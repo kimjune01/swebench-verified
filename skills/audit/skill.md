@@ -67,6 +67,8 @@ Routing rationale (the outer loop):
 - **Regression-only** → recon was right, the fix is too broad. Send a kill report to /craft (narrow mode) — don't pay to re-diagnose.
 - **Ineffective / partial** → the diagnosis missed the real path. Send the failing-test evidence to /recon as a new H₀.
 
+**No-progress escalation (harness-enforced).** A regression gets at most ONE narrow attempt. If you route `craft` again on the *next* round (the regression survived the narrow), the driver overrides the route to `recon` and re-diagnoses — a regression that can't be narrowed away means the approach itself conflicts with the P2P test, so grinding `craft` would just retry the same edit. You still emit the honest `RE-ENTER: craft` for a regression; the driver decides when a repeat means "re-diagnose instead."
+
 ### Phase 5: Emit
 
 Print, with the verdict and route each on their own final lines so the driver can parse them:

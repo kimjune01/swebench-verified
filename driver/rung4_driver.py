@@ -297,6 +297,7 @@ def process(iid):
     pathlib.Path(hgraph).write_text(f"# Hypothesis graph: {iid}\n")
 
     verdict, route, kill_report, handoff = "UNKNOWN", "recon", None, None
+    prev_route = None
     for depth in range(MAX_OUTER):
         # RECON — unless audit routed straight back to craft (recon was right)
         if route == "recon" or handoff is None:
@@ -309,15 +310,27 @@ def process(iid):
         if wants_rediagnose and depth < MAX_OUTER-1:
             # craft says the hypothesis is wrong — feed its note back to recon next iter
             kill_report = f"craft could not implement the diagnosis:\n{craft_out[-2000:]}"
-            route = "recon"; continue
+            route = "recon"; prev_route = None; continue
         # AUDIT
-        audit_out, verdict, route = audit(inst, box, gate, hgraph, failbase, depth)
+        audit_out, verdict, raw_route = audit(inst, box, gate, hgraph, failbase, depth)
+        route = raw_route
         if verdict == "RESOLVED" or route == "none":
             break
-        if depth < MAX_OUTER-1:
-            kill_report = audit_out[-2500:]  # routes recon (re-diagnose) or craft (narrow)
+        # No-progress escalation: a regression that survived ONE narrow attempt means the
+        # approach conflicts with the P2P test — re-diagnosing beats grinding craft (which
+        # would just retry the same edit). Allow one narrow, then route recon.
+        if route == "craft" and prev_route == "craft":
+            log({"instance":iid,"stage":"escalate",
+                 "msg":"narrow mode stalled on persistent regression -> route recon (re-diagnose)"})
+            route = "recon"
+            kill_report = ("NARROW MODE STALLED: a PASS_TO_PASS regression persisted after a "
+                           "narrow attempt. The chosen root cause / edit site conflicts with the "
+                           "regressed test. Re-diagnose with a DIFFERENT approach.\n" + audit_out[-1800:])
+        elif depth < MAX_OUTER-1:
+            kill_report = audit_out[-2500:]  # routes recon (re-diagnose) or craft (narrow, first time)
         else:
             log({"instance":iid,"stage":"halt","msg":f"depth budget exhausted at {verdict}"})
+        prev_route = raw_route
 
     # Driver-side final gate: save passing-test output + independently confirm verdict.
     passout, drv_f2p_pass = verify_gate(inst, cid, root)

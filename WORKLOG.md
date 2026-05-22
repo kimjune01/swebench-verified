@@ -17,4 +17,15 @@
 - Box: EC2 m7i.xlarge, us-west-2, 90-min self-terminating watchdog. Torn down after the run.
 - Caught and fixed during the run: the eval image is `swebench/sweb.eval.x86_64.pallets_1776_flask-5014` (the `__` -> `_1776_` substitution under the `swebench` namespace), not the literal double-underscore form.
 
-**Not yet done** (see `LIMITATIONS.md`): official `run_evaluation` grading of the captured patch; any instance that exercises the outer loop; the clean-room ablation that would isolate the method.
+Official grading of flask-5014: `run_evaluation` reports resolved (committed under `results/pallets__flask-5014/<run>/official_eval/`).
+
+## 2026-05-22 — batch_001 (15 instances, 5 boxes parallel)
+
+15 Verified instances, filtered against `KNOWN_BAD.md` (the filter caught 4 bad picks: astropy-7606/-7166/-7671 gold-patch-fails + requests-2317 flaky/external), pytest-based, sharded 3-per-box across 5 EC2 boxes.
+
+- **Official: 15/15 RESOLVED.** Per-run commits with official reports + harness test logs.
+- **Outer loop exercised + audit false-negative found.** `psf__requests-2931`: audit flagged a P2P regression, re-entered craft narrow-mode at depths 1 and 2, halted on budget → NOT_RESOLVED on our gate. Official grader resolves it. Audit misclassified a flaky/pre-existing P2P as a regression; the captured patch was correct. Our gate 14/15, official 15/15 — the gap is the value of the third-party grader.
+- **Routing fix applied:** the driver now escalates a regression that survives one narrow attempt to `recon` (re-diagnose) instead of grinding `craft`. A no-progress guard, not a budget increase (`MAX_OUTER` stays 3: try → narrow once → re-diagnose once). Audit skill documents the harness-enforced escalation.
+- **Open follow-up:** tighten audit's flaky/pre-existing P2P detection so it stops emitting false-negative regressions (the routing escalation reduces wasted compute but doesn't fix the misclassification itself).
+
+**Not yet done** (see `LIMITATIONS.md`): the clean-room ablation that would isolate the method; a larger/representative sample; non-pytest repos (the driver's `verify_gate` parser is pytest-specific).

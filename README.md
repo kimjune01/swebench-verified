@@ -35,7 +35,14 @@ One instance, `pallets__flask-5014` ("require a non-empty Blueprint name"). Arti
 - Our gate agreed independently: the driver re-ran the suite itself (`driver_f2p_pass: true`) and saved the raw output (`passing_tests_our_gate.txt`, `60 passed`). Verdict is not the agent's say-so.
 - The codex volley **demonstrably fired** (not narrated by the agent). See `codex_volley_proof.txt`, verbatim from codex's own session log: codex caught that `if not name` is broader than the failing case (it would also catch `None/False/0/[]` and pre-empt the existing `TypeError` path) and recommended `if name == ""`. The agent folded it in.
 
-This is one easy instance. It exercises the happy path, not the outer loop (re-entry, fixed-point halt, narrow-on-regression are still unexercised because nothing failed). See `LIMITATIONS.md`.
+### batch_001 — 15 instances, 5 boxes in parallel
+
+A second run: 15 Verified instances (filtered against `KNOWN_BAD.md`, pytest-based, across scikit-learn / pytest / astropy / pylint / requests / seaborn), sharded 3-per-box across 5 EC2 boxes.
+
+- **Official verdict: 15/15 RESOLVED.** Per-instance reports + the harness's own test logs are committed under each `results/<id>/<run-id>/official_eval/`. One git commit per run.
+- **The outer loop fired and the official grader caught an audit error.** On `psf__requests-2931`, our internal audit flagged a PASS_TO_PASS regression and re-entered the loop (craft narrow-mode, depths 0→1→2, then budget halt), ending NOT_RESOLVED on *our* gate. The official grader resolves it: the patch was correct; audit misclassified a flaky/pre-existing P2P as a regression. Our gate said 14/15; the truth is 15/15. This is exactly why the third-party grader is the authority and our gate is not — and it is committed evidence, not a claim. (Follow-ups: a no-progress routing escalation, now in the driver, re-diagnoses instead of grinding a stuck regression; tightening audit's flaky/pre-existing detection is open.)
+
+Combined, 16 distinct Verified instances have been officially graded RESOLVED. Still a contaminated/leaderboard config on a KNOWN_BAD-filtered, pytest-only slice — not a clean-science claim. See `LIMITATIONS.md`.
 
 ## Run it yourself
 
