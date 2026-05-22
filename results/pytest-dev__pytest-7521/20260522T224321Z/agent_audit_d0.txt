@@ -1,0 +1,25 @@
+# Audit: pytest-dev__pytest-7521
+
+## FAIL_TO_PASS
+- `testing/test_capture.py::TestCaptureFixture::test_cafd_preserves_newlines[\r\n]` — **PASSED** ✓
+- `testing/test_capture.py::TestCaptureFixture::test_cafd_preserves_newlines[\r]` — **PASSED** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 125 tests passed with no regressions
+
+## Pre-existing (not counted, confirmed against base capture)
+- 3 skipped tests (lsof unavailable, Windows-only test)
+- 1 xfailed test (unimplemented feature - test_capture_scope_cache)
+
+## Summary
+
+The craft patch adds `newline=""` to the `EncodedFile` instantiation in `FDCaptureBinary.__init__()`, disabling Python's universal newlines mode. This preserves original line endings (`\r`, `\r\n`, `\n`) instead of normalizing them all to `\n`.
+
+**Gate results:** 125 passed, 3 skipped, 1 xfailed in 4.38s
+
+Both FAIL_TO_PASS tests now pass, and all PASS_TO_PASS tests remain passing with zero regressions. The fix is minimal, surgical, and correct.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,51 @@
+# Recon: pytest-dev__pytest-7521
+
+## Failure summary
+
+The failing tests check that `capfd.readouterr()` preserves the original line endings when capturing output. Specifically, when a test prints text ending with `\r` or `\r\n`, the captured output should preserve those exact line endings. However, in pytest 6.0.0rc1, both `\r` and `\r\n` are being converted to `\n`, causing the tests to fail with assertions like:
+```
+assert '  0%\n' == '  0%\r'
+```
+
+## Suspect set
+
+- `src/_pytest/capture.py` lines 386-392: `EncodedFile` instantiation in `FDCaptureBinary.__init__()` — missing `newline=""` parameter
+- `src/_pytest/capture.py` lines 478-485: `FDCapture.snap()` method — reads from `self.tmpfile`
+
+## Root cause
+
+When `EncodedFile` (a subclass of `io.TextIOWrapper`) is instantiated in `FDCaptureBinary.__init__()` at line 386, the `newline` parameter is not specified. According to Python's `io.TextIOWrapper` documentation, when `newline` is `None` (the default), **universal newlines mode** is enabled, which automatically translates all newline characters (`\r`, `\r\n`, and `\n`) to `\n` when reading.
+
+This regression was introduced in commit `29e4cb5d4` ("Remove safe_text_dupfile() and simplify EncodedFile"), which changed `EncodedFile` from a custom class to a `io.TextIOWrapper` subclass. The author did not specify `newline=""` when creating the `EncodedFile` instance, unlike `CaptureIO` which correctly uses `newline=""` at line 195.
+
+**Confidence: Deduction — 98%**
+
+Supporting evidence:
+- `src/_pytest/capture.py:386` — `EncodedFile` instantiation without `newline` parameter:
+  ```python
+  self.tmpfile = EncodedFile(
+      TemporaryFile(buffering=0),
+      encoding="utf-8",
+      errors="replace",
+      write_through=True,
+  )
+  ```
+- `src/_pytest/capture.py:195` — `CaptureIO` (which works correctly for `capsys`) uses `newline=""`:
+  ```python
+  super().__init__(io.BytesIO(), encoding="UTF-8", newline="", write_through=True)
+  ```
+- Git commit `29e4cb5d4` introduced the `io.TextIOWrapper`-based `EncodedFile` without the `newline=""` parameter
+
+## Edit sites
+
+- `src/_pytest/capture.py` lines 386-392: Add `newline=""` parameter to the `EncodedFile` instantiation. This will disable universal newlines mode and preserve the original line endings (`\r`, `\r\n`, `\n`) exactly as written, matching the behavior of `CaptureIO`.
+
+## Rejected hypotheses
+
+None — the root cause was directly identified through code trace.
+
+## Open questions
+
+None — the fix is straightforward and follows the existing pattern used by `CaptureIO`.
+
+---STDERR---
