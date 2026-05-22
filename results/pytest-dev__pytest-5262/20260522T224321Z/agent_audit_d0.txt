@@ -1,0 +1,22 @@
+# Audit: pytest-dev__pytest-5262
+
+## FAIL_TO_PASS
+- `testing/test_capture.py::TestFDCapture::test_capfd_sys_stdout_mode`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch adds a `mode` property to `EncodedFile` that strips 'b' from the underlying buffer's mode string. This ensures `sys.stdout.mode` reports text mode ('r+') instead of binary mode ('rb+') when using `capfd`.
+
+**Gate results**: 108 passed, 7 skipped, 1 xfailed, 0 failed
+
+The FAIL_TO_PASS test now passes, and all PASS_TO_PASS tests remain green. Zero regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

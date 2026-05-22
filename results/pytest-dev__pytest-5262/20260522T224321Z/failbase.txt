@@ -1,0 +1,122 @@
+$ pytest -rA testing/test_capture.py
+
+
+/testbed/src/_pytest/capture.py:436: TypeError
+=========================== 1 failed in 0.01 seconds ===========================
+=========================== short test summary info ============================
+SKIPPED [1] testing/test_capture.py:894: python2 has no buffer
+SKIPPED [2] testing/test_capture.py:1121: text output different for bytes on python3
+SKIPPED [2] /testbed/testing/test_capture.py:963: could not run 'lsof'
+SKIPPED [1] testing/test_capture.py:1391: only py3.6+ on windows
+SKIPPED [1] testing/test_capture.py:565: only have capsysbinary in python 3
+XFAIL testing/test_capture.py::TestPerTestCapturing::test_capture_scope_cache
+  unimplemented feature
+FAILED testing/test_capture.py::TestFDCapture::test_capfd_sys_stdout_mode - A...
+PASSED testing/test_capture.py::TestCaptureManager::test_getmethod_default_no_fd
+PASSED testing/test_capture.py::TestCaptureManager::test_capturing_basic_api[no]
+PASSED testing/test_capture.py::TestCaptureManager::test_capturing_basic_api[sys]
+PASSED testing/test_capture.py::TestCaptureManager::test_capturing_basic_api[fd]
+PASSED testing/test_capture.py::TestCaptureManager::test_init_capturing
+PASSED testing/test_capture.py::TestCaptureIO::test_text
+PASSED testing/test_capture.py::TestCaptureIO::test_unicode_and_str_mixture
+PASSED testing/test_capture.py::TestCaptureIO::test_write_bytes_to_buffer
+PASSED testing/test_capture.py::test_dontreadfrominput
+PASSED testing/test_capture.py::test_dontreadfrominput_buffer_python3
+PASSED testing/test_capture.py::test_dupfile_on_bytesio
+PASSED testing/test_capture.py::test_dupfile_on_textio
+PASSED testing/test_capture.py::TestFDCapture::test_stderr
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_done_simple
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_reset_simple
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_readouterr
+PASSED testing/test_capture.py::TestStdCapture::test_capture_results_accessible_by_attribute
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_readouterr_unicode
+PASSED testing/test_capture.py::TestStdCapture::test_reset_twice_error
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_modify_sysouterr_in_between
+PASSED testing/test_capture.py::TestStdCapture::test_capturing_error_recursive
+PASSED testing/test_capture.py::TestStdCapture::test_just_out_capture
+PASSED testing/test_capture.py::TestStdCapture::test_just_err_capture
+PASSED testing/test_capture.py::TestStdCapture::test_stdin_restored
+PASSED testing/test_capture.py::TestStdCapture::test_stdin_nulled_by_default
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_done_simple
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_reset_simple
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_readouterr
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capture_results_accessible_by_attribute
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_readouterr_unicode
+PASSED testing/test_capture.py::TestStdCaptureFD::test_reset_twice_error
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_modify_sysouterr_in_between
+PASSED testing/test_capture.py::TestStdCaptureFD::test_capturing_error_recursive
+PASSED testing/test_capture.py::TestStdCaptureFD::test_just_out_capture
+PASSED testing/test_capture.py::TestStdCaptureFD::test_just_err_capture
+PASSED testing/test_capture.py::TestStdCaptureFD::test_stdin_restored
+PASSED testing/test_capture.py::TestStdCaptureFD::test_stdin_nulled_by_default
+PASSED testing/test_capture.py::TestStdCaptureFD::test_intermingling
+PASSED testing/test_capture.py::test_capture_not_started_but_reset
+PASSED testing/test_capture.py::test_using_capsys_fixture_works_with_sys_stdout_encoding
+PASSED testing/test_capture.py::test_capsys_results_accessible_by_attribute
+PASSED testing/test_capture.py::test_pickling_and_unpickling_encoded_file
+PASSED testing/test_capture.py::test_capturing_unicode[fd]
+PASSED testing/test_capture.py::test_capturing_unicode[sys]
+PASSED testing/test_capture.py::test_capturing_bytes_in_utf8_encoding[fd]
+PASSED testing/test_capture.py::test_capturing_bytes_in_utf8_encoding[sys]
+PASSED testing/test_capture.py::test_collect_capturing
+PASSED testing/test_capture.py::TestPerTestCapturing::test_capture_and_fixtures
+PASSED testing/test_capture.py::TestPerTestCapturing::test_no_carry_over
+PASSED testing/test_capture.py::TestPerTestCapturing::test_teardown_capturing
+PASSED testing/test_capture.py::TestPerTestCapturing::test_teardown_capturing_final
+PASSED testing/test_capture.py::TestPerTestCapturing::test_capturing_outerr
+PASSED testing/test_capture.py::TestLoggingInteraction::test_logging_stream_ownership
+PASSED testing/test_capture.py::TestLoggingInteraction::test_logging_and_immediate_setupteardown
+PASSED testing/test_capture.py::TestLoggingInteraction::test_logging_and_crossscope_fixtures
+PASSED testing/test_capture.py::TestLoggingInteraction::test_conftestlogging_is_shown
+PASSED testing/test_capture.py::TestLoggingInteraction::test_conftestlogging_and_test_logging
+PASSED testing/test_capture.py::TestLoggingInteraction::test_logging_after_cap_stopped
+PASSED testing/test_capture.py::TestCaptureFixture::test_std_functional[opt0]
+PASSED testing/test_capture.py::TestCaptureFixture::test_std_functional[opt1]
+PASSED testing/test_capture.py::TestCaptureFixture::test_capsyscapfd
+PASSED testing/test_capture.py::TestCaptureFixture::test_capturing_getfixturevalue
+PASSED testing/test_capture.py::TestCaptureFixture::test_capsyscapfdbinary
+PASSED testing/test_capture.py::TestCaptureFixture::test_capture_is_represented_on_failure_issue128[sys]
+PASSED testing/test_capture.py::TestCaptureFixture::test_capture_is_represented_on_failure_issue128[fd]
+PASSED testing/test_capture.py::TestCaptureFixture::test_stdfd_functional
+PASSED testing/test_capture.py::TestCaptureFixture::test_capfdbinary
+PASSED testing/test_capture.py::TestCaptureFixture::test_capsysbinary
+PASSED testing/test_capture.py::TestCaptureFixture::test_partial_setup_failure
+PASSED testing/test_capture.py::TestCaptureFixture::test_keyboardinterrupt_disables_capturing
+PASSED testing/test_capture.py::TestCaptureFixture::test_capture_and_logging
+PASSED testing/test_capture.py::TestCaptureFixture::test_disabled_capture_fixture[True-capsys]
+PASSED testing/test_capture.py::TestCaptureFixture::test_disabled_capture_fixture[True-capfd]
+PASSED testing/test_capture.py::TestCaptureFixture::test_disabled_capture_fixture[False-capsys]
+PASSED testing/test_capture.py::TestCaptureFixture::test_disabled_capture_fixture[False-capfd]
+PASSED testing/test_capture.py::TestCaptureFixture::test_fixture_use_by_other_fixtures[capsys]
+PASSED testing/test_capture.py::TestCaptureFixture::test_fixture_use_by_other_fixtures[capfd]
+PASSED testing/test_capture.py::TestCaptureFixture::test_fixture_use_by_other_fixtures_teardown[capsys]
+PASSED testing/test_capture.py::TestCaptureFixture::test_fixture_use_by_other_fixtures_teardown[capfd]
+PASSED testing/test_capture.py::test_setup_failure_does_not_kill_capturing
+PASSED testing/test_capture.py::test_fdfuncarg_skips_on_no_osdup
+PASSED testing/test_capture.py::test_capture_conftest_runtest_setup
+PASSED testing/test_capture.py::test_capture_badoutput_issue412
+PASSED testing/test_capture.py::test_capture_early_option_parsing
+PASSED testing/test_capture.py::test_capture_binary_output
+PASSED testing/test_capture.py::test_error_during_readouterr
+PASSED testing/test_capture.py::test_dupfile
+PASSED testing/test_capture.py::TestFDCapture::test_simple
+PASSED testing/test_capture.py::TestFDCapture::test_simple_many
+PASSED testing/test_capture.py::TestFDCapture::test_simple_fail_second_start
+PASSED testing/test_capture.py::TestFDCapture::test_stdin
+PASSED testing/test_capture.py::TestFDCapture::test_writeorg
+PASSED testing/test_capture.py::TestFDCapture::test_simple_resume_suspend
+PASSED testing/test_capture.py::TestStdCaptureFD::test_simple_only_fd
+PASSED testing/test_capture.py::TestStdCaptureFDinvalidFD::test_stdcapture_fd_invalid_fd
+PASSED testing/test_capture.py::test_fdcapture_tmpfile_remains_the_same[True]
+PASSED testing/test_capture.py::test_fdcapture_tmpfile_remains_the_same[False]
+PASSED testing/test_capture.py::test_close_and_capture_again
+PASSED testing/test_capture.py::test_capturing_and_logging_fundamentals[SysCapture]
+PASSED testing/test_capture.py::test_capturing_and_logging_fundamentals[FDCapture]
+PASSED testing/test_capture.py::test_error_attribute_issue555
+PASSED testing/test_capture.py::test_dontreadfrominput_has_encoding
+PASSED testing/test_capture.py::test_crash_on_closing_tmpfile_py27
+PASSED testing/test_capture.py::test_global_capture_with_live_logging
+PASSED testing/test_capture.py::test_capture_with_live_logging[capsys]
+PASSED testing/test_capture.py::test_capture_with_live_logging[capfd]
+PASSED testing/test_capture.py::test_typeerror_encodedfile_write
+========== 1 failed, 107 passed, 7 skipped, 1 xfailed in 5.23 seconds ==========

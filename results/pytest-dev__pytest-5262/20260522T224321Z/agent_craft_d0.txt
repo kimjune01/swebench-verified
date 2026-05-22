@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. Added a `mode` property to `EncodedFile` that returns the buffer's mode with 'b' removed, following the same pattern as the existing `name` property. The gate shows 108 passed tests with no regressions.
+
+---STDERR---

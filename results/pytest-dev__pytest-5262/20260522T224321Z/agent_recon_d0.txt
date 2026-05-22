@@ -1,0 +1,41 @@
+Now I'll print my diagnosis to stdout:
+
+```markdown
+# Recon: pytest-dev__pytest-5262
+
+## Failure summary
+The test `test_capfd_sys_stdout_mode` verifies that `sys.stdout.mode` should not contain 'b' when pytest's capture fixture is active. The test fails with `AssertionError: assert 'b' not in 'rb+'` because `sys.stdout.mode` incorrectly reports the binary mode of the underlying buffer instead of the text mode that `EncodedFile` actually implements.
+
+## Suspect set
+- `src/_pytest/capture.py` lines 425-451: `EncodedFile` class — incorrectly exposes binary buffer's mode via `__getattr__`
+- `src/_pytest/capture.py` lines 406-422: `safe_text_dupfile()` — creates binary buffer and wraps in EncodedFile
+
+## Root cause
+The `EncodedFile` class wraps a binary file buffer but presents a text stream interface. When external code (like youtube-dl) checks `'b' in sys.stdout.mode` to determine whether to write bytes or strings, `EncodedFile` incorrectly reports the underlying buffer's binary mode (e.g., 'rb+') due to the `__getattr__` fallthrough on lines 450-451. This misleads callers into writing bytes to what is actually a text stream, causing `TypeError` from the `write()` method.
+
+Code path:
+1. `safe_text_dupfile()` line 414-415 ensures mode has 'b': `if "b" not in mode: mode += "b"`
+2. Line 416 opens binary buffer: `f = os.fdopen(newfd, mode, 0)`
+3. Line 417 wraps in EncodedFile
+4. `EncodedFile.write()` (lines 432-439) enforces text-only contract — raises `TypeError` for bytes in Python 3
+5. But `EncodedFile.__getattr__` delegates `mode` to buffer, exposing 'rb+' instead of 'r+'
+
+Confidence: **deduction — 99%** (direct code trace from test assertion through `__getattr__` to buffer.mode)
+
+Supporting evidence:
+- `src/_pytest/capture.py:450-451` — `__getattr__` delegates all undefined attributes to buffer
+- `src/_pytest/capture.py:432-439` — `write()` method only accepts `str` in Python 3, not `bytes`
+- `src/_pytest/capture.py:445-448` — precedent: `name` property already overrides buffer attribute
+- `testing/test_capture.py:1559-1578` — `test_typeerror_encodedfile_write` confirms bytes raise TypeError
+
+## Edit sites
+- `src/_pytest/capture.py` lines 445-450: Add a `mode` property after the existing `name` property and before `__getattr__`. The property should return `self.buffer.mode` with 'b' removed (e.g., 'rb+' → 'r+', 'wb+' → 'w+')
+
+## Rejected hypotheses
+None — root cause is clear from direct code inspection.
+
+## Open questions
+None — the fix location and implementation are unambiguous.
+```
+
+---STDERR---
