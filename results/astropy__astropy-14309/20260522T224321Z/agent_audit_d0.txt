@@ -1,0 +1,38 @@
+# Audit: astropy__astropy-14309
+
+## Patch Verification
+**Diff stat**: 1 file changed, 3 insertions(+), 1 deletion(-)
+
+**Change applied**:
+```python
+# astropy/io/fits/connect.py:72
+-    return isinstance(args[0], (HDUList, TableHDU, BinTableHDU, GroupsHDU))
++    return len(args) > 0 and isinstance(
++        args[0], (HDUList, TableHDU, BinTableHDU, GroupsHDU)
++    )
+```
+
+## FAIL_TO_PASS
+- `test_is_fits_gh_14305`: ✅ PASS
+
+## PASS_TO_PASS Regressions
+None. All 142 tests passed:
+- 29 TestSingleTable tests: PASS
+- 46 TestMultipleHDU tests: PASS  
+- 67 other tests: PASS
+- 8 skipped (conditional skips - expected)
+- 5 xfailed (unsupported mixins - expected)
+
+## Pre-existing Failures
+None detected. All tests that passed on base continue to pass.
+
+## Kill Report
+N/A - patch is RESOLVED
+
+## Verification Summary
+The patch correctly fixes the IndexError by adding a length guard before accessing `args[0]`. When `args` is empty, the function now returns `False` instead of raising an exception, matching the original behavior before the SIM103 refactor. No regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully addresses the IndexError in `is_fits()` when the args tuple is empty. The guard `len(args) > 0 and isinstance(args[0], ...)` restores the original fallthrough behavior that was inadvertently removed by a linter refactoring, allowing the function to return False for non-FITS files without positional arguments rather than crashing.
+
+---STDERR---
