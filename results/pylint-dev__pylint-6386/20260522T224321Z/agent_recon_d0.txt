@@ -1,0 +1,36 @@
+# Recon: pylint-dev__pylint-6386
+
+## Failure summary
+
+The test `test_short_verbose` checks that the short option `-v` for verbose mode works correctly. The test runs `pylint` with the `-v` flag and expects to see "Using config file" in the error output. However, the test fails with `argparse.ArgumentError: argument --verbose/-v: expected one argument`. The error occurs during argument parsing when argparse tries to process the `-v` flag and expects it to be followed by a value.
+
+## Suspect set
+
+- `pylint/config/utils.py` lines 214-250: `_preprocess_options` function that handles command-line argument preprocessing
+- `pylint/config/utils.py` lines 168-180: `PREPROCESSABLE_OPTIONS` dictionary that maps options to their preprocessing handlers
+- `pylint/config/callback_actions.py` lines 41-52: `_DoNothingAction` class definition
+
+## Root cause
+
+The issue is that the `_preprocess_options` function only handles long options (those starting with `--`), not short options (those starting with `-`). When `--verbose` is used, the preprocessing logic at line 218 (`if not argument.startswith("--")`) allows it to be processed by the `_set_verbose_mode` callback, which consumes it before argparse sees it. When `-v` is used, it bypasses preprocessing entirely (line 215-217) and goes straight to argparse. Since `_DoNothingAction` doesn't override `__init__` to set `nargs=0`, argparse defaults to `nargs=None`, which means it expects exactly one argument.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `pylint/config/utils.py:215-217` — Short options are added to `processed_args` without any preprocessing
+- `pylint/config/utils.py:179` — `PREPROCESSABLE_OPTIONS` only contains `"--verbose": (False, _set_verbose_mode)`, no entry for `-v`
+- `pylint/lint/base_options.py:541` — The verbose option definition includes `"short": "v"` which should map to `-v`
+- Manual test confirms: `pylint test.py --verbose` works, `pylint test.py -v` fails with "expected one argument"
+
+## Edit sites
+
+- `pylint/config/utils.py` lines 214-230: Modify the `_preprocess_options` function to handle short options by mapping them to their long equivalents. Specifically, when encountering `-v`, it should be treated the same way as `--verbose`.
+
+Alternative approach: Create a mapping from short options to long options and check if a short option matches before passing it through unprocessed. The mapping would be: `{"-v": "--verbose"}` (and potentially others if more short preprocessable options exist in the future).
+
+## Open questions
+
+- Are there other short options that should be preprocessable? Currently, only `-v` has a short form among the preprocessable options, but the fix should be general enough to support others if added in the future.
+- Should we also add `-E` (short for `--errors-only`) to preprocessing? Currently it uses `_ErrorsOnlyModeAction` which properly sets `nargs=0`, so it works, but for consistency with verbose, it might make sense.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the `-v` short option work by adding a mapping from short options to their long equivalents. The preprocessing logic now handles `-v` correctly by converting it to `--verbose` before processing, which allows the verbose mode callback to be triggered without argparse expecting an argument.
+
+---STDERR---

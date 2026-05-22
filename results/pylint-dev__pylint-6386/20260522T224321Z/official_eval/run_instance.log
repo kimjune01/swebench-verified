@@ -1,0 +1,105 @@
+2026-05-22 22:40:38,587 - INFO - Creating container for pylint-dev__pylint-6386...
+2026-05-22 22:40:38,709 - INFO - Container for pylint-dev__pylint-6386 created: 636e77093930e0b8cb96b1d42b1ec44cbf925592fa740f56dc97283cef130f40
+2026-05-22 22:40:39,430 - INFO - Container for pylint-dev__pylint-6386 started: 636e77093930e0b8cb96b1d42b1ec44cbf925592fa740f56dc97283cef130f40
+2026-05-22 22:40:39,431 - INFO - Intermediate patch for pylint-dev__pylint-6386 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-6386/patch.diff, now applying to container...
+2026-05-22 22:40:39,503 - INFO - >>>>> Applied Patch:
+Checking patch pylint/config/utils.py...
+Applied patch pylint/config/utils.py cleanly.
+
+2026-05-22 22:40:39,671 - INFO - Git diff before:
+diff --git a/pylint/config/utils.py b/pylint/config/utils.py
+index 8c790416..5c78409d 100644
+--- a/pylint/config/utils.py
++++ b/pylint/config/utils.py
+@@ -210,6 +210,11 @@ PREPROCESSABLE_OPTIONS: dict[
+     "--enable-all-extensions": (False, _enable_all_extensions),
+ }
+ 
++# Mapping from short options to their long option equivalents
++SHORT_TO_LONG_OPTION: dict[str, str] = {
++    "-v": "--verbose",
++}
++
+ 
+ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     """Preprocess options before full config parsing has started."""
+@@ -218,15 +223,20 @@ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     i = 0
+     while i < len(args):
+         argument = args[i]
+-        if not argument.startswith("--"):
++
++        # Check if this is a short option that maps to a preprocessable long option
++        if argument in SHORT_TO_LONG_OPTION:
++            option = SHORT_TO_LONG_OPTION[argument]
++            value = None
++        elif not argument.startswith("--"):
+             processed_args.append(argument)
+             i += 1
+             continue
+-
+-        try:
+-            option, value = argument.split("=", 1)
+-        except ValueError:
+-            option, value = argument, None
++        else:
++            try:
++                option, value = argument.split("=", 1)
++            except ValueError:
++                option, value = argument, None
+ 
+         if option not in PREPROCESSABLE_OPTIONS:
+             processed_args.append(argument)
+2026-05-22 22:40:39,672 - INFO - Eval script for pylint-dev__pylint-6386 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-6386/eval.sh; copying to container...
+2026-05-22 22:40:42,457 - INFO - Test runtime: 2.70 seconds
+2026-05-22 22:40:42,457 - INFO - Test output for pylint-dev__pylint-6386 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-6386/test_output.txt
+2026-05-22 22:40:42,533 - INFO - Git diff after:
+diff --git a/pylint/config/utils.py b/pylint/config/utils.py
+index 8c790416..5c78409d 100644
+--- a/pylint/config/utils.py
++++ b/pylint/config/utils.py
+@@ -210,6 +210,11 @@ PREPROCESSABLE_OPTIONS: dict[
+     "--enable-all-extensions": (False, _enable_all_extensions),
+ }
+ 
++# Mapping from short options to their long option equivalents
++SHORT_TO_LONG_OPTION: dict[str, str] = {
++    "-v": "--verbose",
++}
++
+ 
+ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     """Preprocess options before full config parsing has started."""
+@@ -218,15 +223,20 @@ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     i = 0
+     while i < len(args):
+         argument = args[i]
+-        if not argument.startswith("--"):
++
++        # Check if this is a short option that maps to a preprocessable long option
++        if argument in SHORT_TO_LONG_OPTION:
++            option = SHORT_TO_LONG_OPTION[argument]
++            value = None
++        elif not argument.startswith("--"):
+             processed_args.append(argument)
+             i += 1
+             continue
+-
+-        try:
+-            option, value = argument.split("=", 1)
+-        except ValueError:
+-            option, value = argument, None
++        else:
++            try:
++                option, value = argument.split("=", 1)
++            except ValueError:
++                option, value = argument, None
+ 
+         if option not in PREPROCESSABLE_OPTIONS:
+             processed_args.append(argument)
+2026-05-22 22:40:42,533 - INFO - Grading answer for pylint-dev__pylint-6386...
+2026-05-22 22:40:42,533 - INFO - report: {'pylint-dev__pylint-6386': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['tests/config/test_config.py::test_short_verbose'], 'failure': []}, 'PASS_TO_PASS': {'success': ['tests/config/test_config.py::test_can_read_toml_env_variable', 'tests/config/test_config.py::test_unknown_message_id', 'tests/config/test_config.py::test_unknown_option_name', 'tests/config/test_config.py::test_unknown_short_option_name', 'tests/config/test_config.py::test_unknown_confidence', 'tests/config/test_config.py::test_unknown_yes_no', 'tests/config/test_config.py::test_unknown_py_version'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pylint-dev__pylint-6386: resolved: True
+2026-05-22 22:40:42,534 - INFO - Attempting to stop container sweb.eval.pylint-dev__pylint-6386.batch...
+2026-05-22 22:40:57,909 - INFO - Attempting to remove container sweb.eval.pylint-dev__pylint-6386.batch...
+2026-05-22 22:40:57,921 - INFO - Container sweb.eval.pylint-dev__pylint-6386.batch removed.

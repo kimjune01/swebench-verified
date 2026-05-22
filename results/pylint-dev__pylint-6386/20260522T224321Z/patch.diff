@@ -1,0 +1,43 @@
+diff --git a/pylint/config/utils.py b/pylint/config/utils.py
+index 8c790416..5c78409d 100644
+--- a/pylint/config/utils.py
++++ b/pylint/config/utils.py
+@@ -210,6 +210,11 @@ PREPROCESSABLE_OPTIONS: dict[
+     "--enable-all-extensions": (False, _enable_all_extensions),
+ }
+ 
++# Mapping from short options to their long option equivalents
++SHORT_TO_LONG_OPTION: dict[str, str] = {
++    "-v": "--verbose",
++}
++
+ 
+ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     """Preprocess options before full config parsing has started."""
+@@ -218,15 +223,20 @@ def _preprocess_options(run: Run, args: Sequence[str]) -> list[str]:
+     i = 0
+     while i < len(args):
+         argument = args[i]
+-        if not argument.startswith("--"):
++
++        # Check if this is a short option that maps to a preprocessable long option
++        if argument in SHORT_TO_LONG_OPTION:
++            option = SHORT_TO_LONG_OPTION[argument]
++            value = None
++        elif not argument.startswith("--"):
+             processed_args.append(argument)
+             i += 1
+             continue
+-
+-        try:
+-            option, value = argument.split("=", 1)
+-        except ValueError:
+-            option, value = argument, None
++        else:
++            try:
++                option, value = argument.split("=", 1)
++            except ValueError:
++                option, value = argument, None
+ 
+         if option not in PREPROCESSABLE_OPTIONS:
+             processed_args.append(argument)

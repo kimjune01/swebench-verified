@@ -1,0 +1,25 @@
+# Audit: pylint-dev__pylint-6386
+
+## FAIL_TO_PASS
+- `tests/config/test_config.py::test_short_verbose`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 7 tests passed:
+- `test_can_read_toml_env_variable`: PASS
+- `test_unknown_message_id`: PASS
+- `test_unknown_option_name`: PASS
+- `test_unknown_short_option_name`: PASS
+- `test_unknown_confidence`: PASS
+- `test_unknown_yes_no`: PASS
+- `test_unknown_py_version`: PASS
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Analysis
+The patch successfully resolves the issue. The craft implementation added a `SHORT_TO_LONG_OPTION` mapping and modified `_preprocess_options` to convert `-v` to `--verbose` before preprocessing. This allows the short verbose flag to work correctly without triggering argparse's argument-expecting behavior. All FAIL_TO_PASS tests pass and no regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

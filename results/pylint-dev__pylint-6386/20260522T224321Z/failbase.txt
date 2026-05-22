@@ -1,0 +1,122 @@
+$ pytest -rA tests/config/test_config.py
+
+        if args is None:
+            # args default to the system args
+            args = _sys.argv[1:]
+        else:
+            # make sure that args are mutable
+            args = list(args)
+    
+        # default Namespace built from parser defaults
+        if namespace is None:
+            namespace = Namespace()
+    
+        # add any action defaults that aren't present
+        for action in self._actions:
+            if action.dest is not SUPPRESS:
+                if not hasattr(namespace, action.dest):
+                    if action.default is not SUPPRESS:
+                        setattr(namespace, action.dest, action.default)
+    
+        # add any parser defaults that aren't present
+        for dest in self._defaults:
+            if not hasattr(namespace, dest):
+                setattr(namespace, dest, self._defaults[dest])
+    
+        # parse the arguments and exit if there are any errors
+        if self.exit_on_error:
+            try:
+>               namespace, args = self._parse_known_args(args, namespace)
+
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:1858: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:2067: in _parse_known_args
+    start_index = consume_optional(start_index)
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:1997: in consume_optional
+    arg_count = match_argument(action, selected_patterns)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='pylint', usage='%(prog)s [options]', description=None, formatter_class=<class 'pylint.config.help_formatter._HelpFormatter'>, conflict_handler='error', add_help=True)
+action = _DoNothingAction(option_strings=['--verbose', '-v'], dest='verbose', nargs=None, const=None, default=None, type=None, choices=None, required=False, help='In verbose mode, extra non-checker-related info will be displayed.', metavar=None)
+arg_strings_pattern = ''
+
+    def _match_argument(self, action, arg_strings_pattern):
+        # match the pattern for this action to the arg strings
+        nargs_pattern = self._get_nargs_pattern(action)
+        match = _re.match(nargs_pattern, arg_strings_pattern)
+    
+        # raise an exception if we weren't able to find a match
+        if match is None:
+            nargs_errors = {
+                None: _('expected one argument'),
+                OPTIONAL: _('expected at most one argument'),
+                ONE_OR_MORE: _('expected at least one argument'),
+            }
+            msg = nargs_errors.get(action.nargs)
+            if msg is None:
+                msg = ngettext('expected %s argument',
+                               'expected %s arguments',
+                               action.nargs) % action.nargs
+>           raise ArgumentError(action, msg)
+E           argparse.ArgumentError: argument --verbose/-v: expected one argument
+
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:2162: ArgumentError
+
+During handling of the above exception, another exception occurred:
+
+capsys = <_pytest.capture.CaptureFixture object at 0x7f84d7eedc70>
+
+    def test_short_verbose(capsys: CaptureFixture) -> None:
+        """Check that we correctly handle the -v flag."""
+>       Run([str(EMPTY_MODULE), "-v"], exit=False)
+
+tests/config/test_config.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pylint/lint/run.py:135: in __init__
+    args = _config_initialization(
+pylint/config/config_initialization.py:73: in _config_initialization
+    parsed_args_list = linter._parse_command_line_configuration(args_list)
+pylint/config/arguments_manager.py:258: in _parse_command_line_configuration
+    self.config, parsed_args = self._arg_parser.parse_known_args(
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:1861: in parse_known_args
+    self.error(str(err))
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:2582: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='pylint', usage='%(prog)s [options]', description=None, formatter_class=<class 'pylint.config.help_formatter._HelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'pylint: error: argument --verbose/-v: expected one argument\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+/opt/miniconda3/envs/testbed/lib/python3.9/argparse.py:2569: SystemExit
+----------------------------- Captured stderr call -----------------------------
+usage: pylint [options]
+pylint: error: argument --verbose/-v: expected one argument
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6
+  /opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+pylint/checkers/utils.py:455: 146 warnings
+tests/config/test_config.py: 14 warnings
+  /testbed/pylint/checkers/utils.py:455: DeprecationWarning: utils.check_messages will be removed in favour of calling utils.only_required_for_messages in pylint 3.0
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/config/test_config.py::test_can_read_toml_env_variable
+PASSED tests/config/test_config.py::test_unknown_message_id
+PASSED tests/config/test_config.py::test_unknown_option_name
+PASSED tests/config/test_config.py::test_unknown_short_option_name
+PASSED tests/config/test_config.py::test_unknown_confidence
+PASSED tests/config/test_config.py::test_unknown_yes_no
+PASSED tests/config/test_config.py::test_unknown_py_version
+FAILED tests/config/test_config.py::test_short_verbose - SystemExit: 2
+================== 1 failed, 7 passed, 161 warnings in 0.29s ===================
