@@ -28,6 +28,12 @@ Read this before drawing any conclusion from this repo. The repo is built to inv
 
 11. **Two model CLIs must be authenticated on the driver host.** `claude` (Anthropic) and `codex` (OpenAI). The models run on the host that runs the driver; only the system-under-test container is offline. Costs accrue on both model accounts and on the Docker host.
 
+## Sampling bias (important for any rate)
+
+12. **The batches are not a random sample, and they are easy-biased.** Instances are selected by *smallest test_patch* within a pytest-repo allowlist, round-robined for repo diversity. This systematically favors localized, well-specified bugs and **excludes the hard majority**: Django (`runtests`), sympy (`bin/test`), and sphinx (`tox`) are non-pytest and filtered out entirely (the driver's `verify_gate` parser is pytest-specific). So a high pass rate on these batches partly measures the selection ("we picked easy, well-scoped instances"), not the method's ceiling. A per-batch pass rate here is **not** an estimate of solve rate on Verified.
+
+13. **The sample is tiny.** Tens of instances out of 500. Confidence intervals are wide; an all-resolved batch is consistent with a broad range of true rates. Treat the batches as plumbing/capability evidence (the pipeline runs end-to-end and yields officially-graded-correct patches across repos), not as a solve-rate measurement.
+
 ## What would make this convincing
 
 - The clean-room ablation (limitation 3): same post-cutoff model, with vs without the pipeline, on instances after the model's cutoff.
