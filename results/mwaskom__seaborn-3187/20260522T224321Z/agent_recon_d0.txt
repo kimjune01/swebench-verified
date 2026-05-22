@@ -1,0 +1,45 @@
+# Recon: mwaskom__seaborn-3187
+
+## Failure summary
+
+Two tests fail with identical symptoms across different APIs. Both tests create data with values around 1e8 (100 million) and verify that legend labels show these large values (assert float(text) > 1e7). Instead, legends display offset-stripped values: "1" and "2.5" instead of "100000001" and "100000002.5". The tests use:
+1. New objects API (`Plot`) - fails in `tests/_core/test_plot.py::TestLegend::test_legend_has_no_offset`
+2. Old relational API (`relplot`) - fails in `tests/test_relational.py::TestRelationalPlotter::test_legend_has_no_offset`
+
+Error messages:
+- `AssertionError: assert 1.0 > 10000000.0` (Plot API)  
+- `AssertionError: assert 2.5 > 10000000.0` (relplot API)
+
+## Suspect set
+
+- `seaborn/_core/scales.py` lines 376-382: ContinuousBase._setup() method where legends are created for the new objects API using `format_ticks()`
+- `seaborn/utils.py` lines 685-710: `locator_to_legend_entries()` function used by the old relational API, formats values using `formatter(x)`
+
+## Root cause
+
+matplotlib's ScalarFormatter applies an offset to keep large numbers concise on axes (e.g., displaying "1, 2, 3" with "+1e8" shown separately). The methods `format_ticks()` and `__call__()` return only the offset-relative labels without the base value. Seaborn's legend code in both APIs uses these methods without checking for or applying the offset, resulting in legend labels showing "1" instead of "100000001".
+
+The offset can be detected via `formatter.get_offset()` which returns a string like "+1e8" when present or "" when absent. The method `format_data(value)` returns the full value in scientific notation (e.g., "1.00000001e8") which correctly parses to the actual numeric value.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `seaborn/_core/scales.py:381` — `labels = axis.major.formatter.format_ticks(locs)` returns offset-stripped labels when formatter has offset
+- `seaborn/utils.py:709` — `formatted_levels = [formatter(x) for x in raw_levels]` same issue, formatter.__call__ strips offset
+- Experimental verification: `ScalarFormatter().format_ticks([1e8+1, 1e8+2])` returns `['1', '2']` with `get_offset()` returning `'+1e8'`, while `format_data(1e8+1)` returns `'1.00000001e8'` which parses to 100000001
+
+## Edit sites
+
+- `seaborn/_core/scales.py` lines 376-382: In ContinuousBase._setup(), after line 380 where `locs` is filtered, replace line 381. Check if `axis.major.formatter.get_offset()` is non-empty. If yes, use `[axis.major.formatter.format_data(loc) for loc in locs]` to get full values. If no, use `format_ticks(locs)` as currently done.
+
+- `seaborn/utils.py` lines 700-710: In `locator_to_legend_entries()`, after line 708 where `formatter.set_locs(raw_levels)` is called, replace line 709. Check if `formatter.get_offset()` is non-empty. If yes, use `[formatter.format_data(x) for x in raw_levels]`. If no, use `[formatter(x) for x in raw_levels]` as currently done.
+
+## Rejected hypotheses
+
+None - the root cause was directly identified from the problem statement and confirmed by code inspection and experimental verification.
+
+## Open questions
+
+None - the fix is straightforward and both failure paths have been localized. The solution (using `format_data()` when offset is present) produces scientificnotation that correctly parses to the full numeric values the tests expect.
+
+---STDERR---

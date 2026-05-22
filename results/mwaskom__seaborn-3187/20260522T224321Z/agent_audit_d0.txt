@@ -1,0 +1,28 @@
+# Audit: mwaskom__seaborn-3187
+
+## FAIL_TO_PASS
+- tests/_core/test_plot.py::TestLegend::test_legend_has_no_offset: **PASS** ✅
+- tests/test_relational.py::TestRelationalPlotter::test_legend_has_no_offset: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None.** All 249 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_stat_default (XFAIL: Need decision on default stat)
+- test_categorical_as_datetime (XFAIL: Temporal auto-conversion not implemented)
+- test_log_scale_name (XFAIL: Custom log scale needs log name)
+- test_identity_mapping_color_strings (XFAIL: Color identity scale representation undefined)
+- test_undefined_variable_raises (XFAIL: Unused variable scale behavior undefined)
+
+## Summary
+The patch successfully fixes both target tests without introducing any regressions. The fix correctly handles matplotlib's ScalarFormatter offset by:
+1. Calling `formatter.set_locs()` before checking offset
+2. Using `format_data_short()` when offset is present (returns full values)
+3. Falling back to `format_ticks()` when no offset (preserves existing behavior)
+
+Both code paths (new Plot API in scales.py and legacy relational API in utils.py) are fixed consistently.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

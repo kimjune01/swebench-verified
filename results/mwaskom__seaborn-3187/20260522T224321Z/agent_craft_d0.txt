@@ -1,0 +1,10 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix addresses matplotlib's ScalarFormatter offset issue by:
+
+1. **seaborn/_core/scales.py (lines 381-387)**: Added `formatter.set_locs(locs)` before checking `get_offset()`, then uses `format_data_short()` when offset is present to get full numeric values instead of offset-stripped labels
+2. **seaborn/utils.py (lines 708-711)**: Added offset check after the existing `set_locs()` call, uses `format_data_short()` when offset is present
+
+The key insight from codex: `format_data_short()` returns parseable numeric strings (e.g., "100000001.000") while `format_data()` can return LaTeX strings that fail float() parsing. Setting locs before checking offset is critical since the offset is computed during set_locs.
+
+---STDERR---
