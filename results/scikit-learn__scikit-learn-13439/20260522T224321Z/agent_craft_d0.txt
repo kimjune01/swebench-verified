@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `__len__` method to the Pipeline class that returns `len(self.steps)`. The FAIL_TO_PASS test now passes, and all 41 tests in the pipeline test suite pass with no regressions.
+
+---STDERR---

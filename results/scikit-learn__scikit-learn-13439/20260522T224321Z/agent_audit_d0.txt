@@ -1,0 +1,18 @@
+# Audit: scikit-learn__scikit-learn-13439
+
+## FAIL_TO_PASS
+- `sklearn/tests/test_pipeline.py::test_make_pipeline_memory`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 40 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the only failure in the base capture was the FAIL_TO_PASS test `test_make_pipeline_memory`.
+
+## Summary
+The patch successfully added a `__len__` method to the Pipeline class that returns `len(self.steps)`. This resolved the `TypeError: object of type 'Pipeline' has no len()` error. All 41 tests passed with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

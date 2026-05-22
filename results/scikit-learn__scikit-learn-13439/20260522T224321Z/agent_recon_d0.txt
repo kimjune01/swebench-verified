@@ -1,0 +1,3 @@
+Diagnosis complete. The Pipeline class is missing the `__len__` method, which was overlooked when indexing support was added. The fix is to add a method that returns `len(self.steps)` at line 223 in `sklearn/pipeline.py`, right after the existing `__getitem__` method.
+
+---STDERR---
