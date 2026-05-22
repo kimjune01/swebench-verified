@@ -1,0 +1,46 @@
+Now let me print the diagnosis handoff:
+
+# Recon: mwaskom__seaborn-3069
+
+## Failure summary
+
+The tests check that nominal (categorical) scales behave like seaborn's categorical plots: limits set to +/- 0.5 from first/last category, no gridlines, and y-axis inversion. Currently, `test_nominal_x_axis_tweaks` expects xlim=(-0.5, 2.5) for 3 categories but gets approximately (-0.055, 0.055). Similarly, `test_nominal_y_axis_tweaks` expects inverted ylim=(2.5, -0.5) but gets (-0.055, 0.055). Gridlines remain visible when they should be hidden.
+
+## Suspect set
+
+- `seaborn/_core/plot.py` lines 1628-1647: `Plotter._finalize_figure` method - handles axis finalization but only processes limits when explicitly set by user
+- `seaborn/_core/scales.py` lines 138-230: `Nominal._setup` method - sets up categorical scale but doesn't enforce the special axis behavior
+
+## Root cause
+
+The `_finalize_figure` method only applies limit adjustments when the user explicitly provides limits via `.limit()`. When no explicit limits are set, matplotlib's default auto-scaling applies, which uses percentage-based margins (~5%) rather than the categorical-specific +/- 0.5 padding. Additionally, gridlines are never turned off and the y-axis is never inverted for nominal scales.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `seaborn/_core/plot.py:1636` — `if axis_key in p._limits:` gates all limit processing; no code path handles implicit nominal limits
+- `seaborn/_core/plot.py:1641-1644` — Contains logic to adjust string limits by +/- 0.5, but only within the explicit limits block
+- Test verification: `ax.xaxis.units._mapping` contains OrderedDict([('a', 0), ('b', 1), ('c', 2)]) showing 3 categories, but xlim is (-0.055, 0.055) instead of (-0.5, 2.5)
+
+## Edit sites
+
+- `seaborn/_core/plot.py` lines 1628-1647: In `_finalize_figure` method, after the existing explicit limits block (line 1644), add logic to:
+  1. Check if `self._scales[axis_key]` is an instance of `Nominal`
+  2. If yes and `axis_key not in p._limits` (no explicit limit was set):
+     - Get the axis object: `axis_obj = getattr(ax, f"{axis}axis")`
+     - Check for categorical units: `if axis_obj.units and hasattr(axis_obj.units, "_mapping"):`
+     - Get number of categories: `n = len(axis_obj.units._mapping)`
+     - Set limits: `(-0.5, n - 0.5)` for x-axis, `(n - 0.5, -0.5)` for y-axis (inverted)
+     - Hide gridlines: `axis_obj.grid(False)`
+
+- `seaborn/_core/plot.py` line 1241: Add import at module level if not already present: `from seaborn._core.scales import Nominal` (currently imported inline at line 1241, should be moved to top-level imports for use in _finalize_figure)
+
+## Rejected hypotheses
+
+None — the code path is clear: no logic exists to handle implicit nominal limits.
+
+## Open questions
+
+None — implementation path is straightforward. The axis object already has the categorical unit mapping available when _finalize_figure runs.
+
+---STDERR---

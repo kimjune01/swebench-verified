@@ -1,0 +1,26 @@
+# Audit: mwaskom__seaborn-3069
+
+## FAIL_TO_PASS
+- tests/_core/test_plot.py::TestScaling::test_nominal_x_axis_tweaks: PASS ✓
+- tests/_core/test_plot.py::TestScaling::test_nominal_y_axis_tweaks: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+All 74 current failures existed on base (76 total base failures minus 2 fixed):
+- TestLayerAddition: 10 failures (test_without_data, test_with_new_variable_by_name, test_with_new_variable_by_vector, test_with_late_data_definition, test_with_new_data_definition, test_drop_variable, test_orient variants)
+- TestScaling: 22 failures (inference tests, categorical converter tests, mark_data tests, facet/pair category tests, etc.)
+- TestPlotting: 27 failures (split tests, grouping tests, facet tests, paired tests, stat/move tests, axes/figure tests, label tests)
+- TestPairInterface: 2 failures (orient_inference, computed_coordinate_orient_inference)
+- TestLegend: 13 failures (layer tests, variable tests, artist tests)
+
+## Kill report
+Not applicable - instance resolved.
+
+**Summary:** The patch successfully fixed both FAIL_TO_PASS tests with zero regressions. All 74 remaining failures are pre-existing (confirmed against fail-on-base capture). The craft edit correctly detects nominal scales and applies categorical axis tweaks (limits, inverted y-axis, hidden gridlines).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

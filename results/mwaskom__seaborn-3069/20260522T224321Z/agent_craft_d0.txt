@@ -1,0 +1,14 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass:
+- `tests/_core/test_plot.py::TestScaling::test_nominal_x_axis_tweaks` ✓
+- `tests/_core/test_plot.py::TestScaling::test_nominal_y_axis_tweaks` ✓
+
+The fix adds nominal scale handling to `_finalize_figure`:
+1. Imported `Nominal` at module level 
+2. Detects nominal scales and unconditionally disables gridlines (`grid(False, which="both")`)
+3. When no explicit limit is set, applies categorical defaults: limits at ±0.5 from categories, with y-axis inversion
+
+The codex volley caught critical issues in the initial draft (wrong indentation, brittle reliance on private `._mapping`, missed grid disabling for explicit limits) and guided to the clean final implementation using `get_major_ticks()` and proper control flow.
+
+---STDERR---
