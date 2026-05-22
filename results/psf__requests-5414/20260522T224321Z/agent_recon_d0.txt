@@ -1,0 +1,33 @@
+# Recon: psf__requests-5414
+
+## Failure summary
+The test `test_invalid_url[InvalidURL-http://.example.com]` expects `requests.get("http://.example.com")` to raise `requests.exceptions.InvalidURL` with message "URL has an invalid label." However, the request propagates to urllib3 which raises `urllib3.exceptions.LocationParseError: Failed to parse: '.example.com', label empty or too long`. The hostname `.example.com` has an invalid label (the leading dot creates an empty label), but this is not caught during requests' URL validation.
+
+## Suspect set
+- `requests/models.py` lines 400-407: URL validation logic that only checks non-ASCII hosts via IDNA encoding
+- `requests/adapters.py` lines 439-540: The `send()` method's `conn.urlopen()` call and exception handlers
+
+## Root cause
+The URL validation in `PreparedRequest.prepare_url()` only runs IDNA encoding (which would detect invalid labels) on non-ASCII hostnames. For ASCII hostnames, it only checks if they start with `*`. The hostname `.example.com` is ASCII and doesn't start with `*`, so it passes validation. Later, when urllib3 attempts to create the connection, its hostname parsing raises `LocationParseError`, which is not caught by requests' exception handlers in `adapters.py:send()`.
+
+**Confidence: deduction — 95%**
+
+Supporting evidence:
+- `requests/models.py:401-407` — validation branches on `if not unicode_is_ascii(host):` then IDNA encodes, `elif host.startswith(u'*'):` raises InvalidURL, but no other checks
+- `requests/adapters.py:413-415` — already catches `LocationValueError` from `get_connection()`: `except LocationValueError as e: raise InvalidURL(e, request=request)`
+- `requests/adapters.py:500-540` — exception handlers after `conn.urlopen()` don't include `LocationValueError` or `LocationParseError`
+- Manual verification: `python -c "import idna; idna.encode('.example.com', uts46=True)"` raises `idna.core.IDNAError: Empty Label`
+- Manual verification: `requests.get("http://*example.com")` correctly raises `InvalidURL` due to explicit wildcard check at line 407
+
+## Edit sites
+**Primary fix** — `requests/adapters.py` lines 500-540: Add exception handler for `LocationValueError` after the existing handlers, catching it from `conn.urlopen()` and converting to `InvalidURL(e, request=request)`. This mirrors the existing pattern at lines 413-415 and catches all URL parse errors that urllib3 might raise during connection.
+
+**Alternative fix** — `requests/models.py` lines 400-407: Remove the ASCII-only guard and run IDNA encoding on all hostnames, OR add an explicit check for `host.startswith('.')`. However, this only fixes the specific symptom and may miss other invalid hostnames that urllib3 rejects.
+
+## Rejected hypotheses
+None — the root cause is clear from code reading and confirmed by manual testing.
+
+## Open questions
+Should the fix also catch `LocationParseError` specifically, or is catching the parent `LocationValueError` sufficient? The parent is already imported and used elsewhere, so catching it is simpler and more general.
+
+---STDERR---

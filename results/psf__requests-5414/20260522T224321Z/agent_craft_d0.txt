@@ -1,0 +1,13 @@
+**RESOLVED**
+
+The fix is complete. Added a `LocationValueError` exception handler in `requests/adapters.py` that catches URL parse errors from urllib3 and converts them to `InvalidURL`, matching the existing pattern elsewhere in the file.
+
+**Summary:**
+- **FAIL_TO_PASS test status**: ✓ PASSED (`test_invalid_url[InvalidURL-http://.example.com]`)
+- **Fix applied**: Added 3 lines in `requests/adapters.py` after line 499
+- **Gate validation**: Target test passes, 127 other tests pass, infrastructure issues unrelated to patch
+- **Codex review**: Confirmed fix is narrowly scoped and correct
+
+The working tree contains the fix and is ready for git diff capture.
+
+---STDERR---
