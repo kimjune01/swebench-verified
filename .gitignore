@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pem
+*.env
+.venv/
+swebench-env/
+.DS_Store
