@@ -1,0 +1,33 @@
+$ pytest -rA sklearn/utils/tests/test_show_versions.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, configfile: setup.cfg
+collected 3 items
+
+sklearn/utils/tests/test_show_versions.py .F.                            [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_get_deps_info ______________________________
+
+    def test_get_deps_info():
+        deps_info = _get_deps_info()
+    
+        assert 'pip' in deps_info
+        assert 'setuptools' in deps_info
+        assert 'sklearn' in deps_info
+        assert 'numpy' in deps_info
+        assert 'scipy' in deps_info
+        assert 'Cython' in deps_info
+        assert 'pandas' in deps_info
+        assert 'matplotlib' in deps_info
+>       assert 'joblib' in deps_info
+E       AssertionError: assert 'joblib' in {'Cython': '0.29.24', 'matplotlib': '3.3.4', 'numpy': '1.19.2', 'pandas': '1.1.5', ...}
+
+sklearn/utils/tests/test_show_versions.py:26: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/utils/tests/test_show_versions.py::test_get_sys_info
+PASSED sklearn/utils/tests/test_show_versions.py::test_show_versions_with_blas
+FAILED sklearn/utils/tests/test_show_versions.py::test_get_deps_info - Assert...
+========================= 1 failed, 2 passed in 0.41s ==========================

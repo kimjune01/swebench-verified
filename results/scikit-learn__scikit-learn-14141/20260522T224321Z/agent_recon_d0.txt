@@ -1,0 +1,29 @@
+# Recon: scikit-learn__scikit-learn-14141
+
+## Failure summary
+The test `test_get_deps_info()` in `sklearn/utils/tests/test_show_versions.py` checks that key dependencies are present in the dictionary returned by `_get_deps_info()`. The test fails at line 26 with `AssertionError: assert 'joblib' in deps_info` because the joblib dependency is missing from the returned dictionary, despite it being a required package listed in setup.py and used extensively throughout the codebase.
+
+## Suspect set
+- `sklearn/utils/_show_versions.py` lines 42-51: The `deps` list that defines which packages to check
+
+## Root cause
+The `_get_deps_info()` function builds its dependency dictionary by iterating through a hardcoded list called `deps` at lines 42-51. This list contains pip, setuptools, sklearn, numpy, scipy, Cython, pandas, and matplotlib, but **does not include "joblib"**. Since joblib is not in the list, it cannot be imported and added to the returned dictionary. The problem statement explicitly requires joblib to be added to show_versions for sklearn version > 0.20, and joblib is indeed a required dependency (setup.py:235) used throughout the codebase (20+ import sites in datasets, ensemble, neighbors, utils modules).
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `sklearn/utils/_show_versions.py:42-51` — deps list missing joblib: `deps = ["pip", "setuptools", "sklearn", "numpy", "scipy", "Cython", "pandas", "matplotlib"]`
+- `sklearn/utils/_show_versions.py:58-67` — loop iterates only over deps list: `for modname in deps:`
+- `setup.py:235` — joblib is a required dependency: `'joblib>={}'.format(JOBLIB_MIN_VERSION)`
+- `sklearn/utils/tests/test_show_versions.py:26` — test expects joblib: `assert 'joblib' in deps_info`
+
+## Edit sites
+- `sklearn/utils/_show_versions.py` lines 42-51: Add `"joblib"` as a new element in the `deps` list. The string should be inserted after `"matplotlib"` at line 50, before the closing bracket at line 51.
+
+## Rejected hypotheses
+None — the causal chain is direct and unambiguous: package not in list → not imported → not in dictionary → test fails.
+
+## Open questions
+None — the fix is straightforward.
+
+---STDERR---

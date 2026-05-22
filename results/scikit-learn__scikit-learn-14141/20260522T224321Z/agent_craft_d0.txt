@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. Added "joblib" to the deps list in `sklearn/utils/_show_versions.py` at line 51, which allows `_get_deps_info()` to include joblib in the returned dictionary as expected by the test.
+
+---STDERR---

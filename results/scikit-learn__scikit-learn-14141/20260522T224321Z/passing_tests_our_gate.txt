@@ -1,0 +1,15 @@
+$ pytest -rA sklearn/utils/tests/test_show_versions.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, configfile: setup.cfg
+collected 3 items
+
+sklearn/utils/tests/test_show_versions.py ...                            [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/utils/tests/test_show_versions.py::test_get_sys_info
+PASSED sklearn/utils/tests/test_show_versions.py::test_get_deps_info
+PASSED sklearn/utils/tests/test_show_versions.py::test_show_versions_with_blas
+============================== 3 passed in 0.36s ===============================

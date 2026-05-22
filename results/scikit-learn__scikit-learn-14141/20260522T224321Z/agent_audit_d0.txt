@@ -1,0 +1,18 @@
+# Audit: scikit-learn__scikit-learn-14141
+
+## FAIL_TO_PASS
+- `test_get_deps_info`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully adds "joblib" to the dependency list in `_get_deps_info()`. The previously failing test now passes, both PASS_TO_PASS tests remain passing, and no regressions were introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
