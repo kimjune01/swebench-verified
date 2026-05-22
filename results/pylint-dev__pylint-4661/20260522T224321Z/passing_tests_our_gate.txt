@@ -1,0 +1,72 @@
+$ pytest -rA tests/lint/unittest_lint.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.2.5, py-1.11.0, pluggy-1.5.0
+benchmark: 3.4.1 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /testbed, configfile: setup.cfg
+plugins: benchmark-3.4.1, cov-2.12.1, forked-1.6.0, profiling-1.7.0, xdist-2.5.0
+collected 51 items
+
+tests/lint/unittest_lint.py ............................................ [ 86%]
+.......                                                                  [100%]
+
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6
+  /opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/lint/unittest_lint.py::test_no_args
+PASSED tests/lint/unittest_lint.py::test_one_arg[case0]
+PASSED tests/lint/unittest_lint.py::test_one_arg[case1]
+PASSED tests/lint/unittest_lint.py::test_one_arg[case2]
+PASSED tests/lint/unittest_lint.py::test_one_arg[case3]
+PASSED tests/lint/unittest_lint.py::test_one_arg[case4]
+PASSED tests/lint/unittest_lint.py::test_two_similar_args[case0]
+PASSED tests/lint/unittest_lint.py::test_two_similar_args[case1]
+PASSED tests/lint/unittest_lint.py::test_two_similar_args[case2]
+PASSED tests/lint/unittest_lint.py::test_two_similar_args[case3]
+PASSED tests/lint/unittest_lint.py::test_more_args[case0]
+PASSED tests/lint/unittest_lint.py::test_more_args[case1]
+PASSED tests/lint/unittest_lint.py::test_more_args[case2]
+PASSED tests/lint/unittest_lint.py::test_pylint_visit_method_taken_in_account
+PASSED tests/lint/unittest_lint.py::test_enable_message
+PASSED tests/lint/unittest_lint.py::test_enable_message_category
+PASSED tests/lint/unittest_lint.py::test_message_state_scope
+PASSED tests/lint/unittest_lint.py::test_enable_message_block
+PASSED tests/lint/unittest_lint.py::test_enable_by_symbol
+PASSED tests/lint/unittest_lint.py::test_enable_report
+PASSED tests/lint/unittest_lint.py::test_report_output_format_aliased
+PASSED tests/lint/unittest_lint.py::test_set_unsupported_reporter
+PASSED tests/lint/unittest_lint.py::test_set_option_1
+PASSED tests/lint/unittest_lint.py::test_set_option_2
+PASSED tests/lint/unittest_lint.py::test_enable_checkers
+PASSED tests/lint/unittest_lint.py::test_errors_only
+PASSED tests/lint/unittest_lint.py::test_disable_similar
+PASSED tests/lint/unittest_lint.py::test_disable_alot
+PASSED tests/lint/unittest_lint.py::test_addmessage
+PASSED tests/lint/unittest_lint.py::test_addmessage_invalid
+PASSED tests/lint/unittest_lint.py::test_load_plugin_command_line
+PASSED tests/lint/unittest_lint.py::test_load_plugin_config_file
+PASSED tests/lint/unittest_lint.py::test_load_plugin_configuration
+PASSED tests/lint/unittest_lint.py::test_init_hooks_called_before_load_plugins
+PASSED tests/lint/unittest_lint.py::test_analyze_explicit_script
+PASSED tests/lint/unittest_lint.py::test_python3_checker_disabled
+PASSED tests/lint/unittest_lint.py::test_full_documentation
+PASSED tests/lint/unittest_lint.py::test_list_msgs_enabled
+PASSED tests/lint/unittest_lint.py::test_pylint_home
+PASSED tests/lint/unittest_lint.py::test_pylintrc
+PASSED tests/lint/unittest_lint.py::test_pylintrc_parentdir
+PASSED tests/lint/unittest_lint.py::test_pylintrc_parentdir_no_package
+PASSED tests/lint/unittest_lint.py::TestPreprocessOptions::test_value_equal
+PASSED tests/lint/unittest_lint.py::TestPreprocessOptions::test_value_space
+PASSED tests/lint/unittest_lint.py::TestPreprocessOptions::test_error_missing_expected_value
+PASSED tests/lint/unittest_lint.py::TestPreprocessOptions::test_error_unexpected_value
+PASSED tests/lint/unittest_lint.py::test_custom_should_analyze_file
+PASSED tests/lint/unittest_lint.py::test_multiprocessing[1]
+PASSED tests/lint/unittest_lint.py::test_multiprocessing[2]
+PASSED tests/lint/unittest_lint.py::test_filename_with__init__
+PASSED tests/lint/unittest_lint.py::test_by_module_statement_value
+======================== 51 passed, 1 warning in 0.76s =========================

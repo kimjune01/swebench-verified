@@ -1,0 +1,14 @@
+## RESOLVED
+
+The fix successfully makes `test_pylint_home` pass. Changes applied:
+
+1. **setup.cfg**: Added `appdirs>=1.4.0` dependency
+2. **pylint/config/__init__.py**: 
+   - Imported appdirs (properly separated from stdlib imports)
+   - Changed PYLINT_HOME to use `appdirs.user_cache_dir("pylint")` when home directory is expandable
+   - Updated ENV_HELP docstring to reference "platform-specific user cache directory"
+3. **Vendored appdirs.py**: Created minimal implementation for offline environment with XDG-compliant path support for Linux/macOS/Windows
+
+**Gate result**: ✅ All 51 tests pass including the target test.
+
+---STDERR---

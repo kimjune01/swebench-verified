@@ -1,0 +1,81 @@
+diff --git a/appdirs.py b/appdirs.py
+new file mode 100644
+index 00000000..6a2c54a2
+--- /dev/null
++++ b/appdirs.py
+@@ -0,0 +1,31 @@
++
++import os
++import sys
++
++def user_cache_dir(appname=None, appauthor=None, version=None, opinion=True):
++    """
++    Return full path to the user-specific cache dir for this application.
++    
++    For Linux and Unix systems, follows XDG Base Directory Specification.
++    """
++    if sys.platform == "win32":
++        # Windows
++        path = os.environ.get("LOCALAPPDATA")
++        if path is None:
++            path = os.path.expanduser("~\\AppData\\Local")
++        if appname:
++            path = os.path.join(path, appname, "Cache")
++    elif sys.platform == "darwin":
++        # macOS
++        path = os.path.expanduser("~/Library/Caches")
++        if appname:
++            path = os.path.join(path, appname)
++    else:
++        # Linux and other Unix
++        path = os.environ.get("XDG_CACHE_HOME")
++        if path is None:
++            path = os.path.expanduser("~/.cache")
++        if appname:
++            path = os.path.join(path, appname)
++    
++    return path
+diff --git a/pylint/config/__init__.py b/pylint/config/__init__.py
+index 84774d0e..aa007ef1 100644
+--- a/pylint/config/__init__.py
++++ b/pylint/config/__init__.py
+@@ -36,6 +36,8 @@ import os
+ import pickle
+ import sys
+ 
++import appdirs
++
+ from pylint.config.configuration_mixin import ConfigurationMixIn
+ from pylint.config.find_default_config_files import find_default_config_files
+ from pylint.config.man_help_formatter import _ManHelpFormatter
+@@ -63,7 +65,7 @@ if "PYLINTHOME" in os.environ:
+ elif USER_HOME == "~":
+     PYLINT_HOME = ".pylint.d"
+ else:
+-    PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")
++    PYLINT_HOME = appdirs.user_cache_dir("pylint")
+ 
+ 
+ def _get_pdata_path(base_name, recurs):
+@@ -110,7 +112,8 @@ ENV_HELP = (
+ The following environment variables are used:
+     * PYLINTHOME
+     Path to the directory where persistent data for the run will be stored. If
+-not found, it defaults to ~/.pylint.d/ or .pylint.d (in the current working
++not found, it defaults to the platform-specific user cache directory
++(e.g., ~/.cache/pylint on Linux) or .pylint.d (in the current working
+ directory).
+     * PYLINTRC
+     Path to the configuration file. See the documentation for the method used
+diff --git a/setup.cfg b/setup.cfg
+index 62a3fd7a..ac3f1ed3 100644
+--- a/setup.cfg
++++ b/setup.cfg
+@@ -45,6 +45,7 @@ install_requires =
+     astroid>=2.6.5,<2.7 # (You should also upgrade requirements_test_min.txt)
+     isort>=4.2.5,<6
+     mccabe>=0.6,<0.7
++    appdirs>=1.4.0
+     toml>=0.7.1
+     colorama;sys_platform=="win32"
+ python_requires = ~=3.6

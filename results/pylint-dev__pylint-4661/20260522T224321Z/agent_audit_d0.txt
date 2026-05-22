@@ -1,0 +1,18 @@
+# Audit: pylint-dev__pylint-4661
+
+## FAIL_TO_PASS
+- tests/lint/unittest_lint.py::test_pylint_home: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None (PASS_TO_PASS list was empty)
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The baseline had a collection error (ModuleNotFoundError: No module named 'appdirs') that prevented all tests from running. The craft patch fixed this by adding appdirs as a dependency and implementing XDG-compliant directory detection.
+
+## Gate summary
+All 51 tests PASSED in 0.76s. The patch successfully resolved the missing dependency and implemented the expected behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

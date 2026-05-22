@@ -1,0 +1,56 @@
+# Recon: pylint-dev__pylint-4661
+
+## Failure summary
+
+The test `test_pylint_home` checks that pylint uses XDG Base Directory Specification-compliant paths for its data directory. When the user's home directory can be expanded (i.e., `os.path.expanduser("~")` returns something other than "~"), the test expects `config.PYLINT_HOME` to equal `appdirs.user_cache_dir("pylint")` (which returns an XDG-compliant cache directory like `$HOME/.cache/pylint` on Linux). The test fails during collection with `ModuleNotFoundError: No module named 'appdirs'` because the test imports appdirs but it's not installed as a dependency.
+
+## Suspect set
+
+- `setup.cfg` lines 72-78: install_requires section — appdirs missing from dependencies
+- `pylint/config/__init__.py` lines 49-66: Import section and PYLINT_HOME initialization — needs to import appdirs and use it for XDG-compliant path
+- `pylint/config/__init__.py` lines 108-116: ENV_HELP docstring — documents old non-XDG path
+- `doc/faq.rst` lines 96-99: Documentation references to `.pylint.d` directory
+
+## Root cause
+
+Commit 4e44f8be ("testpatch") modified the test to expect XDG-compliant directories by changing the expected value from `os.path.join(uhome, ".pylint.d")` to `appdirs.user_cache_dir("pylint")` and added `import appdirs` to the test file. However, the implementation was not updated to match:
+
+1. **Missing dependency**: appdirs is not in setup.cfg's install_requires, causing the import to fail
+2. **Implementation mismatch**: pylint/config/__init__.py:66 still sets `PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")` instead of using `appdirs.user_cache_dir("pylint")`
+3. **Missing import**: pylint/config/__init__.py does not import appdirs
+
+The code path is:
+- Test collection loads tests/lint/unittest_lint.py
+- Line 49 executes `import appdirs` 
+- Python cannot find appdirs module → ImportError
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `tests/lint/unittest_lint.py:49` — `import appdirs` (added in commit 4e44f8be)
+- `tests/lint/unittest_lint.py:635` — `expected = appdirs.user_cache_dir("pylint")` (changed in commit 4e44f8be)
+- `setup.cfg:72-78` — install_requires list does not contain appdirs
+- `pylint/config/__init__.py:66` — `PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")` (unchanged, not XDG-compliant)
+
+## Edit sites
+
+1. **setup.cfg** line ~73: Add `appdirs` to the install_requires list after the existing dependencies
+   
+2. **pylint/config/__init__.py** line ~49: Add `import appdirs` in the imports section (after os/sys imports, before local imports)
+
+3. **pylint/config/__init__.py** line 66: Replace `PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")` with `PYLINT_HOME = appdirs.user_cache_dir("pylint")`
+
+4. **pylint/config/__init__.py** lines 108-116: Update the ENV_HELP docstring to document the new XDG-compliant default path (change "~/.pylint.d/" to the XDG cache directory path pattern)
+
+5. **doc/faq.rst** lines 96, 99: Update documentation to reflect new default XDG-compliant paths instead of ".pylint.d"
+
+## Rejected hypotheses
+
+None — the failure mode is unambiguous (missing module import), and the test expectations clearly indicate the intended behavior.
+
+## Open questions
+
+- Should the fallback path for when `USER_HOME == "~"` (line 64) remain as `".pylint.d"` or also use an appdirs alternative? The test keeps it as `".pylint.d"`, suggesting this fallback is acceptable.
+- Are there other documentation files beyond doc/faq.rst that reference .pylint.d and need updating?
+
+---STDERR---

@@ -1,0 +1,116 @@
+2026-05-22 22:40:46,053 - INFO - Creating container for pylint-dev__pylint-4661...
+2026-05-22 22:40:46,075 - INFO - Container for pylint-dev__pylint-4661 created: 2d4ce190b998d963566cf9389d9ce047e729212487228ffa1ecc33405c1ecb83
+2026-05-22 22:40:46,540 - INFO - Container for pylint-dev__pylint-4661 started: 2d4ce190b998d963566cf9389d9ce047e729212487228ffa1ecc33405c1ecb83
+2026-05-22 22:40:46,541 - INFO - Intermediate patch for pylint-dev__pylint-4661 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4661/patch.diff, now applying to container...
+2026-05-22 22:40:46,643 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:14: trailing whitespace.
+    
+/tmp/patch.diff:36: trailing whitespace.
+    
+Checking patch appdirs.py...
+Checking patch pylint/config/__init__.py...
+Checking patch setup.cfg...
+Applied patch appdirs.py cleanly.
+Applied patch pylint/config/__init__.py cleanly.
+Applied patch setup.cfg cleanly.
+warning: 2 lines add whitespace errors.
+
+2026-05-22 22:40:46,755 - INFO - Git diff before:
+diff --git a/pylint/config/__init__.py b/pylint/config/__init__.py
+index 84774d0e..aa007ef1 100644
+--- a/pylint/config/__init__.py
++++ b/pylint/config/__init__.py
+@@ -36,6 +36,8 @@ import os
+ import pickle
+ import sys
+ 
++import appdirs
++
+ from pylint.config.configuration_mixin import ConfigurationMixIn
+ from pylint.config.find_default_config_files import find_default_config_files
+ from pylint.config.man_help_formatter import _ManHelpFormatter
+@@ -63,7 +65,7 @@ if "PYLINTHOME" in os.environ:
+ elif USER_HOME == "~":
+     PYLINT_HOME = ".pylint.d"
+ else:
+-    PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")
++    PYLINT_HOME = appdirs.user_cache_dir("pylint")
+ 
+ 
+ def _get_pdata_path(base_name, recurs):
+@@ -110,7 +112,8 @@ ENV_HELP = (
+ The following environment variables are used:
+     * PYLINTHOME
+     Path to the directory where persistent data for the run will be stored. If
+-not found, it defaults to ~/.pylint.d/ or .pylint.d (in the current working
++not found, it defaults to the platform-specific user cache directory
++(e.g., ~/.cache/pylint on Linux) or .pylint.d (in the current working
+ directory).
+     * PYLINTRC
+     Path to the configuration file. See the documentation for the method used
+diff --git a/setup.cfg b/setup.cfg
+index 62a3fd7a..ac3f1ed3 100644
+--- a/setup.cfg
++++ b/setup.cfg
+@@ -45,6 +45,7 @@ install_requires =
+     astroid>=2.6.5,<2.7 # (You should also upgrade requirements_test_min.txt)
+     isort>=4.2.5,<6
+     mccabe>=0.6,<0.7
++    appdirs>=1.4.0
+     toml>=0.7.1
+     colorama;sys_platform=="win32"
+ python_requires = ~=3.6
+2026-05-22 22:40:46,755 - INFO - Eval script for pylint-dev__pylint-4661 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4661/eval.sh; copying to container...
+2026-05-22 22:40:50,757 - INFO - Test runtime: 3.96 seconds
+2026-05-22 22:40:50,757 - INFO - Test output for pylint-dev__pylint-4661 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4661/test_output.txt
+2026-05-22 22:40:50,865 - INFO - Git diff after:
+diff --git a/pylint/config/__init__.py b/pylint/config/__init__.py
+index 84774d0e..aa007ef1 100644
+--- a/pylint/config/__init__.py
++++ b/pylint/config/__init__.py
+@@ -36,6 +36,8 @@ import os
+ import pickle
+ import sys
+ 
++import appdirs
++
+ from pylint.config.configuration_mixin import ConfigurationMixIn
+ from pylint.config.find_default_config_files import find_default_config_files
+ from pylint.config.man_help_formatter import _ManHelpFormatter
+@@ -63,7 +65,7 @@ if "PYLINTHOME" in os.environ:
+ elif USER_HOME == "~":
+     PYLINT_HOME = ".pylint.d"
+ else:
+-    PYLINT_HOME = os.path.join(USER_HOME, ".pylint.d")
++    PYLINT_HOME = appdirs.user_cache_dir("pylint")
+ 
+ 
+ def _get_pdata_path(base_name, recurs):
+@@ -110,7 +112,8 @@ ENV_HELP = (
+ The following environment variables are used:
+     * PYLINTHOME
+     Path to the directory where persistent data for the run will be stored. If
+-not found, it defaults to ~/.pylint.d/ or .pylint.d (in the current working
++not found, it defaults to the platform-specific user cache directory
++(e.g., ~/.cache/pylint on Linux) or .pylint.d (in the current working
+ directory).
+     * PYLINTRC
+     Path to the configuration file. See the documentation for the method used
+diff --git a/setup.cfg b/setup.cfg
+index 62a3fd7a..ac3f1ed3 100644
+--- a/setup.cfg
++++ b/setup.cfg
+@@ -45,6 +45,7 @@ install_requires =
+     astroid>=2.6.5,<2.7 # (You should also upgrade requirements_test_min.txt)
+     isort>=4.2.5,<6
+     mccabe>=0.6,<0.7
++    appdirs>=1.4.0
+     toml>=0.7.1
+     colorama;sys_platform=="win32"
+ python_requires = ~=3.6
+2026-05-22 22:40:50,865 - INFO - Grading answer for pylint-dev__pylint-4661...
+2026-05-22 22:40:50,867 - INFO - report: {'pylint-dev__pylint-4661': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['tests/lint/unittest_lint.py::test_pylint_home'], 'failure': []}, 'PASS_TO_PASS': {'success': [], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pylint-dev__pylint-4661: resolved: True
+2026-05-22 22:40:50,867 - INFO - Attempting to stop container sweb.eval.pylint-dev__pylint-4661.batch...
+2026-05-22 22:41:06,361 - INFO - Attempting to remove container sweb.eval.pylint-dev__pylint-4661.batch...
+2026-05-22 22:41:06,371 - INFO - Container sweb.eval.pylint-dev__pylint-4661.batch removed.
