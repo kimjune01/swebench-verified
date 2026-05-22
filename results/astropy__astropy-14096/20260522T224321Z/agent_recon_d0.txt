@@ -1,0 +1,60 @@
+Now I'll write the structured handoff:
+
+# Recon: astropy__astropy-14096
+
+## Failure summary
+
+The test `test_subclass_property_exception_error` checks that when a subclassed SkyCoord has a property that attempts to access a non-existent attribute, the AttributeError message should name the missing attribute (`random_attr`), not the property name (`prop`). Currently, the error message incorrectly states `'custom_coord' object has no attribute 'prop'` instead of `'custom_coord' object has no attribute 'random_attr'`.
+
+The test creates a custom_coord subclass with a property `prop` that accesses `self.random_attr`. When accessing `c.prop`, the test expects an AttributeError matching "random_attr", but it matches "prop" instead.
+
+## Suspect set
+
+- `astropy/coordinates/sky_coordinate.py` lines 869-900: The `SkyCoord.__getattr__` method that raises the misleading AttributeError
+
+## Root cause
+
+When a property in a SkyCoord subclass raises an AttributeError (by trying to access a non-existent attribute), Python's descriptor protocol performs a two-step attribute lookup:
+
+1. The property getter executes and tries to access `self.random_attr`
+2. This triggers `__getattr__('random_attr')`, which raises AttributeError for 'random_attr'
+3. Python catches this AttributeError from the descriptor and retries
+4. Python calls `__getattr__('prop')` to give the class another chance
+5. `__getattr__` doesn't recognize that 'prop' is a descriptor that already failed
+6. `__getattr__` raises a new AttributeError claiming 'prop' doesn't exist, masking the real error
+
+The fix is to detect when `__getattr__` is called for an attribute that's actually a descriptor in the class hierarchy. In that case, explicitly invoke the descriptor's `__get__` method and let any AttributeError propagate naturally instead of wrapping it.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `sky_coordinate.py:897-899` — raises `AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")` without checking if attr is a descriptor
+- Reproduced with minimal test: `__getattr__` is called twice (once with 'random_attr', once with 'prop')
+- Validated fix: checking `if hasattr(cls_attr, '__get__')` and calling `cls_attr.__get__(self, type(self))` preserves the original error message
+
+## Edit sites
+
+- `astropy/coordinates/sky_coordinate.py` lines 897-899 (just before the final raise): Add a check before raising the final AttributeError. If the attribute exists in the class hierarchy as a descriptor (property, method, etc.), invoke it explicitly using `object.__getattribute__(type(self), attr).__get__(self, type(self))` to preserve any AttributeError raised within the descriptor.
+
+Specifically, insert this logic before line 897:
+```
+# Check if attr is a descriptor in the class (e.g., a property in a subclass)
+# If so, invoke it explicitly to preserve any AttributeError from within
+try:
+    cls_attr = object.__getattribute__(type(self), attr)
+except AttributeError:
+    pass
+else:
+    if hasattr(cls_attr, '__get__'):
+        return cls_attr.__get__(self, type(self))
+```
+
+## Rejected hypotheses
+
+None - the root cause is clear from tracing the attribute lookup sequence.
+
+## Open questions
+
+None - the fix is straightforward and validated with a test case.
+
+---STDERR---

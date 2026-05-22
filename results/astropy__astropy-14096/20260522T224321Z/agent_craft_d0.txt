@@ -1,0 +1,13 @@
+**RESOLVED**
+
+The fix successfully addresses the issue. The FAIL_TO_PASS test (`test_subclass_property_exception_error`) now passes.
+
+**What was fixed:**
+Added a descriptor check at the start of `SkyCoord.__getattr__` that:
+1. Uses `inspect.getattr_static()` to properly search the class MRO for descriptors
+2. When the attribute is a descriptor (property), invokes it explicitly via `__get__`
+3. Lets any AttributeError from within the property propagate naturally instead of masking it
+
+This ensures that when a subclass property tries to access a non-existent attribute, the error message correctly names the missing attribute (`random_attr`) rather than the property name (`prop`).
+
+---STDERR---
