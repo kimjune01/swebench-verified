@@ -24,6 +24,8 @@ This is a **leaderboard / capability configuration, not a contamination-clean sc
 
 **`LIMITATIONS.md` is the full, unhedged list** of disclaimers and limitations (single instance, the outer loop is unexercised, our gate is not the official grader, model output is stochastic, codex can be wrong, hardlinks can drift, AWS/amd64-specific infra). Read it before drawing any conclusion.
 
+**Exclusions are explicit.** `KNOWN_BAD.md` is the list of SWE-bench instances with broken Docker envs, flaky tests, gold patches that fail to grade, or weak test coverage (sourced from SWE-bench issues and the UTBoost paper). Every batch is filtered against it before running, so any reported solve rate has an honest denominator. The exclusion is committed, not hidden.
+
 ## Result so far
 
 One instance, `pallets__flask-5014` ("require a non-empty Blueprint name"). Artifacts live under `results/pallets__flask-5014/<run-id>/`, one directory and one git commit per run.
