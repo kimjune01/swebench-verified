@@ -1,0 +1,26 @@
+# Audit: psf__requests-2931
+
+## FAIL_TO_PASS
+- `test_requests.py::TestRequests::test_binary_put`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- `test_requests.py::TestTimeout::test_connect_timeout`: ConnectionError instead of ConnectTimeout (network unreachable to 10.255.255.1)
+- `test_requests.py::TestTimeout::test_total_timeout_connect`: ConnectionError instead of ConnectTimeout (network unreachable to 10.255.255.1)
+
+## Pre-existing (not counted, confirmed against base capture)
+- 81 ERROR results (httpbin unavailable) — present in base capture as ERROR
+
+## Kill report
+
+**Regressions detected**: Two timeout tests that passed on base now fail.
+
+**Code path**: The failures occur at socket connect level (`urllib3/util/connection.py:81`), attempting to connect to the TARPIT IP 10.255.255.1. The connection immediately fails with "Network is unreachable" (OSError 101) instead of timing out and raising `ConnectTimeout`.
+
+**Patch analysis**: The patch modifies `_encode_params` in `requests/models.py` to handle bytes vs strings differently (lines 83-86, 390-392). This encoding logic should not affect socket-level connection behavior, suggesting the regressions may be environmental rather than code-related.
+
+**Craft investigation needed**: Determine if the patch inadvertently affects request preparation flow in a way that changes exception handling behavior, or if these are environment-dependent test failures unrelated to the encoding fix.
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: craft
+
+---STDERR---

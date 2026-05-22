@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_requests.py::TestRequests::test_binary_put` now passes. The fix correctly handles binary request body data by:
+
+1. Making `_encode_params` return bytes unchanged instead of attempting ASCII decode
+2. Adding explicit bytes-to-string conversion in `prepare_url` to preserve the fix for issue #2844 (bytes query params)
+
+The compat module's type system ensures correct behavior across Python 2 and 3.
+
+---STDERR---

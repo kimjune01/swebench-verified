@@ -1,0 +1,35 @@
+# Audit: psf__requests-2931
+
+## FAIL_TO_PASS
+- `test_requests.py::TestRequests::test_binary_put`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- `test_requests.py::TestTimeout::test_connect_timeout`: **FAILED**
+  - Error: `ConnectionError: HTTPConnectionPool(host='10.255.255.1', port=80): Max retries exceeded with url: / (Caused by NewConnectionError: [Errno 101] Network is unreachable')`
+  - Expected: `ConnectTimeout` exception
+  - Got: `ConnectionError` exception (immediate network rejection)
+  - Baseline status: PASSED
+
+- `test_requests.py::TestTimeout::test_total_timeout_connect`: **FAILED**
+  - Error: Same - OSError 101 Network unreachable when connecting to 10.255.255.1
+  - Baseline status: PASSED
+
+## Pre-existing (not counted, confirmed against base capture)
+- 81 ERROR results: httpbin service unavailable in test environment
+
+## Kill report
+
+**Regressions detected**: Two timeout tests regressed (passed on base, failing now with network unreachable errors).
+
+**Code path analysis**: The patch modifies `_encode_params` at lines 83-86 (split bytes/string handling) and adds bytes-to-string conversion at lines 390-392 (for URL params). The failing timeout tests execute `requests.get(TARPIT, timeout=(0.1, None))` with no params or body data. The modified `_encode_params` code paths are never invoked by these tests.
+
+**Failure mechanism**: Tests expect `ConnectTimeout` when connecting to non-routable IP 10.255.255.1 (TARPIT). Instead, container network isolation causes immediate OSError 101 (Network is unreachable) before timeout logic can trigger.
+
+**Evidence from hypothesis graph**: Previous craft iteration reverted the patch completely and re-ran timeout tests on clean base - same failure occurred, confirming environmental cause rather than patch logic.
+
+**Recommendation for craft**: The regressions are environmental false positives. The FAIL_TO_PASS test passes correctly. However, per strict gate arbitration, these are classified as regressions (baseline shows PASSED, gate shows FAILED). Craft should verify the baseline capture environment or determine if test isolation/mocking is needed.
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: craft
+
+---STDERR---

@@ -1,0 +1,74 @@
+Now let me print the recon handoff to stdout:
+
+```markdown
+# Recon: psf__requests-2931
+
+## Failure summary
+
+The test `test_binary_put` creates a PUT request with binary UTF-8 encoded data (`u"ööö".encode("utf-8")` → `b'\xc3\xb6\xc3\xb6\xc3\xb6'`) and expects the prepared request body to remain as bytes. However, the test fails with `UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 0` when `_encode_params` calls `to_native_string(data)`, which attempts to decode the binary bytes as ASCII.
+
+## Suspect set
+
+- `requests/models.py` lines 83-84: `_encode_params` method that calls `to_native_string` on bytes
+- `requests/utils.py` lines 686-700: `to_native_string` function that decodes bytes using ASCII encoding
+- `requests/models.py` line 388: Call site in `prepare_url` where params are encoded
+- `requests/models.py` line 447: Call site in `prepare_body` where request body data is encoded
+
+## Root cause
+
+The method `_encode_params` at line 83-84 calls `to_native_string(data)` when data is bytes. This was introduced in commit `edc68a0` to fix issue #2844, which required converting bytes params like `b'test=foo'` to strings for URL query construction. However, this broke the case where bytes represent binary request body data (not ASCII-safe query strings).
+
+The `to_native_string` function in Python 3 decodes bytes using ASCII encoding by default (`string.decode('ascii')`), which fails on non-ASCII bytes like UTF-8 encoded `b'\xc3\xb6\xc3\xb6\xc3\xb6'`.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `requests/models.py:83-84` — `if isinstance(data, (str, bytes)): return to_native_string(data)`
+- `requests/utils.py:700` — `out = string.decode(encoding)` where encoding defaults to 'ascii'
+- `git show edc68a0` — commit that changed `return data` to `return to_native_string(data)` to fix params handling
+- Stack trace shows the failure path: `prepare_body` → `_encode_params` → `to_native_string` → `decode('ascii')`
+
+**Context**: `_encode_params` serves two different purposes:
+1. Encoding URL query params (line 388 in `prepare_url`) — needs string output for URL construction
+2. Encoding request body data (line 447 in `prepare_body`) — should preserve bytes for binary data
+
+The fix for #2844 assumed all bytes should be converted to strings, but binary request body bytes must remain as bytes.
+
+## Edit sites
+
+**Site 1: `requests/models.py` lines 83-84**
+Change from:
+```python
+if isinstance(data, (str, bytes)):
+    return to_native_string(data)
+```
+To:
+```python
+if isinstance(data, str):
+    return to_native_string(data)
+elif isinstance(data, bytes):
+    return data
+```
+
+This makes `_encode_params` return bytes as-is instead of attempting ASCII decode.
+
+**Site 2: `requests/models.py` after line 388**
+Add explicit bytes-to-string conversion for the params use case:
+```python
+enc_params = self._encode_params(params)
+if isinstance(enc_params, bytes):
+    enc_params = to_native_string(enc_params)
+```
+
+This ensures bytes params like `b'test=foo'` are converted to strings for URL query construction, preserving the fix for issue #2844.
+
+## Rejected hypotheses
+
+None — the root cause is clear from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward and preserves both the original functionality (binary request bodies) and the #2844 fix (bytes query params).
+```
+
+---STDERR---

@@ -1,0 +1,22 @@
+## Analysis: Environmental False Positives
+
+I verified that the timeout test failures are environmental, not caused by the patch:
+
+**Evidence:**
+1. ✓ FAIL_TO_PASS test (`test_binary_put`) **PASSES** with patch
+2. ✓ FAIL_TO_PASS test **FAILS** without patch (UnicodeDecodeError as expected)
+3. ✓ Timeout tests **FAIL** identically on clean base (OSError 101: Network unreachable)
+4. ✓ Code path analysis confirms `_encode_params` modifications are not invoked by timeout tests
+
+**Root cause of timeout failures:** Container network isolation prevents connection attempts to non-routable IP 10.255.255.1, causing immediate "Network unreachable" error before timeout logic can trigger. This is an environmental difference from the baseline capture, not a code regression.
+
+**Patch correctness:**
+- Site 1 (lines 83-86): Returns bytes as-is instead of attempting ASCII decode
+- Site 2 (lines 390-392): Converts bytes params to strings for URL construction
+- Both changes correctly fix binary PUT while preserving URL param handling
+
+**RESOLVED**
+
+The fix correctly solves the binary PUT issue without introducing code regressions. Timeout test failures are pre-existing environmental issues unrelated to this patch.
+
+---STDERR---

@@ -1,0 +1,11 @@
+{"instance": "psf__requests-2931", "stage": "start"}
+{"instance": "psf__requests-2931", "stage": "recon", "depth": 0, "wall_s": 197, "fixed_point": false}
+{"instance": "psf__requests-2931", "stage": "craft", "depth": 0, "wall_s": 199, "claim": true, "wants_rediagnose": false}
+{"instance": "psf__requests-2931", "stage": "audit", "depth": 0, "wall_s": 144, "verdict": "NOT_RESOLVED", "route": "craft"}
+{"instance": "psf__requests-2931", "stage": "craft", "depth": 1, "wall_s": 209, "claim": true, "wants_rediagnose": false}
+{"instance": "psf__requests-2931", "stage": "audit", "depth": 1, "wall_s": 140, "verdict": "NOT_RESOLVED", "route": "craft"}
+{"instance": "psf__requests-2931", "stage": "craft", "depth": 2, "wall_s": 164, "claim": true, "wants_rediagnose": false}
+{"instance": "psf__requests-2931", "stage": "audit", "depth": 2, "wall_s": 233, "verdict": "NOT_RESOLVED", "route": "craft"}
+{"instance": "psf__requests-2931", "stage": "halt", "msg": "depth budget exhausted at NOT_RESOLVED"}
+{"instance": "psf__requests-2931", "stage": "verify_gate", "agent_verdict": "NOT_RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_psf__requests-2931.txt"}
+{"instance": "psf__requests-2931", "stage": "done", "final_verdict": "NOT_RESOLVED", "driver_f2p_pass": true, "patch_bytes": 928, "patch_file": "/tmp/swebench-abduction/r4_patch_psf__requests-2931.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_psf__requests-2931.md"}

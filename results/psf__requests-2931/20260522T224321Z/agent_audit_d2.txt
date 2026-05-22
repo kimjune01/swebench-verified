@@ -1,0 +1,27 @@
+# Audit: psf__requests-2931
+
+## FAIL_TO_PASS
+- `test_requests.py::TestRequests::test_binary_put`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- `test_requests.py::TestTimeout::test_connect_timeout`: `ConnectionError: HTTPConnectionPool(host='10.255.255.1', port=80): Max retries exceeded... [Errno 101] Network is unreachable` (expected: ConnectTimeout)
+- `test_requests.py::TestTimeout::test_total_timeout_connect`: Same error as above
+
+## Pre-existing (not counted, confirmed against base capture)
+- 81 ERROR results (httpbin service unavailable)
+- 1 XFAIL (test_response_iter_lines_reentrant)
+
+## Kill report
+
+**For RE-ENTER: craft** — Two timeout tests (`test_connect_timeout`, `test_total_timeout_connect`) show as regressions per baseline comparison (PASSED→FAILED), but previous craft investigation (hypothesis graph lines 192-210) confirmed these are environmental false positives: they fail identically on unpatched base due to container network isolation.
+
+The patch modifies `_encode_params` (lines 83-86) and `prepare_url` (lines 390-392) for bytes/string handling. Timeout tests call `requests.get(TARPIT, timeout=(0.1, None))` with no params or body—modified code paths are never executed.
+
+**Root cause:** Baseline capture environment differs from current gate environment. In baseline, tests reached TARPIT and timed out (ConnectTimeout). In current container, immediate OSError 101 (Network unreachable) prevents timeout logic from triggering.
+
+**Patch status:** Correctly fixes binary PUT issue (FAIL_TO_PASS passes). Timeout failures are environmental artifacts, not patch regressions.
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: craft
+
+---STDERR---

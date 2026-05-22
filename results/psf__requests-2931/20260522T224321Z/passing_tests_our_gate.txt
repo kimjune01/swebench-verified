@@ -1,0 +1,302 @@
+$ pytest -rA test_requests.py
+
+        :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
+        :param stream: (optional) Whether to stream the request content.
+        :param timeout: (optional) How long to wait for the server to send
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
+        :type timeout: float or tuple
+        :param verify: (optional) Whether to verify SSL certificates.
+        :param cert: (optional) Any user-provided SSL certificate to be trusted.
+        :param proxies: (optional) The proxies dictionary to apply to the request.
+        """
+    
+        conn = self.get_connection(request.url, proxies)
+    
+        self.cert_verify(conn, request.url, verify, cert)
+        url = self.request_url(request, proxies)
+        self.add_headers(request)
+    
+        chunked = not (request.body is None or 'Content-Length' in request.headers)
+    
+        if isinstance(timeout, tuple):
+            try:
+                connect, read = timeout
+                timeout = TimeoutSauce(connect=connect, read=read)
+            except ValueError as e:
+                # this may raise a string formatting error.
+                err = ("Invalid timeout {0}. Pass a (connect, read) "
+                       "timeout tuple, or a single float to set "
+                       "both timeouts to the same value".format(timeout))
+                raise ValueError(err)
+        else:
+            timeout = TimeoutSauce(connect=timeout, read=timeout)
+    
+        try:
+            if not chunked:
+                resp = conn.urlopen(
+                    method=request.method,
+                    url=url,
+                    body=request.body,
+                    headers=request.headers,
+                    redirect=False,
+                    assert_same_host=False,
+                    preload_content=False,
+                    decode_content=False,
+                    retries=self.max_retries,
+                    timeout=timeout
+                )
+    
+            # Send the request.
+            else:
+                if hasattr(conn, 'proxy_pool'):
+                    conn = conn.proxy_pool
+    
+                low_conn = conn._get_conn(timeout=DEFAULT_POOL_TIMEOUT)
+    
+                try:
+                    low_conn.putrequest(request.method,
+                                        url,
+                                        skip_accept_encoding=True)
+    
+                    for header, value in request.headers.items():
+                        low_conn.putheader(header, value)
+    
+                    low_conn.endheaders()
+    
+                    for i in request.body:
+                        low_conn.send(hex(len(i))[2:].encode('utf-8'))
+                        low_conn.send(b'\r\n')
+                        low_conn.send(i)
+                        low_conn.send(b'\r\n')
+                    low_conn.send(b'0\r\n\r\n')
+    
+                    # Receive the response from the server
+                    try:
+                        # For Python 2.7+ versions, use buffering of HTTP
+                        # responses
+                        r = low_conn.getresponse(buffering=True)
+                    except TypeError:
+                        # For compatibility with Python 2.6 versions and back
+                        r = low_conn.getresponse()
+    
+                    resp = HTTPResponse.from_httplib(
+                        r,
+                        pool=conn,
+                        connection=low_conn,
+                        preload_content=False,
+                        decode_content=False
+                    )
+                except:
+                    # If we hit any problems here, clean up the connection.
+                    # Then, reraise so that we can handle the actual exception.
+                    low_conn.close()
+                    raise
+    
+        except (ProtocolError, socket.error) as err:
+            raise ConnectionError(err, request=request)
+    
+        except MaxRetryError as e:
+            if isinstance(e.reason, ConnectTimeoutError):
+                # TODO: Remove this in 3.0.0: see #2811
+                if not isinstance(e.reason, NewConnectionError):
+                    raise ConnectTimeout(e, request=request)
+    
+            if isinstance(e.reason, ResponseError):
+                raise RetryError(e, request=request)
+    
+>           raise ConnectionError(e, request=request)
+E           requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.255.255.1', port=80): Max retries exceeded with url: / (Caused by NewConnectionError('<requests.packages.urllib3.connection.HTTPConnection object at 0x7f460753ad90>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
+
+requests/adapters.py:437: ConnectionError
+=============================== warnings summary ===============================
+requests/packages/urllib3/_collections.py:2
+requests/packages/urllib3/_collections.py:2
+  /testbed/requests/packages/urllib3/_collections.py:2: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import Mapping, MutableMapping
+
+test_requests.py::TestRequests::test_invalid_url
+  /testbed/requests/models.py:170: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    if isinstance(hook, collections.Callable):
+
+test_requests.py::TestContentEncodingDetection::test_html4_pragma
+test_requests.py::TestContentEncodingDetection::test_html_charset
+test_requests.py::TestContentEncodingDetection::test_none
+test_requests.py::TestContentEncodingDetection::test_precedence
+test_requests.py::TestContentEncodingDetection::test_xhtml_pragma
+test_requests.py::TestContentEncodingDetection::test_xml
+  /testbed/requests/utils.py:315: DeprecationWarning: In requests 3.0, get_encodings_from_content will be removed. For more information, please see the discussion on issue #2266. (This warning should only appear once.)
+    warnings.warn((
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_requests.py::TestRequests::test_entry_points
+PASSED test_requests.py::TestRequests::test_invalid_url
+PASSED test_requests.py::TestRequests::test_basic_building
+PASSED test_requests.py::TestRequests::test_path_is_not_double_encoded
+PASSED test_requests.py::TestRequests::test_params_are_added_before_fragment
+PASSED test_requests.py::TestRequests::test_params_original_order_is_preserved_by_default
+PASSED test_requests.py::TestRequests::test_params_bytes_are_encoded
+PASSED test_requests.py::TestRequests::test_binary_put
+PASSED test_requests.py::TestRequests::test_connection_error_invalid_domain
+PASSED test_requests.py::TestRequests::test_connection_error_invalid_port
+PASSED test_requests.py::TestRequests::test_LocationParseError
+PASSED test_requests.py::TestRequests::test_prepare_request_with_bytestring_url
+PASSED test_requests.py::TestRequests::test_links
+PASSED test_requests.py::TestRequests::test_cookie_parameters
+PASSED test_requests.py::TestRequests::test_cookie_as_dict_keeps_len
+PASSED test_requests.py::TestRequests::test_cookie_as_dict_keeps_items
+PASSED test_requests.py::TestRequests::test_cookie_as_dict_keys
+PASSED test_requests.py::TestRequests::test_cookie_as_dict_values
+PASSED test_requests.py::TestRequests::test_cookie_as_dict_items
+PASSED test_requests.py::TestRequests::test_response_is_iterable
+PASSED test_requests.py::TestRequests::test_response_decode_unicode
+PASSED test_requests.py::TestRequests::test_get_auth_from_url
+PASSED test_requests.py::TestRequests::test_get_auth_from_url_encoded_spaces
+PASSED test_requests.py::TestRequests::test_get_auth_from_url_not_encoded_spaces
+PASSED test_requests.py::TestRequests::test_get_auth_from_url_percent_chars
+PASSED test_requests.py::TestRequests::test_get_auth_from_url_encoded_hashes
+PASSED test_requests.py::TestRequests::test_http_error
+PASSED test_requests.py::TestRequests::test_transport_adapter_ordering
+PASSED test_requests.py::TestRequests::test_long_authinfo_in_url
+PASSED test_requests.py::TestRequests::test_nonhttp_schemes_dont_check_URLs
+PASSED test_requests.py::TestRequests::test_basic_auth_str_is_always_native
+PASSED test_requests.py::TestContentEncodingDetection::test_html4_pragma
+PASSED test_requests.py::TestContentEncodingDetection::test_html_charset
+PASSED test_requests.py::TestContentEncodingDetection::test_none
+PASSED test_requests.py::TestContentEncodingDetection::test_precedence
+PASSED test_requests.py::TestContentEncodingDetection::test_xhtml_pragma
+PASSED test_requests.py::TestContentEncodingDetection::test_xml
+PASSED test_requests.py::TestCaseInsensitiveDict::test_contains
+PASSED test_requests.py::TestCaseInsensitiveDict::test_copy
+PASSED test_requests.py::TestCaseInsensitiveDict::test_delitem
+PASSED test_requests.py::TestCaseInsensitiveDict::test_docstring_example
+PASSED test_requests.py::TestCaseInsensitiveDict::test_equality
+PASSED test_requests.py::TestCaseInsensitiveDict::test_fixes_649
+PASSED test_requests.py::TestCaseInsensitiveDict::test_get
+PASSED test_requests.py::TestCaseInsensitiveDict::test_getitem
+PASSED test_requests.py::TestCaseInsensitiveDict::test_iter
+PASSED test_requests.py::TestCaseInsensitiveDict::test_iterable_init
+PASSED test_requests.py::TestCaseInsensitiveDict::test_kwargs_init
+PASSED test_requests.py::TestCaseInsensitiveDict::test_len
+PASSED test_requests.py::TestCaseInsensitiveDict::test_lower_items
+PASSED test_requests.py::TestCaseInsensitiveDict::test_mapping_init
+PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case
+PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case
+PASSED test_requests.py::TestCaseInsensitiveDict::test_setdefault
+PASSED test_requests.py::TestCaseInsensitiveDict::test_update
+PASSED test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged
+PASSED test_requests.py::UtilsTestCase::test_address_in_network
+PASSED test_requests.py::UtilsTestCase::test_dotted_netmask
+PASSED test_requests.py::UtilsTestCase::test_get_auth_from_url
+PASSED test_requests.py::UtilsTestCase::test_get_environ_proxies
+PASSED test_requests.py::UtilsTestCase::test_get_environ_proxies_ip_ranges
+PASSED test_requests.py::UtilsTestCase::test_guess_filename_when_filename_is_an_int
+PASSED test_requests.py::UtilsTestCase::test_guess_filename_when_int
+PASSED test_requests.py::UtilsTestCase::test_guess_filename_with_file_like_obj
+PASSED test_requests.py::UtilsTestCase::test_guess_filename_with_unicode_name
+PASSED test_requests.py::UtilsTestCase::test_is_ipv4_address
+PASSED test_requests.py::UtilsTestCase::test_is_valid_cidr
+PASSED test_requests.py::UtilsTestCase::test_requote_uri_properly_requotes
+PASSED test_requests.py::UtilsTestCase::test_requote_uri_with_unquoted_percents
+PASSED test_requests.py::UtilsTestCase::test_select_proxies
+PASSED test_requests.py::UtilsTestCase::test_super_len_correctly_calculates_len_of_partially_read_file
+PASSED test_requests.py::UtilsTestCase::test_super_len_io_streams
+PASSED test_requests.py::TestMorselToCookieExpires::test_expires_invalid_int
+PASSED test_requests.py::TestMorselToCookieExpires::test_expires_invalid_str
+PASSED test_requests.py::TestMorselToCookieExpires::test_expires_none
+PASSED test_requests.py::TestMorselToCookieExpires::test_expires_valid_str
+PASSED test_requests.py::TestMorselToCookieMaxAge::test_max_age_invalid_str
+PASSED test_requests.py::TestMorselToCookieMaxAge::test_max_age_valid_int
+PASSED test_requests.py::test_data_argument_accepts_tuples
+PASSED test_requests.py::test_prepared_request_empty_copy
+PASSED test_requests.py::test_prepared_request_no_cookies_copy
+PASSED test_requests.py::test_prepared_request_complete_copy
+PASSED test_requests.py::test_prepare_unicode_url
+PASSED test_requests.py::test_vendor_aliases
+XFAIL test_requests.py::TestRequests::test_response_iter_lines_reentrant
+ERROR test_requests.py::TestRequests::test_no_content_length
+ERROR test_requests.py::TestRequests::test_override_content_length
+ERROR test_requests.py::TestRequests::test_mixed_case_scheme_acceptable
+ERROR test_requests.py::TestRequests::test_HTTP_200_OK_GET_ALTERNATIVE
+ERROR test_requests.py::TestRequests::test_HTTP_302_ALLOW_REDIRECT_GET
+ERROR test_requests.py::TestRequests::test_HTTP_200_OK_GET_WITH_PARAMS
+ERROR test_requests.py::TestRequests::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS
+ERROR test_requests.py::TestRequests::test_set_cookie_on_301
+ERROR test_requests.py::TestRequests::test_cookie_sent_on_redirect
+ERROR test_requests.py::TestRequests::test_cookie_removed_on_expire
+ERROR test_requests.py::TestRequests::test_cookie_quote_wrapped
+ERROR test_requests.py::TestRequests::test_cookie_persists_via_api
+ERROR test_requests.py::TestRequests::test_request_cookie_overrides_session_cookie
+ERROR test_requests.py::TestRequests::test_request_cookies_not_persisted
+ERROR test_requests.py::TestRequests::test_generic_cookiejar_works
+ERROR test_requests.py::TestRequests::test_param_cookiejar_works
+ERROR test_requests.py::TestRequests::test_requests_in_history_are_not_overridden
+ERROR test_requests.py::TestRequests::test_history_is_always_a_list
+ERROR test_requests.py::TestRequests::test_headers_on_session_with_None_are_not_sent
+ERROR test_requests.py::TestRequests::test_user_agent_transfers
+ERROR test_requests.py::TestRequests::test_HTTP_200_OK_HEAD
+ERROR test_requests.py::TestRequests::test_HTTP_200_OK_PUT
+ERROR test_requests.py::TestRequests::test_BASICAUTH_TUPLE_HTTP_200_OK_GET
+ERROR test_requests.py::TestRequests::test_basicauth_with_netrc
+ERROR test_requests.py::TestRequests::test_DIGEST_HTTP_200_OK_GET
+ERROR test_requests.py::TestRequests::test_DIGEST_AUTH_RETURNS_COOKIE
+ERROR test_requests.py::TestRequests::test_DIGEST_AUTH_SETS_SESSION_COOKIES
+ERROR test_requests.py::TestRequests::test_DIGEST_STREAM
+ERROR test_requests.py::TestRequests::test_DIGESTAUTH_WRONG_HTTP_401_GET
+ERROR test_requests.py::TestRequests::test_DIGESTAUTH_QUOTES_QOP_VALUE
+ERROR test_requests.py::TestRequests::test_POSTBIN_GET_POST_FILES
+ERROR test_requests.py::TestRequests::test_POSTBIN_GET_POST_FILES_WITH_DATA
+ERROR test_requests.py::TestRequests::test_conflicting_post_params
+ERROR test_requests.py::TestRequests::test_request_ok_set
+ERROR test_requests.py::TestRequests::test_status_raising
+ERROR test_requests.py::TestRequests::test_decompress_gzip
+ERROR test_requests.py::TestRequests::test_unicode_get
+ERROR test_requests.py::TestRequests::test_unicode_header_name
+ERROR test_requests.py::TestRequests::test_pyopenssl_redirect
+ERROR test_requests.py::TestRequests::test_urlencoded_get_query_multivalued_param
+ERROR test_requests.py::TestRequests::test_different_encodings_dont_break_post
+ERROR test_requests.py::TestRequests::test_unicode_multipart_post
+ERROR test_requests.py::TestRequests::test_unicode_multipart_post_fieldnames
+ERROR test_requests.py::TestRequests::test_unicode_method_name
+ERROR test_requests.py::TestRequests::test_unicode_method_name_with_request_object
+ERROR test_requests.py::TestRequests::test_custom_content_type
+ERROR test_requests.py::TestRequests::test_hook_receives_request_arguments
+ERROR test_requests.py::TestRequests::test_session_hooks_are_used_with_no_request_hooks
+ERROR test_requests.py::TestRequests::test_session_hooks_are_overridden_by_request_hooks
+ERROR test_requests.py::TestRequests::test_prepared_request_hook
+ERROR test_requests.py::TestRequests::test_prepared_from_session
+ERROR test_requests.py::TestRequests::test_time_elapsed_blank
+ERROR test_requests.py::TestRequests::test_request_and_response_are_pickleable
+ERROR test_requests.py::TestRequests::test_cannot_send_unprepared_requests
+ERROR test_requests.py::TestRequests::test_session_pickling
+ERROR test_requests.py::TestRequests::test_fixes_1329
+ERROR test_requests.py::TestRequests::test_uppercase_scheme_redirect
+ERROR test_requests.py::TestRequests::test_header_remove_is_case_insensitive
+ERROR test_requests.py::TestRequests::test_params_are_merged_case_sensitive
+ERROR test_requests.py::TestRequests::test_header_keys_are_native
+ERROR test_requests.py::TestRequests::test_can_send_nonstring_objects_with_files
+ERROR test_requests.py::TestRequests::test_can_send_bytes_bytearray_objects_with_files
+ERROR test_requests.py::TestRequests::test_can_send_file_object_with_non_string_filename
+ERROR test_requests.py::TestRequests::test_autoset_header_values_are_native
+ERROR test_requests.py::TestRequests::test_auth_is_stripped_on_redirect_off_host
+ERROR test_requests.py::TestRequests::test_auth_is_retained_for_redirect_on_host
+ERROR test_requests.py::TestRequests::test_manual_redirect_with_partial_body_read
+ERROR test_requests.py::TestRequests::test_redirect_with_wrong_gzipped_header
+ERROR test_requests.py::TestRequests::test_requests_history_is_saved
+ERROR test_requests.py::TestRequests::test_json_param_post_content_type_works
+ERROR test_requests.py::TestRequests::test_json_param_post_should_not_override_data_param
+ERROR test_requests.py::TestRequests::test_response_iter_lines
+ERROR test_requests.py::TestRequests::test_unconsumed_session_response_closes_connection
+ERROR test_requests.py::TestTimeout::test_stream_timeout
+ERROR test_requests.py::TestTimeout::test_invalid_timeout
+ERROR test_requests.py::TestTimeout::test_none_timeout
+ERROR test_requests.py::TestTimeout::test_read_timeout
+ERROR test_requests.py::TestTimeout::test_encoded_methods
+ERROR test_requests.py::TestRedirects::test_requests_are_updated_each_time
+ERROR test_requests.py::test_urllib3_retries
+ERROR test_requests.py::test_urllib3_pool_connection_closed
+FAILED test_requests.py::TestTimeout::test_connect_timeout - requests.excepti...
+FAILED test_requests.py::TestTimeout::test_total_timeout_connect - requests.e...
+======== 2 failed, 84 passed, 1 xfailed, 9 warnings, 81 errors in 0.30s ========

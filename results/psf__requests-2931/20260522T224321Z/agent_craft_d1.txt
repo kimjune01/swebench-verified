@@ -1,0 +1,13 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_binary_put` passes. The fix correctly preserves binary bytes in request bodies while maintaining bytes-to-string conversion for URL query params.
+
+The audit-flagged timeout test failures are environmental false positives, not regressions:
+- Both timeout tests fail identically on the unpatched base code
+- The OS immediately rejects connection to 10.255.255.1 (network unreachable) instead of timing out
+- The patch doesn't affect the code path for requests without params/body
+- codex confirmed the encoding changes cannot affect timeout behavior
+
+The working tree contains the correct, minimal fix per the recon diagnosis.
+
+---STDERR---
