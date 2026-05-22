@@ -1,0 +1,21 @@
+# Audit: scikit-learn__scikit-learn-12585
+
+## FAIL_TO_PASS
+- `test_clone_estimator_types`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 22 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None. The only failure on base was `test_clone_estimator_types`, which is now fixed.
+
+## Summary
+
+The patch added a type check (`isinstance(estimator, six.class_types)`) to sklearn/base.py:51 to route class types to the deepcopy branch instead of attempting to call `get_params()` on an unbound class method. This correctly fixes the issue where cloning an estimator with a parameter set to a class (rather than an instance) would fail with `TypeError: get_params() missing 1 required positional argument: 'self'`.
+
+All 23 tests pass. The FAIL_TO_PASS test now passes, and there are zero regressions in PASS_TO_PASS tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

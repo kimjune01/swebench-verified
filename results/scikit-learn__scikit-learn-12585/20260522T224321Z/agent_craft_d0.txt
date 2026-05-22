@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes all tests. The issue was that the `clone()` function didn't distinguish between estimator classes and estimator instances when checking for the `get_params` attribute. By adding `isinstance(estimator, six.class_types)` to the condition at line 51, class types are now correctly routed to the deepcopy branch (when `safe=False`), which preserves class identity as required by the test.
+
+---STDERR---
