@@ -1,0 +1,18 @@
+# Audit: pallets__flask-5014
+
+## FAIL_TO_PASS
+- `tests/test_blueprints.py::test_empty_name_not_allowed`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully resolves the issue. The single FAIL_TO_PASS test now passes, and all 59 PASS_TO_PASS tests remain passing. The 3-line fix adds empty name validation to Blueprint.__init__, raising `ValueError("'name' may not be empty.")` when an empty string is provided. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

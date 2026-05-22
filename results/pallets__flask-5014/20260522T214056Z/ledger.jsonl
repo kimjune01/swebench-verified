@@ -1,0 +1,6 @@
+{"instance": "pallets__flask-5014", "stage": "start"}
+{"instance": "pallets__flask-5014", "stage": "recon", "depth": 0, "wall_s": 90, "fixed_point": false}
+{"instance": "pallets__flask-5014", "stage": "craft", "depth": 0, "wall_s": 182, "claim": true, "wants_rediagnose": false}
+{"instance": "pallets__flask-5014", "stage": "audit", "depth": 0, "wall_s": 50, "verdict": "RESOLVED", "route": "none"}
+{"instance": "pallets__flask-5014", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_pallets__flask-5014.txt"}
+{"instance": "pallets__flask-5014", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 437, "patch_file": "/tmp/swebench-abduction/r4_patch_pallets__flask-5014.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_pallets__flask-5014.md"}

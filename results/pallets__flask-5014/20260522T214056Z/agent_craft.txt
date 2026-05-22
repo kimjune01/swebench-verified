@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added empty name validation to Blueprint.__init__ that raises `ValueError("'name' may not be empty.")` when an empty string is provided. All 60 tests pass, including the required `test_empty_name_not_allowed`.
+
+---STDERR---

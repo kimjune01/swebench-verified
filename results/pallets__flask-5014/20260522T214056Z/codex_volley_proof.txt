@@ -1,0 +1,80 @@
+# codex volley — verbatim from codex session log
+# session: rollout-2026-05-22T14-35-00-019e519c-f1d9-7751-b680-4572270adbae.jsonl 
+
+=== craft -> codex ===
+This patch is meant to make a failing test pass without breaking others. Be direct — what's wrong, what's missing, what breaks. No preamble.
+
+FAILING TEST (must pass):
+```python
+def test_empty_name_not_allowed(app, client):
+    with pytest.raises(ValueError):
+        flask.Blueprint("", __name__)
+```
+
+RECON ROOT CAUSE:
+The Blueprint class is missing validation for empty names in its `__init__` method. The fix requires adding an empty string check before the existing dot validation at line 193 in `src/flask/blueprints.py`.
+
+RELEVANT SOURCE (current, from the repo):
+```python
+    ):
+        super().__init__(
+            import_name=import_name,
+            static_folder=static_folder,
+            static_url_path=static_url_path,
+            template_folder=template_folder,
+            root_path=root_path,
+        )
+
+        if "." in name:
+            raise ValueError("'name' may not contain a dot '.' character.")
+
+        self.name = name
+        self.url_prefix = url_prefix
+        self.subdomain = subdomain
+```
+
+PROPOSED DIFF:
+```diff
+--- a/src/flask/blueprints.py
++++ b/src/flask/blueprints.py
+@@ -190,6 +190,9 @@ class Blueprint(Scaffold):
+             root_path=root_path,
+         )
+ 
++        if not name:
++            raise ValueError("'name' cannot be empty.")
++
+         if "." in name:
+             raise ValueError("'name' may not contain a dot '.' character.")
+ 
+```
+
+
+=== codex -> craft ===
+I’ll inspect the current tree and tests around `Blueprint` so the review is grounded in the repo state, not just the snippet.
+
+=== codex -> craft ===
+The expected `src` and `tests` paths are not present at the provided cwd, so I’m checking the workspace shape before calling anything missing.
+
+=== codex -> craft ===
+Findings:
+
+- `if not name` is broader than the stated fix. It rejects `None`, `0`, `False`, `[]`, etc. with `ValueError`, changing current behavior. If the intended contract is specifically “empty string not allowed,” use:
+  ```python
+  if name == "":
+      raise ValueError("'name' cannot be empty.")
+  ```
+
+- Missing test. Add the failing test to the blueprint tests so this regression is covered.
+
+- Error text may be inconsistent with nearby wording. Existing validation says `"'name' may not contain..."`; Flask commonly uses “may not” style. Consider:
+  ```python
+  raise ValueError("'name' may not be empty.")
+  ```
+
+What breaks:
+
+- Existing callers/tests that pass non-string falsey values may now get `ValueError` earlier instead of the previous behavior, likely `TypeError` for `None` at `"." in name` or acceptance for some falsey containers.
+
+Could not verify against the local repo because the provided workspace directory is empty: no `src/` or `tests/` files are present.
+
