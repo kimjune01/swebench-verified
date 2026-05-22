@@ -1,0 +1,78 @@
+# Recon: pytest-dev__pytest-7324
+
+## Failure summary
+
+The tests check that identifiers "True", "False", and "None" can be used as valid mark expression identifiers (not Python constants). When these expressions are compiled via `Expression.compile()`, Python 3.8+ raises `ValueError: Name node can't be used with 'None' constant` because the AST compiler rejects `ast.Name` nodes with these three reserved constant names. The failure occurs at `src/_pytest/mark/expression.py:202` when calling `compile()` on the generated AST. On debug builds, this triggers an assertion crash; on release builds, it raises ValueError.
+
+## Suspect set
+
+- `src/_pytest/mark/expression.py` lines 155-165: `not_expr()` function that creates `ast.Name(ident.value, ast.Load())` for all identifiers without special-casing the three Python constants
+- `src/_pytest/mark/expression.py` lines 168-181: `MatcherAdapter` class that needs modification to support the workaround
+- `src/_pytest/mark/expression.py` lines 207-218: `Expression.evaluate()` method that passes MatcherAdapter to eval()
+
+## Root cause
+
+Python 3.8+ enforces that the identifier strings "True", "False", and "None" cannot be used in `ast.Name` nodes because these are reserved constant literals, not valid variable names. The restriction is enforced in `Python/compile.c:compiler_nameop` with an assertion (debug builds) or ValueError (release builds).
+
+At line 164 of `src/_pytest/mark/expression.py`, the code creates `ast.Name(ident.value, ast.Load())` for every identifier token, including "True", "False", and "None". When compile() processes this AST, it rejects it.
+
+The mark expression parser intends to treat these as regular identifiers (marker names to look up via the matcher function), not as Python constant literals. But the AST compiler cannot distinguish intent and refuses to compile the tree.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `src/_pytest/mark/expression.py:164` — `return ast.Name(ident.value, ast.Load())` creates the problematic node
+- Direct test confirms: `compile(ast.Expression(ast.Name("True", ast.Load())), "test", "eval")` raises ValueError
+- Error message explicitly states: `ValueError: Name node can't be used with 'None' constant`
+- Workaround verified: Using `ast.Subscript(ast.Name("__locals__", ast.Load()), ast.Constant("True"), ast.Load())` compiles and evaluates correctly
+
+## Edit sites
+
+### 1. `src/_pytest/mark/expression.py` lines 155-165 (not_expr function)
+Change the identifier handling to detect "True", "False", "None" and create an `ast.Subscript` node instead of `ast.Name`. The subscript node should perform a dict lookup: `__locals__["True"]` which avoids the Python restriction.
+
+Specific change: At line 162-164, after accepting IDENT token, check if `ident.value in ("True", "False", "None")`. If true, return:
+```python
+ast.Subscript(
+    value=ast.Name("__locals__", ast.Load()),
+    slice=ast.Constant(ident.value),
+    ctx=ast.Load()
+)
+```
+Otherwise return the existing `ast.Name(ident.value, ast.Load())`.
+
+### 2. `src/_pytest/mark/expression.py` lines 174-175 (MatcherAdapter.__getitem__)
+Add special handling for the "__locals__" key to raise KeyError, allowing it to fall through to globals lookup. Without this, when eval() looks up "__locals__", it would first try MatcherAdapter["__locals__"], which would call the matcher function with "__locals__" as the marker name.
+
+Specific change: At the start of `__getitem__`, add:
+```python
+if key == "__locals__":
+    raise KeyError(key)
+```
+
+### 3. `src/_pytest/mark/expression.py` lines 215-217 (Expression.evaluate)
+Modify the eval() call to pass MatcherAdapter in both the globals dict (as "__locals__") and as the locals dict. This allows the `__locals__` Name node to resolve to the adapter object for subscripting.
+
+Specific change: Change from:
+```python
+ret = eval(
+    self.code, {"__builtins__": {}}, MatcherAdapter(matcher)
+)
+```
+To:
+```python
+adapter = MatcherAdapter(matcher)
+ret = eval(
+    self.code, {"__builtins__": {}, "__locals__": adapter}, adapter
+)
+```
+
+## Rejected hypotheses
+
+None - the diagnosis is direct from the error message and code inspection.
+
+## Open questions
+
+None - the root cause is confirmed and the fix approach is verified with manual testing.
+
+---STDERR---

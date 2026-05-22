@@ -1,0 +1,122 @@
+$ pytest -rA testing/test_mark_expression.py
+
+            "1234+5678",
+            "123.232",
+            "True",
+            "False",
+            "None",
+            "if",
+            "else",
+            "while",
+        ),
+    )
+    def test_valid_idents(ident: str) -> None:
+>       assert evaluate(ident, {ident: True}.__getitem__)
+
+testing/test_mark_expression.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+testing/test_mark_expression.py:9: in evaluate
+    return Expression.compile(input).evaluate(matcher)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <class '_pytest.mark.expression.Expression'>, input = 'None'
+
+    @classmethod
+    def compile(self, input: str) -> "Expression":
+        """Compile a match expression.
+    
+        :param input: The input expression - one line.
+        """
+        astexpr = expression(Scanner(input))
+>       code = compile(
+            astexpr, filename="<pytest match expression>", mode="eval",
+        )  # type: types.CodeType
+E       ValueError: Name node can't be used with 'None' constant
+
+src/_pytest/mark/expression.py:202: ValueError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED testing/test_mark_expression.py::test_empty_is_false
+PASSED testing/test_mark_expression.py::test_basic[true-True0]
+PASSED testing/test_mark_expression.py::test_basic[true-True1]
+PASSED testing/test_mark_expression.py::test_basic[false-False]
+PASSED testing/test_mark_expression.py::test_basic[not true-False]
+PASSED testing/test_mark_expression.py::test_basic[not false-True]
+PASSED testing/test_mark_expression.py::test_basic[not not true-True]
+PASSED testing/test_mark_expression.py::test_basic[not not false-False]
+PASSED testing/test_mark_expression.py::test_basic[true and true-True]
+PASSED testing/test_mark_expression.py::test_basic[true and false-False]
+PASSED testing/test_mark_expression.py::test_basic[false and true-False]
+PASSED testing/test_mark_expression.py::test_basic[true and true and true-True]
+PASSED testing/test_mark_expression.py::test_basic[true and true and false-False]
+PASSED testing/test_mark_expression.py::test_basic[true and true and not true-False]
+PASSED testing/test_mark_expression.py::test_basic[false or false-False]
+PASSED testing/test_mark_expression.py::test_basic[false or true-True]
+PASSED testing/test_mark_expression.py::test_basic[true or true-True]
+PASSED testing/test_mark_expression.py::test_basic[true or true or false-True]
+PASSED testing/test_mark_expression.py::test_basic[true and true or false-True]
+PASSED testing/test_mark_expression.py::test_basic[not true or true-True]
+PASSED testing/test_mark_expression.py::test_basic[(not true) or true-True]
+PASSED testing/test_mark_expression.py::test_basic[not (true or true)-False]
+PASSED testing/test_mark_expression.py::test_basic[true and true or false and false-True]
+PASSED testing/test_mark_expression.py::test_basic[true and (true or false) and false-False]
+PASSED testing/test_mark_expression.py::test_basic[true and (true or (not (not false))) and false-False]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[               true           -True]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[               ((((((true))))))           -True]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[     (         ((\t  (((true)))))  \t   \t)-True]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[(     true     and   (((false))))-False]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[not not not not true-True]
+PASSED testing/test_mark_expression.py::test_syntax_oddeties[not not not not not true-False]
+PASSED testing/test_mark_expression.py::test_syntax_errors[(-2-expected not OR left parenthesis OR identifier; got end of input]
+PASSED testing/test_mark_expression.py::test_syntax_errors[ (-3-expected not OR left parenthesis OR identifier; got end of input]
+PASSED testing/test_mark_expression.py::test_syntax_errors[)-1-expected not OR left parenthesis OR identifier; got right parenthesis]
+PASSED testing/test_mark_expression.py::test_syntax_errors[) -1-expected not OR left parenthesis OR identifier; got right parenthesis]
+PASSED testing/test_mark_expression.py::test_syntax_errors[not-4-expected not OR left parenthesis OR identifier; got end of input]
+PASSED testing/test_mark_expression.py::test_syntax_errors[not not-8-expected not OR left parenthesis OR identifier; got end of input]
+PASSED testing/test_mark_expression.py::test_syntax_errors[(not)-5-expected not OR left parenthesis OR identifier; got right parenthesis]
+PASSED testing/test_mark_expression.py::test_syntax_errors[and-1-expected not OR left parenthesis OR identifier; got and]
+PASSED testing/test_mark_expression.py::test_syntax_errors[ident and-10-expected not OR left parenthesis OR identifier; got end of input]
+PASSED testing/test_mark_expression.py::test_syntax_errors[ident and or-11-expected not OR left parenthesis OR identifier; got or]
+PASSED testing/test_mark_expression.py::test_syntax_errors[ident ident-7-expected end of input; got identifier]
+PASSED testing/test_mark_expression.py::test_valid_idents[.]
+PASSED testing/test_mark_expression.py::test_valid_idents[...]
+PASSED testing/test_mark_expression.py::test_valid_idents[:::]
+PASSED testing/test_mark_expression.py::test_valid_idents[a:::c]
+PASSED testing/test_mark_expression.py::test_valid_idents[a+-b]
+PASSED testing/test_mark_expression.py::test_valid_idents[\u05d0\u05d1\u05d2\u05d3]
+PASSED testing/test_mark_expression.py::test_valid_idents[aa\u05d0\u05d1\u05d2\u05d3cc]
+PASSED testing/test_mark_expression.py::test_valid_idents[a[bcd]]
+PASSED testing/test_mark_expression.py::test_valid_idents[1234]
+PASSED testing/test_mark_expression.py::test_valid_idents[1234abcd]
+PASSED testing/test_mark_expression.py::test_valid_idents[1234and]
+PASSED testing/test_mark_expression.py::test_valid_idents[notandor]
+PASSED testing/test_mark_expression.py::test_valid_idents[not_and_or]
+PASSED testing/test_mark_expression.py::test_valid_idents[not[and]or]
+PASSED testing/test_mark_expression.py::test_valid_idents[1234+5678]
+PASSED testing/test_mark_expression.py::test_valid_idents[123.232]
+PASSED testing/test_mark_expression.py::test_valid_idents[if]
+PASSED testing/test_mark_expression.py::test_valid_idents[else]
+PASSED testing/test_mark_expression.py::test_valid_idents[while]
+PASSED testing/test_mark_expression.py::test_invalid_idents[/]
+PASSED testing/test_mark_expression.py::test_invalid_idents[\\]
+PASSED testing/test_mark_expression.py::test_invalid_idents[^]
+PASSED testing/test_mark_expression.py::test_invalid_idents[*]
+PASSED testing/test_mark_expression.py::test_invalid_idents[=]
+PASSED testing/test_mark_expression.py::test_invalid_idents[&]
+PASSED testing/test_mark_expression.py::test_invalid_idents[%]
+PASSED testing/test_mark_expression.py::test_invalid_idents[$]
+PASSED testing/test_mark_expression.py::test_invalid_idents[#]
+PASSED testing/test_mark_expression.py::test_invalid_idents[@]
+PASSED testing/test_mark_expression.py::test_invalid_idents[!]
+PASSED testing/test_mark_expression.py::test_invalid_idents[~]
+PASSED testing/test_mark_expression.py::test_invalid_idents[{]
+PASSED testing/test_mark_expression.py::test_invalid_idents[}]
+PASSED testing/test_mark_expression.py::test_invalid_idents["]
+PASSED testing/test_mark_expression.py::test_invalid_idents[']
+PASSED testing/test_mark_expression.py::test_invalid_idents[|]
+PASSED testing/test_mark_expression.py::test_invalid_idents[;]
+PASSED testing/test_mark_expression.py::test_invalid_idents[\u2190]
+FAILED testing/test_mark_expression.py::test_valid_idents[True] - ValueError:...
+FAILED testing/test_mark_expression.py::test_valid_idents[False] - ValueError...
+FAILED testing/test_mark_expression.py::test_valid_idents[None] - ValueError:...
+========================= 3 failed, 80 passed in 0.07s =========================

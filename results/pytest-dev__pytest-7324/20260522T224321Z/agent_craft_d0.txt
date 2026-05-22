@@ -1,0 +1,11 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix successfully handles "True", "False", and "None" as mark expression identifiers by:
+
+1. Detecting these three keywords in `not_expr()` and generating `ast.Subscript` nodes instead of `ast.Name` nodes
+2. Using the sentinel key `__pytest_mark_eval__` to bridge the adapter into the eval namespace
+3. Maintaining Python 3.8 compatibility with `ast.Index(ast.Str(...))`
+
+The gate shows 83/83 tests passing, including the three that were failing.
+
+---STDERR---

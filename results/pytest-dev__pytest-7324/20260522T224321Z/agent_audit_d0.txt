@@ -1,0 +1,25 @@
+# Audit: pytest-dev__pytest-7324
+
+## FAIL_TO_PASS
+- `testing/test_mark_expression.py::test_valid_idents[True]`: **PASS** ✓
+- `testing/test_mark_expression.py::test_valid_idents[False]`: **PASS** ✓
+- `testing/test_mark_expression.py::test_valid_idents[None]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 80 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+**None** — no pre-existing failures found in gate run.
+
+## Summary
+The craft patch successfully resolves all three FAIL_TO_PASS tests without introducing any regressions. The fix converts `True`, `False`, and `None` identifiers into `ast.Subscript` operations that look them up via the matcher function, avoiding Python 3.8+'s restriction on using these constants in `ast.Name` nodes.
+
+All 83 tests passed in the full gate run:
+- 3 FAIL_TO_PASS tests now PASS
+- 80 PASS_TO_PASS tests remain PASS  
+- 0 regressions
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
