@@ -1,0 +1,70 @@
+# Recon: astropy__astropy-13033
+
+## Failure summary
+
+The test `test_required_columns` checks that TimeSeries objects properly validate required columns. When a TimeSeries has multiple required columns (e.g., `['time', 'a']`) and one is removed, the validation error message should list all expected required columns and all actual columns found. Currently, the error message only shows `'time' as the first columns but found 'time'` instead of the expected `['time', 'a'] as the first columns but found ['time', 'b']`.
+
+Test failure output:
+```
+assert "TimeSeries object is invalid - expected 'time' as the first columns but found 'time'" == "TimeSeries object is invalid - expected ['time', 'a'] as the first columns but found ['time', 'b']"
+```
+
+## Suspect set
+
+- `astropy/timeseries/core.py` lines 57-85: The `_check_required_columns()` method that validates required columns are present
+- Specifically lines 73-75 and 79-81: The two error message formatting locations
+
+## Root cause
+
+The error message formatting uses only the first element of the column lists (`required_columns[0]` and `self.colnames[0]`) instead of showing the complete list when multiple columns are involved. While the code correctly detects multiple columns via the `plural` variable (line 69: `plural = 's' if len(required_columns) > 1 else ''`), the formatted error messages only display the first column name.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `astropy/timeseries/core.py:79-81` — Column mismatch error:
+```python
+raise ValueError("{} object is invalid - expected '{}' "
+                 "as the first column{} but found '{}'"
+                 .format(self.__class__.__name__, required_columns[0], plural, self.colnames[0]))
+```
+Uses `required_columns[0]` and `self.colnames[0]` extracting only first element.
+
+- `astropy/timeseries/core.py:73-75` — Empty table error:
+```python
+raise ValueError("{} object is invalid - expected '{}' "
+                 "as the first column{} but time series has no columns"
+                 .format(self.__class__.__name__, required_columns[0], plural))
+```
+Uses `required_columns[0]` only.
+
+- Test expectation at `astropy/timeseries/tests/test_sampled.py:403` shows the desired format for multiple columns: `"['time', 'a'] as the first columns but found ['time', 'b']"`
+
+## Edit sites
+
+**Primary fix location** — `astropy/timeseries/core.py` lines 73-81:
+
+1. **Lines 73-75** (empty table case): Change error message to show full `required_columns` list when multiple columns, or single column string when one column.
+
+2. **Lines 79-81** (mismatch case): Change error message to show:
+   - Full `required_columns` (or just first element if single)
+   - Full `self.colnames[:len(required_columns)]` (or just first element if single)
+
+The formatting should produce:
+- **Single required column**: `'time' as the first column` (string)
+- **Multiple required columns**: `['time', 'a'] as the first columns` (list repr)
+
+Implementation approach: Conditionally format based on `len(required_columns)`:
+- If 1: format as string with quotes
+- If >1: format as list representation
+
+Also need to format the "found" columns slice: `self.colnames[:len(required_columns)]` when showing what was actually found (not just `self.colnames[0]`).
+
+## Rejected hypotheses
+
+None — the root cause is clear from direct code inspection and matches the test failure precisely.
+
+## Open questions
+
+None — the fix is straightforward string formatting conditional on list length.
+
+---STDERR---

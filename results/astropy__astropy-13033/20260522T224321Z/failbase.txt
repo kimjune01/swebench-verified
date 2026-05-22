@@ -1,0 +1,122 @@
+$ pytest -rA astropy/timeseries/tests/test_sampled.py
+
+    
+        Uses `astropy.utils.iers.LeapSeconds.auto_open` to try to find an
+        up-to-date table.  See that routine for the definition of "out of date".
+    
+        In order to make it safe to call this any time, all exceptions are turned
+        into warnings,
+    
+        Parameters
+        ----------
+        files : list of path-like, optional
+            List of files/URLs to attempt to open.  By default, uses defined by
+            `astropy.utils.iers.LeapSeconds.auto_open`, which includes the table
+            used by ERFA itself, so if that is up to date, nothing will happen.
+    
+        Returns
+        -------
+        n_update : int
+            Number of items updated.
+    
+        """
+        try:
+            from astropy.utils import iers
+    
+            table = iers.LeapSeconds.auto_open(files)
+            return erfa.leap_seconds.update(table)
+    
+        except Exception as exc:
+>           warn("leap-second auto-update failed due to the following "
+                 f"exception: {exc!r}", AstropyWarning)
+E           astropy.utils.exceptions.AstropyWarning: leap-second auto-update failed due to the following exception: IERSStaleWarning('leap-second file is expired.')
+
+astropy/time/core.py:2828: AstropyWarning
+____________________________ test_required_columns _____________________________
+
+    def test_required_columns():
+    
+        # Test the machinery that makes sure that the required columns are present
+    
+        ts = TimeSeries(time=INPUT_TIME,
+                        data=[[10, 2, 3], [4, 5, 6]],
+                        names=['a', 'b'])
+    
+        # In the examples below, the operation (e.g. remove_column) is actually
+        # carried out before the checks are made, so we need to use copy() so that
+        # we don't change the main version of the time series.
+    
+        # Make sure copy works fine
+        ts.copy()
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().add_column(Column([3, 4, 5], name='c'), index=0)
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'c'")
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().add_columns([Column([3, 4, 5], name='d'),
+                                   Column([3, 4, 5], name='e')], indexes=[0, 1])
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'd'")
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().keep_columns(['a', 'b'])
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'a'")
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().remove_column('time')
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'a'")
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().remove_columns(['time', 'a'])
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'b'")
+    
+        with pytest.raises(ValueError) as exc:
+            ts.copy().rename_column('time', 'banana')
+        assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "'time' as the first column but found 'banana'")
+    
+        # https://github.com/astropy/astropy/issues/13009
+        ts_2cols_required = ts.copy()
+        ts_2cols_required._required_columns = ['time', 'a']
+        with pytest.raises(ValueError) as exc:
+            ts_2cols_required.remove_column('a')
+>       assert exc.value.args[0] == ("TimeSeries object is invalid - expected "
+                                     "['time', 'a'] as the first columns but found ['time', 'b']")
+E       assert "TimeSeries o... found 'time'" == "TimeSeries o...['time', 'b']"
+E         - TimeSeries object is invalid - expected ['time', 'a'] as the first columns but found ['time', 'b']
+E         ?                                         -      ------                                -      ------
+E         + TimeSeries object is invalid - expected 'time' as the first columns but found 'time'
+
+astropy/timeseries/tests/test_sampled.py:403: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED astropy/timeseries/tests/test_sampled.py::test_empty_initialization
+PASSED astropy/timeseries/tests/test_sampled.py::test_empty_initialization_invalid
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialize_only_time
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_with_data
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialize_only_data
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_with_table
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_missing_time_delta
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_invalid_time_and_time_start
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_invalid_time_delta
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_with_time_in_data
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_n_samples
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_length_mismatch
+PASSED astropy/timeseries/tests/test_sampled.py::test_initialization_invalid_both_time_and_time_delta
+PASSED astropy/timeseries/tests/test_sampled.py::test_fold
+PASSED astropy/timeseries/tests/test_sampled.py::test_fold_invalid_options
+PASSED astropy/timeseries/tests/test_sampled.py::test_read_time_missing
+PASSED astropy/timeseries/tests/test_sampled.py::test_read_time_wrong
+PASSED astropy/timeseries/tests/test_sampled.py::test_read
+PASSED astropy/timeseries/tests/test_sampled.py::test_periodogram[BoxLeastSquares]
+PASSED astropy/timeseries/tests/test_sampled.py::test_periodogram[LombScargle]
+SKIPPED [1] astropy/timeseries/tests/test_sampled.py:272: could not import 'pandas': No module named 'pandas'
+SKIPPED [2] ../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/pytest_remotedata/plugin.py:85: need --remote-data option to run
+FAILED astropy/timeseries/tests/test_sampled.py::test_initialization_with_time_delta
+FAILED astropy/timeseries/tests/test_sampled.py::test_required_columns - asse...
+=================== 2 failed, 20 passed, 3 skipped in 0.21s ====================

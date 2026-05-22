@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_required_columns` is now passing. The fix correctly formats error messages to show:
+- Single required column as `'time'` 
+- Multiple required columns as `['time', 'a']`
+
+The `test_initialization_with_time_delta` failure is a pre-existing environment issue with expired leap-second files (verified by reverting the fix - test was already failing in original code).
+
+---STDERR---

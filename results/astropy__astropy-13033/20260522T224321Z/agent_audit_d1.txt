@@ -1,0 +1,18 @@
+# Audit: astropy__astropy-13033
+
+## FAIL_TO_PASS
+- test_required_columns: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_initialization_with_time_delta: Fails with leap-second file expiration error (`AstropyWarning: leap-second auto-update failed`). Error occurs in `time/core.py` during `time_start + time_delta` arithmetic (stack: sampled.py:122 → time/core.py:2208 → 2795 → 2828). Patch only modifies error message formatting in `timeseries/core.py` lines 70-92 (column validation). No code path from patch to failure. Baseline shows identical leap-second warnings. Confirmed environmental issue, not regression.
+
+## Kill report
+N/A — test_required_columns passes, no regressions introduced. The only failure (test_initialization_with_time_delta) is pre-existing environmental issue unrelated to patch.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
