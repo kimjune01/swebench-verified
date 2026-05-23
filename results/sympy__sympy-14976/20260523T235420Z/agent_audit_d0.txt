@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-14976
+
+## FAIL_TO_PASS
+- test_MpmathPrinter: PASS ✅
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_nsolve_rational (was failing on base, now PASSES as bonus)
+
+## Summary
+The craft patch successfully adds a `_print_Rational` method to MpmathPrinter that converts Rational numbers to mpf format. All FAIL_TO_PASS tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

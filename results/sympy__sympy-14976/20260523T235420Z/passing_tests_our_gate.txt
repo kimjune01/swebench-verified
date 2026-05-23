@@ -1,0 +1,35 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/printing/tests/test_pycode.py sympy/solvers/tests/test_numeric.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        69537993
+hash randomization: on (PYTHONHASHSEED=2387200236)
+
+sympy/printing/tests/test_pycode.py[8] 
+test_PythonCodePrinter ok
+test_MpmathPrinter ok
+test_NumPyPrinter ok
+test_SciPyPrinter ok
+test_pycode_reserved_words ok
+test_printmethod ok
+test_codegen_ast_nodes ok
+test_issue_14283 ok                                                         [OK]
+
+sympy/solvers/tests/test_numeric.py[10] 
+test_nsolve_fail f
+test_nsolve_denominator ok
+test_nsolve ok
+test_issue_6408 ok
+test_issue_6408_fail f
+test_increased_dps ok
+test_nsolve_precision ok
+test_nsolve_complex ok
+test_nsolve_dict_kwarg ok
+test_nsolve_rational ok                                                     [OK]
+
+
+======== tests finished: 16 passed, 2 expected to fail, in 0.56 seconds ========

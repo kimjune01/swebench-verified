@@ -1,0 +1,5 @@
+**RESOLVED** ✓
+
+The fix successfully makes test_MpmathPrinter pass by adding a `_print_Rational` method to the MpmathPrinter class. The implementation wraps both numerator and denominator with `mpmath.mpf()` for arbitrary precision arithmetic, with a special case for integer rationals (`q == 1`) to avoid unnecessarily verbose output.
+
+---STDERR---
