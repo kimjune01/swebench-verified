@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix is complete and verified. The `make_bytes` method in `django/http/response.py` now properly handles `memoryview` objects by grouping them with `bytes` in the isinstance check. This allows `memoryview` content to be correctly converted to bytes rather than falling through to the string representation fallback.
+
+**Summary:**
+- **Fix**: Changed `isinstance(value, bytes)` to `isinstance(value, (bytes, memoryview))` on line 232
+- **Gate result**: All 65 tests passed, including the previously failing `test_memoryview_content`
+- **No regressions**: All existing tests continue to pass
+
+---STDERR---

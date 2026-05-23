@@ -1,0 +1,36 @@
+# Recon: django__django-11133
+
+## Failure summary
+The test `test_memoryview_content` checks that `HttpResponse` can handle `memoryview` objects. When initialized with `HttpResponse(memoryview(b'memoryview'))`, the expected behavior is that `response.content` returns `b'memoryview'`. However, it fails with `AssertionError: b'<memory at 0x7f51be195588>' != b'memoryview'`. The response content contains a string representation of the memoryview object instead of its actual bytes.
+
+## Suspect set
+- `django/http/response.py` lines 223-237: The `make_bytes` method in `HttpResponseBase` class - this is where content values are converted to bytes, and it doesn't handle `memoryview` objects
+
+## Root cause
+The `make_bytes` method (django/http/response.py:223-237) does not recognize `memoryview` objects as a valid byte-like type. When a memoryview is passed to `HttpResponse.__init__`, the flow is: `__init__` → `content.setter` → `make_bytes`. Since memoryview is neither `bytes` nor `str`, it falls through to the generic fallback: `return str(value).encode(self.charset)`. The `str()` function on a memoryview returns its string representation (e.g., `"<memory at 0x7f51be195588>"`) rather than extracting the bytes.
+
+Confidence: Deduction — 95%
+
+Supporting evidence:
+- `django/http/response.py:232-236` — The make_bytes method:
+```python
+if isinstance(value, bytes):
+    return bytes(value)
+if isinstance(value, str):
+    return bytes(value.encode(self.charset))
+# Handle non-string types.
+return str(value).encode(self.charset)
+```
+- Verified behavior: `str(memoryview(b'test'))` returns `"<memory at 0x7fbd30cdef48>"` (the problem)
+- Verified solution: `bytes(memoryview(b'test'))` correctly returns `b'test'`
+
+## Edit sites
+- `django/http/response.py` lines 232-236: Add explicit handling for `memoryview` objects in the `make_bytes` method. Insert a check `if isinstance(value, memoryview): return bytes(value)` after the `bytes` check and before the `str` check, or combine memoryview with the bytes check since they can both be converted using `bytes(value)`.
+
+## Rejected hypotheses
+None - this is the initial diagnosis.
+
+## Open questions
+None - the root cause is clear from code inspection and the fix is straightforward.
+
+---STDERR---
