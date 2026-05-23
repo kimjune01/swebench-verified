@@ -1,0 +1,9 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests pass on the first gate iteration. The fix correctly combines all search term Q objects with AND connector into a single `filter()` call, which ensures related field searches use a shared JOIN instead of creating separate JOINs for each term. This fixes:
+
+1. **test_many_search_terms**: No longer crashes with "at most 64 tables in a join" - now uses only 1 JOIN regardless of search term count
+2. **test_related_field_multiple_search_terms**: Correctly returns 0 when search terms match different related rows (previously incorrectly returned 1)
+3. **test_multiple_search_fields**: Correctly returns 0 when search terms span different many-to-many related rows
+
+---STDERR---

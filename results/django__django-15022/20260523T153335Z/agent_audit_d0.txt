@@ -1,0 +1,22 @@
+# Audit: django__django-15022
+
+## FAIL_TO_PASS
+- `test_many_search_terms (admin_changelist.tests.ChangeListTests)`: **PASS** ✓
+- `test_multiple_search_fields (admin_changelist.tests.ChangeListTests)`: **PASS** ✓
+- `test_related_field_multiple_search_terms (admin_changelist.tests.ChangeListTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 63 non-skipped tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The only baseline failure was `test_related_field_multiple_search_terms`, now fixed.
+
+## Summary
+The patch successfully resolves the issue by combining all search term Q objects with AND logic before calling filter() once, rather than chaining multiple filter() calls. This eliminates both the 64-table join limit crash and the incorrect multi-term search behavior on related fields.
+
+All 69 tests executed: 63 passed, 6 skipped (Selenium - consistent with baseline). Full contract satisfied.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

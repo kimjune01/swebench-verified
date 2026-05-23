@@ -1,0 +1,68 @@
+# Recon: django__django-15022
+
+## Failure summary
+
+The admin changelist search with multiple search terms fails in three ways:
+1. **test_many_search_terms**: Crashes with `OperationalError: at most 64 tables in a join` when searching with 80 repetitions of "daniel" across search_fields including related field `child__name`. Expected 1 result with only 1 JOIN.
+2. **test_related_field_multiple_search_terms**: Searching for "danielle 19" with search_fields=['child__name', 'child__age'] returns 1 result instead of 0 (should return 0 because "danielle" and "19" match different Child rows). Searching for "daniel 19" correctly expects 1 (both terms match same Child).
+3. **test_multiple_search_fields**: Searching for "Mary Jonathan Duo" in a many-to-many relationship returns 1 result instead of 0 (should return 0 because "Mary" and "Jonathan" are different members).
+
+## Suspect set
+
+- `django/contrib/admin/options.py` lines 1034-1040: The loop that processes search terms and applies filters
+- Specifically the pattern: `queryset = queryset.filter(or_queries)` called repeatedly in the loop
+
+## Root cause
+
+The `get_search_results` method in `ModelAdmin` calls `queryset.filter()` separately for each search term. This causes Django's ORM to create a new JOIN for each filter when the search involves related fields.
+
+**Code path**: When a search query contains multiple terms:
+1. `smart_split(search_term)` breaks the query into individual words
+2. For each word, a Q object is built with OR conditions across all search fields
+3. **BUG**: `queryset.filter(or_queries)` is called for EACH term separately
+
+**Why this is wrong**:
+- In Django ORM, `queryset.filter(A).filter(B)` on related fields creates separate JOINs (allows A and B to match different related rows)
+- `queryset.filter(A & B)` on related fields uses a single JOIN (A and B must match the same related row)
+
+**Consequences**:
+1. Each search term adds another JOIN to the same related table → 80 terms = 80 JOINs → exceeds SQLite's 64-table limit
+2. For multi-valued relationships (foreign keys, many-to-many), different terms can match different related rows instead of requiring all terms to match the same row
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/contrib/admin/options.py:1034-1040`:
+```python
+for bit in smart_split(search_term):
+    if bit.startswith(('"', "'")) and bit[0] == bit[-1]:
+        bit = unescape_string_literal(bit)
+    or_queries = models.Q(
+        *((orm_lookup, bit) for orm_lookup in orm_lookups),
+        _connector=models.Q.OR,
+    )
+    queryset = queryset.filter(or_queries)  # ← Called repeatedly
+```
+
+## Edit sites
+
+- `django/contrib/admin/options.py` lines 1033-1040: Replace the loop that calls `queryset.filter()` for each search term with code that:
+  1. Collects all Q objects for all search terms into a list
+  2. Combines them with AND connector
+  3. Calls `queryset.filter()` once with the combined Q object
+
+Specific change: Instead of calling `filter()` inside the loop, accumulate Q objects in a list, then after the loop:
+```python
+if and_queries:  # list of Q objects
+    queryset = queryset.filter(models.Q(*and_queries, _connector=models.Q.AND))
+```
+
+## Rejected hypotheses
+
+None — the failure mode, error message, and code path directly point to this single root cause.
+
+## Open questions
+
+None — the fix is straightforward once the root cause is identified.
+
+---STDERR---
