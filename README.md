@@ -42,7 +42,12 @@ A second run: 15 Verified instances (filtered against `KNOWN_BAD.md`, pytest-bas
 - **Official verdict: 15/15 RESOLVED.** Per-instance reports + the harness's own test logs are committed under each `results/<id>/<run-id>/official_eval/`. One git commit per run.
 - **The outer loop fired and the official grader caught an audit error.** On `psf__requests-2931`, our internal audit flagged a PASS_TO_PASS regression and re-entered the loop (craft narrow-mode, depths 0→1→2, then budget halt), ending NOT_RESOLVED on *our* gate. The official grader resolves it: the patch was correct; audit misclassified a flaky/pre-existing P2P as a regression. Our gate said 14/15; the truth is 15/15. This is exactly why the third-party grader is the authority and our gate is not — and it is committed evidence, not a claim. (Follow-ups: a no-progress routing escalation, now in the driver, re-diagnoses instead of grinding a stuck regression; tightening audit's flaky/pre-existing detection is open.)
 
-Combined, 16 distinct Verified instances have been officially graded RESOLVED. Still a contaminated/leaderboard config on a KNOWN_BAD-filtered, pytest-only slice — not a clean-science claim. See `LIMITATIONS.md`.
+### batch_002 — 15 more, 5 boxes
+
+- **Official: 14/15 RESOLVED.** The one miss (`pydata__xarray-6599`) is a craft **timeout** (3600s, no patch captured) — an honest no-solve, not a wrong answer. Recorded as unresolved.
+- Two driver false-negatives the official grader overturned: `astropy-14369` (driver `verify_gate` reported `f2p=False`) and `pytest-5809` (audit emitted no parseable verdict) both graded RESOLVED. The pytest-specific `verify_gate` parser undercounts; the official harness is the truth. Two oversized patches (astropy-14598 ~104KB, -14369 ~23KB) also resolved.
+
+**Running total: 30/31 officially RESOLVED** (flask + batch_001 + batch_002), the lone miss a timeout. But read `LIMITATIONS.md` first — these are easy-biased, non-random, pytest-only batches. The number is plumbing/capability evidence, not a solve rate. The next batch (random, difficulty-stratified, Django-heavy) is the one whose rate would mean something.
 
 ## Run it yourself
 
