@@ -1,0 +1,17 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix was exactly as recon diagnosed:
+
+**Change**: `src/_pytest/setuponly.py:69`  
+```python
+-        tw.write("[{}]".format(fixturedef.cached_param))
++        tw.write("[{}]".format(repr(fixturedef.cached_param)))
+```
+
+This single-line change:
+1. ✅ Adds proper quoting to string parameters: `['foo']` instead of `[foo]`
+2. ✅ Prevents BytesWarning with bytes parameters under `-bb` flag
+
+Gate result: **26 passed** including all required FAIL_TO_PASS tests.
+
+---STDERR---

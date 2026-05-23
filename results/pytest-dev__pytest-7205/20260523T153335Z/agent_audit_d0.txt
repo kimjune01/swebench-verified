@@ -1,0 +1,23 @@
+# Audit: pytest-dev__pytest-7205
+
+## FAIL_TO_PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-only]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-only]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-only]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-plan]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-plan]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-plan]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-show]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-show]: PASS
+- testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-show]: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

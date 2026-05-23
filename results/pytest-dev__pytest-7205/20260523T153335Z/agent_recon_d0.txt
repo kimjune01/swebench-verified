@@ -1,0 +1,38 @@
+# Recon: pytest-dev__pytest-7205
+
+## Failure summary
+The failing tests check that parametrized fixtures display their parameter values with proper quoting in `--setup-show`, `--setup-only`, and `--setup-plan` modes. The tests expect output like `SETUP S arg_same['foo']` but get `SETUP S arg_same[foo]` (missing quotes). Additionally, a new test `test_show_fixture_action_with_bytes` fails because when fixture parameters are bytes objects (e.g., `b'Hello World'`), running pytest with Python's `-bb` flag (BytesWarning as error) causes the setup display code to raise a BytesWarning, failing the test.
+
+## Suspect set
+- `src/_pytest/setuponly.py` lines 68-69: The `_show_fixture_action` function writes the cached parameter value without using `repr()`, causing both the missing quotes issue and the BytesWarning issue.
+
+## Root cause
+In `src/_pytest/setuponly.py:69`, the code formats the cached parameter value directly:
+```python
+if hasattr(fixturedef, "cached_param"):
+    tw.write("[{}]".format(fixturedef.cached_param))
+```
+
+When `cached_param` is a bytes object, `.format()` implicitly calls `str()` on it, triggering Python's BytesWarning (comparison/conversion between bytes and str). With the `-bb` flag, this warning becomes an error.
+
+Additionally, for string parameters, this produces unquoted output `[foo]` instead of the expected quoted format `['foo']`.
+
+**Confidence**: deduction — 95%
+
+Supporting evidence:
+- `src/_pytest/setuponly.py:69` — `tw.write("[{}]".format(fixturedef.cached_param))`
+- Reproduced: `python -bb -c "print('[{}]'.format(b'Hello'))"` raises BytesWarning
+- Verified fix: `python -bb -c "print('[{}]'.format(repr(b'Hello')))"` produces `[b'Hello']` without warning
+- Test expectations use fnmatch pattern `?'foo'?` requiring quotes around values
+- Test output shows `SETUP S arg_same[foo]` but test expects `SETUP S arg_same['foo']`
+
+## Edit sites
+- `src/_pytest/setuponly.py:69` — Replace `fixturedef.cached_param` with `repr(fixturedef.cached_param)` to properly quote string values and avoid BytesWarning for bytes values
+
+## Rejected hypotheses
+None — the first hypothesis (direct code reading) identified the exact issue.
+
+## Open questions
+None — the root cause is clear from reading the code and the fix is straightforward.
+
+---STDERR---

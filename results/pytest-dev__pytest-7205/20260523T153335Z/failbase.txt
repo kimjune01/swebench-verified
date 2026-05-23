@@ -1,0 +1,122 @@
+$ pytest -rA testing/test_setuponly.py
+
+        test_show_fixtures_with_autouse.py::test_arg1 (fixtures used: arg_function, arg_session).
+        TEARDOWN F arg_function
+TEARDOWN S arg_session
+
+============================== 1 passed in 0.00s ===============================
+_________________________ test_dynamic_fixture_request _________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev262+g5e7f1ab4b, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_dynamic_fixture_request0
+collected 1 item
+
+test_dynamic_fixture_request.py 
+        SETUP    F dynamically_requested_fixture
+        SETUP    F dependent_fixture
+        test_dynamic_fixture_request.py::test_dyn (fixtures used: dependent_fixture, request)
+        TEARDOWN F dependent_fixture
+        TEARDOWN F dynamically_requested_fixture
+
+============================ no tests ran in 0.00s =============================
+________________________________ test_capturing ________________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev262+g5e7f1ab4b, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_capturing0
+collected 1 item
+
+test_capturing.py 
+        SETUP    F one
+        SETUP    F two (fixtures used: one)E
+        TEARDOWN F two
+        TEARDOWN F one
+
+==================================== ERRORS ====================================
+_______________________ ERROR at setup of test_capturing _______________________
+
+one = None
+
+    @pytest.fixture()
+    def two(one):
+>       assert 0
+E       assert 0
+
+test_capturing.py:8: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+this should be captured
+---------------------------- Captured stderr setup -----------------------------
+this should also be captured
+=========================== short test summary info ============================
+ERROR test_capturing.py::test_capturing - assert 0
+=============================== 1 error in 0.01s ===============================
+_____________________ test_show_fixtures_and_execute_test ______________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev262+g5e7f1ab4b, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_show_fixtures_and_execute_test0
+collected 1 item
+
+test_show_fixtures_and_execute_test.py 
+        SETUP    F arg
+        test_show_fixtures_and_execute_test.py::test_arg (fixtures used: arg)F
+        TEARDOWN F arg
+
+=================================== FAILURES ===================================
+___________________________________ test_arg ___________________________________
+
+arg = None
+
+    def test_arg(arg):
+>       assert False
+E       assert False
+
+test_show_fixtures_and_execute_test.py:6: AssertionError
+=========================== short test summary info ============================
+FAILED test_show_fixtures_and_execute_test.py::test_arg - assert False
+============================== 1 failed in 0.01s ===============================
+________________ test_setup_show_with_KeyboardInterrupt_in_test ________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev262+g5e7f1ab4b, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_setup_show_with_KeyboardInterrupt_in_test0
+collected 1 item
+
+test_setup_show_with_KeyboardInterrupt_in_test.py 
+        SETUP    F arg
+        test_setup_show_with_KeyboardInterrupt_in_test.py::test_arg (fixtures used: arg)
+        TEARDOWN F arg
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/tmp/pytest-of-root/pytest-0/test_setup_show_with_KeyboardInterrupt_in_test0/test_setup_show_with_KeyboardInterrupt_in_test.py:6: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+============================ no tests ran in 0.09s =============================
+=========================== short test summary info ============================
+PASSED testing/test_setuponly.py::test_show_only_active_fixtures[--setup-only]
+PASSED testing/test_setuponly.py::test_show_different_scopes[--setup-only]
+PASSED testing/test_setuponly.py::test_show_nested_fixtures[--setup-only]
+PASSED testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-only]
+PASSED testing/test_setuponly.py::test_show_only_active_fixtures[--setup-plan]
+PASSED testing/test_setuponly.py::test_show_different_scopes[--setup-plan]
+PASSED testing/test_setuponly.py::test_show_nested_fixtures[--setup-plan]
+PASSED testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-plan]
+PASSED testing/test_setuponly.py::test_show_only_active_fixtures[--setup-show]
+PASSED testing/test_setuponly.py::test_show_different_scopes[--setup-show]
+PASSED testing/test_setuponly.py::test_show_nested_fixtures[--setup-show]
+PASSED testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-show]
+PASSED testing/test_setuponly.py::test_dynamic_fixture_request
+PASSED testing/test_setuponly.py::test_capturing
+PASSED testing/test_setuponly.py::test_show_fixtures_and_execute_test
+PASSED testing/test_setuponly.py::test_setup_show_with_KeyboardInterrupt_in_test
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-only]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-only]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-only]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-plan]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-plan]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-plan]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameters[--setup-show]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids[--setup-show]
+FAILED testing/test_setuponly.py::test_show_fixtures_with_parameter_ids_function[--setup-show]
+FAILED testing/test_setuponly.py::test_show_fixture_action_with_bytes - asser...
+======================== 10 failed, 16 passed in 0.71s =========================
