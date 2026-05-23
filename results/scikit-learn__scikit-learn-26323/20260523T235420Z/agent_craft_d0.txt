@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. The issue was that `self.remainder` wasn't getting the output configuration when `set_output` was called before fitting. By adding a call to `_safe_set_output(self.remainder, transform=transform)` in the `set_output` method (guarded to skip "passthrough" and "drop"), the remainder transformer now properly receives the output configuration.
+
+Gate result: ✅ All 189 tests passed on first iteration, including the target test `test_remainder_set_output`.
+
+---STDERR---

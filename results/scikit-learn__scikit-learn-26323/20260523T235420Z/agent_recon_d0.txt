@@ -1,0 +1,5 @@
+Perfect! This confirms that my diagnosis and fix are correct. The issue occurs when `set_output` is called before fitting, and `self.remainder` (which is stored separately from `self.transformers`) never gets the output configuration propagated to it.
+
+My recon diagnosis is complete and has been output to stdout and appended to the hypothesis graph. The fix is clear: add a call to `_safe_set_output(self.remainder, transform=transform)` in the `set_output` method if `self.remainder` is not "passthrough" or "drop".
+
+---STDERR---

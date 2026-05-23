@@ -1,0 +1,21 @@
+# Audit: scikit-learn__scikit-learn-26323
+
+## FAIL_TO_PASS
+- `test_remainder_set_output`: ✅ **PASS**
+
+## PASS_TO_PASS regressions
+None. All 189 tests passed with zero failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+None detected. Clean gate run.
+
+## Summary
+
+The patch successfully resolves the issue. The single FAIL_TO_PASS test now passes, and zero regressions were introduced across the 189-test suite. 
+
+The fix adds 4 lines to `sklearn/compose/_column_transformer.py` that propagate `set_output()` configuration to `self.remainder` when it's a custom transformer (not "passthrough" or "drop"). This directly addresses the root cause: the remainder was stored separately from `self.transformers` and wasn't included in the output configuration loop.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
