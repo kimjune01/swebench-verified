@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 mail.tests
+
+  File "/testbed/tests/mail/tests.py", line 885, in test_send_long_lines
+    email.send()
+  File "/testbed/django/core/mail/message.py", line 279, in send
+    return self.get_connection(fail_silently).send_messages([self])
+  File "/testbed/django/core/mail/backends/smtp.py", line 109, in send_messages
+    sent = self._send(message)
+  File "/testbed/django/core/mail/backends/smtp.py", line 125, in _send
+    self.connection.sendmail(from_email, recipients, message.as_bytes(linesep='\r\n'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 852, in sendmail
+    self.ehlo_or_helo_if_needed()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 600, in ehlo_or_helo_if_needed
+    if not (200 <= self.ehlo()[0] <= 299):
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 440, in ehlo
+    self.putcmd(self.ehlo_msg, name or self.local_hostname)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 367, in putcmd
+    self.send(str)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 352, in send
+    s = s.encode(self.command_encoding)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 5-6: ordinal not in range(128)
+
+======================================================================
+ERROR: test_send_many (mail.tests.SMTPBackendTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/mail/tests.py", line 899, in test_send_many
+    num_sent = mail.get_connection().send_messages(emails_list)
+  File "/testbed/django/core/mail/backends/smtp.py", line 109, in send_messages
+    sent = self._send(message)
+  File "/testbed/django/core/mail/backends/smtp.py", line 125, in _send
+    self.connection.sendmail(from_email, recipients, message.as_bytes(linesep='\r\n'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 852, in sendmail
+    self.ehlo_or_helo_if_needed()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 600, in ehlo_or_helo_if_needed
+    if not (200 <= self.ehlo()[0] <= 299):
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 440, in ehlo
+    self.putcmd(self.ehlo_msg, name or self.local_hostname)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 367, in putcmd
+    self.send(str)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 352, in send
+    s = s.encode(self.command_encoding)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 5-6: ordinal not in range(128)
+
+======================================================================
+ERROR: test_send_unicode (mail.tests.SMTPBackendTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/mail/tests.py", line 870, in test_send_unicode
+    num_sent = mail.get_connection().send_messages([email])
+  File "/testbed/django/core/mail/backends/smtp.py", line 109, in send_messages
+    sent = self._send(message)
+  File "/testbed/django/core/mail/backends/smtp.py", line 125, in _send
+    self.connection.sendmail(from_email, recipients, message.as_bytes(linesep='\r\n'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 852, in sendmail
+    self.ehlo_or_helo_if_needed()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 600, in ehlo_or_helo_if_needed
+    if not (200 <= self.ehlo()[0] <= 299):
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 440, in ehlo
+    self.putcmd(self.ehlo_msg, name or self.local_hostname)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 367, in putcmd
+    self.send(str)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 352, in send
+    s = s.encode(self.command_encoding)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 5-6: ordinal not in range(128)
+
+======================================================================
+ERROR: test_send_verbose_name (mail.tests.SMTPBackendTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/mail/tests.py", line 910, in test_send_verbose_name
+    email.send()
+  File "/testbed/django/core/mail/message.py", line 279, in send
+    return self.get_connection(fail_silently).send_messages([self])
+  File "/testbed/django/core/mail/backends/smtp.py", line 109, in send_messages
+    sent = self._send(message)
+  File "/testbed/django/core/mail/backends/smtp.py", line 125, in _send
+    self.connection.sendmail(from_email, recipients, message.as_bytes(linesep='\r\n'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 852, in sendmail
+    self.ehlo_or_helo_if_needed()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 600, in ehlo_or_helo_if_needed
+    if not (200 <= self.ehlo()[0] <= 299):
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 440, in ehlo
+    self.putcmd(self.ehlo_msg, name or self.local_hostname)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 367, in putcmd
+    self.send(str)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 352, in send
+    s = s.encode(self.command_encoding)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 5-6: ordinal not in range(128)
+
+======================================================================
+ERROR: test_server_login (mail.tests.SMTPBackendTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/mail/tests.py", line 1446, in test_server_login
+    with backend:
+  File "/testbed/django/core/mail/backends/base.py", line 45, in __enter__
+    self.open()
+  File "/testbed/django/core/mail/backends/smtp.py", line 69, in open
+    self.connection.login(self.username, self.password)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 694, in login
+    self.ehlo_or_helo_if_needed()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 600, in ehlo_or_helo_if_needed
+    if not (200 <= self.ehlo()[0] <= 299):
+  File "/testbed/tests/mail/tests.py", line 1339, in ehlo
+    response = SMTP.ehlo(self, name=name)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 440, in ehlo
+    self.putcmd(self.ehlo_msg, name or self.local_hostname)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 367, in putcmd
+    self.send(str)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/smtplib.py", line 352, in send
+    s = s.encode(self.command_encoding)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 5-6: ordinal not in range(128)
+
+----------------------------------------------------------------------
+Ran 158 tests in 0.209s
+
+FAILED (errors=19)
+Testing against Django installed in '/testbed/django'
+Importing application mail
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

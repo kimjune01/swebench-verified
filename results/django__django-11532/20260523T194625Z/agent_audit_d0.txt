@@ -1,0 +1,23 @@
+# Audit: django__django-11532
+
+## FAIL_TO_PASS
+- test_non_ascii_dns_non_unicode_email (mail.tests.MailTests): PASS ✓
+
+## PASS_TO_PASS regressions
+None — all 158 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+The following tests were failing on base with UnicodeEncodeError and are now passing:
+- test_send_long_lines (mail.tests.SMTPBackendTests)
+- test_send_many (mail.tests.SMTPBackendTests)
+- test_send_unicode (mail.tests.SMTPBackendTests)
+
+The patch not only fixed the target FAIL_TO_PASS test but also resolved pre-existing SMTP backend failures related to non-ASCII DNS handling in SMTP.
+
+## Result
+All FAIL_TO_PASS tests pass. Zero PASS_TO_PASS regressions. The fix correctly handles non-ASCII DNS names by encoding them to ASCII (IDNA) before passing to SMTP, which resolves both the target test and the pre-existing Unicode encoding errors in the SMTP backend.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

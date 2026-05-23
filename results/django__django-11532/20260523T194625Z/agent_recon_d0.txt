@@ -1,0 +1,52 @@
+# Recon: django__django-11532
+
+## Failure summary
+
+The test `test_non_ascii_dns_non_unicode_email` is designed to verify that email messages handle non-ASCII domain names correctly when the email encoding is set to a non-unicode encoding (iso-8859-1). The test mocks `socket.getfqdn()` to return a non-ASCII hostname ('漢字'), creates an email with iso-8859-1 encoding, and expects the Message-ID header to contain the punycode representation of the hostname ('@xn--p8s937b>'). 
+
+The test currently fails with `AttributeError: _fqdn` because it attempts to delete the `_fqdn` cache attribute from DNS_NAME before it has been initialized. Once this test issue is resolved, the actual bug will surface: a `UnicodeEncodeError` when trying to encode the non-ASCII domain name in the Message-ID header to iso-8859-1.
+
+## Suspect set
+
+- `django/core/mail/utils.py` lines 9-20: CachedDnsName class that returns socket.getfqdn() without punycode conversion
+- `django/core/mail/message.py` line 260: Uses DNS_NAME in make_msgid without ensuring ASCII-safe domain
+- `tests/mail/tests.py` line 371: Test attempts delattr on potentially non-existent attribute
+
+## Root cause
+
+The CachedDnsName.get_fqdn() method returns the value from socket.getfqdn() directly without converting it to punycode (IDNA encoding). When the hostname contains non-ASCII characters (e.g., '漢字'), and this value is used in email headers with non-unicode encodings (e.g., iso-8859-1), Python's email.header.Header class cannot encode the characters, resulting in a UnicodeEncodeError.
+
+The codebase already has a punycode conversion pattern in `sanitize_address()` at line 108: `domain.encode('idna').decode('ascii')`. This handles email addresses in address headers (To, From, Cc, etc.), but the Message-ID header is not an address header, so it doesn't go through sanitize_address. Instead, DNS_NAME is passed directly to make_msgid, and the resulting Message-ID value goes through forbid_multi_line_headers, which attempts to encode non-ASCII values using Header(val, encoding) - this fails for non-unicode encodings.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/core/mail/utils.py:14-17` — get_fqdn() caches and returns socket.getfqdn() without conversion
+- `django/core/mail/message.py:260` — `msg['Message-ID'] = make_msgid(domain=DNS_NAME)` uses DNS_NAME as-is
+- `django/core/mail/message.py:40-46` — ADDRESS_HEADERS set contains 'from', 'to', 'cc', etc., but not 'message-id'
+- `django/core/mail/message.py:64-67` — Non-address headers use `Header(val, encoding).encode()` which fails on non-unicode encodings
+- `django/core/mail/message.py:108` — Existing pattern: `domain.encode('idna').decode('ascii')` for address headers
+
+## Edit sites
+
+1. **django/core/mail/utils.py** lines 14-17 (CachedDnsName.get_fqdn method):
+   - Add punycode conversion: convert the cached FQDN to ASCII using IDNA encoding
+   - Pattern to follow: `hostname.encode('idna').decode('ascii')` (same as line 108 in message.py)
+   - This ensures DNS_NAME always returns an ASCII-safe domain name
+
+2. **tests/mail/tests.py** line 371 (test_non_ascii_dns_non_unicode_email):
+   - Change `delattr(DNS_NAME, '_fqdn')` to conditionally delete only if attribute exists
+   - Use: `if hasattr(DNS_NAME, '_fqdn'): delattr(DNS_NAME, '_fqdn')`
+   - This prevents AttributeError when DNS_NAME hasn't been accessed yet
+
+## Rejected hypotheses
+
+- H₁: Fix should be at the make_msgid call site in message.py — Rejected because DNS_NAME is also used in smtp.py for local_hostname, and SMTP protocol requires ASCII-safe hostnames. Converting in get_fqdn() protects both uses.
+- H₂: Fix should be in forbid_multi_line_headers to handle Message-ID specially — Rejected because the root issue is that DNS_NAME provides non-ASCII data; fixing at the source is cleaner than adding special cases downstream.
+
+## Open questions
+
+- Should the punycode conversion handle errors (e.g., invalid hostnames that can't be encoded)? The existing pattern in sanitize_address doesn't, so probably not needed for consistency.
+- Are there any other consumers of DNS_NAME outside django.core.mail that might be affected? (grep shows only mail module uses it)
+
+---STDERR---

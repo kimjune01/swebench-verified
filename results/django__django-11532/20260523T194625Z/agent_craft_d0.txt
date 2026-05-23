@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test now passes. The fix applied IDNA (punycode) conversion to `DNS_NAME.get_fqdn()` following the existing pattern from `sanitize_address()`, ensuring Message-ID headers work correctly with non-ASCII hostnames and non-unicode email encodings.
+
+---STDERR---
