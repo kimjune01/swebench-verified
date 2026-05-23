@@ -1,0 +1,29 @@
+# Audit: astropy__astropy-13236
+
+## FAIL_TO_PASS
+- astropy/table/tests/test_mixin.py::test_ndarray_mixin[False]: **PASS** ✓
+- astropy/table/tests/test_table.py::test_structured_masked_column: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+- astropy/table/tests/test_mixin.py::test_skycoord_representation — TypeError in concatenate (failed on base)
+- astropy/table/tests/test_table.py::test_values_equal_part1 — Failed to raise ValueError (failed on base)
+
+## Gate summary
+- 646 tests passed
+- 2 tests failed (both pre-existing, verified against `/tmp/swebench-abduction/r4_failbase_astropy__astropy-13236.txt`)
+- 25 skipped
+- 1 xfailed
+
+The patch successfully removed the auto-transform code (lines 1242-1247) that was converting structured ndarrays to NdarrayMixin. This allows:
+- Regular structured ndarrays to fall through to Column creation
+- Masked structured ndarrays to be caught by the masked array check and become MaskedColumn
+
+Both FAIL_TO_PASS tests now pass. The two remaining failures were already present before the patch and are unrelated to the fix.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

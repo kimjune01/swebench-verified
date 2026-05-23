@@ -1,0 +1,122 @@
+$ pytest -rA astropy/table/tests/test_mixin.py astropy/table/tests/test_table.py
+
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_convert_numpy_array[subclass]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_as_array_byteswap[unmasked]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_as_array_byteswap[masked]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_as_array_byteswap[subclass]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_byteswap_fits_array[unmasked]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_byteswap_fits_array[masked]
+PASSED astropy/table/tests/test_table.py::TestConvertNumpyArray::test_byteswap_fits_array[subclass]
+PASSED astropy/table/tests/test_table.py::test_copy
+PASSED astropy/table/tests/test_table.py::test_copy_masked
+PASSED astropy/table/tests/test_table.py::test_copy_protocol
+PASSED astropy/table/tests/test_table.py::test_disallow_inequality_comparisons
+PASSED astropy/table/tests/test_table.py::test_rows_equal
+PASSED astropy/table/tests/test_table.py::test_equality_masked
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_none
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_init[meta0]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_init[meta1]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_init[meta2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_init[ceci n'est pas un meta]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_init[1.2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_init[meta2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_set[meta0]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_set[meta1]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_mapping_set[meta2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_set[ceci n'est pas un meta]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_set[1.2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_non_mapping_set[meta2]
+PASSED astropy/table/tests/test_table.py::TestMetaTable::test_meta_fits_header
+PASSED astropy/table/tests/test_table.py::test_unicode_content
+PASSED astropy/table/tests/test_table.py::test_unicode_policy
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[unmasked-\u043f\u0438\u0442\u043e\u043d\u0430]
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[unmasked-ascii]
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[masked-\u043f\u0438\u0442\u043e\u043d\u0430]
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[masked-ascii]
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[subclass-\u043f\u0438\u0442\u043e\u043d\u0430]
+PASSED astropy/table/tests/test_table.py::test_unicode_bytestring_conversion[subclass-ascii]
+PASSED astropy/table/tests/test_table.py::test_table_deletion
+PASSED astropy/table/tests/test_table.py::test_nested_iteration
+PASSED astropy/table/tests/test_table.py::test_table_init_from_degenerate_arrays[unmasked]
+PASSED astropy/table/tests/test_table.py::test_table_init_from_degenerate_arrays[masked]
+PASSED astropy/table/tests/test_table.py::test_table_init_from_degenerate_arrays[subclass]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_fail_replace_column[unmasked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_fail_replace_column[masked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_fail_replace_column[subclass]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column[unmasked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column[masked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column[subclass]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_index_column[unmasked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_index_column[masked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_index_column[subclass]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column_no_copy[unmasked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column_no_copy[masked]
+PASSED astropy/table/tests/test_table.py::TestReplaceColumn::test_replace_column_no_copy[subclass]
+PASSED astropy/table/tests/test_table.py::TestQTableColumnConversionCornerCases::test_replace_with_masked_col_with_units_in_qtable
+PASSED astropy/table/tests/test_table.py::TestQTableColumnConversionCornerCases::test_do_not_replace_string_column_with_units_in_qtable
+PASSED astropy/table/tests/test_table.py::Test__Astropy_Table__::test_simple_1
+PASSED astropy/table/tests/test_table.py::Test__Astropy_Table__::test_simple_2
+PASSED astropy/table/tests/test_table.py::Test__Astropy_Table__::test_kwargs_exception
+PASSED astropy/table/tests/test_table.py::TestUpdate::test_different_lengths
+PASSED astropy/table/tests/test_table.py::TestUpdate::test_invalid_inputs
+PASSED astropy/table/tests/test_table.py::TestUpdate::test_metadata_conflict
+PASSED astropy/table/tests/test_table.py::TestUpdate::test_update
+PASSED astropy/table/tests/test_table.py::TestUpdate::test_update_without_copy
+PASSED astropy/table/tests/test_table.py::test_table_meta_copy
+PASSED astropy/table/tests/test_table.py::test_table_meta_copy_with_meta_arg
+PASSED astropy/table/tests/test_table.py::test_replace_column_qtable
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_warnings_normal
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_warnings_slice
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_warnings_attributes
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_warnings_refcount
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_warnings_always
+PASSED astropy/table/tests/test_table.py::test_replace_update_column_via_setitem_replace_inplace
+PASSED astropy/table/tests/test_table.py::test_primary_key_is_inherited
+PASSED astropy/table/tests/test_table.py::test_qtable_read_for_ipac_table_with_char_columns
+PASSED astropy/table/tests/test_table.py::test_create_table_from_final_row
+PASSED astropy/table/tests/test_table.py::test_key_values_in_as_array
+PASSED astropy/table/tests/test_table.py::test_tolist
+PASSED astropy/table/tests/test_table.py::test_table_attribute
+PASSED astropy/table/tests/test_table.py::test_table_attribute_ecsv
+PASSED astropy/table/tests/test_table.py::test_table_attribute_fail
+PASSED astropy/table/tests/test_table.py::test_set_units_fail
+PASSED astropy/table/tests/test_table.py::test_set_units
+PASSED astropy/table/tests/test_table.py::test_set_descriptions
+PASSED astropy/table/tests/test_table.py::test_set_units_from_row
+PASSED astropy/table/tests/test_table.py::test_set_units_descriptions_read
+PASSED astropy/table/tests/test_table.py::test_broadcasting_8933
+PASSED astropy/table/tests/test_table.py::test_custom_masked_column_in_nonmasked_table
+PASSED astropy/table/tests/test_table.py::test_sort_with_mutable_skycoord
+PASSED astropy/table/tests/test_table.py::test_sort_with_non_mutable
+PASSED astropy/table/tests/test_table.py::test_init_with_list_of_masked_arrays
+PASSED astropy/table/tests/test_table.py::test_data_to_col_convert_strategy
+PASSED astropy/table/tests/test_table.py::test_rows_with_mixins
+PASSED astropy/table/tests/test_table.py::test_iterrows
+PASSED astropy/table/tests/test_table.py::test_values_and_types
+PASSED astropy/table/tests/test_table.py::test_items
+PASSED astropy/table/tests/test_table.py::test_read_write_not_replaceable
+PASSED astropy/table/tests/test_table.py::test_keep_columns_with_generator
+PASSED astropy/table/tests/test_table.py::test_remove_columns_with_generator
+PASSED astropy/table/tests/test_table.py::test_keep_columns_invalid_names_messages
+PASSED astropy/table/tests/test_table.py::test_remove_columns_invalid_names_messages
+PASSED astropy/table/tests/test_table.py::test_read_write_tilde_path[str]
+PASSED astropy/table/tests/test_table.py::test_read_write_tilde_path[Path]
+SKIPPED [2] ../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/pytest_remotedata/plugin.py:85: need --remote-data option to run
+SKIPPED [4] astropy/table/tests/test_mixin.py:282: no unsupported column types
+SKIPPED [1] astropy/table/tests/test_table.py:1817: condition: not HAS_PANDAS
+SKIPPED [8] astropy/table/tests/test_table.py:1869: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:1883: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:1893: condition: not HAS_PANDAS
+SKIPPED [2] astropy/table/tests/test_table.py:1927: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:1974: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:1993: condition: not HAS_PANDAS
+SKIPPED [2] astropy/table/tests/test_table.py:2006: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:2057: condition: not HAS_PANDAS
+SKIPPED [1] astropy/table/tests/test_table.py:2077: condition: not HAS_PANDAS
+XFAIL astropy/table/tests/test_table.py::test_equality_masked_bug
+FAILED astropy/table/tests/test_mixin.py::test_skycoord_representation - Type...
+FAILED astropy/table/tests/test_mixin.py::test_ndarray_mixin[False] - Asserti...
+FAILED astropy/table/tests/test_table.py::test_values_equal_part1 - Failed: D...
+FAILED astropy/table/tests/test_table.py::test_structured_masked_column - Att...
+============= 4 failed, 644 passed, 25 skipped, 1 xfailed in 3.93s =============

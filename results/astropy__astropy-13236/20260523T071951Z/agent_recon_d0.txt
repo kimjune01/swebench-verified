@@ -1,0 +1,50 @@
+# Recon: astropy__astropy-13236
+
+## Failure summary
+The failing tests verify that structured ndarrays can be added to Tables as `Column` or `MaskedColumn` objects instead of being auto-transformed to `NdarrayMixin`. Currently, all structured ndarrays (including masked ones) are automatically converted to `NdarrayMixin` in `_convert_data_to_col`, preventing the creation of proper Column types.
+
+**test_ndarray_mixin[False]**: When `as_ndarray_mixin=False`, expects structured arrays added to a table to be `Column` instances, but they are `NdarrayMixin` instances.
+- Error: `AssertionError: assert False where False = isinstance(NdarrayMixin(...), <class 'astropy.table.column.Column'>)`
+
+**test_structured_masked_column**: Expects masked structured arrays to become `MaskedColumn` instances with accessible `.mask` attribute, but they become `NdarrayMixin` instances which lack this attribute.
+- Error: `AttributeError: 'NdarrayMixin' object has no attribute 'mask'`
+
+## Suspect set
+- `astropy/table/table.py` lines 1242-1247: Auto-transform of structured ndarrays to `NdarrayMixin`
+- `astropy/table/table.py` lines 1268-1273: Early return for mixin data (prevents normal Column creation)
+- `astropy/table/table.py` lines 1286-1290: Masked array handling (never reached for structured masked arrays)
+
+## Root cause
+Lines 1242-1247 in `astropy/table/table.py` unconditionally transform structured ndarrays to `NdarrayMixin` before downstream logic can classify them as `Column` or `MaskedColumn`.
+
+The control flow in `_convert_data_to_col`:
+1. Line 1244: Checks `isinstance(data, np.ndarray) and len(data.dtype) > 1` → matches all structured arrays
+2. Line 1246: Converts to `NdarrayMixin` and sets `data_is_mixin = True`
+3. Line 1268: Because `data_is_mixin` is True, returns early without further classification
+4. Lines 1286-1290: Masked array check never executes for structured masked arrays
+5. Line 1313: Default Column creation never executes for structured regular arrays
+
+Since `np.ma.MaskedArray` is a subclass of `np.ndarray`, masked structured arrays match the line 1244 condition and get transformed before being recognized as masked.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `astropy/table/table.py:1244-1247` — the transformation code that matches all structured arrays
+- `astropy/table/table.py:1286` — masked array handling unreachable for structured dtypes
+- Verified via container: `Column` and `MaskedColumn` already support structured dtypes post-#12644
+- `grep -rn "view(NdarrayMixin)"` shows this is the only location performing auto-transform (tests do it explicitly)
+
+## Edit sites
+- `astropy/table/table.py` lines 1242-1247: **Delete the entire block** (6 lines including the comment). This removes the auto-transform behavior, allowing structured arrays to fall through to normal Column/MaskedColumn creation logic.
+
+After removal:
+- Regular structured ndarrays will reach line 1313 → `col_cls = self.ColumnClass` → become `Column`
+- Masked structured ndarrays will reach line 1286 → `isinstance(data, np.ma.MaskedArray)` → become `MaskedColumn`
+
+## Rejected hypotheses
+None. The control flow is deterministic and directly observable. No competing explanations survive code reading.
+
+## Open questions
+None. The fix is a simple deletion with no edge cases. Post-#12644, `Column` and `MaskedColumn` fully support structured dtypes, making the auto-transform obsolete.
+
+---STDERR---

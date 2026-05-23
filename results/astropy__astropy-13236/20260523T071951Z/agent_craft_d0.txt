@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass:
+- `test_ndarray_mixin[False]` ✅
+- `test_structured_masked_column` ✅
+
+The fix was simple and correct: deleting the 6-line block that auto-transformed structured ndarrays to `NdarrayMixin`. This allows structured arrays to fall through to the proper `Column` or `MaskedColumn` creation logic, exactly as the recon diagnosis predicted.
+
+---STDERR---

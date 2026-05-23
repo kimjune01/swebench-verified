@@ -1,0 +1,7 @@
+{
+ "instance_id": "astropy__astropy-13236",
+ "official_resolved": true,
+ "run_id": "20260523T071951Z",
+ "grader": "swebench.harness.run_evaluation",
+ "dataset": "princeton-nlp/SWE-bench_Verified"
+}
