@@ -1,0 +1,38 @@
+# Recon: pydata__xarray-3993
+
+## Failure summary
+
+The tests verify that DataArray.integrate should use `coord` as its parameter name (matching Dataset.integrate) instead of `dim`. The test_integrate tests expect that calling `da.integrate(dim="x")` raises a FutureWarning for the deprecated parameter. The test_units tests expect `da.integrate(coord="x")` to work. Currently, DataArray.integrate only accepts `dim`, causing:
+1. `test_integrate[True/False]`: No FutureWarning emitted when using `dim` keyword
+2. `test_units` tests: TypeError when using `coord` keyword ("got an unexpected keyword argument 'coord'")
+
+## Suspect set
+
+- `xarray/core/dataarray.py` lines 3483-3531: DataArray.integrate method — wrong parameter name and missing deprecation warning
+
+## Root cause
+
+DataArray.integrate uses `dim` as its parameter name while Dataset.integrate uses `coord`, creating API inconsistency. The parameter should be `coord` (not `dim`) because coordinates contain the spacing information needed for integration, while dimensions are just labels. The issue requires both adding support for the `coord` parameter and deprecating the old `dim` parameter with a FutureWarning.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `xarray/core/dataarray.py:3483-3484` — Current signature: `def integrate(self, dim: Union[Hashable, Sequence[Hashable]], datetime_unit: str = None)`
+- `xarray/core/dataset.py:5966` — Dataset signature: `def integrate(self, coord, datetime_unit=None)`
+- `xarray/core/dataarray.py:3531` — Calls Dataset: `ds = self._to_temp_dataset().integrate(dim, datetime_unit)` (works via positional arg)
+- `xarray/tests/test_dataset.py:6606` — Test expects: `with pytest.warns(FutureWarning): da.integrate(dim="x")`
+- `xarray/tests/test_units.py:3684` — Test calls: `method("integrate", coord="x")`
+
+## Edit sites
+
+- `xarray/core/dataarray.py` lines 3483-3531: Change integrate method signature from `def integrate(self, dim, datetime_unit=None)` to `def integrate(self, coord=None, datetime_unit=None, *, dim=None)`. Add logic at function start: if `dim` is not None, issue `warnings.warn("dim parameter is deprecated. Use coord instead.", FutureWarning, stacklevel=2)` and use dim value; if both coord and dim are provided, raise ValueError; if neither, raise TypeError. Update the Dataset.integrate call to pass the determined coordinate value. Update docstring parameter name from `dim` to `coord`.
+
+## Rejected hypotheses
+
+None — first diagnosis.
+
+## Open questions
+
+None — the fix is a straightforward parameter rename with backward compatibility via deprecation warning.
+
+---STDERR---

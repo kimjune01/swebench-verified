@@ -1,0 +1,15 @@
+## RESOLVED
+
+Both FAIL_TO_PASS tests are now passing on the first gate iteration:
+- ✅ `xarray/tests/test_dataset.py::test_integrate[True]`
+- ✅ `xarray/tests/test_dataset.py::test_integrate[False]`
+
+**Fix summary:**
+Changed DataArray.integrate to use `coord` parameter (matching Dataset.integrate API) while deprecating the old `dim` parameter with a FutureWarning. The implementation handles backward compatibility by accepting both parameters but emitting appropriate warnings and errors:
+- `da.integrate("x")` → works (positional, no warning)
+- `da.integrate(coord="x")` → works (keyword, no warning)
+- `da.integrate(dim="x")` → works with FutureWarning
+- `da.integrate()` → TypeError (missing required argument)
+- `da.integrate(coord="x", dim="x")` → TypeError (conflicting arguments)
+
+---STDERR---

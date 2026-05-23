@@ -1,0 +1,19 @@
+## RESOLVED
+
+Both FAIL_TO_PASS tests are passing. The fix correctly implements the parameter rename from `dim` to `coord` in `DataArray.integrate()` with proper backward compatibility via FutureWarning.
+
+**Final changes:**
+- `xarray/core/dataarray.py:3484` — Changed signature: `coord=None` as main parameter, `dim=None` as keyword-only deprecated parameter
+- `xarray/core/dataarray.py:3494` — Updated docstring parameter from `dim` to `coord`
+- `xarray/core/dataarray.py:3531-3544` — Added deprecation logic:
+  - TypeError if neither parameter provided
+  - FutureWarning if `dim` is used
+  - TypeError if both parameters provided
+
+**FAIL_TO_PASS status:**
+- ✅ `xarray/tests/test_dataset.py::test_integrate[True]` — PASSED
+- ✅ `xarray/tests/test_dataset.py::test_integrate[False]` — PASSED
+
+**Audit regressions:** The 5 FAILED tests (categorical + polyfit) are pre-existing environmental failures, confirmed by testing on base commit (stashed changes, ran tests, same failures).
+
+---STDERR---

@@ -1,0 +1,45 @@
+# Audit: pydata__xarray-3993
+
+## FAIL_TO_PASS
+- xarray/tests/test_dataset.py::test_integrate[True]: **PASS** ✓
+- xarray/tests/test_dataset.py::test_integrate[False]: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- xarray/tests/test_dataset.py::TestDataset::test_sel_categorical: ImportError — Pandas requires version '0.19.0' or newer of 'xarray' (version '0.16.3.dev94+g8cc34cb41' currently installed)
+- xarray/tests/test_dataset.py::TestDataset::test_sel_categorical_error: ImportError — Same pandas version check error
+- xarray/tests/test_dataset.py::TestDataset::test_categorical_multiindex: ImportError — Same pandas version check error
+- xarray/tests/test_dataset.py::TestDataset::test_from_dataframe_categorical: ImportError — Same pandas version check error
+- xarray/tests/test_dataset.py::TestDataset::test_polyfit_warnings: AssertionError — Expected 1 warning, got 3 warnings
+
+## Pre-existing (not counted, confirmed against base capture)
+None — base capture showed only XFAIL tests, no FAILED tests
+
+## Kill report
+**RE-ENTER: craft** — Regressions detected, but causality unclear
+
+**Categorical test failures (4 tests):**
+All fail with `ImportError` when pandas calls `df.to_xarray()` and checks xarray version. Pandas requires ≥0.19.0 but finds 0.16.3.dev94+g8cc34cb41. This version check error:
+- Should have failed on base if environmental
+- Doesn't involve DataArray.integrate() path
+- Tests: test_sel_categorical, test_sel_categorical_error, test_categorical_multiindex, test_from_dataframe_categorical
+
+**Polyfit warning failure (1 test):**
+test_polyfit_warnings expects `polyfit("dim2", 10, full=False)` to generate exactly 1 warning (np.RankWarning), but gets 3 warnings. Polyfit doesn't call integrate(), so the FutureWarning added by the patch shouldn't leak here unless there's test pollution or warning filter state changes.
+
+**Diff analysis:**
+The patch only modifies `xarray/core/dataarray.py` lines 3483-3544:
+- Changed integrate() signature from `def integrate(self, dim, ...)` to `def integrate(self, coord=None, ..., *, dim=None)`
+- Added TypeError checks and FutureWarning for deprecated `dim` parameter
+- No changes to categorical indexing, pandas interop, polyfit, or warning filters
+
+**Hypothesis:** These regressions may be:
+1. Environmental artifacts (pandas version check should be deterministic)
+2. Test execution order dependencies (polyfit warning count)
+3. Unrelated to the patch (no code path connection)
+
+The failures don't fit the pattern of "fix too broad" — they appear disconnected from the code change.
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: craft
+
+---STDERR---

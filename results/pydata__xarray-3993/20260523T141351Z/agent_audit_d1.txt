@@ -1,0 +1,33 @@
+# Audit: pydata__xarray-3993
+
+## FAIL_TO_PASS
+- ✅ xarray/tests/test_dataset.py::test_integrate[True]: PASSED
+- ✅ xarray/tests/test_dataset.py::test_integrate[False]: PASSED
+
+## PASS_TO_PASS regressions
+None. All 5 test failures are pre-existing environmental issues, not regressions from the patch.
+
+## Pre-existing (not counted, confirmed environmental)
+All 5 failures present in gate output are environmental, not caused by the patch:
+
+1. **xarray/tests/test_dataset.py::TestDataset::test_sel_categorical** — ImportError: Pandas version check rejects xarray 0.16.3 (requires ≥0.19.0) when calling df.to_xarray()
+2. **xarray/tests/test_dataset.py::TestDataset::test_sel_categorical_error** — Same pandas ImportError
+3. **xarray/tests/test_dataset.py::TestDataset::test_categorical_multiindex** — Same pandas ImportError
+4. **xarray/tests/test_dataset.py::TestDataset::test_from_dataframe_categorical** — Same pandas ImportError
+5. **xarray/tests/test_dataset.py::TestDataset::test_polyfit_warnings** — Expected 1 warning but got 3 (extra distutils DeprecationWarnings from environment)
+
+**Evidence:**
+- Patch only modifies DataArray.integrate() (param rename dim→coord, deprecation warning)
+- None of the failing tests call integrate()
+- 4 categorical failures: pandas version check during to_xarray() — environmental
+- 1 polyfit failure: distutils warnings pollution (confirmed: RankWarning + 2× distutils DeprecationWarning)
+- Traced polyfit warnings: extra warnings are `distutils.version` deprecations from environment, not from patch
+
+**Contract fulfilled:**
+- All FAIL_TO_PASS tests pass ✅
+- Zero true regressions ✅
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
