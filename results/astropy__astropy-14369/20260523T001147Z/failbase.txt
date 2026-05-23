@@ -1,0 +1,122 @@
+$ pytest -rA astropy/units/tests/test_format.py
+
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit44][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit45][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit46][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit47][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit48][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit49][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit50][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mTestRoundtripOGIP::test_roundtrip[unit51][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_units_available[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vo_units_available[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_cds_units_available[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_cds_non_ascii_unit[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_latex[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_new_style_latex[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_latex_scale[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_latex_inline_scale[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[generic-erg / (cm2 s)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[s-erg / (cm2 s)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[console-  erg  \n ------\n s cm^2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[latex-$\\mathrm{\\frac{erg}{s\\,cm^{2}}}$][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[latex_inline-$\\mathrm{erg\\,s^{-1}\\,cm^{-2}}$][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_format_styles[>20s-       erg / (cm2 s)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_flatten_to_known[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_flatten_impossible[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_console_out[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_flexible_float[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_to_string_function_error[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fraction_repr[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_scale_effectively_unity[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_percent[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_scaled_dimensionless[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_deprecated_did_you_mean_units[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_function[mag(ct/s)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_function[dB(mW)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_function[dex(cm s**-2)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_function[mag(ct/s)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_function[dB(mW)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_function[dex(cm s**-2)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_binary_prefix[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_unknown[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_details[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[nm-nm-0.1-10^-1-0.1][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[fm-fm-100.0-10+2-100][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[m^2-m**2-100.0-100.0-100][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[cm-cm-2.54-2.54-2.54][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[kg-kg-1.898124597e+27-1.898124597E27-1.8981246e+27][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[m/s-m.s**-1-299792458.0-299792458-2.9979246e+08][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_scale_factor[cm2-cm**2-1e-20-10^(-20)-1e-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_custom[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_vounit_implicit_custom[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10+2-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10(+2)-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**+2-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**(+2)-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^+2-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^(+2)-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**2-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**(2)-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^2-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^(2)-100-10**2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10-20-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10(-20)-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**-20-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10**(-20)-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^-20-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor[10^(-20)-1e-20-10**-20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_fits_scale_factor_errors[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_double_superscript[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[1.0-m][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[2.0-m2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[-10-1 / m10][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[1.5-m(3/2)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[0.6666666666666666-m(2/3)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[0.6363636363636364-m(7/11)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[-0.015625-1 / m(1/64)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[0.01-m(1/100)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[0.019801980198019802-m(0.019801980198019802)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_powers[power9-m(2/101)][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\xb5g-unit0][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u03bcg-unit1][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[g\u22121-unit2][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\u207b\xb9-unit3][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m s\u207b\xb9-unit4][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\xb2-unit5][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\u207a\xb2-unit6][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\xb3-unit7][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\xb9\u2070-unit8][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u03a9-unit9][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u2126-unit10][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\xb5\u03a9-unit11][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u212b-unit12][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u212b \u2126-unit13][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\xc5-unit14][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[A\u030a-unit15][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[m\u212b-unit16][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\xb0C-unit17][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\xb0-unit18][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[M\u2299-unit19][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[L\u2609-unit20][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[M\u2295-unit21][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[M\u2641-unit22][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[R\u2643-unit23][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[\u2032-unit24][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[R\u221e-unit25][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode[M\u209a-unit26][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[g\xb5][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[g\u2212][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[m\u207b1][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[m+\xb9][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[m\u2212\xb9][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unicode_failures[k\u212b][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_parse_error_message_for_output_only_format[unicode][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_parse_error_message_for_output_only_format[latex][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_parse_error_message_for_output_only_format[latex_inline][0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_unknown_parser[0m
+[32mPASSED[0m astropy/units/tests/test_format.py::[1mtest_celsius_fits[0m
+[31mFAILED[0m astropy/units/tests/test_format.py::[1mtest_cds_grammar[strings4-unit4][0m - assert Unit("km Mpc / s") == Unit("km / (Mpc s)")
+[31mFAILED[0m astropy/units/tests/test_format.py::[1mtest_cds_grammar[strings6-unit6][0m - assert Unit("1000 J s / (kpc2 m)") == Unit("1000 W / (kpc2 m)")
+[31mFAILED[0m astropy/units/tests/test_format.py::[1mtest_cds_grammar_fail[km/s.Mpc-1][0m - Failed: DID NOT RAISE <class 'ValueError'>
+[31m======================== [31m[1m3 failed[0m, [32m735 passed[0m[31m in 1.02s[0m[31m =========================[0m

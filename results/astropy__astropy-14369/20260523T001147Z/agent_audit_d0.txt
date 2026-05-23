@@ -1,0 +1,20 @@
+# Audit: astropy__astropy-14369
+
+## FAIL_TO_PASS
+- test_cds_grammar[strings4-unit4]: PASS
+- test_cds_grammar[strings6-unit6]: PASS
+- test_cds_grammar_fail[km/s.Mpc-1]: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+N/A — Fix is RESOLVED. All three FAIL_TO_PASS tests now pass. The grammar changes correctly enforced left-associativity for division operators and prevented invalid mixing of `.` and `/` operators. Zero regressions introduced across the full 738-test suite.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

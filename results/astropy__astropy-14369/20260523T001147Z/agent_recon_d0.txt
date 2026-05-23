@@ -1,0 +1,58 @@
+# Recon: astropy__astropy-14369
+
+## Failure summary
+
+The CDS format parser (used for reading MRT files) incorrectly parses composite units with chained division operators. Three tests fail: (1) `km/s/Mpc` parses as `km Mpc / s` instead of `km / s / Mpc`, (2) `10+3J/m/s/kpc2` parses with `s` in the numerator instead of denominator, producing `1000 J s / (kpc2 m)` instead of `1000 W / (kpc2 m)`, and (3) `km/s.Mpc-1` (which mixes `/` and `.` operators invalidly) should raise ValueError but currently parses successfully. The error occurs because division is right-associative when it should be left-associative, and the grammar allows invalid mixing of product and division operators.
+
+## Suspect set
+
+- `astropy/units/format/cds.py` lines 165-195: The YACC grammar rules in the `_make_parser` method, specifically `p_combined_units`, `p_product_of_units`, and `p_division_of_units` which define operator precedence and associativity
+
+## Root cause
+
+The grammar rules make division right-associative by allowing `combined_units` on the right side of the division operator. When parsing `km/s/Mpc`, the parser matches `unit_expression DIVISION combined_units`, where the `combined_units` recursively parses `s/Mpc` as another division. This produces `km / (s/Mpc)` = `km * Mpc / s` instead of left-associative `(km/s)/Mpc` = `km / s / Mpc`.
+
+Additionally, both `product_of_units` and `division_of_units` use `combined_units` on the right side, which allows mixing product (`.`) and division (`/`) operators without parentheses, enabling invalid syntax like `km/s.Mpc-1` to parse when it should fail.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `astropy/units/format/cds.py:174` — `product_of_units : unit_expression PRODUCT combined_units` allows `combined_units` (which includes divisions) after product
+- `astropy/units/format/cds.py:185` — `division_of_units : unit_expression DIVISION combined_units` allows `combined_units` (which includes divisions) after division, creating right-associativity
+
+## Edit sites
+
+**Primary fix (lines 173-175)**: Change the `product_of_units` grammar rule from:
+```python
+product_of_units : unit_expression PRODUCT combined_units
+                 | unit_expression
+```
+to:
+```python
+product_of_units : unit_expression PRODUCT product_of_units
+                 | unit_expression
+```
+This prevents mixing product and division operators without explicit parentheses.
+
+**Primary fix (lines 183-186)**: Change the `division_of_units` grammar rule from:
+```python
+division_of_units : DIVISION unit_expression
+                  | unit_expression DIVISION combined_units
+```
+to:
+```python
+division_of_units : DIVISION unit_expression
+                  | unit_expression DIVISION unit_expression
+                  | division_of_units DIVISION unit_expression
+```
+This makes division left-associative: the third rule allows recursive left-side nesting `(a/b)/c`, while restricting the right side to `unit_expression` prevents right-nesting `a/(b/c)`. Parentheses can still be used to group expressions since `unit_expression` includes `OPEN_PAREN combined_units CLOSE_PAREN`.
+
+## Rejected hypotheses
+
+None — the grammar rules directly control parsing behavior, and the issue is unambiguous from code inspection and test output.
+
+## Open questions
+
+None — the fix is localized to the two grammar rules, and the parser will need regeneration (per comments in the file header, the `_parsetab.py` file should be deleted and regenerated).
+
+---STDERR---
