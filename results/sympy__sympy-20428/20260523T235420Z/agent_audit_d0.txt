@@ -1,0 +1,23 @@
+## Phase 5: Emit Final Report
+
+# Audit: sympy__sympy-20428
+
+## FAIL_TO_PASS
+- `test_issue_20427`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 156 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Resolution Summary
+The patch successfully fixes `Expression.__bool__` in `expressiondomain.py` by replacing syntactic equality (`f.ex != 0`) with semantic zero-checking (`f.ex.is_zero is not True`). This allows `dup_strip` to properly identify and remove zero coefficients that simplify to zero.
+
+**Baseline**: 155 passed, 1 failed (`test_issue_20427`)  
+**With patch**: 156 passed, 0 failed
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

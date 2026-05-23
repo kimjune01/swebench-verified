@@ -1,0 +1,13 @@
+diff --git a/sympy/polys/domains/expressiondomain.py b/sympy/polys/domains/expressiondomain.py
+index 1ce2316dc6..3372397e01 100644
+--- a/sympy/polys/domains/expressiondomain.py
++++ b/sympy/polys/domains/expressiondomain.py
+@@ -120,7 +120,7 @@ def __ne__(f, g):
+             return not f == g
+ 
+         def __bool__(f):
+-            return f.ex != 0
++            return f.ex.is_zero is not True
+ 
+         def gcd(f, g):
+             from sympy.polys import gcd

@@ -1,0 +1,44 @@
+Now I'll output the structured recon handoff:
+
+# Recon: sympy__sympy-20428
+
+## Failure summary
+The test `test_issue_20427` creates a Poly from a complex algebraic expression that mathematically simplifies to zero. The test asserts that this Poly equals `Poly(0, x, domain='EX')`, but it fails because the internal representation isn't properly normalized. The created Poly has representation `DMP([EX(complex_expr)], EX, None)` instead of the expected `DMP([], EX, None)` for a zero polynomial. This causes `poly.is_zero` to return `False` even though `poly.as_expr().is_zero` returns `True`.
+
+## Suspect set
+- `sympy/polys/domains/expressiondomain.py` lines 122-123: `Expression.__bool__` method
+- `sympy/polys/densebasic.py` lines 252-267: `dup_strip` function that strips leading zeros
+
+## Root cause
+The `Expression.__bool__` method uses syntactic equality (`f.ex != 0`) instead of semantic zero-checking. When polynomial construction calls `dup_strip` to remove leading zero coefficients, it checks `if cf:` which invokes `__bool__` on EX-wrapped coefficients. For complex expressions that simplify to zero but aren't syntactically equal to 0, `__bool__` incorrectly returns `True`, preventing the zero coefficient from being stripped.
+
+**Evidence:**
+- Testing the problematic expression shows: `expr.is_zero == True` but `expr != 0 == True` (syntactic check)
+- `bool(EX(expr)) == True` when it should be `False`
+- `sympy/polys/domains/expressiondomain.py:122-123` — `__bool__` implementation uses `return f.ex != 0`
+- `sympy/polys/densebasic.py:261-267` — `dup_strip` uses `if cf:` to detect non-zero coefficients
+
+Confidence: **deduction** — 95%  
+The code path is clear, and the behavior is directly observable from the `__bool__` implementation interacting with `dup_strip`.
+
+## Edit sites
+- `sympy/polys/domains/expressiondomain.py` line 123: Change `Expression.__bool__` from `return f.ex != 0` to `return f.ex.is_zero is not True`
+  - This handles three cases: `is_zero == True` → `False`, `is_zero == False` → `True`, `is_zero == None` → `True` (conservative for unknown)
+  - Ensures that coefficients wrapping expressions that evaluate to zero are properly identified as falsy
+
+## Call path traced
+1. `Poly(complex_zero_expr, x)` → `Poly.__new__` → `Poly._from_expr`
+2. `_from_expr` → `_dict_from_expr` → `_parallel_dict_from_expr_if_gens` → creates dict `{(0,): complex_zero_expr}`
+3. `_from_dict` → `DMP.from_dict` → `dmp_from_dict` → `dup_from_dict`
+4. `dup_from_dict` calls `dup_strip` at line 948 to normalize the representation
+5. `dup_strip` iterates coefficients checking `if cf:` at line 261, which calls `__bool__`
+6. `Expression.__bool__` returns `True` because `complex_zero_expr != 0` is `True` (syntactic)
+7. Zero coefficient not stripped, resulting in `DMP([EX(...)], EX, None)` instead of `DMP([], EX, None)`
+
+## Rejected hypotheses
+None — the first diagnosis converged on a clear root cause.
+
+## Open questions
+None — the fix is straightforward and the root cause is confirmed by direct code observation.
+
+---STDERR---

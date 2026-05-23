@@ -1,0 +1,3 @@
+**RESOLVED** — The fix passed on first gate iteration. Changed `Expression.__bool__` from syntactic equality to semantic zero-checking, allowing `dup_strip` to properly normalize zero polynomials. All 156 tests pass.
+
+---STDERR---
