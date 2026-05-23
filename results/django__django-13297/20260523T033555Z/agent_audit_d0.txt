@@ -1,0 +1,26 @@
+# Audit: django__django-13297
+
+## FAIL_TO_PASS
+- `test_template_params_filtering (generic_views.test_base.DeprecationTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None. All PASS_TO_PASS tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None applicable. Base capture showed `test_template_params_filtering` as ERROR, now resolved.
+
+## Summary
+The craft patch successfully resolves the issue. The gate ran all 59 tests with zero failures:
+
+**FAIL_TO_PASS (1/1)**: 
+- `test_template_params_filtering` was ERROR on base (`sqlite3.InterfaceError: Error binding parameter 0 - probably unsupported type`) 
+- Now PASS after the fix
+
+**PASS_TO_PASS (58/58)**: All tests remain green, no regressions introduced.
+
+The fix correctly defers SimpleLazyObject wrapping to occur after `get_context_data()` returns, allowing user code to consume URL kwargs as concrete values (e.g., for database queries) while still emitting deprecation warnings for kwargs that reach the template context.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

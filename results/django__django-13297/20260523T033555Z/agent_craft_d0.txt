@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. The solution defers wrapping of URL kwargs until after `get_context_data()` returns, wrapping only kwargs that actually made it into the final template context. This allows user code to explicitly consume URL kwargs through named parameters without receiving wrapped SimpleLazyObject instances.
+
+---STDERR---

@@ -1,0 +1,63 @@
+Now I'll print the handoff to stdout:
+
+```markdown
+# Recon: django__django-13297
+
+## Failure summary
+
+Test `test_template_params_filtering` in `tests/generic_views/test_base.py` fails with `sqlite3.InterfaceError: Error binding parameter 0 - probably unsupported type`. 
+
+The test creates a `TemplateView` subclass with `get_context_data(*, artist_name, **kwargs)` that explicitly consumes the `artist_name` URL parameter and uses it in a database query: `Artist.objects.get(name=artist_name)`. The database query fails because `artist_name` is a `SimpleLazyObject` instead of a string. The test expects that kwargs explicitly consumed by `get_context_data()` (via named parameters) should be usable as normal values, not lazy-wrapped objects.
+
+## Suspect set
+
+- `django/views/generic/base.py` lines 159-163: `TemplateView.get()` method — wraps kwargs before calling `get_context_data()`
+- `django/views/generic/base.py` lines 167-181: `_wrap_url_kwargs_with_deprecation_warning()` function — wraps all URL kwargs in SimpleLazyObject
+
+## Root cause
+
+The deprecation mechanism (added in commit 4ed534758c to fix #19878) wraps URL kwargs too early. In `TemplateView.get()` line 162, `_wrap_url_kwargs_with_deprecation_warning(kwargs)` wraps **all** URL kwargs in `SimpleLazyObject` **before** passing them to `get_context_data()`.
+
+The original intent was to emit a deprecation warning when URL kwargs are accessed **in templates**. However, by wrapping before `get_context_data()` is called:
+1. User code that explicitly consumes kwargs (via parameters like `artist_name`) receives SimpleLazyObject instances
+2. These wrapped values can't be used with database operations or other code expecting concrete types
+3. The deprecation fires even when kwargs are consumed by `get_context_data()` and never reach the template
+
+In the failing test, `get_context_data(*, artist_name, **kwargs)` extracts `artist_name` and passes only the remaining `**kwargs` to `super().get_context_data()`, filtering it from the final context. But `artist_name` is already wrapped when the method receives it, causing the database query to fail.
+
+**Confidence**: deduction — 98%
+
+**Supporting evidence**:
+- `django/views/generic/base.py:162` — `context_kwargs = _wrap_url_kwargs_with_deprecation_warning(kwargs)` wraps before calling `get_context_data()`
+- `django/views/generic/base.py:172-180` — each URL kwarg value is wrapped with `@SimpleLazyObject` decorator
+- Stack trace shows `Artist.objects.get(name=artist_name)` → SQLite error when binding SimpleLazyObject parameter
+- Test demonstrates: kwargs explicitly consumed by `get_context_data()` signature are still wrapped
+
+## Edit sites
+
+**File**: `django/views/generic/base.py`
+
+1. **Lines 159-163**: `TemplateView.get()` method
+   - Current: wraps kwargs via `_wrap_url_kwargs_with_deprecation_warning(kwargs)` before calling `get_context_data()`
+   - Required change: pass unwrapped `kwargs` to `get_context_data()`, then wrap only URL kwargs that appear in the returned context
+
+2. **Lines 167-181**: `_wrap_url_kwargs_with_deprecation_warning()` function
+   - Current: wraps all URL kwargs values in SimpleLazyObject
+   - Required change: modify to accept both the original URL kwargs dict and the returned context dict, wrap only values for keys that exist in both dicts (URL kwargs that made it to the template context)
+
+**Alternative approach**: Create a new post-processing function that wraps the context after `get_context_data()` returns, wrapping only URL kwargs that survived into the context.
+
+## Competing hypotheses
+
+None — the code path is deterministic and traceable from test through `TemplateView.get()` to the wrapping function.
+
+## Rejected hypotheses
+
+None.
+
+## Open questions
+
+None — the fix is straightforward: defer wrapping until after `get_context_data()` returns, and wrap only URL kwargs that actually reach the template context.
+```
+
+---STDERR---
