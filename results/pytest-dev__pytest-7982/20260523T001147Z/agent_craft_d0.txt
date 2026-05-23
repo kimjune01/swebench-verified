@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `src/_pytest/pathlib.py:561` from `entry.is_dir(follow_symlinks=False)` to `entry.is_dir()`, restoring symlink directory traversal. Gate confirms FAIL_TO_PASS test passes and no regressions.
+
+---STDERR---

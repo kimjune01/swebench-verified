@@ -1,0 +1,122 @@
+$ pytest -rA testing/test_collection.py
+
+
+    def test_check():
+>       from foo import foo
+E       ModuleNotFoundError: No module named 'foo'
+
+tests/test_foo.py:2: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_foo.py::test_check - ModuleNotFoundError: No module named '...
+============================== 1 failed in 0.00s ===============================
+_____________ test_does_not_crash_on_error_from_decorated_function _____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.2.0.dev154+ga7e38c5c6, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_does_not_crash_on_error_from_decorated_function0
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+___ ERROR collecting test_does_not_crash_on_error_from_decorated_function.py ___
+test_does_not_crash_on_error_from_decorated_function.py:1: in <module>
+    @pytest.fixture
+E   NameError: name 'pytest' is not defined
+=========================== short test summary info ============================
+ERROR test_does_not_crash_on_error_from_decorated_function.py - NameError: na...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.03s ===============================
+______________________ test_collect_pyargs_with_testpaths ______________________
+----------------------------- Captured stdout call -----------------------------
+running: /opt/miniconda3/envs/testbed/bin/python -mpytest --basetemp=/tmp/pytest-of-root/pytest-0/test_collect_pyargs_with_testpaths0/runpytest-0
+     in: /tmp/pytest-of-root/pytest-0/test_collect_pyargs_with_testpaths0/root
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.2.0.dev154+ga7e38c5c6, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_collect_pyargs_with_testpaths0/root, configfile: pytest.ini, testpaths: testmod
+collected 1 item
+
+test_file.py .                                                           [100%]
+
+============================== 1 passed in 0.00s ===============================
+=========================== short test summary info ============================
+PASSED testing/test_collection.py::TestCollector::test_collect_versus_item
+PASSED testing/test_collection.py::test_fscollector_from_parent
+PASSED testing/test_collection.py::TestCollector::test_check_equality
+PASSED testing/test_collection.py::TestCollector::test_getparent
+PASSED testing/test_collection.py::TestCollector::test_getcustomfile_roundtrip
+PASSED testing/test_collection.py::TestCollector::test_can_skip_class_with_test_attr
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_certain_directories
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[activate]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[activate.csh]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[activate.fish]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[Activate]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[Activate.bat]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs[Activate.ps1]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[activate]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[activate.csh]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[activate.fish]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[Activate]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[Activate.bat]
+PASSED testing/test_collection.py::TestCollectFS::test_ignored_virtualenvs_norecursedirs_precedence[Activate.ps1]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[activate]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[activate.csh]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[activate.fish]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[Activate]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[Activate.bat]
+PASSED testing/test_collection.py::TestCollectFS::test__in_venv[Activate.ps1]
+PASSED testing/test_collection.py::TestCollectFS::test_custom_norecursedirs
+PASSED testing/test_collection.py::TestCollectFS::test_testpaths_ini
+PASSED testing/test_collection.py::TestCollectPluginHookRelay::test_pytest_collect_file
+PASSED testing/test_collection.py::TestPrunetraceback::test_custom_repr_failure
+PASSED testing/test_collection.py::TestCustomConftests::test_ignore_collect_path
+PASSED testing/test_collection.py::TestCustomConftests::test_ignore_collect_not_called_on_argument
+PASSED testing/test_collection.py::TestCustomConftests::test_collectignore_exclude_on_option
+PASSED testing/test_collection.py::TestCustomConftests::test_collectignoreglob_exclude_on_option
+PASSED testing/test_collection.py::TestCustomConftests::test_pytest_fs_collect_hooks_are_seen
+PASSED testing/test_collection.py::TestCustomConftests::test_pytest_collect_file_from_sister_dir
+PASSED testing/test_collection.py::TestSession::test_collect_topdir
+PASSED testing/test_collection.py::TestSession::test_collect_protocol_single_function
+PASSED testing/test_collection.py::TestSession::test_collect_protocol_method
+PASSED testing/test_collection.py::TestSession::test_collect_custom_nodes_multi_id
+PASSED testing/test_collection.py::TestSession::test_collect_subdir_event_ordering
+PASSED testing/test_collection.py::TestSession::test_collect_two_commandline_args
+PASSED testing/test_collection.py::TestSession::test_serialization_byid
+PASSED testing/test_collection.py::TestSession::test_find_byid_without_instance_parents
+PASSED testing/test_collection.py::Test_getinitialnodes::test_global_file
+PASSED testing/test_collection.py::Test_getinitialnodes::test_pkgfile
+PASSED testing/test_collection.py::Test_genitems::test_check_collect_hashes
+PASSED testing/test_collection.py::Test_genitems::test_example_items1
+PASSED testing/test_collection.py::Test_genitems::test_class_and_functions_discovery_using_glob
+PASSED testing/test_collection.py::test_matchnodes_two_collections_same_file
+PASSED testing/test_collection.py::TestNodekeywords::test_no_under
+PASSED testing/test_collection.py::TestNodekeywords::test_issue345
+PASSED testing/test_collection.py::TestNodekeywords::test_keyword_matching_is_case_insensitive_by_default
+PASSED testing/test_collection.py::test_exit_on_collection_error
+PASSED testing/test_collection.py::test_exit_on_collection_with_maxfail_smaller_than_n_errors
+PASSED testing/test_collection.py::test_exit_on_collection_with_maxfail_bigger_than_n_errors
+PASSED testing/test_collection.py::test_continue_on_collection_errors
+PASSED testing/test_collection.py::test_continue_on_collection_errors_maxfail
+PASSED testing/test_collection.py::test_fixture_scope_sibling_conftests
+PASSED testing/test_collection.py::test_collect_init_tests
+PASSED testing/test_collection.py::test_collect_invalid_signature_message
+PASSED testing/test_collection.py::test_collect_handles_raising_on_dunder_class
+PASSED testing/test_collection.py::test_collect_with_chdir_during_import
+PASSED testing/test_collection.py::test_collect_symlink_file_arg
+PASSED testing/test_collection.py::test_collect_symlink_out_of_tree
+PASSED testing/test_collection.py::test_collectignore_via_conftest
+PASSED testing/test_collection.py::test_collect_pkg_init_and_file_in_args
+PASSED testing/test_collection.py::test_collect_pkg_init_only
+PASSED testing/test_collection.py::test_collect_sub_with_symlinks[True]
+PASSED testing/test_collection.py::test_collect_sub_with_symlinks[False]
+PASSED testing/test_collection.py::test_collector_respects_tbstyle
+PASSED testing/test_collection.py::test_does_not_eagerly_collect_packages
+PASSED testing/test_collection.py::test_does_not_put_src_on_path
+PASSED testing/test_collection.py::TestImportModeImportlib::test_collect_duplicate_names
+PASSED testing/test_collection.py::TestImportModeImportlib::test_conftest
+PASSED testing/test_collection.py::TestImportModeImportlib::test_modules_importable_as_side_effect
+PASSED testing/test_collection.py::TestImportModeImportlib::test_modules_not_importable_as_side_effect
+PASSED testing/test_collection.py::test_does_not_crash_on_error_from_decorated_function
+PASSED testing/test_collection.py::test_collect_pyargs_with_testpaths
+XFAIL testing/test_collection.py::TestPrunetraceback::test_collect_report_postprocessing
+  other mechanism for adding to reporting needed
+FAILED testing/test_collection.py::test_collect_symlink_dir - AssertionError:...
+=================== 1 failed, 78 passed, 1 xfailed in 2.11s ====================

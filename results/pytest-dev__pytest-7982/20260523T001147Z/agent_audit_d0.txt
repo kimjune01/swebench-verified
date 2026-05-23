@@ -1,0 +1,20 @@
+# Audit: pytest-dev__pytest-7982
+
+## FAIL_TO_PASS
+- `testing/test_collection.py::test_collect_symlink_dir`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 79 tests pass in test_collection.py
+
+## Pre-existing (not counted, confirmed against base capture)
+- `tests/test_foo.py::test_check` - ModuleNotFoundError (present in base capture, not in scope)
+
+## Kill report
+Not applicable - fix is RESOLVED.
+
+The minimal edit (removing `follow_symlinks=False` from `entry.is_dir()` at line 561 in src/_pytest/pathlib.py) successfully allows pytest to collect tests from symlinked directories. The single FAIL_TO_PASS test now passes, and all PASS_TO_PASS tests remain green with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

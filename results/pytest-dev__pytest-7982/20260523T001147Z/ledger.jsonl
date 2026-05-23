@@ -1,0 +1,6 @@
+{"instance": "pytest-dev__pytest-7982", "stage": "start"}
+{"instance": "pytest-dev__pytest-7982", "stage": "recon", "depth": 0, "wall_s": 136, "fixed_point": false}
+{"instance": "pytest-dev__pytest-7982", "stage": "craft", "depth": 0, "wall_s": 168, "claim": true, "wants_rediagnose": false}
+{"instance": "pytest-dev__pytest-7982", "stage": "audit", "depth": 0, "wall_s": 48, "verdict": "RESOLVED", "route": "none"}
+{"instance": "pytest-dev__pytest-7982", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_pytest-dev__pytest-7982.txt"}
+{"instance": "pytest-dev__pytest-7982", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 475, "patch_file": "/tmp/swebench-abduction/r4_patch_pytest-dev__pytest-7982.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_pytest-dev__pytest-7982.md"}

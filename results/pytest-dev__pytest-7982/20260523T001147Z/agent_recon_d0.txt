@@ -1,0 +1,30 @@
+# Recon: pytest-dev__pytest-7982
+
+## Failure summary
+The test `test_collect_symlink_dir` creates a directory `dir` with a test file `test_it.py`, then creates a symlink `symlink_dir` pointing to that directory. It expects pytest to collect 2 tests (one from `dir/test_it.py` and one from `symlink_dir/test_it.py`), but only 1 test is collected. The symlinked directory is not being followed during collection, causing the test to fail with `AssertionError: assert {'passed': 1} != {'passed': 2}`.
+
+## Suspect set
+- `src/_pytest/pathlib.py` lines 551-562: The `visit()` function that recursively walks directories during test collection
+
+## Root cause
+The `visit()` function at line 561 checks if an entry is a directory using `entry.is_dir(follow_symlinks=False)`. This prevents symlinks to directories from being recognized as directories and recursed into. The parameter `follow_symlinks=False` was added in commit 3633b691d (part of merge commit b473e515bc57ff1133fe650f1e7e6d7e22e5d841) when migrating from `py.path.local.visit()` to `os.scandir()`. The old implementation used `entry.check(dir=1)` which followed symlinks by default, but the new implementation explicitly disables symlink following.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `src/_pytest/pathlib.py:561` — `if entry.is_dir(follow_symlinks=False) and recurse(entry):`
+- `os.DirEntry.is_dir()` documentation shows default is `follow_symlinks=True`
+- Git history confirms the parameter was added in the migration commit
+- Other tests like `test_collect_sub_with_symlinks` pass because they test symlinked files (not directories), and the `is_file()` checks don't have `follow_symlinks=False`
+- Test output shows only 1 item collected instead of 2, confirming the symlinked directory is skipped
+
+## Edit sites
+- `src/_pytest/pathlib.py` line 561: Remove the `follow_symlinks=False` parameter from `entry.is_dir()`. Change from `entry.is_dir(follow_symlinks=False)` to `entry.is_dir()` to restore the default behavior of following symlinks.
+
+## Rejected hypotheses
+None — the root cause is straightforward and directly confirmed by code inspection and git history.
+
+## Open questions
+None — the fix is clear and matches the problem statement's description of the regression.
+
+---STDERR---
