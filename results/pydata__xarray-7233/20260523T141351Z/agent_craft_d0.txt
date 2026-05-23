@@ -1,0 +1,3 @@
+**RESOLVED** — The fix preserves all coordinates from the original object during `Dataset.coarsen().construct()`, changing from set intersection to a list comprehension that maintains coordinate ordering. The FAIL_TO_PASS test now passes along with all 190 existing tests.
+
+---STDERR---

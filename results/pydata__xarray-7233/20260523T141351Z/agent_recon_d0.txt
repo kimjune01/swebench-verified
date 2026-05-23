@@ -1,0 +1,31 @@
+# Recon: pydata__xarray-7233
+
+## Failure summary
+The test `test_coarsen_construct_keeps_all_coords` verifies that non-dimensional coordinates are preserved when calling `Dataset.coarsen().construct()`. The test creates a DataArray with a non-dimensional coordinate 'day' (indexed by dimension 'time'), converts it to a Dataset, then calls `coarsen(time=12).construct(time=("year", "month"))`. The test expects the 'day' coordinate to remain a coordinate in the output, but it gets demoted to a data variable. The assertion `assert list(da.coords) == list(result.coords)` fails with `AssertionError: assert ['day'] == []`.
+
+## Suspect set
+- `xarray/core/rolling.py` lines 976-977: The logic that determines which variables should be coordinates in the result
+
+## Root cause
+The `Coarsen.construct()` method at line 976 only preserves coordinates that appear in the `window_dim` parameter keys, not all coordinates from the original object. When a dataset has a non-dimensional coordinate (like 'day') that depends on a coarsened dimension (like 'time') but is not itself a dimension, the current logic excludes it from the coordinates:
+
+```python
+should_be_coords = set(window_dim) & set(self.obj.coords)
+```
+
+For the failing test case where `window_dim = {'time': ('year', 'month')}` and `self.obj.coords = ['day']`, this computes `{'time'} & {'day'} = {}` (empty set), so no coordinates are preserved. The 'day' variable gets reshaped correctly (lines 970-976) but is not marked as a coordinate (line 977), leaving it as a data variable.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `xarray/core/rolling.py:976` — `should_be_coords = set(window_dim) & set(self.obj.coords)` only includes intersection
+- Manual verification shows 'day' is present in output as a data variable with correct shape ('year', 'month'), just not marked as a coordinate
+- DataArray.coarsen().construct() works correctly because `_from_temp_dataset()` (line 979) restores all coordinates from the Dataset back to the DataArray
+
+## Edit sites
+- `xarray/core/rolling.py` line 976: Change `should_be_coords = set(window_dim) & set(self.obj.coords)` to preserve all coordinates from the original object that are present in the reshaped dataset. The fix should be `should_be_coords = set(self.obj.coords) & set(reshaped.variables)` or simply `set(self.obj.coords)` since all variables from the original are processed into `reshaped`.
+
+## Open questions
+None — the fix is straightforward and matches the behavior of `DataArrayRolling.construct()` which uses `coords=obj.coords` to preserve all coordinates.
+
+---STDERR---

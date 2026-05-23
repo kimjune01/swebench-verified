@@ -1,0 +1,30 @@
+# Audit: pydata__xarray-7233
+
+## Patch verification
+- File: `xarray/core/rolling.py` 
+- Changed line 976 from set intersection to list comprehension
+- Preserves all coordinates that exist in reshaped variables, not just those in window_dim
+
+## FAIL_TO_PASS
+- `xarray/tests/test_coarsen.py::TestCoarsenConstruct::test_coarsen_construct_keeps_all_coords`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 190 tests passed, 8 skipped.
+
+Verified samples:
+- `test_coarsen_absent_dims_error[1-numpy]`: PASS
+- `test_coarsen_dataset[1-numpy-trim-left-True]`: PASS
+- All `test_coarsen_reduce` variants (80+ tests): PASS
+- All `test_coarsen_da_reduce` variants (50+ tests): PASS
+- `TestCoarsenConstruct::test_coarsen_construct[True/False]`: PASS
+
+## Pre-existing failures
+None confirmed — gate shows 0 failures total.
+
+## Kill report
+Not applicable — the fix successfully resolves the issue with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
