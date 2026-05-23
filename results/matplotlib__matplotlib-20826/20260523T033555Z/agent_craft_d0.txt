@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix restores tick label visibility for shared subplot axes after `clear()` by calling `_label_outer_xaxis()` and `_label_outer_yaxis()` conditionally in the `cla()` method. The gate confirms `test_shared_axes_clear[png]` now passes with no regressions.
+
+---STDERR---

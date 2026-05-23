@@ -1,0 +1,67 @@
+Now I'll output the handoff:
+
+# Recon: matplotlib__matplotlib-20826
+
+## Failure summary
+
+Test `test_shared_axes_clear[png]` creates two 2×2 subplot grids with `sharex=True, sharey=True`. The reference figure plots directly; the test figure calls `ax.clear()` before plotting. Expected: identical images. Actual: test figure shows tick labels on interior subplots that should be hidden by the shared-axis convention. Image comparison fails with RMS 12.919. Bug appeared between matplotlib 3.4.1 (May 7, 2021) and 3.4.2.
+
+## Suspect set
+
+- `lib/matplotlib/axes/_base.py` lines 1182-1372: `cla()` method — clears axes and re-establishes shared axes but never restores tick label visibility
+- `lib/matplotlib/axis.py` lines 776-787, 788-817: `_reset_major_tick_kw()`, `_reset_minor_tick_kw()`, `clear()` — wipes tick keyword dictionaries including visibility settings
+- `lib/matplotlib/axes/_subplots.py` lines 115-143: `_label_outer_xaxis()`, `_label_outer_yaxis()` — methods that hide interior tick labels, only called at subplot creation
+
+## Root cause
+
+When `ax.clear()` is called on a subplot with shared axes, tick label visibility settings are wiped and never restored.
+
+**Call path:**
+1. `ax.clear()` → `ax.cla()` (_base.py:1473, 1182)
+2. `cla()` calls `self.xaxis.clear()` and `self.yaxis.clear()` (line 1196-1197)
+3. `axis.clear()` calls `_reset_major_tick_kw()` and `_reset_minor_tick_kw()` (axis.py:809-810)
+4. These methods call `self._major_tick_kw.clear()` (axis.py:777), wiping ALL tick parameters including `labelbottom=False`, `labelleft=False`, etc.
+5. `cla()` re-establishes shared axes via `self.sharex(self._sharex)` and `self.sharey(self._sharey)` (lines 1205, 1213)
+6. **But `cla()` never calls `_label_outer_xaxis()` or `_label_outer_yaxis()` to restore tick label hiding**
+
+**Introduced by commit 93aabc1d19** (backported to v3.4.2, "Fix resetting grid visibility"). This commit changed `axis.clear()` from preserving tick kwargs while updating `gridOn`, to calling `.clear()` which wipes the entire dictionary. Before: `self._major_tick_kw['gridOn'] = ...`. After: `self._major_tick_kw.clear()` then set `gridOn`.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `lib/matplotlib/axis.py:777` — `self._major_tick_kw.clear()` wipes dictionary
+- `lib/matplotlib/gridspec.py:310-315` — `subplots()` calls `_label_outer_xaxis()` and `_label_outer_yaxis()` after creating shared axes
+- `lib/matplotlib/axes/_subplots.py:122,129` — these methods call `set_tick_params(labelbottom=False)` etc., storing settings in tick kwargs
+- Git commit 93aabc1d19 changed axis.clear() to call `.clear()` on tick kwargs dictionaries
+
+## Edit sites
+
+**Primary:** `lib/matplotlib/axes/_base.py` lines 1364-1372 (end of `cla()` method)
+
+After restoring axis visibility for shared axes, add conditional calls to `_label_outer_xaxis()` and `_label_outer_yaxis()` if:
+1. This is a subplot (check `hasattr(self, '_label_outer_xaxis')`)
+2. Axes are sharing (check `self._sharex is not None` or `self._sharey is not None`)
+
+The fix should mirror GridSpec.subplots() logic (gridspec.py:310-315): call `_label_outer_xaxis()` if sharing x-axis, call `_label_outer_yaxis()` if sharing y-axis.
+
+Specific change location: after line 1372 in _base.py, where visibility is restored:
+```python
+if self._sharex is not None:
+    self.xaxis.set_visible(xaxis_visible)
+    self.patch.set_visible(patch_visible)
+if self._sharey is not None:
+    self.yaxis.set_visible(yaxis_visible)
+    self.patch.set_visible(patch_visible)
+# ADD FIX HERE: call _label_outer_xaxis() / _label_outer_yaxis() if methods exist
+```
+
+## Rejected hypotheses
+
+None — single clear call path from symptom to root cause.
+
+## Open questions
+
+- Should we check for SubplotBase specifically or just use hasattr? (hasattr is more defensive)
+- GridSpec.subplots() only calls label_outer methods if `ax.name == "rectilinear"` — should cla() check this too? (likely yes, to match creation behavior)
+
+---STDERR---

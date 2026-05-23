@@ -1,0 +1,41 @@
+# Audit: matplotlib__matplotlib-20826
+
+## FAIL_TO_PASS
+- test_shared_axes_clear[png]: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+**None**
+
+All 13 PASS_TO_PASS tests remained passing:
+- test_get_labels
+- test_label_loc_vertical[png], test_label_loc_vertical[pdf]
+- test_label_loc_horizontal[png], test_label_loc_horizontal[pdf]
+- test_label_loc_rc[png], test_label_loc_rc[pdf]
+- test_acorr[png]
+- test_spy[png], test_spy_invalid_kwargs
+- test_matshow[png]
+- test_formatter_ticker[png], test_formatter_ticker[pdf]
+
+## Pre-existing (not counted, confirmed against base capture)
+8 tests failed but are NOT in FAIL_TO_PASS or PASS_TO_PASS lists:
+- test_bar_pandas (pandas ValueError - not in contract)
+- test_pandas_minimal_plot (pandas ValueError - not in contract)
+- test_hist2d[pdf] (ImageComparisonFailure - not in contract)
+- test_hist2d_transpose[pdf] (ImageComparisonFailure - not in contract)
+- test_errorbar[png] (ImageComparisonFailure - not in contract)
+- test_errorbar[pdf] (ImageComparisonFailure - not in contract)
+- test_pandas_indexing_dates (pandas ValueError - not in contract)
+- test_pandas_index_shape (pandas ValueError - not in contract)
+
+These are unrelated to the shared axes clearing fix (patch only touches `_base.py` cla() method for shared axes tick label restoration).
+
+## Summary
+Gate: 674 passed, 8 failed (pre-existing), 63 skipped
+- ✓ FAIL_TO_PASS test passes
+- ✓ All PASS_TO_PASS tests pass
+- ✓ Zero regressions
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
