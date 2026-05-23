@@ -1,0 +1,5 @@
+Recon complete. The diagnosis has been written to stdout and the hypothesis node has been appended to the graph document at `/tmp/swebench-abduction/r4_hgraph_pydata__xarray-4094.md`.
+
+**Summary:** The bug occurs when unstacking a DataArray with a single-level MultiIndex. After selection and squeeze, each variable retains the original MultiIndex coordinate as a scalar with different values, causing a merge conflict. The fix is to conditionally drop this coordinate using `reset_coords(dim, drop=True)` at line 1964 of `xarray/core/dataarray.py`.
+
+---STDERR---

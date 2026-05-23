@@ -1,0 +1,23 @@
+# Audit: pydata__xarray-4094
+
+## FAIL_TO_PASS
+- `xarray/tests/test_dataset.py::TestDataset::test_to_stacked_array_to_unstacked_dataset`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `xarray/tests/test_dataset.py::TestDataset::test_sel_categorical` (ImportError: pandas version check)
+- `xarray/tests/test_dataset.py::TestDataset::test_sel_categorical_error` (ImportError: pandas version check)
+- `xarray/tests/test_dataset.py::TestDataset::test_categorical_multiindex` (ImportError: pandas version check)
+- `xarray/tests/test_dataset.py::TestDataset::test_from_dataframe_categorical` (ImportError: pandas version check)
+
+All 4 categorical failures share the same root cause: `ImportError: Pandas requires version '0.19.0' or newer of 'xarray' (version '0.15.2.dev110+ga64cf2d54' currently installed).` This is an environment configuration issue completely unrelated to the patch, which only modifies unstacking logic in dataarray.py:1964. The patch cannot cause pandas version check import errors.
+
+## Verdict Summary
+The fix successfully resolves the stacked/unstacked roundtrip issue. The FAIL_TO_PASS test passes. No PASS_TO_PASS regressions were introduced. All observed failures are pre-existing environmental issues.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

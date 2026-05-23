@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix has been successfully implemented and verified. The FAIL_TO_PASS test now passes.
+
+**Summary:**
+- **Root cause:** When unstacking a DataArray with a single-level MultiIndex, each variable retained the original MultiIndex coordinate as a scalar with different values, causing a merge conflict
+- **Fix location:** `xarray/core/dataarray.py:1964` in the `to_unstacked_dataset` method
+- **Solution:** After selecting and squeezing each variable, explicitly drop the stacked dimension coordinate using `drop_vars(dim, errors="ignore")`
+- **Iterations:** 1 (converged immediately after codex review suggested `drop_vars` over `reset_coords`)
+- **Test result:** `test_to_stacked_array_to_unstacked_dataset` ✅ PASSED
+
+The gate-loop node has been appended to the hypothesis graph at `/tmp/swebench-abduction/r4_hgraph_pydata__xarray-4094.md`.
+
+---STDERR---
