@@ -1,0 +1,27 @@
+Perfect! The fix is complete and working:
+
+## Summary
+
+**RESOLVED** - The FAIL_TO_PASS test `test_query_convert_timezones` is now passing.
+
+### Changes Made
+
+1. **MySQL** (`django/db/backends/mysql/operations.py`):
+   - Changed `CONVERT_TZ(%s, 'UTC', '%s')` to use `self.connection.timezone_name` as the source timezone instead of hardcoded 'UTC'
+
+2. **Oracle** (`django/db/backends/oracle/operations.py`):
+   - Changed `FROM_TZ(%s, '0:00')` to use `self.connection.timezone_name` instead of hardcoded UTC offset '0:00'
+
+3. **SQLite** (`django/db/backends/sqlite3/`):
+   - Updated `operations.py` to pass `db_tzname` parameter (database timezone) in addition to `tzname` (target timezone) to all datetime SQL functions
+   - Updated `base.py` function registrations to accept the additional parameter
+   - Added new `_sqlite_datetime_parse_tz()` helper that properly interprets naive datetime values as being in the database timezone instead of assuming UTC
+   - Modified all datetime cast/extract/trunc functions to use the new helper
+
+### Root Cause
+When `USE_TZ=True` and a database's `TIME_ZONE` setting is configured to a non-UTC timezone (e.g., 'Africa/Nairobi'), Django's database backends were incorrectly hardcoding UTC as the source timezone when performing `__date`, `__time`, `__extract`, and `__trunc` lookups. This caused queries like `dt__date=2016-01-02` to fail when the datetime was stored in the database's local timezone.
+
+### Fix
+All three backends (MySQL, Oracle, SQLite) now use `self.connection.timezone_name` which returns the database's configured `TIME_ZONE` (defaulting to 'UTC' when not set), ensuring datetime conversions correctly interpret stored values as being in the database's timezone before converting to the target timezone.
+
+---STDERR---

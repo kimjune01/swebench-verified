@@ -1,0 +1,25 @@
+# Audit: django__django-11138
+
+## FAIL_TO_PASS
+- `test_query_convert_timezones (timezones.tests.NewDatabaseTests)` - **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all PASS_TO_PASS tests verified passing
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_aware_datetime_in_local_timezone (timezones.tests.SerializationTests)` - was failing on base
+- `test_aware_datetime_in_other_timezone (timezones.tests.SerializationTests)` - was failing on base
+- `test_aware_datetime_with_microsecond (timezones.tests.SerializationTests)` - was failing on base
+
+## Summary
+
+The craft patch successfully fixes the target issue. The FAIL_TO_PASS test `test_query_convert_timezones` now passes, validating that `__date` lookups correctly respect the database TIME_ZONE setting instead of hardcoding UTC.
+
+The three SerializationTests failures are pre-existing (confirmed in the fail-on-base capture) and unrelated to the timezone conversion fix. They represent a separate issue not in scope for this instance.
+
+All PASS_TO_PASS tests pass with zero regressions introduced by the patch.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

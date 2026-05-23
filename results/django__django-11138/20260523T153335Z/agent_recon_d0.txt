@@ -1,0 +1,62 @@
+# Recon: django__django-11138
+
+## Failure summary
+
+The test `test_query_convert_timezones` verifies that Django correctly uses the database's TIME_ZONE setting when performing `__date` lookups on datetime fields. The test sets the database connection timezone to 'Africa/Nairobi', creates an event at 2016-01-02 23:10:11 EAT, then filters by `dt__date=2016-01-02`. The query returns None instead of the expected event because the generated SQL assumes the database stores datetimes in UTC rather than respecting the configured database timezone.
+
+**Error**: `AssertionError: None != <Event: Event object (1)>` at line 340 of `tests/timezones/tests.py`
+
+## Suspect set
+
+- `django/db/backends/mysql/operations.py` lines 73-76: `_convert_field_to_tz` method hardcodes 'UTC' as source timezone
+- `django/db/backends/oracle/operations.py` lines 97-104: `_convert_field_to_tz` method hardcodes '0:00' UTC offset  
+- `django/db/backends/sqlite3/base.py` lines 75-85: `_sqlite_datetime_parse` uses `typecast_timestamp` which creates UTC-aware datetimes
+- `django/db/backends/sqlite3/operations.py` lines 90-108: datetime SQL methods need to pass database timezone parameter
+
+## Root cause
+
+When USE_TZ=True and a database's TIME_ZONE setting is configured, Django should treat naive datetime values in the database as being in that timezone. However, all three backends (MySQL, SQLite, Oracle) hardcode UTC as the source timezone when converting datetime fields for `__date`, `__time`, `__extract`, and `__trunc` lookups.
+
+**MySQL** generates `CONVERT_TZ(field, 'UTC', 'target_tz')` when it should generate `CONVERT_TZ(field, 'database_tz', 'target_tz')`.
+
+**Oracle** generates `FROM_TZ(field, '0:00')` (UTC offset) when it should use the database's timezone offset or name.
+
+**SQLite** uses `typecast_timestamp()` which creates datetimes with `tzinfo=utc`, then converts from UTC to the target timezone. It should instead create datetimes in the database's timezone.
+
+The connection object provides `timezone_name` and `timezone` properties that return the database's TIME_ZONE setting from `settings_dict['TIME_ZONE']`. These properties are already used correctly in other methods like `adapt_datetimefield_value` and `convert_datetimefield_value` in the same files.
+
+**Confidence: Abduction — 85%**
+
+Supporting evidence:
+- `django/db/backends/mysql/operations.py:75` — `field_name = "CONVERT_TZ(%s, 'UTC', '%s')" % (field_name, tzname)` 
+- `django/db/backends/oracle/operations.py:104` — `return "CAST((FROM_TZ(%s, '0:00') AT TIME ZONE '%s') AS TIMESTAMP)" % (field_name, tzname)`
+- `django/db/backends/utils.py:typecast_timestamp` — `tzinfo = utc if settings.USE_TZ else None`
+- `django/db/backends/base/base.py:117-146` — Defines `connection.timezone` and `connection.timezone_name` properties
+- Test helper at `tests/timezones/tests.py:51` sets `connection.settings_dict['TIME_ZONE']` and clears cached timezone properties
+
+## Edit sites
+
+**MySQL** — 1 location:
+- `django/db/backends/mysql/operations.py` lines 73-76: In `_convert_field_to_tz` method, replace `'UTC'` with `self.connection.timezone_name` in the CONVERT_TZ source timezone parameter
+
+**Oracle** — 1 location:
+- `django/db/backends/oracle/operations.py` lines 97-104: In `_convert_field_to_tz` method, replace `'0:00'` with the database timezone offset or name derived from `self.connection.timezone_name`
+
+**SQLite** — Multiple locations:
+- `django/db/backends/sqlite3/operations.py` lines 90-93: Update `datetime_cast_date_sql` to pass database timezone as additional SQL parameter
+- `django/db/backends/sqlite3/operations.py` lines 95-98: Update `datetime_cast_time_sql` to pass database timezone as additional SQL parameter  
+- `django/db/backends/sqlite3/operations.py` lines 100-103: Update `datetime_extract_sql` to pass database timezone as additional SQL parameter
+- `django/db/backends/sqlite3/operations.py` lines 105-108: Update `datetime_trunc_sql` to pass database timezone as additional SQL parameter
+- `django/db/backends/sqlite3/base.py`: Update function registrations to accept additional database timezone parameter (change parameter count from 2 to 3 for cast_date and cast_time, from 3 to 4 for extract and trunc)
+- `django/db/backends/sqlite3/base.py`: Update `_sqlite_datetime_parse` to accept `db_tzname` parameter and use it instead of UTC when creating the initial datetime (replace tzinfo, localize to db_tzname, then convert to target timezone)
+- `django/db/backends/sqlite3/base.py`: Update `_sqlite_datetime_cast_date`, `_sqlite_datetime_cast_time`, `_sqlite_datetime_extract`, `_sqlite_datetime_trunc` to accept and forward the database timezone parameter
+
+## Rejected hypotheses
+
+None — first diagnosis based on direct code inspection matching the problem description.
+
+## Open questions
+
+For Oracle: Verify whether `FROM_TZ` accepts timezone region names (like 'Asia/Bangkok') or requires numeric offsets. The code already uses region names in the `AT TIME ZONE` clause and validates them with `_tzname_re`, suggesting region names should work. If Oracle requires numeric offsets, will need to convert timezone name to offset, accounting for DST.
+
+---STDERR---
