@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed line 1504 in `django/db/models/fields/__init__.py` to catch `(decimal.InvalidOperation, TypeError, ValueError)` instead of just `decimal.InvalidOperation`. Both FAIL_TO_PASS tests now pass on the first gate run, and all 12 DecimalFieldTests pass without regressions.
+
+---STDERR---

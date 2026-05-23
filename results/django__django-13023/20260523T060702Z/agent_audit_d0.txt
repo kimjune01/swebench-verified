@@ -1,0 +1,19 @@
+# Audit: django__django-13023
+
+## FAIL_TO_PASS
+- test_invalid_value (model_fields.test_decimalfield.DecimalFieldTests): **PASS** ✓
+- test_lookup_really_big_value (model_fields.test_decimalfield.DecimalFieldTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 9 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_fetch_from_db_without_float_rounding: skipped on both base and patched (SQLite rounding limitation)
+
+## Summary
+The patch successfully resolves the issue by catching `TypeError` and `ValueError` in addition to `decimal.InvalidOperation` in `DecimalField.to_python()`. Both FAIL_TO_PASS tests now pass, and no PASS_TO_PASS tests regressed. The fix is minimal (one line changed) and correctly handles all exception types that `decimal.Decimal()` can raise for invalid inputs.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

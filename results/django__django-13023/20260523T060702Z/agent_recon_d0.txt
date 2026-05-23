@@ -1,0 +1,40 @@
+# Recon: django__django-13023
+
+## Failure summary
+
+The test `test_invalid_value` checks that `DecimalField.clean()` raises `ValidationError` with message `'"%s" value must be a decimal number.'` when called with invalid values like `{}`, `[]`, `()`, `set()`, `object()`, `complex()`, and `b'bytes'`. However, the test fails because these values cause `DecimalField.to_python()` to raise `TypeError` (for dict, set, complex, bytes, object) or implicitly `ValueError` (for list, tuple) instead of `ValidationError`. The error originates from line 1503 in `django/db/models/fields/__init__.py` where `decimal.Decimal(value)` is called without catching these exception types.
+
+## Suspect set
+
+- `django/db/models/fields/__init__.py` lines 1495-1507: The `DecimalField.to_python()` method that only catches `decimal.InvalidOperation` but not `TypeError` or `ValueError`
+
+## Root cause
+
+The `DecimalField.to_python()` method catches only `decimal.InvalidOperation` when calling `decimal.Decimal(value)`, but the Decimal constructor raises different exceptions for different invalid input types:
+- `TypeError` for: dict, set, complex, bytes, object instances
+- `ValueError` for: empty sequences like list, tuple  
+- `decimal.InvalidOperation` for: invalid string representations
+
+Since only `decimal.InvalidOperation` is caught and converted to `ValidationError`, the other exception types propagate up as-is, causing test failures.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/models/fields/__init__.py:1503` — `return decimal.Decimal(value)` 
+- `django/db/models/fields/__init__.py:1504-1508` — Exception handler only catches `decimal.InvalidOperation`
+- Empirical verification: `decimal.Decimal({})` raises `TypeError: conversion from dict to Decimal is not supported`
+- Empirical verification: `decimal.Decimal([])` raises `ValueError: Cannot convert list to Decimal`
+
+## Edit sites
+
+- `django/db/models/fields/__init__.py` line 1504: Change `except decimal.InvalidOperation:` to `except (decimal.InvalidOperation, TypeError, ValueError):` to catch all exception types that `decimal.Decimal()` can raise for invalid inputs
+
+## Rejected hypotheses
+
+None — the root cause is straightforward from reading the code and reproducing the failure.
+
+## Open questions
+
+None — the fix is localized to a single exception handler.
+
+---STDERR---
