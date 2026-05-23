@@ -1,0 +1,21 @@
+# Audit: matplotlib__matplotlib-25479
+
+## FAIL_TO_PASS
+- test_colormap_equals: PASSED ✓
+- test_set_cmap_mismatched_name: PASSED ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture and craft stash test)
+- test_double_register_builtin_cmap - FAILED with pytest.warns(UserWarning) catching MatplotlibDeprecationWarning instead
+  - Confirmed pre-existing in craft iteration 1 by stashing changes and re-running test
+  - Both warnings (DeprecationWarning and UserWarning) are correctly issued, but pytest.warns() interaction issue
+
+## Kill report
+N/A - All FAIL_TO_PASS tests pass and zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

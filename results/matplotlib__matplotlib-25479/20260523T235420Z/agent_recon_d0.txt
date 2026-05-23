@@ -1,0 +1,53 @@
+# Recon: matplotlib__matplotlib-25479
+
+## Failure summary
+
+Two tests fail due to colormap name handling issues:
+
+1. **test_colormap_equals** (line 201): Expects two colormaps with identical lookup tables but different names to be equal. Currently fails because `Colormap.__eq__` includes name comparison.
+
+2. **test_set_cmap_mismatched_name** (line 1663): When a colormap is registered with a name different from its internal `.name` attribute, the retrieved colormap should have the registered name. Currently returns a colormap with the original internal name instead.
+
+Error messages:
+- test_colormap_equals: `AssertionError: assert <Colormap object> == <Colormap object>` when names differ
+- test_set_cmap_mismatched_name: `AssertionError: assert 'test-cmap' == 'wrong-cmap'`
+
+## Suspect set
+
+- `lib/matplotlib/colors.py` lines 776-785: `Colormap.__eq__` method - includes name in equality comparison
+- `lib/matplotlib/cm.py` lines 77-81: `ColormapRegistry.__getitem__` method - returns copy without updating name
+- `lib/matplotlib/cm.py` lines 103-149: `ColormapRegistry.register` method - stores copy but doesn't update name
+
+## Root cause
+
+**Problem 1: Colormap equality incorrectly depends on name**
+
+The `Colormap.__eq__` method at `lib/matplotlib/colors.py:777` checks `self.name != other.name` and returns False if names differ, even when lookup tables are identical. The test comment at line 199 explicitly states "Test different names are equal if the lookup table is the same", indicating name should not affect equality.
+
+**Problem 2: Retrieved colormaps have wrong name**
+
+When a colormap is registered with a name different from its `.name` attribute, the registry stores a copy (line 149: `self._cmaps[name] = cmap.copy()`). The `__copy__` method (colors.py:768-774) copies all attributes including the original name. When retrieved via `__getitem__` (cm.py:79), another copy is returned, still carrying the original name instead of the registered key.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `lib/matplotlib/colors.py:777` — `if (not isinstance(other, Colormap) or self.name != other.name or ...)`
+- `lib/matplotlib/cm.py:79` — `return self._cmaps[item].copy()` (no name update)
+- `lib/matplotlib/cm.py:149` — `self._cmaps[name] = cmap.copy()` (stores with original name)
+- `lib/matplotlib/colors.py:771` — `cmapobject.__dict__.update(self.__dict__)` (preserves all attributes including name)
+
+## Edit sites
+
+1. **lib/matplotlib/colors.py lines 776-779**: Remove `self.name != other.name` from the equality check. The condition should only check type and `colorbar_extend`, not name.
+
+2. **lib/matplotlib/cm.py lines 77-81**: In `__getitem__`, after creating the copy, set its name to match the requested key before returning it. Change from `return self._cmaps[item].copy()` to a two-step pattern that sets the name.
+
+## Rejected hypotheses
+
+None. The diagnosis is straightforward from reading the code and test failures.
+
+## Open questions
+
+None. Both fixes are clear and localized.
+
+---STDERR---

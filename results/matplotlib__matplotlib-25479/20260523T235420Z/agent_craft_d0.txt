@@ -1,0 +1,13 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass:
+- `lib/matplotlib/tests/test_colors.py::test_colormap_equals` ✓
+- `lib/matplotlib/tests/test_colors.py::test_set_cmap_mismatched_name` ✓
+
+**Changes made:**
+1. `lib/matplotlib/colors.py:777` - Removed name comparison from `Colormap.__eq__` so colormaps with identical lookup tables are equal regardless of name
+2. `lib/matplotlib/cm.py:79-81` - Updated `ColormapRegistry.__getitem__` to set the returned copy's name to match the registry key
+
+The patch correctly implements the recon diagnosis and makes the required tests pass.
+
+---STDERR---
