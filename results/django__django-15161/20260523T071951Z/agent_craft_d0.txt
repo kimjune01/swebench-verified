@@ -1,0 +1,23 @@
+Perfect! The fix is complete. Let me create a final summary:
+
+## RESOLVED
+
+Successfully fixed django__django-15161 by adding `@deconstructible(path='django.db.models.X')` decorators to 6 expression classes in `django/db/models/expressions.py`:
+
+1. **Func** (line 653)
+2. **Value** (line 734)
+3. **ExpressionWrapper** (line 956)
+4. **When** (line 987)
+5. **Case** (line 1053)
+6. **OrderBy** (line 1225)
+
+**Gate Result**: ✅ All FAIL_TO_PASS tests pass
+- `test_deconstruct (expressions.tests.ValueTests)` ✅
+- `test_deconstruct_output_field (expressions.tests.ValueTests)` ✅
+- `test_serialize_complex_func_index (migrations.test_writer.WriterTests)` ✅
+
+**Total**: 214 tests ran in 0.180s - OK (skipped=1, expected failures=1)
+
+The fix ensures that these expression classes deconstruct to simplified import paths (`django.db.models.Value` instead of `django.db.models.expressions.Value`), making migration files cleaner and following the pattern established by the F class. The `deconstructible` decorator already includes `type(obj) is klass` guard to protect subclass deconstruction behavior.
+
+---STDERR---

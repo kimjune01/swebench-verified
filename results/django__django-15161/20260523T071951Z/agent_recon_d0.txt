@@ -1,0 +1,58 @@
+# Recon: django__django-15161
+
+## Failure summary
+
+The tests verify that expression classes deconstruct to simplified import paths (`django.db.models.*`) rather than full module paths (`django.db.models.expressions.*`). Three tests fail:
+
+1. `test_deconstruct` - Value().deconstruct() returns `'django.db.models.expressions.Value'` instead of expected `'django.db.models.Value'`
+2. `test_deconstruct_output_field` - Same issue with Value class
+3. `test_serialize_complex_func_index` - Migration serialization uses full paths like `django.db.models.expressions.Func` instead of simplified `models.Func`
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 654, 734, 956, 988, 1055, 1228 - Class definitions for Func, Value, ExpressionWrapper, When, Case, and OrderBy that lack the `@deconstructible` decorator with simplified path
+
+## Root cause
+
+PR #14047 added `@deconstructible(path='django.db.models.F')` decorator to the F class to make it deconstruct to the simplified path. The same technique needs to be applied to other expression classes. These classes are all exported from `django.db.models` but currently deconstruct to their full module path `django.db.models.expressions.*` because they don't have the decorator.
+
+The `deconstructible` decorator (from `django.utils.deconstruct`, already imported in expressions.py) provides a `path` parameter. When set, the `deconstruct()` method returns that path instead of the default `f'{obj.__class__.__module__}.{name}'`.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/expressions.py:527` - F class shows the pattern:
+  ```python
+  @deconstructible(path='django.db.models.F')
+  class F(Combinable):
+  ```
+- `django/db/models/__init__.py` lines 18-21 - All six classes are exported from django.db.models
+- `django/utils/deconstruct.py:22-30` - The decorator's `deconstruct` method uses the `path` parameter when provided
+
+## Edit sites
+
+All edits are in `django/db/models/expressions.py`. Add `@deconstructible(path='...')` decorator immediately before each class definition:
+
+1. **Line 654** - Add `@deconstructible(path='django.db.models.Func')` before `class Func(...)`
+2. **Line 734** - Add `@deconstructible(path='django.db.models.Value')` before `class Value(...)`
+3. **Line 956** - Add `@deconstructible(path='django.db.models.ExpressionWrapper')` before `class ExpressionWrapper(...)`
+4. **Line 988** - Add `@deconstructible(path='django.db.models.When')` before `class When(...)`
+5. **Line 1055** - Add `@deconstructible(path='django.db.models.Case')` before `class Case(...)`
+6. **Line 1228** - Add `@deconstructible(path='django.db.models.OrderBy')` before `class OrderBy(...)`
+
+Each decorator should be added on the blank line immediately preceding the class definition (the pattern used for F on line 527).
+
+## Competing hypotheses
+
+None - the root cause is clear from code inspection and matches the established pattern from PR #14047.
+
+## Rejected hypotheses
+
+- H₁: The deconstruct methods need to be overridden manually - REJECTED because the `@deconstructible` decorator already provides this functionality, as demonstrated by the F class
+- H₂: Changes needed in django.db.models.__init__.py - REJECTED because the classes are already exported there; only the deconstruct path needs updating
+
+## Open questions
+
+None - the fix is straightforward and follows the established pattern.
+
+---STDERR---
