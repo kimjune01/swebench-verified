@@ -1,0 +1,27 @@
+# Audit: django__django-16877
+
+## FAIL_TO_PASS
+- test_autoescape_off: ✅ PASS
+- test_basic: ✅ PASS
+- test_chain_join: ✅ PASS
+- test_chain_join_autoescape_off: ✅ PASS
+
+## PASS_TO_PASS regressions
+None (no PASS_TO_PASS tests specified)
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Contract verification
+✅ All 4 FAIL_TO_PASS tests now pass  
+✅ Zero regressions  
+✅ Full contract satisfied
+
+**Patch**: Added 9 lines implementing the `escapeseq` filter in `django/template/defaultfilters.py`. The filter uses `conditional_escape()` to escape each sequence element while preserving already-safe `SafeData` objects, mirroring the `safeseq` pattern but with escaping semantics.
+
+**Gate result**: All tests completed successfully in 0.003s.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

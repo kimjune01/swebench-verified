@@ -1,0 +1,46 @@
+# Recon: django__django-16877
+
+## Failure summary
+
+The tests fail because the `escapeseq` template filter does not exist. All four tests (`test_basic`, `test_autoescape_off`, `test_chain_join`, `test_chain_join_autoescape_off`) raise `TemplateSyntaxError: Invalid filter: 'escapeseq'` when the Django template engine attempts to compile the filter expression. The error originates from `django/template/base.py:603` in the `find_filter()` method, which cannot locate a registered filter named `escapeseq`.
+
+The expected behavior (from tests) is that `escapeseq` should escape each element in a sequence individually, converting HTML-significant characters to their entity equivalents (e.g., `&` → `&amp;`, `<` → `&lt;`), while preserving items already marked as safe with `mark_safe()`. The filter must work identically regardless of autoescape settings.
+
+## Suspect set
+
+- `django/template/defaultfilters.py` lines 490-505: The file where all built-in template filters are registered. The related filter `safeseq` (which marks sequence items as safe) is defined at line 492. The `escapeseq` filter should be added near this location.
+
+## Root cause
+
+The `escapeseq` template filter has not been implemented in Django's template system. The filter needs to be registered in `django/template/defaultfilters.py` using the `@register.filter` decorator and the `Library` instance on line 31.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/template/base.py:603` — raises exception when filter not found in registered filters
+- `grep -r "escapeseq"` across codebase — no implementation exists, only the test file
+- `django/template/defaultfilters.py:492` — `safeseq` implementation serves as the inverse pattern
+- `django/template/defaultfilters.py:17` — `conditional_escape` already imported and available
+- `django/template/defaultfilters.py:347` — `escape_filter` demonstrates `conditional_escape()` usage with `is_safe=True`
+
+The implementation should mirror `safeseq`'s structure (list comprehension over the sequence) but apply `conditional_escape()` to each element instead of `mark_safe()`. The `conditional_escape()` function (from `django.utils.html`) already handles the requirement to escape non-safe strings while preserving already-safe strings, because it checks for the `__html__()` method that `SafeData` objects provide.
+
+## Edit sites
+
+- `django/template/defaultfilters.py` lines 500-501: Add the `escapeseq` filter definition immediately after the `safeseq` filter (which ends at line 499). The implementation should be:
+  - Decorator: `@register.filter(is_safe=True)` (output is properly escaped)
+  - Function signature: `def escapeseq(value):`
+  - Docstring: Describe escaping each element in sequence, with no effect on already-safe items
+  - Body: `return [conditional_escape(obj) for obj in value]`
+
+The filter should be approximately 7 lines (decorator, function def, docstring, return statement), matching the style and structure of `safeseq` above it.
+
+## Rejected hypotheses
+
+None. The root cause is straightforward — the error message explicitly states the filter doesn't exist, and grep confirms it's not implemented anywhere in the codebase.
+
+## Open questions
+
+None. The implementation pattern is clear from examining `safeseq` (the inverse operation) and `escape_filter` (which uses `conditional_escape` on individual strings).
+
+---STDERR---
