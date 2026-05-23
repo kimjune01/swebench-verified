@@ -1,0 +1,47 @@
+Now I'll print the complete diagnosis to stdout:
+
+```markdown
+# Recon: django__django-15382
+
+## Failure summary
+
+The test `test_negated_empty_exists` creates a Manager object and filters with `~Exists(Manager.objects.none()) & Q(pk=manager.pk)`. The negated empty EXISTS should evaluate to TRUE (since there are no rows in the empty subquery, NOT EXISTS should match), combined with the pk filter it should return the manager object. However, the queryset returns empty. The issue is that `EmptyResultSet` exception from the empty subquery propagates through the query compilation and causes the entire WHERE clause to become `0 = 1` (always false), eliminating all results.
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 1212-1223: `Exists.as_sql()` method — does not catch `EmptyResultSet` when compiling the subquery, allowing it to propagate to the WHERE node which then treats the entire condition as "always false"
+
+## Root cause
+
+When `Exists.as_sql()` compiles a subquery that is empty (`.none()`), the `super().as_sql()` call raises `EmptyResultSet`. This exception propagates up to the WHERE node's compilation. The WHERE node, seeing one child raise `EmptyResultSet` in an AND context with a non-negated WHERE, raises `EmptyResultSet` for the entire WHERE clause. The compiler catches this and replaces it with `WHERE 0 = 1`, making the query return no results.
+
+The correct semantics should be:
+- `EXISTS(empty)` = FALSE (should filter out rows)
+- `NOT EXISTS(empty)` = TRUE (should not filter out rows)
+
+When `Exists` is negated and the subquery is empty, it should return empty SQL `('', [])` to indicate "no restriction" rather than raising `EmptyResultSet`.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/expressions.py:1214-1220` — `super().as_sql()` call has no exception handling for `EmptyResultSet`
+- `django/db/models/sql/where.py:88-91` — WHERE node raises `EmptyResultSet` when `empty_needed == 0` in AND context with non-negated node
+- `django/db/models/sql/compiler.py:520-524` — Compiler catches `EmptyResultSet` and sets `where = '0 = 1'`
+- Related: commit dd1fa3a31b (issue #33018) added `empty_result_set_value` to `Subquery` but didn't handle the case where `Exists` specifically needs different behavior based on its `negated` flag
+
+## Edit sites
+
+- `django/db/models/expressions.py` lines 1212-1223: In `Exists.as_sql()`, wrap the `super().as_sql()` call (lines 1214-1220) in a try-except block. When `EmptyResultSet` is caught:
+  - If `self.negated` is True: return `('', [])` to indicate "no restriction" (TRUE condition)
+  - If `self.negated` is False: re-raise `EmptyResultSet` to indicate "always false" condition
+
+## Rejected hypotheses
+
+None — the call path is deterministic and the fix location is clear from tracing the exception propagation.
+
+## Open questions
+
+None — the semantics and fix are straightforward.
+```
+
+---STDERR---

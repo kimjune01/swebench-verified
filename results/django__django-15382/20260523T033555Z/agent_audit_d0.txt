@@ -1,0 +1,18 @@
+# Audit: django__django-15382
+
+## FAIL_TO_PASS
+- `test_negated_empty_exists (expressions.tests.ExistsTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 16 PASS_TO_PASS tests still passing
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_mixed_comparisons1 (expressions.tests.FTimeDeltaTests)`: expected failure (confirmed in base capture)
+
+## Kill report
+Not applicable - patch fully resolves the issue with no regressions. The recon diagnosis was accurate, and the craft fix correctly handles `EmptyResultSet` exceptions in negated `Exists` expressions by returning an empty SQL fragment, which evaluates to TRUE in the WHERE clause context.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

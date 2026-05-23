@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully passes all tests including the FAIL_TO_PASS test `test_negated_empty_exists`. 
+
+The implementation wraps the `super().as_sql()` call in `Exists.as_sql()` with a try-except block. When `EmptyResultSet` is raised from an empty subquery:
+- If `self.negated` is True (for `NOT EXISTS`): returns `('', [])` indicating "no restriction" (TRUE condition)
+- Otherwise: re-raises the exception to maintain "always false" semantics
+
+This makes `~Exists(Manager.objects.none()) & Q(pk=manager.pk)` correctly return results, as the negated empty EXISTS evaluates to TRUE in the WHERE clause.
+
+---STDERR---
