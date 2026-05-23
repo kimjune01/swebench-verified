@@ -1,0 +1,45 @@
+# Recon: matplotlib__matplotlib-24870
+
+## Failure summary
+
+The test `test_bool_autolevel` verifies that boolean arrays passed to contour plotting functions automatically get appropriate default levels: `[0.5]` for line contours (`contour`, `tricontour`) and `[0, 0.5, 1]` for filled contours (`contourf`, `tricontourf`). The test fails because boolean arrays are converted to float64 (0.0 and 1.0) but still receive the default 7 levels, producing `[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.05]` instead of `[0.5]`.
+
+Error: `AssertionError: assert [0.0, 0.15000...00000001, ...] == [0.5]`
+
+## Suspect set
+
+- `lib/matplotlib/contour.py` lines 1442-1465: `QuadContourSet._contour_args` - processes z array and converts to float64 before any boolean detection
+- `lib/matplotlib/contour.py` lines 1119-1137: `_process_contour_level_args` - sets default levels without checking for boolean input
+- `lib/matplotlib/tri/_tricontour.py` lines 53-76: `TriContourSet._contour_args` - processes z array for triangular contours
+
+## Root cause
+
+The contour code lacks boolean array detection. In `QuadContourSet._contour_args`, the z array is immediately converted to `float64` via `ma.asarray(args[0], dtype=np.float64)` at line 1449 (or through `_check_xyz` at line 1489 for the x,y,z signature), destroying the boolean dtype information. Subsequently, `_process_contour_level_args` applies the default 7 levels without knowledge that the original input was boolean. The same issue exists in `TriContourSet._contour_args`.
+
+The fix requires detecting boolean dtype **before** float64 conversion and, when `self.levels is None`, setting `self.levels` to the appropriate defaults based on whether the contour is filled.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `lib/matplotlib/contour.py:1449` — `z = ma.asarray(args[0], dtype=np.float64)` converts z before any dtype checking
+- `lib/matplotlib/contour.py:1489` — `z = ma.asarray(args[2], dtype=np.float64)` same conversion in `_check_xyz`
+- `lib/matplotlib/contour.py:1123` — `levels_arg = 7  # Default, hard-wired.` when no levels provided
+- `lib/matplotlib/tri/_tricontour.py:57` — `z = np.ma.asarray(args[0])` preserves dtype initially but no boolean check follows
+- Test expects: `contour(bool) → [0.5]`, `contourf(bool) → [0, 0.5, 1]`
+
+## Edit sites
+
+- `lib/matplotlib/contour.py` lines 1442-1465 (`QuadContourSet._contour_args`): Before converting z to float64 at lines 1449 or 1452, check if the original input (args[0] or args[2]) has boolean dtype. If boolean and `self.levels is None`, set `self.levels = [0.5]` if not filled, or `self.levels = [0, 0.5, 1]` if filled.
+
+- `lib/matplotlib/tri/_tricontour.py` lines 53-76 (`TriContourSet._contour_args`): After line 57 where z is assigned, check if z has boolean dtype. If boolean and `self.levels is None`, set `self.levels = [0.5]` if not filled, or `self.levels = [0, 0.5, 1]` if filled.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection.
+
+## Open questions
+
+1. Should lists of booleans (e.g., `[[True, False], [False, True]]`) also be detected? The test includes `.tolist()` cases, so yes.
+2. How to detect boolean dtype for lists? Use `np.asarray(input).dtype == bool` or check for `np.dtype('bool')`.
+
+---STDERR---

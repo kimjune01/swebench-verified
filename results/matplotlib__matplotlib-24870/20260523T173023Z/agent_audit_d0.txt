@@ -1,0 +1,22 @@
+# Audit: matplotlib__matplotlib-24870
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_contour.py::test_bool_autolevel: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 66 tests passed, 1 skipped
+
+## Pre-existing (not counted, confirmed against base capture)
+None - test_bool_autolevel was the only failure on base, now resolved
+
+## Verification
+Gate output shows all tests passing:
+- 66 passed, 1 skipped
+- test_bool_autolevel successfully passes with the fix
+- No new failures introduced
+- All PASS_TO_PASS tests remain passing
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

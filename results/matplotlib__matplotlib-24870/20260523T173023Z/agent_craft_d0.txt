@@ -1,0 +1,17 @@
+**RESOLVED** — test_bool_autolevel passes on first gate run.
+
+## Summary
+
+Fixed boolean array autolevel detection in matplotlib contour functions by adding dtype checks before float64 conversion:
+
+**Changes**:
+1. **lib/matplotlib/contour.py** - Added boolean detection in `QuadContourSet._contour_args` for both nargs <= 2 and nargs <= 4 paths
+2. **lib/matplotlib/tri/_tricontour.py** - Added boolean detection in `TriContourSet._contour_args`
+
+**Logic**: When a boolean array is detected and no levels are explicitly set, assign:
+- Line contours (`contour`, `tricontour`): `[0.5]`  
+- Filled contours (`contourf`, `tricontourf`): `[0, 0.5, 1]`
+
+**Gate result**: ✅ All 66 tests passed (including test_bool_autolevel), 1 skipped, no regressions.
+
+---STDERR---

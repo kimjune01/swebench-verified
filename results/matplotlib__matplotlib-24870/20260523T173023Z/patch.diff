@@ -1,0 +1,46 @@
+diff --git a/lib/matplotlib/contour.py b/lib/matplotlib/contour.py
+index 144eadeae2..737281bbd6 100644
+--- a/lib/matplotlib/contour.py
++++ b/lib/matplotlib/contour.py
+@@ -1447,10 +1447,24 @@ class QuadContourSet(ContourSet):
+             fn = 'contour'
+         nargs = len(args)
+         if nargs <= 2:
++            # Detect boolean arrays before float64 conversion
++            z_input = ma.asarray(args[0])
++            if z_input.dtype == bool and self.levels is None:
++                if self.filled:
++                    self.levels = [0, 0.5, 1]
++                else:
++                    self.levels = [0.5]
+             z = ma.asarray(args[0], dtype=np.float64)
+             x, y = self._initialize_x_y(z)
+             args = args[1:]
+         elif nargs <= 4:
++            # Detect boolean arrays before float64 conversion
++            z_input = ma.asarray(args[2])
++            if z_input.dtype == bool and self.levels is None:
++                if self.filled:
++                    self.levels = [0, 0.5, 1]
++                else:
++                    self.levels = [0.5]
+             x, y, z = self._check_xyz(args[:3], kwargs)
+             args = args[3:]
+         else:
+diff --git a/lib/matplotlib/tri/_tricontour.py b/lib/matplotlib/tri/_tricontour.py
+index c403ebae70..a4e042f315 100644
+--- a/lib/matplotlib/tri/_tricontour.py
++++ b/lib/matplotlib/tri/_tricontour.py
+@@ -54,6 +54,12 @@ class TriContourSet(ContourSet):
+         tri, args, kwargs = Triangulation.get_from_args_and_kwargs(*args,
+                                                                    **kwargs)
+         z = np.ma.asarray(args[0])
++        # Detect boolean arrays and set appropriate default levels
++        if z.dtype == bool and self.levels is None:
++            if self.filled:
++                self.levels = [0, 0.5, 1]
++            else:
++                self.levels = [0.5]
+         if z.shape != tri.x.shape:
+             raise ValueError('z array must have same length as triangulation x'
+                              ' and y arrays')
