@@ -1,0 +1,25 @@
+# Audit: astropy__astropy-14598
+
+## FAIL_TO_PASS
+- `astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_long_string_value_with_quotes`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — All 176 tests passed with zero regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — All tests passed, no pre-existing failures.
+
+## Patch Summary
+The craft patch successfully fixed the double-unescaping bug with two targeted changes:
+1. Added `$` anchor to `_strg_comment_RE` regex (line 69) to ensure full string matching
+2. Removed `.replace("''", "'")` from value processing in `_split()` (line 862) to eliminate double-unescaping
+
+The fix resolves the issue where FITS CONTINUE cards with embedded single quotes were losing one quote character during parse-serialize round-trips. The root cause was confirmed: single quotes were being unescaped twice — once in `_split()` and again in `_parse_value()`.
+
+**Gate Result**: 176/176 tests passed (0.37s)  
+**Contract**: FAIL_TO_PASS passes ✓, PASS_TO_PASS no regressions ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,61 @@
+Now I'll output my handoff to stdout:
+
+# Recon: astropy__astropy-14598
+
+## Failure summary
+
+The test `test_long_string_value_with_quotes` checks that FITS Card objects correctly preserve double single-quote ('') sequences through serialization and deserialization. The test creates a Card with a long string value ending in '', converts it to its 80-column string representation (which may use CONTINUE cards for long values), then parses it back using `Card.fromstring()`. The test fails because one of the two single quotes is lost during the round-trip for certain string lengths. The failure manifests as an AssertionError where the parsed value has one less single quote than expected.
+
+## Suspect set
+
+- `astropy/io/fits/card.py` lines 860-877: `_split()` method's CONTINUE card handling - processes multi-card strings and performs quote unescaping
+- `astropy/io/fits/card.py` lines 751-806: `_parse_value()` method - parses card values and also performs quote unescaping
+- `astropy/io/fits/card.py` lines 1045-1100: `_format_long_image()` method - formats long strings into CONTINUE cards with quote escaping
+
+## Root cause
+
+The bug is caused by **double-unescaping of single quotes** in CONTINUE card parsing. When a long string value containing '' is split across multiple CONTINUE cards, the single quotes are unescaped twice:
+
+1. **First unescape** at line 862 in `_split()`: When processing CONTINUE cards, the code extracts each subcard's string value and calls `value.rstrip().replace("''", "'")`, converting doubled quotes to single quotes.
+
+2. **Second unescape** at line 771 in `_parse_value()`: The method receives the synthetic valuecomment string from `_split()` and applies `re.sub("''", "'", m.group("strg"))` again.
+
+**Example trace** for value "x" * 65 + "''":
+- Escaped: "x" * 65 + "'''' (4 single quotes)
+- Split into chunks: ["x"*65 + "''", "''"]
+- First unescape in `_split()`: ["x"*65 + "'", "'"]
+- Joined and wrapped: "'x"*65 + "'''" (3 single quotes)
+- Second unescape in `_parse_value()`: "x"*65 + "'" (1 single quote) ← Bug!
+
+The root cause was introduced in commit c5400c7332 by E. Madison Bray (2020-11-30), which refactored CONTINUE card handling into `_split()`. The refactoring moved the logic but incorrectly kept the quote unescaping in both places.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `card.py:862` — `value = value.rstrip().replace("''", "'")` in `_split()` method
+- `card.py:771` — `value = re.sub("''", "'", m.group("strg"))` in `_parse_value()` method
+- `card.py:877` — `valuecomment = f"'{''.join(values)}' / {' '.join(comments)}"` constructs synthetic string with already-unescaped values
+- Git commit c5400c7332 shows the refactoring that introduced the bug
+- Manual trace confirms double-unescaping at specific string lengths
+
+## Edit sites
+
+- `astropy/io/fits/card.py` line 862: Remove the `.replace("''", "'")` call from the value processing in `_split()`. The line should only strip trailing whitespace, not unescape quotes. Change from:
+  ```python
+  value = value.rstrip().replace("''", "'")
+  ```
+  to:
+  ```python
+  value = value.rstrip()
+  ```
+  This ensures quotes are only unescaped once, in `_parse_value()`, not twice.
+
+## Rejected hypotheses
+
+None — the double-unescape theory is the only hypothesis that fits all observations.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

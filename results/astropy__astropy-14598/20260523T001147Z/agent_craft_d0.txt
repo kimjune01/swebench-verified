@@ -1,0 +1,23 @@
+## RESOLVED
+
+Fixed the double-unescaping bug in FITS Card CONTINUE card parsing. The recon diagnosis was correct, but the fix required two changes:
+
+**Changes Applied:**
+
+1. **`astropy/io/fits/card.py` line 69**: Added `$` anchor to `_strg_comment_RE` regex
+   - From: `_strg_comment_RE = re.compile(f"({_strg})? *{_comm_field}?")`
+   - To: `_strg_comment_RE = re.compile(f"({_strg})? *{_comm_field}?$")`
+   - This ensures the regex matches the complete string, not just a prefix
+
+2. **`astropy/io/fits/card.py` line 862**: Removed quote unescaping from `_split()`
+   - From: `value = value.rstrip().replace("''", "'")` - To: `value = value.rstrip()`
+   - This eliminates the first (erroneous) unescape, leaving only the correct one in `_parse_value()`
+
+**Root Cause:** When CONTINUE cards contained escaped single quotes ('' → ''''), the quotes were being unescaped twice:
+- First in `_split()` at line 862
+- Second in `_parse_value()` at line 771
+This caused '' to become ' instead of being preserved.
+
+**Gate Result:** All 176 tests PASSED, including the FAIL_TO_PASS test `test_long_string_value_with_quotes`.
+
+---STDERR---
