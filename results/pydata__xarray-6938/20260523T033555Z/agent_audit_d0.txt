@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-6938
+
+## FAIL_TO_PASS
+- `xarray/tests/test_variable.py::TestIndexVariable::test_to_index_variable_copy`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully resolves the issue. Changed `IndexVariable.to_index_variable()` at line 2884 to return `self.copy(deep=False)` instead of `self`, ensuring callers receive an independent object that can be modified without affecting the original.
+
+Gate results: 431 passed, 0 failures, 0 regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

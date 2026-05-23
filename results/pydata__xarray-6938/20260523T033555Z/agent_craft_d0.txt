@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully changed `IndexVariable.to_index_variable()` to return a shallow copy instead of `self`. The FAIL_TO_PASS test now passes, all existing tests remain passing, and no regressions were introduced.
+
+---STDERR---

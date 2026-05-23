@@ -1,0 +1,32 @@
+# Recon: pydata__xarray-6938
+
+## Failure summary
+The test `test_to_index_variable_copy` checks that calling `to_index_variable()` on an IndexVariable returns a copy rather than the same object. The test creates an IndexVariable `a`, calls `b = a.to_index_variable()`, and expects `a is not b`. It then modifies `b.dims` and verifies that `a.dims` remains unchanged. The test currently fails at the identity check (`assert a is not b`) because both variables reference the same object, proving that mutations to one affect the other. This is the root cause of issue #6931 where `.swap_dims()` inadvertently modifies the original dataset.
+
+## Suspect set
+- `xarray/core/variable.py` lines 2882-2884: `IndexVariable.to_index_variable()` method that returns `self`
+- `xarray/core/dataset.py` lines 3774-3776: `Dataset.swap_dims()` calls `to_index_variable()` and then mutates the result
+
+## Root cause
+The `IndexVariable.to_index_variable()` method at line 2883 returns `self` instead of a copy. When this method is called by `Dataset.swap_dims()` (line 3775), the code then modifies `var.dims` (line 3776), which mutates the original variable since `var` and the original are the same object.
+
+This contrasts with `Variable.to_index_variable()` (line 549), which correctly creates a new IndexVariable object. The git history (commit 3ecfa666 from 2016) shows this was a deliberate design choice for efficiency, but it violates the expected contract that `to_index_variable()` returns an independent object safe to modify.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `xarray/core/variable.py:2883` — `return self` returns the same object
+- `xarray/core/variable.py:549-551` — Variable class creates new IndexVariable object
+- `xarray/core/dataset.py:3775-3776` — swap_dims calls `to_index_variable()` then mutates dims
+- Test failure shows `a is b` when they should be different objects
+
+## Edit sites
+- `xarray/core/variable.py` lines 2882-2884: Change `IndexVariable.to_index_variable()` to return `self.copy(deep=False)` instead of `return self`. This ensures the method returns a shallow copy that can be safely modified without affecting the original.
+
+## Rejected hypotheses
+None — the root cause is directly observable from the code and test failure.
+
+## Open questions
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---
