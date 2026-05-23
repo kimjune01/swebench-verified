@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully enables left multiplication for Point objects by adding the `__rmul__` method that delegates to `__mul__`. Both `test_point` and `test_point3D` now pass, along with all other tests in the test suite.
+
+---STDERR---

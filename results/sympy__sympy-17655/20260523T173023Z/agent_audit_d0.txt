@@ -1,0 +1,25 @@
+# Audit: sympy__sympy-17655
+
+## FAIL_TO_PASS
+- test_point: PASS ✅
+- test_point3D: PASS ✅
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+
+The craft patch successfully added a `__rmul__` method to the Point class in `sympy/geometry/point.py`, enabling left multiplication (e.g., `5 * point`). Both failing tests now pass:
+
+- `test_point` was failing with `TypeError: unsupported operand type(s) for *: 'int' and 'Point2D'` at line 94 (`assert 5 * p4 == Point(5, 5)`)
+- `test_point3D` was failing with `TypeError: unsupported operand type(s) for *: 'int' and 'Point3D'` at line 171 (`assert 5 * p4 == Point3D(5, 5, 5)`)
+
+All 12 tests in the suite pass, with zero regressions. The fix is minimal, correct, and complete.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

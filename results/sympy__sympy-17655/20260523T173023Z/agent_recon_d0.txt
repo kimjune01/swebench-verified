@@ -1,0 +1,30 @@
+# Recon: sympy__sympy-17655
+
+## Failure summary
+The tests `test_point` and `test_point3D` check that Points can be multiplied by scalars using both right multiplication (`Point * 5`) and left multiplication (`5 * Point`). The tests fail with `TypeError: unsupported operand type(s) for *: 'int' and 'Point2D'` and `'int' and 'Point3D'` respectively when attempting left multiplication (`5 * p4`), while right multiplication (`p4 * 5`) passes.
+
+## Suspect set
+- `sympy/geometry/point.py` lines 250-280: The `__mul__` method exists but `__rmul__` is missing
+
+## Root cause
+The `Point` class implements `__mul__` to support right multiplication (Point * scalar) but does not implement `__rmul__` to support left multiplication (scalar * Point). Python's operator resolution mechanism first tries the left operand's `__mul__`, and when that fails (because int/float don't know how to multiply with Point), Python tries the right operand's `__rmul__`. Since Point lacks `__rmul__`, the operation fails.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `sympy/geometry/point.py:250` - `__mul__` method defined: `def __mul__(self, factor):`
+- `grep "__rmul__" sympy/geometry/point.py` returns 0 matches - no `__rmul__` method exists
+- Test error: `TypeError: unsupported operand type(s) for *: 'int' and 'Point2D'`
+- Test at `sympy/geometry/tests/test_point.py:93` shows `p4 * 5` passes
+- Test at `sympy/geometry/tests/test_point.py:95` shows `5 * p4` fails
+
+## Edit sites
+- `sympy/geometry/point.py` after line 280 (after the `__mul__` method): Add `__rmul__` method that delegates to `__mul__`, implementing the same scalar multiplication logic. The method should accept a `factor` parameter, sympify it, multiply each coordinate, and return a new Point with `evaluate=False`.
+
+## Rejected hypotheses
+None - the diagnosis is straightforward from Python's operator resolution mechanism.
+
+## Open questions
+None - the fix is clear and well-defined.
+
+---STDERR---
