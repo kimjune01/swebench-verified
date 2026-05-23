@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-23262
+
+## Failure summary
+The test `test_issue_14941` checks that `lambdify([], (1,))` returns a function that when called returns the tuple `(1,)`. The test fails with an `AssertionError` because the generated lambda function returns the integer `1` instead of the single-element tuple `(1,)`. The generated code is `return (1)` instead of `return (1,)` — the missing trailing comma causes Python to interpret it as a parenthesized integer rather than a tuple.
+
+## Suspect set
+- `sympy/utilities/lambdify.py` lines 948-968: The `_recursive_to_string` function that converts Python tuples/lists to their string representation for code generation
+
+## Root cause
+The `_recursive_to_string` helper function at line 964 in `sympy/utilities/lambdify.py` joins tuple elements with `', '` but doesn't handle the special case of single-element tuples that require a trailing comma.
+
+For a single-element tuple like `(1,)`:
+- The function sets `left = "("` and `right = ")"`  
+- Then computes `', '.join(_recursive_to_string(doprint, e) for e in (1,))`
+- This evaluates to `', '.join(['1'])` which produces just `'1'`
+- Final result: `'(' + '1' + ')'` = `'(1)'` (missing the critical trailing comma)
+
+In Python, `(1)` is simply the integer 1 wrapped in parentheses (parentheses are used for grouping), while `(1,)` is a tuple. The comma is what creates the tuple, not the parentheses.
+
+Confidence: **deduction — 98%**
+
+Supporting evidence:
+- `sympy/utilities/lambdify.py:964` — `return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right`
+- Manual verification confirms `', '.join(['1'])` produces `'1'` with no trailing comma
+- The function correctly handles multi-element tuples: `', '.join(['1', '2'])` → `'1, 2'` → `'(1, 2)'`
+- Test execution shows generated code is `return (1)` instead of `return (1,)`
+
+## Edit sites
+- `sympy/utilities/lambdify.py` lines 957-964: Modify the tuple branch in `_recursive_to_string` to append a trailing comma when the tuple has exactly one element. Specifically, after the join operation, check if `isinstance(arg, tuple) and len(arg) == 1`, and if so, append `','` before appending `right`.
+
+## Rejected hypotheses
+None — the root cause was identified directly through code tracing from the symptom.
+
+## Open questions
+None — the fix is straightforward and localized.
+
+---STDERR---

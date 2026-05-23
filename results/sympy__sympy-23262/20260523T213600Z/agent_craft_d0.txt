@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `lambdify([], (1,))` return a function that produces the tuple `(1,)` instead of the integer `1`. The change adds a trailing comma to single-element tuples in the generated code, changing `return (1)` to `return (1,)`.
+
+---STDERR---

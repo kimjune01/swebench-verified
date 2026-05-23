@@ -1,0 +1,21 @@
+# Audit: sympy__sympy-23262
+
+## FAIL_TO_PASS
+- test_issue_14941: **PASS** ✅ (was F on base, now ok)
+
+## PASS_TO_PASS regressions
+**None** — all PASS_TO_PASS tests remain passing
+
+## Pre-existing (not counted, confirmed against base capture)
+None applicable
+
+## Summary
+The patch successfully resolves the issue by adding a trailing comma for single-element tuples in `_recursive_to_string`. The fix is minimal, targeted, and introduces no regressions.
+
+**Gate output**: 63 passed, 54 skipped, in 2.04 seconds  
+**Patch**: 5 insertions, 1 deletion in `sympy/utilities/lambdify.py`
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
