@@ -1,0 +1,18 @@
+Perfect! The fix is complete and all tests pass. Let me create a summary.
+
+## RESOLVED
+
+The fix has been successfully implemented. The root cause was identified correctly by recon - the `Join.equals()` method ignores `filtered_relation` - but codex correctly pointed out that the fix should be in the call sites, not in `equals()` itself.
+
+**Key insight**: `Join.equals()` intentionally ignores `filtered_relation` for a specific use case: when compiling a FilteredRelation's own ON condition, lookups within that condition need to be able to reuse the filtered join. However, this same `equals()` method was being used for normal join reuse, causing multiple FilteredRelations to the same table to incorrectly share a single join.
+
+**Solution**: Thread a `reuse_with_filtered_relation` parameter through the call chain (`build_filtered_relation_q` → `build_filter` → `setup_joins` → `join`). When this flag is True, use `j.equals(join)` (ignores filtered_relation). When False (normal join reuse), use `j == join` (includes filtered_relation in the comparison).
+
+**Result**: 
+- ✅ `test_multiple` passes (2 rows with correct book titles)
+- ✅ All 43 filtered_relation tests pass
+- ✅ No regressions
+
+The working tree now contains the complete fix and is ready for the driver to capture via `git diff`.
+
+---STDERR---

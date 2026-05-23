@@ -1,0 +1,40 @@
+# Recon: django__django-15554
+
+## Failure summary
+
+The test `test_multiple` creates two FilteredRelation annotations (`book_title_alice` and `book_title_jane`) that both reference the "book" relation but with different filter conditions. The test expects each FilteredRelation to create a separate SQL JOIN with its own ON clause condition, so that querying for an author named "Jane" returns two rows showing her books in the `book_title_jane__title` column (with "Alice" books showing as NULL in `book_title_alice__title`). Instead, the test receives only one row with both columns as NULL, indicating that only one JOIN was generated and the second FilteredRelation's condition was ignored.
+
+Error: `AssertionError: Element counts were not equal` - expecting 2 rows with `book_title_jane__title` populated but receiving 1 row with both columns NULL.
+
+## Suspect set
+
+- `django/db/models/sql/datastructures.py` lines 164-166: The `Join.equals()` method that determines join equality
+- `django/db/models/sql/datastructures.py` lines 145-155: The `Join.identity` property that defines join identity
+- `django/db/models/sql/query.py` lines 1014-1051: The `Query.join()` method that implements join reuse logic
+
+## Root cause
+
+The `Join.equals()` method at `django/db/models/sql/datastructures.py:165` explicitly ignores the `filtered_relation` attribute when comparing joins for equality. The method returns `self.identity[:-1] == other.identity[:-1]`, which slices off the last element of the identity tuple (the `filtered_relation`). This causes the join reuse logic in `Query.join()` to incorrectly identify two joins to the same table with different FilteredRelation conditions as "equal", leading to join reuse when a new join should be created.
+
+When the query builder processes the second FilteredRelation (`book_title_jane`), it creates a Join object and calls `Query.join()` to add it. The `join()` method searches for reusable joins by calling `j.equals(join)` on existing joins. Since `equals()` ignores `filtered_relation`, it finds the first join (for `book_title_alice`) and incorrectly reuses it, discarding the second FilteredRelation's condition entirely.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `datastructures.py:165` — `return self.identity[:-1] == other.identity[:-1]` with comment "# Ignore filtered_relation in equality check."
+- `datastructures.py:145-155` — The `identity` property includes `self.filtered_relation` as the final element
+- `query.py:1030` — `if (reuse is None or a in reuse) and j.equals(join)` — the reuse logic relies on `equals()`
+
+## Edit sites
+
+- `django/db/models/sql/datastructures.py` lines 164-166: Change the `Join.equals()` method to include `filtered_relation` in the equality comparison. Replace `return self.identity[:-1] == other.identity[:-1]` with `return self.identity == other.identity`. This ensures joins with different FilteredRelation objects (even to the same base table) are not considered equal and each creates its own JOIN clause.
+
+## Rejected hypotheses
+
+None — the code path is deterministic and the root cause is directly observable in the equality check.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---
