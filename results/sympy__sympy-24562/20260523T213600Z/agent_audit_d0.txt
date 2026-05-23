@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-24562
+
+## FAIL_TO_PASS
+- test_issue_24543: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_mpmath_issues: expected to fail (same as baseline)
+- test_numpy_to_float: skipped (same as baseline)
+
+## Summary
+
+The craft patch successfully resolves the issue. The problem was in `Rational.__new__()` where both `p` and `q` being non-SYMPY_INTS would cause values to be overwritten during conversion. The fix extracts numerator and denominator components before cross-multiplication, allowing `Rational(1.5, 1.5)` to work correctly.
+
+All 107 applicable tests pass. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

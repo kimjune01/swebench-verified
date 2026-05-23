@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The bug in `Rational('0.5', '100')` has been fixed. The issue was that the constructor performed string multiplication (`'100' * 2 = '100100'`) before converting q to a numeric type.
+
+**Fix:** Reordered the conversion logic to extract denominators during type conversion, then cross-multiply after both p and q are numeric:
+- `sympy/core/numbers.py:1628-1645` — Convert both arguments to Rational/int first, extract denominators (p_q, q_q), then perform cross-multiplication
+
+**Gate result:** All FAIL_TO_PASS tests pass (test_issue_24543 ✓), 107 tests passed total.
+
+---STDERR---

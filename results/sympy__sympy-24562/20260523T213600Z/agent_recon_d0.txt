@@ -1,0 +1,51 @@
+# Recon: sympy__sympy-24562
+
+## Failure summary
+
+The test `test_issue_24543` checks that `Rational(p, q)` produces the same result as `Rational('%s/%s'%(p,q))` for various combinations of string and numeric inputs. The test fails with `TypeError: invalid input: 1.51.5` when both p and q are the string `'1.5'`. The error occurs because string multiplication creates `'1.51.5'` (string repetition) instead of performing arithmetic multiplication.
+
+The issue description reports that `Rational('0.5', '100')` incorrectly produces `1/100100` instead of `1/200`. This occurs because `'100' * 2 = '100100'` when the string `'100'` is multiplied by the integer `2`.
+
+## Suspect set
+
+- `sympy/core/numbers.py` lines 1627-1640: The Rational.__new__ method's logic for handling non-integer p and q values
+- Specifically lines 1629 and 1636: The multiplication operations `q *= p.q` and `p *= q.q` that assume operands are numeric
+
+## Root cause
+
+The Rational constructor converts string arguments to Rational objects sequentially, but performs multiplication operations before ensuring both operands are numeric types. When `Rational('0.5', '100')` is called:
+
+1. Line 1628: `p = Rational('0.5')` returns `Rational(1, 2)`
+2. Line 1629: `q *= p.q` attempts `'100' * 2`, which in Python produces `'100100'` (string repetition)  
+3. Line 1630: `p = p.p` sets `p = 1`
+4. Line 1635: `q = Rational('100100')` converts the concatenated string
+5. Final result: `Rational(1, 100100)` instead of `Rational(1, 200)`
+
+This bug was introduced in commit 44f22e62e0 (August 2021, "Rational creation uses ints"). The old code converted both p and q to Rational objects first, then extracted numerators/denominators. The new code converts them sequentially to improve efficiency, but incorrectly assumes q is numeric during the first conversion step.
+
+**Confidence: deduction — 99%**
+
+Supporting evidence:
+- `sympy/core/numbers.py:1629` — `q *= p.q` occurs when q may still be a string
+- Python behavior: `'100' * 2 == '100100'` (verified via REPL)
+- Error message `'1.51.5'` matches `'1.5' * 2`
+- Git blame: commit 44f22e62e0 introduced this code structure
+
+## Edit sites
+
+- `sympy/core/numbers.py` lines 1627-1640: Reorder the conversion logic to ensure both p and q are converted to Rational or int types BEFORE performing any multiplication operations. The fix should:
+  1. Convert p to Rational (if not SYMPY_INTS) or int
+  2. Convert q to Rational (if not SYMPY_INTS) or int  
+  3. Only then perform the cross-multiplication `q *= p.q` and `p *= q.q`
+
+This ensures that the multiplication operands are always numeric types (int or Rational), preventing string repetition.
+
+## Rejected hypotheses
+
+None. The root cause was immediately evident from the error message (`'1.51.5'` clearly indicates string multiplication) and confirmed by code inspection showing the multiplication occurs before type conversion.
+
+## Open questions
+
+None. The fix is straightforward: separate the type conversion phase from the multiplication phase.
+
+---STDERR---
