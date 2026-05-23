@@ -1,0 +1,20 @@
+diff --git a/sympy/physics/quantum/tensorproduct.py b/sympy/physics/quantum/tensorproduct.py
+index 9dd10d219..d4079a0bd 100644
+--- a/sympy/physics/quantum/tensorproduct.py
++++ b/sympy/physics/quantum/tensorproduct.py
+@@ -382,9 +382,13 @@ def tensor_product_simp(e, **hints):
+     if isinstance(e, Add):
+         return Add(*[tensor_product_simp(arg) for arg in e.args])
+     elif isinstance(e, Pow):
+-        return tensor_product_simp(e.base) ** e.exp
++        simplified_base = tensor_product_simp(e.base, **hints)
++        if isinstance(simplified_base, TensorProduct):
++            return TensorProduct(*[arg**e.exp for arg in simplified_base.args])
++        return simplified_base**e.exp
+     elif isinstance(e, Mul):
+-        return tensor_product_simp_Mul(e)
++        simplified_args = [tensor_product_simp(arg, **hints) for arg in e.args]
++        return tensor_product_simp_Mul(Mul(*simplified_args))
+     elif isinstance(e, Commutator):
+         return Commutator(*[tensor_product_simp(arg) for arg in e.args])
+     elif isinstance(e, AntiCommutator):

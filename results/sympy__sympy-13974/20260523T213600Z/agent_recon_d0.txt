@@ -1,0 +1,47 @@
+# Recon: sympy__sympy-13974
+
+## Failure summary
+
+The failing test `test_tensor_product_simp` checks that powers of `TensorProduct` expressions are properly simplified by the `tensor_product_simp` function. Specifically, it expects `TP(A, B)**x` to be simplified to `TP(A**x, B**x)` (distributing the exponent to each argument), but currently the expression is returned unchanged. The test fails with `AssertionError` at line 51: `assert tensor_product_simp(TP(A, B)**x) == TP(A**x, B**x)`.
+
+## Suspect set
+
+- `sympy/physics/quantum/tensorproduct.py` lines 384-385: The `Pow` case in `tensor_product_simp` doesn't distribute exponents into `TensorProduct` arguments
+- `sympy/physics/quantum/tensorproduct.py` lines 386-387: The `Mul` case doesn't recursively simplify arguments before attempting to combine `TensorProduct`s
+
+## Root cause
+
+The `tensor_product_simp` function has two related deficiencies:
+
+1. **Primary issue** (lines 384-385): When encountering a `Pow` expression, the function simplifies the base and raises it to the exponent, but doesn't check if the base is a `TensorProduct` that needs the exponent distributed to its arguments. For `TP(A, B)**x`, it calls `tensor_product_simp(TP(A, B))` which returns `TP(A, B)` unchanged (since `TensorProduct` instances fall through to the `else: return e` case), then raises it to `x`, producing `TP(A, B)**x` unchanged.
+
+2. **Secondary issue** (lines 386-387): When encountering a `Mul` expression like `x*TP(A, B)**2`, the function calls `tensor_product_simp_Mul` directly without first recursively simplifying the arguments. Since `tensor_product_simp_Mul` only combines multiple `TensorProduct`s and sees only one non-commutative part (`TP(A, B)**2`, which is a `Pow` not a `TensorProduct`), it returns the expression unchanged. The nested `Pow` is never simplified.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `sympy/physics/quantum/tensorproduct.py:384-385` — `elif isinstance(e, Pow): return tensor_product_simp(e.base) ** e.exp`
+- Manual test: `tensor_product_simp(TP(A, B)**x)` returns `AxB**x` instead of `(A**x)x(B**x)`
+- Manual test: `tensor_product_simp(x*TP(A, B)**2)` returns `x*AxB**2` instead of `x*(A**2)x(B**2)`
+
+## Edit sites
+
+1. `sympy/physics/quantum/tensorproduct.py` lines 384-385 (Pow case):
+   - After simplifying the base, check if it's a `TensorProduct`
+   - If so, distribute the exponent to each argument: `TensorProduct(*[arg**e.exp for arg in simplified_base.args])`
+   - Otherwise, return the simplified base raised to the exponent as before
+
+2. `sympy/physics/quantum/tensorproduct.py` lines 386-387 (Mul case):
+   - Recursively call `tensor_product_simp` on each argument of the `Mul` first
+   - Reconstruct the `Mul` with simplified arguments
+   - Then call `tensor_product_simp_Mul` to combine any `TensorProduct`s
+
+## Rejected hypotheses
+
+None — the root cause is directly observable from code trace and confirmed by manual tests.
+
+## Open questions
+
+None — the fix is straightforward and all test cases can be traced through the updated logic.
+
+---STDERR---

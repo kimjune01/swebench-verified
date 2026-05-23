@@ -1,0 +1,53 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/physics/quantum/tests/test_tensorproduct.py
+
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping, defaultdict
+/testbed/sympy/core/containers.py:271: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  class OrderedSet(collections.MutableSet):
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping, defaultdict
+/testbed/sympy/core/containers.py:271: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  class OrderedSet(collections.MutableSet):
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.21-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        60212130
+hash randomization: on (PYTHONHASHSEED=4261538029)
+
+sympy/physics/quantum/tests/test_tensorproduct.py[7] 
+test_tensor_product_dagger E
+test_tensor_product_abstract ok
+test_tensor_product_expand ok
+test_tensor_product_commutator ok
+test_tensor_product_simp ok
+test_issue_5923 ok
+test_eval_trace ok                                                        [FAIL]
+
+
+________________________________________________________________________________
+_ sympy/physics/quantum/tests/test_tensorproduct.py:test_tensor_product_dagger _
+  File "/testbed/sympy/physics/quantum/tests/test_tensorproduct.py", line 23, in test_tensor_product_dagger
+    assert Dagger(TensorProduct(mat1, mat2)) == \
+  File "/testbed/sympy/physics/quantum/tensorproduct.py", line 121, in __new__
+    return matrix_tensor_product(*args)
+  File "/testbed/sympy/physics/quantum/matrixutils.py", line 247, in matrix_tensor_product
+    return _sympy_tensor_product(*product)
+  File "/testbed/sympy/physics/quantum/matrixutils.py", line 206, in _sympy_tensor_product
+    start = matrix_expansion*mat[i*cols]
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2026, in __mul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+
+=========== tests finished: 6 passed, 1 exceptions, in 0.26 seconds ============
+DO *NOT* COMMIT!

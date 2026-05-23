@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes `test_tensor_product_simp` pass by:
+1. Distributing exponents over TensorProduct arguments when simplifying Pow expressions
+2. Recursively simplifying Mul arguments before combining TensorProducts
+
+Gate result: target test passes ✓
+
+---STDERR---
