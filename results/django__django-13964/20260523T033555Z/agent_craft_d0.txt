@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_save_fk_after_parent_with_non_numeric_pk_set_on_child` pass in a single gate iteration. The minimal change (replacing `is None` with `in field.target_field.empty_values` at line 936) correctly handles CharField PKs that default to `''` instead of `None`, with no test regressions.
+
+---STDERR---

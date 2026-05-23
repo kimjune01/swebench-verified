@@ -1,0 +1,29 @@
+---
+
+# Audit: django__django-13964
+
+## FAIL_TO_PASS
+- `test_save_fk_after_parent_with_non_numeric_pk_set_on_child`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 37 tests passed.
+
+## Pre-existing failures (not counted)
+None identified.
+
+## Gate Summary
+
+The patch successfully resolves the issue. The change from checking `is None` to checking `in field.target_field.empty_values` correctly handles both numeric PKs (where uninitialized = `None`) and string PKs (where uninitialized = `''`).
+
+**Results**:
+- ✅ All FAIL_TO_PASS tests now pass
+- ✅ All PASS_TO_PASS tests continue to pass
+- ✅ Zero regressions
+- ✅ 37/37 tests pass
+
+The fix is minimal, semantically sound (uses Django's canonical empty-value semantics), and preserves all existing behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

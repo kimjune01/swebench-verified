@@ -1,0 +1,54 @@
+Now let me print the recon handoff to stdout:
+
+# Recon: django__django-13964
+
+## Failure summary
+The test `test_save_fk_after_parent_with_non_numeric_pk_set_on_child` creates a parent object with a CharField primary key without specifying the PK value initially. The parent is assigned to a child's foreign key, then the parent's PK is set and saved, followed by saving the child. The test expects `child.parent_id` to contain the parent's PK value ('jeff'), but it contains an empty string instead. This causes a `ParentStringPrimaryKey.DoesNotExist` error when accessing `child.parent`, and an `IntegrityError` because the empty string FK value doesn't correspond to any existing parent record.
+
+## Suspect set
+- `django/db/models/base.py` lines 911-943 (`_prepare_related_fields_for_save` method): Contains logic that should update FK fields from cached parent objects before save
+- `django/db/models/fields/related_descriptors.py` lines 203-270 (`ForwardManyToOneDescriptor.__set__`): Copies parent PK to child FK field at assignment time
+
+## Root cause
+The bug is in `django/db/models/base.py:937`. The `_prepare_related_fields_for_save()` method only updates the FK field from a cached parent object when the FK field value is `None`:
+
+```python
+elif getattr(self, field.attname) is None:
+    setattr(self, field.attname, obj.pk)
+```
+
+When a CharField primary key is uninitialized, it has an empty string value (''), not `None`. The sequence of events:
+
+1. `parent = ParentStringPrimaryKey()` creates a parent with `name=''` (CharField default)
+2. `child.parent = parent` triggers the descriptor, copying '' to `child.parent_id`
+3. `child.parent.name = 'jeff'` updates the cached parent object's PK
+4. `child.save()` calls `_prepare_related_fields_for_save()`
+5. Line 937 checks `child.parent_id is None`, which is False (it's '')
+6. The FK field doesn't get updated
+7. Lines 941-943 detect the mismatch ('jeff' != '') but only clear the cache, don't update the FK field
+
+This differs from AutoField PKs which initialize to `None` and are handled correctly by the existing check.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/base.py:937` — Only checks `is None`, not other empty values
+- `django/db/models/base.py:941-943` — Detects mismatch but only does `field.delete_cached_value(self)`
+- `django/db/models/fields/related_descriptors.py:248-249` — `setattr(instance, lh_field.attname, getattr(value, rh_field.attname))` copies PK at assignment time
+- Git commit 519016e5f2 (2019) added this `is None` check to fix issue #28147 for AutoField PKs
+
+## Edit sites
+- `django/db/models/base.py` lines 937-939: Change the `elif` condition to handle not just `None` but also empty string. The condition should check if the FK field doesn't match the cached object's PK AND the FK field appears to be an uninitialized value (None or ''). Replace the single-line check with a multi-line comparison that extracts both values and checks if they differ while the FK value is empty.
+
+## Competing hypotheses
+None - the root cause is clear from code inspection and matches the exact symptom.
+
+## Rejected hypotheses
+- H₁: The descriptor's `__set__` method should not copy empty PK values — Rejected because this would be a more invasive change and would require tracking whether a PK is "set" vs "empty", which is ambiguous for CharFields
+- H₂: The cache clearing logic (lines 941-943) should also update the FK field — Rejected because this would break the existing `test_cached_relation_invalidated_on_save` which expects the FK field to be preserved when explicitly set by the user
+
+## Open questions
+- Should the fix check specifically for '' or use a more general "empty" check for different field types?
+- Are there other field types besides CharField that have non-None default values for PKs?
+
+---STDERR---
