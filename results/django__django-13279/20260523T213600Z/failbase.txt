@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 sessions_tests.tests
+
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+
+======================================================================
+ERROR: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CookieSessionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+  File "/testbed/django/contrib/sessions/backends/base.py", line 126, in _legacy_decode
+    encoded_data = base64.b64decode(session_data.encode('ascii'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+
+======================================================================
+ERROR: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.FileSessionPathLibTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+  File "/testbed/django/contrib/sessions/backends/base.py", line 126, in _legacy_decode
+    encoded_data = base64.b64decode(session_data.encode('ascii'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+
+======================================================================
+ERROR: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.FileSessionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+  File "/testbed/django/contrib/sessions/backends/base.py", line 126, in _legacy_decode
+    encoded_data = base64.b64decode(session_data.encode('ascii'))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+
+======================================================================
+FAIL: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CacheDBSessionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+AssertionError: {} != {'a test key': 'a test value'}
+- {}
++ {'a test key': 'a test value'}
+
+======================================================================
+FAIL: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CacheDBSessionWithTimeZoneTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+AssertionError: {} != {'a test key': 'a test value'}
+- {}
++ {'a test key': 'a test value'}
+
+======================================================================
+FAIL: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CustomDatabaseSessionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+AssertionError: {} != {'a test key': 'a test value'}
+- {}
++ {'a test key': 'a test value'}
+
+======================================================================
+FAIL: test_default_hashing_algorith_legacy_decode (sessions_tests.tests.DatabaseSessionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 333, in test_default_hashing_algorith_legacy_decode
+    self.assertEqual(self.session._legacy_decode(encoded), data)
+AssertionError: {} != {'a test key': 'a test value'}
+- {}
++ {'a test key': 'a test value'}
+
+----------------------------------------------------------------------
+Ran 384 tests in 0.199s
+
+FAILED (failures=4, errors=5, skipped=2, expected failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application sessions_tests
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, sessions, sessions_tests, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table sessions_tests_customsession
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

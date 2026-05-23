@@ -1,0 +1,46 @@
+# Audit: django__django-13279
+
+## Patch verification
+
+Patch is live in tree:
+```
+ django/contrib/sessions/backends/base.py | 5 +++++
+ 1 file changed, 5 insertions(+)
+```
+
+The craft patch modifies `encode()` to check `DEFAULT_HASHING_ALGORITHM` and use legacy base64 format when set to 'sha1'.
+
+## FAIL_TO_PASS results
+
+All 7 FAIL_TO_PASS tests now **PASS**:
+
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CookieSessionTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CacheSessionTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.FileSessionTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.FileSessionPathLibTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CacheDBSessionTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.CacheDBSessionWithTimeZoneTests)`: **PASS**
+- `test_default_hashing_algorith_legacy_decode (sessions_tests.tests.DatabaseSessionTests)`: **PASS**
+
+## PASS_TO_PASS regressions
+
+**None.** Full gate ran 384 tests with result: `OK (skipped=2, expected failures=1)`. No regressions introduced.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+
+**None.** All tests that were failing on base are now passing after the patch.
+
+## Baseline comparison
+
+The fail-on-base capture showed these tests failing before the patch:
+- `CookieSessionTests`: `binascii.Error: Incorrect padding` 
+- `FileSessionTests`: `binascii.Error: Incorrect padding`
+- `FileSessionPathLibTests`: `binascii.Error: Incorrect padding`
+- `CacheDBSessionTests`: `AssertionError: {} != {'a test key': 'a test value'}`
+
+All now pass. The fix successfully resolved the format incompatibility between `encode()` and `_legacy_decode()` when `DEFAULT_HASHING_ALGORITHM='sha1'`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

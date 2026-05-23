@@ -1,0 +1,46 @@
+Now I'll output the complete diagnosis to stdout:
+
+```markdown
+# Recon: django__django-13279
+
+## Failure summary
+The tests verify that when `DEFAULT_HASHING_ALGORITHM='sha1'`, session data encoded with `encode()` can be decoded with `_legacy_decode()`. All 9 test variants fail with `binascii.Error: Incorrect padding` at line 126 of `django/contrib/sessions/backends/base.py` when `_legacy_decode()` attempts to base64-decode the session data. The error occurs because `encode()` produces data in the new signing infrastructure format, but `_legacy_decode()` expects the legacy base64-encoded format.
+
+## Suspect set
+- `django/contrib/sessions/backends/base.py` lines 109-114: `encode()` method - uses signing.dumps() unconditionally without checking DEFAULT_HASHING_ALGORITHM
+- `django/contrib/sessions/backends/base.py` lines 104-107: `_hash()` method - still present for legacy compatibility, uses salted_hmac
+
+## Root cause
+In commit d4fff711d4 (Fixed #31274), the `encode()` method was changed to use the signing infrastructure (`signing.dumps()`) instead of the legacy format. The legacy format was:
+```python
+serialized = self.serializer().dumps(session_dict)
+hash = self._hash(serialized)
+return base64.b64encode(hash.encode() + b":" + serialized).decode('ascii')
+```
+
+The new format is:
+```python
+return signing.dumps(session_dict, salt=self.key_salt, serializer=self.serializer, compress=True)
+```
+
+The `encode()` method doesn't check `settings.DEFAULT_HASHING_ALGORITHM`, so it always produces the new format. When `DEFAULT_HASHING_ALGORITHM='sha1'` (for backward compatibility during Django 3.1 transition), the code should use legacy encoding so that sessions created by new instances can be read by old instances running the legacy format.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/contrib/sessions/backends/base.py:109-114` — encode() always calls signing.dumps(), never checks DEFAULT_HASHING_ALGORITHM
+- `django/contrib/sessions/backends/base.py:126` — _legacy_decode() calls `base64.b64decode(session_data.encode('ascii'))`, expecting legacy format
+- `git show d4fff711d4` — commit that introduced the format change, shows exactly what the old encode() implementation was
+- Problem description states: "setting DEFAULT_HASHING_ALGORITHM to 'sha1' is not enough" and suggests "use the legacy encode() when DEFAULT_HASHING_ALGORITHM == 'sha1'"
+
+## Edit sites
+- `django/contrib/sessions/backends/base.py` lines 109-114: Modify `encode()` method to check `settings.DEFAULT_HASHING_ALGORITHM`. When it equals 'sha1', use the legacy encoding format: serialize the data, compute the hash via `_hash()`, and return `base64.b64encode(hash.encode() + b":" + serialized).decode('ascii')`. Otherwise, use the current `signing.dumps()` approach for the new format.
+
+## Rejected hypotheses
+None — the failure mode, root cause, and solution are unambiguous from the code reading and git history.
+
+## Open questions
+None — the diagnosis is complete and falsifiable against the gate.
+```
+
+---STDERR---
