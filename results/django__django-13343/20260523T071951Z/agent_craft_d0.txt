@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. FileField now preserves callable storage parameters and returns them in deconstruct(), ensuring migrations maintain runtime-variable behavior.
+
+---STDERR---

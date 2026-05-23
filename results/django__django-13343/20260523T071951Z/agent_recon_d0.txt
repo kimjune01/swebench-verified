@@ -1,0 +1,63 @@
+Now let me write the final recon handoff to stdout:
+
+```markdown
+# Recon: django__django-13343
+
+## Failure summary
+The test `test_deconstruction` verifies that when a FileField is instantiated with a callable `storage` parameter, calling `deconstruct()` on that field should return the original callable function, not the evaluated storage object. This ensures migrations preserve the runtime-variable behavior of callable storage. Currently, the test fails with:
+```
+AssertionError: <django.core.files.storage.FileSystemStorage object at 0x7f999bb1eda0> is not <function callable_storage at 0x7f999bb92158>
+```
+
+The field returns the evaluated FileSystemStorage instance instead of the original `callable_storage` function.
+
+## Suspect set
+- `django/db/models/fields/files.py` lines 227-241: FileField.__init__ — evaluates callable storage and discards the original
+- `django/db/models/fields/files.py` lines 276-283: FileField.deconstruct — returns the evaluated storage object
+
+## Root cause
+FileField.__init__ evaluates callable storage immediately and overwrites it with the result, losing the original callable. When deconstruct() runs, it has no way to recover the original callable.
+
+**Code path:**
+1. FileField.__init__ (line 230-232):
+   ```python
+   self.storage = storage or default_storage
+   if callable(self.storage):
+       self.storage = self.storage()  # Evaluates and overwrites
+   ```
+   The original callable is lost.
+
+2. FileField.deconstruct() (line 282):
+   ```python
+   kwargs['storage'] = self.storage  # Returns evaluated object
+   ```
+   Can only return the evaluated storage, not the original callable.
+
+**Contrast:** `upload_to` parameter (line 238) is stored as-is without evaluation: `self.upload_to = upload_to`, so deconstruct (line 281) returns the original callable when present.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/fields/files.py:231-232` — callable is evaluated and result stored in self.storage
+- `django/db/models/fields/files.py:282` — deconstruct returns self.storage (the evaluated object)
+- `django/db/models/fields/files.py:238` — upload_to stored as-is for comparison
+- `tests/file_storage/models.py:26-27` — callable_storage is a function returning temp_storage
+- `tests/file_storage/models.py:57` — field defined with storage=callable_storage
+- `tests/file_storage/tests.py:922-924` — test expects callable_storage function identity
+
+## Edit sites
+1. `django/db/models/fields/files.py` lines 227-241 (FileField.__init__):
+   - Before evaluating callable storage, preserve the original storage parameter in a new attribute (e.g., `self._storage_callable`)
+   - Only store the original if the parameter was actually a callable
+   - Continue to evaluate and store the result in `self.storage` for runtime use
+
+2. `django/db/models/fields/files.py` lines 276-283 (FileField.deconstruct):
+   - Check if the original callable was preserved (e.g., check for `self._storage_callable`)
+   - If yes, return the original callable in kwargs['storage']
+   - If no, return `self.storage` as before (the current behavior for non-callable storage)
+
+## Open questions
+None — the fix is straightforward: preserve the original callable before evaluation, then return it in deconstruct.
+```
+
+---STDERR---
