@@ -1,0 +1,45 @@
+# Recon: django__django-11141
+
+## Failure summary
+
+The test `test_loading_namespace_package` attempts to load migrations from a namespace package (a directory without `__init__.py` file) at `migrations.test_migrations_namespace_package`. The test expects the migration `('migrations', '0001_initial')` to be loaded into the migration graph, but it fails with `NodeNotFoundError: Node ('migrations', '0001_initial') not a valid node`. This indicates the migration was never discovered and loaded by the MigrationLoader.
+
+## Suspect set
+
+- `django/db/migrations/loader.py` lines 87-91: The `__file__` attribute check that skips modules without this attribute, treating them as unmigrated apps
+
+## Root cause
+
+The MigrationLoader's `load_disk()` method incorrectly treats namespace packages as unmigrated apps. On lines 87-91 of `django/db/migrations/loader.py`, there is a check that skips any module where `getattr(module, '__file__', None) is None`. Namespace packages (implicit packages in Python 3 without `__init__.py`) don't have a `__file__` attribute, so they are skipped.
+
+This check was originally introduced in commit e1266e50b2 (#21015) when migration discovery relied on `os.path.dirname(module.__file__)` to access the filesystem. However, in commit 29150d5da8 (#23406), migration discovery was changed to use `pkgutil.iter_modules(module.__path__)` instead. Since `pkgutil.iter_modules()` works with namespace packages (which have `__path__` even without `__file__`), the `__file__` check is now obsolete and incorrectly prevents namespace packages from being processed.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/migrations/loader.py:101` — `migration_names = {name for _, name, is_pkg in pkgutil.iter_modules(module.__path__) if not is_pkg and name[0] not in '_~'}` — Migration discovery uses `module.__path__`, not `module.__file__`
+- `django/db/migrations/loader.py:93-95` — Already has a check for `__path__` to verify the module is a package, which is sufficient
+- `django/db/migrations/questioner.py:48-54` — Correctly handles namespace packages by checking for `__path__` when `__file__` is None, demonstrating the proper pattern
+- Git history shows #23406 specifically changed from filesystem-based discovery (requiring `__file__`) to `pkgutil.iter_modules` (which works with `__path__`)
+
+## Edit sites
+
+- `django/db/migrations/loader.py` lines 87-91: Remove the obsolete `__file__` check. Delete the following 5 lines:
+  ```python
+  # Empty directories are namespaces.
+  # getattr() needed on PY36 and older (replace w/attribute access).
+  if getattr(module, '__file__', None) is None:
+      self.unmigrated_apps.add(app_config.label)
+      continue
+  ```
+  The subsequent `__path__` check (lines 93-95) is sufficient to determine if a module is a package.
+
+## Rejected hypotheses
+
+None — the code path and git history clearly show this is the sole cause of the failure.
+
+## Open questions
+
+None — the fix is straightforward and well-supported by the existing code in questioner.py that already handles namespace packages correctly.
+
+---STDERR---
