@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully resolves the LassoLarsIC.fit() parameter conflict. The FAIL_TO_PASS test now passes along with all other tests (34/34 passing). 
+
+**Final implementation**: Changed `fit()` signature to use `copy_X=None` as a sentinel, then resolve to `self.copy_X` when not explicitly provided. This allows both use cases:
+- `LassoLarsIC(copy_X=False).fit(X, y)` → respects `self.copy_X=False`  
+- `LassoLarsIC().fit(X, y, copy_X=False)` → respects explicit parameter `copy_X=False`
+
+---STDERR---

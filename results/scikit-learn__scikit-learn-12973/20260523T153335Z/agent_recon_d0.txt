@@ -1,0 +1,3 @@
+Diagnosis complete. The bug is a parameter conflict in `LassoLarsIC.fit()` where the method accepts a `copy_X` parameter but inconsistently uses both `self.copy_X` (from `__init__`) and the method parameter. When `fit(X, y, copy_X=False)` is called, the preprocessing step ignores the parameter and uses the default `self.copy_X=True`, copying X before the user's choice can take effect. The fix requires resolving the parameter at the start of `fit()` and using the resolved value consistently.
+
+---STDERR---

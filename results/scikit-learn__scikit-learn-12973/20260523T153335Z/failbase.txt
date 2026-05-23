@@ -1,0 +1,73 @@
+$ pytest -rA sklearn/linear_model/tests/test_least_angle.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, configfile: setup.cfg
+collected 34 items
+
+sklearn/linear_model/tests/test_least_angle.py ......................... [ 73%]
+........F                                                                [100%]
+
+=================================== FAILURES ===================================
+__________________ test_lasso_lars_fit_copyX_behaviour[False] __________________
+
+copy_X = False
+
+    @pytest.mark.parametrize('copy_X', [True, False])
+    def test_lasso_lars_fit_copyX_behaviour(copy_X):
+        """
+        Test that user input to .fit for copy_X overrides default __init__ value
+    
+        """
+        lasso_lars = LassoLarsIC(precompute=False)
+        rng = np.random.RandomState(0)
+        X = rng.normal(0, 1, (100, 5))
+        X_copy = X.copy()
+        y = X[:, 2]
+        lasso_lars.fit(X, y, copy_X=copy_X)
+>       assert copy_X == np.array_equal(X, X_copy)
+E       assert False == True
+E        +  where True = <function array_equal at 0x7f5cf99c6bf8>(array([[ 1.76405235,  0.40015721,  0.97873798,  2.2408932 ,  1.86755799],\n       [-0.97727788,  0.95008842, -0.1513572...336,  1.10028434,  1.29802197,  2.69622405],\n       [-0.07392467, -0.65855297, -0.51423397, -1.01804188, -0.07785476]]), array([[ 1.76405235,  0.40015721,  0.97873798,  2.2408932 ,  1.86755799],\n       [-0.97727788,  0.95008842, -0.1513572...336,  1.10028434,  1.29802197,  2.69622405],\n       [-0.07392467, -0.65855297, -0.51423397, -1.01804188, -0.07785476]]))
+E        +    where <function array_equal at 0x7f5cf99c6bf8> = np.array_equal
+
+sklearn/linear_model/tests/test_least_angle.py:719: AssertionError
+==================================== PASSES ====================================
+_________________________ test_no_path_all_precomputed _________________________
+----------------------------- Captured stdout call -----------------------------
+---
+=========================== short test summary info ============================
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_simple
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_simple_precomputed
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_all_precomputed
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_lstsq
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_gives_lstsq_solution
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_collinearity
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_no_path
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_no_path_precomputed
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_no_path_all_precomputed
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_precompute[Lars]
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_precompute[LarsCV]
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_precompute[LassoLarsIC]
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_singular_matrix
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_rank_deficient_design
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_lasso_cd
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_lasso_cd_early_stopping
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_path_length
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_lasso_cd_ill_conditioned
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_lasso_cd_ill_conditioned2
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_add_features
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_n_nonzero_coefs
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_multitarget
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_cv
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_cv_max_iter
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_ic
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_path_readonly_data
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lars_path_positive_constraint
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_estimatorclasses_positive_constraint
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_lasso_cd_positive
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_vs_R_implementation
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_copyX_behaviour[True]
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_copyX_behaviour[False]
+PASSED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_fit_copyX_behaviour[True]
+FAILED sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_fit_copyX_behaviour[False]
+=================== 1 failed, 33 passed, 4 warnings in 0.67s ===================

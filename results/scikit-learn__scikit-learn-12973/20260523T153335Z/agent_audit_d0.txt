@@ -1,0 +1,23 @@
+# Audit: scikit-learn__scikit-learn-12973
+
+## FAIL_TO_PASS
+- `sklearn/linear_model/tests/test_least_angle.py::test_lasso_lars_fit_copyX_behaviour[False]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 34 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Patch Summary
+The fix modified `LassoLarsIC.fit()` in `sklearn/linear_model/least_angle.py`:
+1. Changed `copy_X` parameter default from `True` to `None`
+2. Added logic to resolve `copy_X` from `self.copy_X` when `None`
+3. Passed resolved value to `_preprocess_data()` instead of always using `self.copy_X`
+
+This allows callers to override the instance-level `copy_X` setting at fit time, fixing the test that expected `copy_X=False` at fit time to override the default `copy_X=True` from `__init__`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
