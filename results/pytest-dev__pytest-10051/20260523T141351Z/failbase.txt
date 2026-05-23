@@ -1,0 +1,122 @@
+$ pytest -rA testing/logging/test_fixture.py
+
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.2.0.dev157+gaa55975c7, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_ini_controls_global_log_level0, configfile: tox.ini
+collected 1 item
+
+test_ini_controls_global_log_level.py .                                  [100%]
+
+============================== 1 passed in 0.00s ===============================
+------------------------------ Captured log call -------------------------------
+WARNING  catchlog:test_ini_controls_global_log_level.py:7 WARNING message won't be shown
+ERROR    catchlog:test_ini_controls_global_log_level.py:8 ERROR message will be shown
+__________________ test_caplog_can_override_global_log_level ___________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.2.0.dev157+gaa55975c7, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_caplog_can_override_global_log_level0, configfile: tox.ini
+collected 1 item
+
+test_caplog_can_override_global_log_level.py .                           [100%]
+
+============================== 1 passed in 0.00s ===============================
+------------------------------ Captured log call -------------------------------
+DEBUG    catchlog:test_caplog_can_override_global_log_level.py:13 DEBUG message will be shown
+INFO     catchlog:test_caplog_can_override_global_log_level.py:21 INFO message will be shown
+____________________ test_caplog_captures_despite_exception ____________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.2.0.dev157+gaa55975c7, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_caplog_captures_despite_exception0, configfile: tox.ini
+collected 1 item
+
+test_caplog_captures_despite_exception.py F                              [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_log_level_override ____________________________
+
+request = <FixtureRequest for <Function test_log_level_override>>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7f918b9cdeb0>
+
+    def test_log_level_override(request, caplog):
+        logger = logging.getLogger('catchlog')
+        plugin = request.config.pluginmanager.getplugin('logging-plugin')
+        assert plugin.log_level == logging.WARNING
+    
+        logger.error("ERROR message " + "will be shown")
+    
+        with caplog.at_level(logging.DEBUG, logger.name):
+            logger.debug("DEBUG message " + "won't be shown")
+>           raise Exception()
+E           Exception
+
+test_caplog_captures_despite_exception.py:12: Exception
+------------------------------ Captured log call -------------------------------
+ERROR    catchlog:test_caplog_captures_despite_exception.py:8 ERROR message will be shown
+=========================== short test summary info ============================
+FAILED test_caplog_captures_despite_exception.py::test_log_level_override - E...
+============================== 1 failed in 0.00s ===============================
+------------------------------ Captured log call -------------------------------
+ERROR    catchlog:test_caplog_captures_despite_exception.py:8 ERROR message will be shown
+DEBUG    catchlog:test_caplog_captures_despite_exception.py:11 DEBUG message won't be shown
+_______ test_log_report_captures_according_to_config_option_upon_failure _______
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.2.0.dev157+gaa55975c7, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_log_report_captures_according_to_config_option_upon_failure0
+collected 1 item
+
+test_log_report_captures_according_to_config_option_upon_failure.py F    [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_that_fails ________________________________
+
+request = <FixtureRequest for <Function test_that_fails>>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7f918b348820>
+
+    def test_that_fails(request, caplog):
+        plugin = request.config.pluginmanager.getplugin('logging-plugin')
+        assert plugin.log_level == logging.INFO
+    
+        with caplog.at_level(logging.DEBUG):
+            function_that_logs()
+    
+        if 'DEBUG log ' + 'message' not in caplog.text:
+            raise Exception('caplog failed to ' + 'capture DEBUG')
+    
+>       assert False
+E       assert False
+
+test_log_report_captures_according_to_config_option_upon_failure.py:20: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Print message
+------------------------------ Captured log call -------------------------------
+INFO     root:test_log_report_captures_according_to_config_option_upon_failure.py:6 INFO log message
+WARNING  root:test_log_report_captures_according_to_config_option_upon_failure.py:7 WARNING log message
+=========================== short test summary info ============================
+FAILED test_log_report_captures_according_to_config_option_upon_failure.py::test_that_fails
+============================== 1 failed in 0.00s ===============================
+------------------------------ Captured log call -------------------------------
+DEBUG    root:test_log_report_captures_according_to_config_option_upon_failure.py:5 DEBUG log message
+INFO     root:test_log_report_captures_according_to_config_option_upon_failure.py:6 INFO log message
+WARNING  root:test_log_report_captures_according_to_config_option_upon_failure.py:7 WARNING log message
+=========================== short test summary info ============================
+PASSED testing/logging/test_fixture.py::test_change_level
+PASSED testing/logging/test_fixture.py::test_with_statement
+PASSED testing/logging/test_fixture.py::test_log_access
+PASSED testing/logging/test_fixture.py::test_messages
+PASSED testing/logging/test_fixture.py::test_record_tuples
+PASSED testing/logging/test_fixture.py::test_unicode
+PASSED testing/logging/test_fixture.py::test_clear
+PASSED testing/logging/test_fixture.py::test_caplog_captures_for_all_stages
+PASSED testing/logging/test_fixture.py::test_fixture_help
+PASSED testing/logging/test_fixture.py::test_change_level_undo
+PASSED testing/logging/test_fixture.py::test_change_level_undos_handler_level
+PASSED testing/logging/test_fixture.py::test_ini_controls_global_log_level
+PASSED testing/logging/test_fixture.py::test_caplog_can_override_global_log_level
+PASSED testing/logging/test_fixture.py::test_caplog_captures_despite_exception
+PASSED testing/logging/test_fixture.py::test_log_report_captures_according_to_config_option_upon_failure
+FAILED testing/logging/test_fixture.py::test_clear_for_call_stage - assert [<...
+========================= 1 failed, 15 passed in 0.16s =========================

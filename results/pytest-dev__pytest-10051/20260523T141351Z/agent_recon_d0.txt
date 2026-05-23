@@ -1,0 +1,59 @@
+# Recon: pytest-dev__pytest-10051
+
+## Failure summary
+
+The test `test_clear_for_call_stage` verifies that `caplog.clear()` properly clears the log records for the current test stage (call), while preserving records from other stages (setup). After calling `caplog.clear()`, the test expects `caplog.get_records("call")` to return an empty list, but it actually returns the old records. The assertion fails with:
+
+```
+assert caplog.get_records("call") == []
+E       assert [<LogRecord: ..."a_call_log">] == []
+```
+
+## Suspect set
+
+- `src/_pytest/logging.py` lines 441-443: `LogCaptureFixture.clear()` method - calls `handler.reset()` which creates new list
+- `src/_pytest/logging.py` lines 345-347: `LogCaptureHandler.reset()` method - replaces records list instead of clearing in-place
+- `src/_pytest/logging.py` line 699: Stash storage - stores reference to handler's records list
+- `src/_pytest/logging.py` line 399: `get_records()` method - returns from stash, not handler
+
+## Root cause
+
+The `caplog.get_records(when)` method becomes decoupled from the handler's actual records when `caplog.clear()` is called. This happens because:
+
+1. During each test phase (setup/call/teardown), the framework stores a **reference** to `handler.records` in the stash: `item.stash[caplog_records_key][when] = caplog_handler.records` (line 699)
+
+2. When the user calls `caplog.clear()`, it invokes `handler.reset()` which does `self.records = []` - creating a **new empty list object** instead of clearing the existing list (line 346)
+
+3. The stash still holds a reference to the **old list** (now orphaned), while the handler points to the **new list**
+
+4. New log records append to the new list in the handler, but `get_records(when)` returns the old list from the stash (line 399)
+
+The core issue is object identity: `reset()` breaks the reference chain by assigning a new list object instead of mutating the existing one.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `src/_pytest/logging.py:346` — `self.records = []` creates new list instead of clearing in-place
+- `src/_pytest/logging.py:699` — `item.stash[caplog_records_key][when] = caplog_handler.records` stores reference
+- `src/_pytest/logging.py:399` — `return self._item.stash[caplog_records_key].get(when, [])` reads from stash
+- `src/_pytest/logging.py:443` — `self.handler.reset()` creates new list, orphaning stash reference
+
+## Edit sites
+
+**File**: `src/_pytest/logging.py`  
+**Lines**: 441-443  
+**Description**: Change `LogCaptureFixture.clear()` to clear the records list in-place (using `.clear()` method) instead of calling `handler.reset()` which replaces the list. Also reset the stream to clear captured text. This maintains the stash reference while clearing the current stage's records.
+
+**Specifically**: Replace `self.handler.reset()` with `self.handler.records.clear()` and `self.handler.stream = StringIO()`.
+
+**Why not change `reset()` itself**: The `LogCaptureHandler.reset()` method is also called at phase boundaries (setup→call→teardown) where we deliberately want separate list objects for each phase. Only the user-initiated `clear()` needs in-place clearing.
+
+## Rejected hypotheses
+
+None. First-pass diagnosis traced the issue directly through the code path from test failure to root cause.
+
+## Open questions
+
+None. The fix is straightforward and localized to a single method.
+
+---STDERR---

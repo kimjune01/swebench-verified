@@ -1,0 +1,28 @@
+# Audit: pytest-dev__pytest-10051
+
+## FAIL_TO_PASS
+- `testing/logging/test_fixture.py::test_clear_for_call_stage`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 16 tests in the PASS_TO_PASS contract passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_caplog_captures_despite_exception` — fails with `Exception` in both baseline and current run
+- `test_log_report_captures_according_to_config_option_upon_failure` — fails with `assert False` in both baseline and current run
+
+These failures appear in the fail-on-base capture output provided by the adapter, confirming they existed before the patch was applied.
+
+## Verdict details
+
+The craft patch successfully resolved the issue:
+- The target test `test_clear_for_call_stage` now passes (was failing before)
+- All PASS_TO_PASS tests remain passing (16/16)
+- No new regressions introduced
+- The fix correctly clears log records in-place while preserving the stash reference integrity
+
+**Patch**: 3-line change in `src/_pytest/logging.py` replacing `self.handler.reset()` with in-place clearing (`self.handler.records.clear()` + `self.handler.stream = StringIO()`) in the `LogCaptureFixture.clear()` method.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

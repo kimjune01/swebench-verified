@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_clear_for_call_stage` pass. Changed `LogCaptureFixture.clear()` to clear the records list in-place (`self.handler.records.clear()`) instead of calling `handler.reset()`, preserving the stash reference while clearing the current phase's logs.
+
+---STDERR---
