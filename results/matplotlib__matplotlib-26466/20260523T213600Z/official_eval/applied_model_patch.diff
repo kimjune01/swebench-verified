@@ -1,0 +1,52 @@
+diff --git a/fix.patch b/fix.patch
+new file mode 100644
+index 0000000000..8ec173306d
+--- /dev/null
++++ b/fix.patch
+@@ -0,0 +1,22 @@
++--- a/lib/matplotlib/text.py
+++++ b/lib/matplotlib/text.py
++@@ -1390,7 +1390,8 @@ class OffsetFrom:
++             The screen units to use (pixels or points) for the offset input.
++         """
++         self._artist = artist
++-        self._ref_coord = ref_coord
+++        x, y = ref_coord
+++        self._ref_coord = x, y
++         self.set_unit(unit)
++ 
++     def set_unit(self, unit):
++@@ -1456,7 +1457,8 @@ class _AnnotationBase:
++                  xycoords="data",
++                  annotation_clip=None):
++ 
++-        self.xy = xy
+++        x, y = xy
+++        self.xy = x, y
++         self.xycoords = xycoords
++         self.set_annotation_clip(annotation_clip)
++ 
+diff --git a/lib/matplotlib/text.py b/lib/matplotlib/text.py
+index d4922fc517..ae5e94505f 100644
+--- a/lib/matplotlib/text.py
++++ b/lib/matplotlib/text.py
+@@ -1389,7 +1389,8 @@ class OffsetFrom:
+             The screen units to use (pixels or points) for the offset input.
+         """
+         self._artist = artist
+-        self._ref_coord = ref_coord
++        x, y = ref_coord
++        self._ref_coord = x, y
+         self.set_unit(unit)
+ 
+     def set_unit(self, unit):
+@@ -1456,7 +1457,8 @@ class _AnnotationBase:
+                  xycoords='data',
+                  annotation_clip=None):
+ 
+-        self.xy = xy
++        x, y = xy
++        self.xy = x, y
+         self.xycoords = xycoords
+         self.set_annotation_clip(annotation_clip)
+ 

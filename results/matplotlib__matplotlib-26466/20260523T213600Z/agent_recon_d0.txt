@@ -1,0 +1,32 @@
+# Recon: matplotlib__matplotlib-26466
+
+## Failure summary
+The test `test_annotate_and_offsetfrom_copy_input[png]` verifies that matplotlib annotations are not affected by mutations to input coordinate arrays after creation. The test creates two figures: one using `OffsetFrom(l, of_xy)` for textcoords, the other using `xy=an_xy` with `xycoords=l`. Both then mutate their input arrays (`of_xy[:] = 1` and `an_xy[:] = 2`). The test expects identical rendering, but fails with ImageComparisonFailure because the mutations affect the stored references, changing the rendered annotation positions.
+
+## Suspect set
+- `lib/matplotlib/text.py` lines 1370-1450: `OffsetFrom` class - stores `ref_coord` parameter without copying
+- `lib/matplotlib/text.py` lines 1453-1623: `_AnnotationBase` class - stores `xy` parameter without copying
+
+## Root cause
+Both `OffsetFrom.__init__` (line 1392) and `_AnnotationBase.__init__` (line 1459) store direct references to input coordinate parameters instead of making defensive copies. When users mutate the original arrays after calling `annotate()`, the mutations affect the stored references, changing the annotation's rendered position.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `lib/matplotlib/text.py:1393` — `self._ref_coord = ref_coord` (direct reference assignment)
+- `lib/matplotlib/text.py:1459` — `self.xy = xy` (direct reference assignment)
+- `lib/matplotlib/text.py:1433-1443` — `OffsetFrom.__call__` reads `self._ref_coord` during rendering
+- `lib/matplotlib/text.py:1573` — `_get_position_xy` reads `self.xy` via `_get_xy` during rendering
+
+## Edit sites
+1. `lib/matplotlib/text.py` line 1393 (in `OffsetFrom.__init__`): Change `self._ref_coord = ref_coord` to `self._ref_coord = tuple(ref_coord)`. This creates an immutable copy while preserving all unpacking and indexing operations that access the coordinate.
+
+2. `lib/matplotlib/text.py` line 1459 (in `_AnnotationBase.__init__`): Change `self.xy = xy` to `self.xy = tuple(xy)`. This creates an immutable copy while preserving unpacking (`x, y = xy`) and indexing (`xy[0]`, `xy[1]`) operations used throughout the codebase.
+
+## Rejected hypotheses
+None - the root cause is directly observable from code inspection. The test failure mode (image comparison) and the defensive copy requirement are straightforward.
+
+## Open questions
+None - the fix is localized to two assignment statements with clear evidence that tuple conversion maintains all required interfaces.
+
+---STDERR---

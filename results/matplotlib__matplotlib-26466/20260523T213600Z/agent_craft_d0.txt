@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix is complete. Both edit sites now unpack and copy coordinate inputs:
+- `OffsetFrom.__init__`: `x, y = ref_coord; self._ref_coord = x, y`
+- `_AnnotationBase.__init__`: `x, y = xy; self.xy = x, y`
+
+This prevents mutations to the original arrays from affecting the stored references while validating shape at init time. Gate passed on first iteration — all 104 tests passing.
+
+---STDERR---

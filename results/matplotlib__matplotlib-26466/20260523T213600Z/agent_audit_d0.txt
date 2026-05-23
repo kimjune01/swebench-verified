@@ -1,0 +1,26 @@
+# Audit: matplotlib__matplotlib-26466
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_text.py::test_annotate_and_offsetfrom_copy_input[png]: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None - all 103 other tests in test_text.py passed successfully.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - all tests either passed (104) or were skipped (12 svg tests due to missing Inkscape).
+
+## Summary
+The craft patch successfully resolves the issue. The FAIL_TO_PASS test `test_annotate_and_offsetfrom_copy_input[png]` now passes, confirming that `annotate()` and `OffsetFrom` properly copy mutable input coordinates. When numpy arrays are passed as position parameters and subsequently mutated, the annotations remain unaffected.
+
+**Full gate results:**
+- ✓ 104 tests passed  
+- ⊘ 12 tests skipped (svg comparison tests - Inkscape not installed)
+- ✗ 0 tests failed
+- Runtime: 4.04 seconds
+
+All PASS_TO_PASS tests continue to pass with zero regressions introduced by the patch.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
