@@ -1,0 +1,17 @@
+**RESOLVED**
+
+The fix has been successfully applied and all FAIL_TO_PASS tests now pass. 
+
+## Summary
+
+**Root Cause**: Python's `match.groupdict()` returns None for optional named groups that didn't participate in the match. When these None values are passed to `reverse()`, they get stringified to "None" in the URL.
+
+**Fix Applied**: Filter None values from kwargs in two locations in `django/urls/resolvers.py`:
+1. **RegexPattern.match()** (line ~158): After the args/kwargs decision, filter None values
+2. **RoutePattern.match()** (line ~254): Before converter iteration, filter None values
+
+**Critical Detail**: The ordering matters - filtering must happen AFTER `args = () if kwargs else match.groups()` in RegexPattern to preserve the semantics where the presence of ANY named groups (even if all None) means args should be empty.
+
+**Gate Result**: ✅ All tests pass on first iteration
+
+---STDERR---

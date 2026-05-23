@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 i18n.patterns.tests i18n.patterns.urls.default urlpatterns.path_urls urlpatterns.tests urlpatterns_reverse.tests
+
+test_namespace_pattern (urlpatterns_reverse.tests.NamespaceTests)
+Namespaces can be applied to include()'d urlpatterns. ... ok
+test_namespace_pattern_with_variable_prefix (urlpatterns_reverse.tests.NamespaceTests) ... ok
+test_namespaces_with_variables (urlpatterns_reverse.tests.NamespaceTests)
+Namespace prefixes can capture variables. ... ok
+test_nested_app_lookup (urlpatterns_reverse.tests.NamespaceTests) ... ok
+test_nested_namespace_pattern (urlpatterns_reverse.tests.NamespaceTests)
+Namespaces can be nested. ... ok
+test_non_existent_namespace (urlpatterns_reverse.tests.NamespaceTests)
+Nonexistent namespaces raise errors. ... ok
+test_normal_name (urlpatterns_reverse.tests.NamespaceTests)
+Normal lookups work as expected. ... ok
+test_simple_included_name (urlpatterns_reverse.tests.NamespaceTests)
+Normal lookups work on names included from other patterns. ... ok
+test_special_chars_namespace (urlpatterns_reverse.tests.NamespaceTests) ... ok
+test_no_handler_exception (urlpatterns_reverse.tests.NoRootUrlConfTests) ... ok
+test_no_urls_exception (urlpatterns_reverse.tests.NoURLPatternsTests) ... ok
+test_reverse_inner_in_response_middleware (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_reverse_inner_in_streaming (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_reverse_outer_in_response_middleware (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_reverse_outer_in_streaming (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_urlconf (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_urlconf_is_reset_after_request (urlpatterns_reverse.tests.RequestURLconfTests)
+The URLconf is reset after each request. ... ok
+test_urlconf_overridden (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_urlconf_overridden_with_null (urlpatterns_reverse.tests.RequestURLconfTests) ... ok
+test_repr (urlpatterns_reverse.tests.ResolverMatchTests) ... ok
+test_resolver_match_on_request (urlpatterns_reverse.tests.ResolverMatchTests) ... ok
+test_resolver_match_on_request_before_resolution (urlpatterns_reverse.tests.ResolverMatchTests) ... ok
+test_urlpattern_resolve (urlpatterns_reverse.tests.ResolverMatchTests) ... ok
+test_404_tried_urls_have_names (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_namespaced_view_detail (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_non_regex (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_populate_concurrency (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_resolver_repr (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_resolver_reverse (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_resolver_reverse_conflict (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_reverse_lazy_object_coercion_by_resolve (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_view_detail_as_method (urlpatterns_reverse.tests.ResolverTests) ... ok
+test_lazy_in_settings (urlpatterns_reverse.tests.ReverseLazySettingsTest) ... ok
+test_no_illegal_imports (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_redirect_to_object (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_redirect_to_url (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_redirect_to_view_name (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_redirect_view_object (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_reverse_by_path_nested (urlpatterns_reverse.tests.ReverseShortcutTests) ... ok
+test_illegal_args_message (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_illegal_kwargs_message (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_mixing_args_and_kwargs (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_no_args_message (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_non_urlsafe_prefix_with_args (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_patterns_reported (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_prefix_braces (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_prefix_format_char (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_prefix_parenthesis (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_reverse_none (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_script_name_escaping (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_urlpattern_reverse (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_view_not_found_message (urlpatterns_reverse.tests.URLPatternReverse) ... ok
+test_attributeerror_not_hidden (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_module_does_not_exist (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_non_string_value (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_not_callable (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_parent_module_does_not_exist (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_string_without_dot (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_view_does_not_exist (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+test_view_loading (urlpatterns_reverse.tests.ViewLoadingTests) ... ok
+
+======================================================================
+FAIL: test_translate_url_utility (i18n.patterns.tests.URLTranslationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/i18n/patterns/tests.py", line 164, in test_translate_url_utility
+    '/nl/with-arguments/regular-argument/',
+AssertionError: '/nl/with-arguments/regular-argument/None.html' != '/nl/with-arguments/regular-argument/'
+- /nl/with-arguments/regular-argument/None.html
+?                                     ---------
++ /nl/with-arguments/regular-argument/
+
+
+======================================================================
+FAIL: test_re_path_with_optional_parameter (urlpatterns.tests.SimplifiedURLTests) (url='/regex_optional/1/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/urlpatterns/tests.py", line 65, in test_re_path_with_optional_parameter
+    self.assertEqual(match.kwargs, kwargs)
+AssertionError: {'arg1': '1', 'arg2': None} != {'arg1': '1'}
+- {'arg1': '1', 'arg2': None}
++ {'arg1': '1'}
+
+----------------------------------------------------------------------
+Ran 154 tests in 0.474s
+
+FAILED (failures=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application i18n
+Importing application urlpatterns
+Importing application urlpatterns_reverse
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, i18n, messages, sessions, staticfiles, urlpatterns, urlpatterns_reverse
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table i18n_testmodel
+    Creating table i18n_company
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

@@ -1,0 +1,22 @@
+# Audit: django__django-11477
+
+## FAIL_TO_PASS
+- test_re_path_with_optional_parameter (urlpatterns.tests.SimplifiedURLTests): **PASS** ✅
+- test_two_variable_at_start_of_path_pattern (urlpatterns.tests.SimplifiedURLTests): **PASS** ✅
+- test_translate_url_utility (i18n.patterns.tests.URLTranslationTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — Full test suite ran 154 tests with OK status. No regressions detected.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Summary
+The patch filters None values from kwargs in both `RegexPattern.match()` (line 158) and `RoutePattern.match()` (line 254) after the args/kwargs decision logic. This prevents optional URL parameters that don't match from being passed as None to reverse(), where they would be stringified to "None" in the generated URL.
+
+All three FAIL_TO_PASS tests now pass, and the full gate shows all 154 tests passing with no regressions in the PASS_TO_PASS test set.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

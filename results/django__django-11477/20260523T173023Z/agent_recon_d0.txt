@@ -1,0 +1,5 @@
+Diagnosis complete. The root cause is that `RegexPattern.match()` and `RoutePattern.match()` use Python's `match.groupdict()` which returns None for optional named groups that didn't participate in the match. This causes resolved URLs to have None in kwargs, and when `translate_url()` calls `reverse()` with these kwargs, None gets stringified to "None" in the URL pattern.
+
+The fix requires filtering None values from kwargs at two locations in `django/urls/resolvers.py` (lines 156 and 252).
+
+---STDERR---

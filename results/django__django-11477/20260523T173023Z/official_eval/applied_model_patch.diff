@@ -1,0 +1,22 @@
+diff --git a/django/urls/resolvers.py b/django/urls/resolvers.py
+index af0508f94e..152b7d1a5a 100644
+--- a/django/urls/resolvers.py
++++ b/django/urls/resolvers.py
+@@ -155,6 +155,8 @@ class RegexPattern(CheckURLMixin):
+             # positional arguments.
+             kwargs = match.groupdict()
+             args = () if kwargs else match.groups()
++            # Filter out None values for optional groups that didn't match
++            kwargs = {k: v for k, v in kwargs.items() if v is not None}
+             return path[match.end():], args, kwargs
+         return None
+ 
+@@ -250,6 +252,8 @@ class RoutePattern(CheckURLMixin):
+         if match:
+             # RoutePattern doesn't allow non-named groups so args are ignored.
+             kwargs = match.groupdict()
++            # Filter out None values for optional groups that didn't match
++            kwargs = {k: v for k, v in kwargs.items() if v is not None}
+             for key, value in kwargs.items():
+                 converter = self.converters[key]
+                 try:
