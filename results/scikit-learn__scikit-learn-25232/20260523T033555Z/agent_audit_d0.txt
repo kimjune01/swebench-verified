@@ -1,0 +1,22 @@
+# Audit: scikit-learn__scikit-learn-25232
+
+## FAIL_TO_PASS
+- `sklearn/impute/tests/test_impute.py::test_iterative_imputer_constant_fill_value`: **PASS**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Verification Summary
+- Patch live: 9 lines added to `sklearn/impute/_iterative.py`
+- Gate result: 217 tests passed, 211 warnings, 0 failures
+- Full contract met: FAIL_TO_PASS test passes, zero PASS_TO_PASS regressions
+
+The craft patch correctly implements the diagnosis from recon. The `fill_value` parameter was added to `IterativeImputer.__init__()` and properly threaded through to the internal `SimpleImputer`, enabling custom constant values for initial imputation when `initial_strategy="constant"`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

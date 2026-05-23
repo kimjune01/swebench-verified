@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix successfully adds `fill_value` parameter support to `IterativeImputer`. All FAIL_TO_PASS tests now pass (217 tests total, 0 failures).
+
+**Changes made**:
+1. Added `fill_value` parameter documentation
+2. Added `fill_value` to `_parameter_constraints` with "no_validation"
+3. Added `fill_value=None` to `__init__` signature
+4. Added `self.fill_value = fill_value` assignment in `__init__` body
+5. Added `fill_value=self.fill_value` when instantiating the internal `SimpleImputer`
+
+The fix is a clean parameter passthrough from `IterativeImputer` to its internal `SimpleImputer`, exactly as recon diagnosed. Gate confirmed resolution in 1 iteration.
+
+---STDERR---

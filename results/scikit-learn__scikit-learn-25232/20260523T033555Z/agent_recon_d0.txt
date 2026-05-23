@@ -1,0 +1,44 @@
+# Recon: scikit-learn__scikit-learn-25232
+
+## Failure summary
+
+The test `test_iterative_imputer_constant_fill_value` attempts to create an `IterativeImputer` with a `fill_value=100` parameter to specify the constant used for initial imputation when `initial_strategy="constant"`. The test fails with `TypeError: __init__() got an unexpected keyword argument 'fill_value'` because `IterativeImputer` does not accept this parameter, even though its internal `SimpleImputer` (used for initial imputation) already supports it.
+
+## Suspect set
+
+- `sklearn/impute/_iterative.py` lines 54-320: `IterativeImputer` class definition, `__init__` method, and parameter constraints
+- `sklearn/impute/_iterative.py` lines 613-617: Where `SimpleImputer` is instantiated for initial imputation
+
+## Root cause
+
+The `IterativeImputer.__init__()` method lacks a `fill_value` parameter that should be passed through to the internal `SimpleImputer` when `initial_strategy="constant"`. The documentation at line 177 already references `fill_value` in the context of `keep_empty_features`, but the parameter itself is never defined. When creating the `initial_imputer_` at line 613, only `missing_values`, `strategy`, and `keep_empty_features` are passed to `SimpleImputer`, omitting `fill_value`.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `sklearn/impute/_iterative.py:301-320` — `__init__()` signature has no `fill_value` parameter
+- `sklearn/impute/_iterative.py:613-617` — `SimpleImputer` instantiation: `SimpleImputer(missing_values=self.missing_values, strategy=self.initial_strategy, keep_empty_features=self.keep_empty_features)` with no `fill_value`
+- `sklearn/impute/_base.py:~145-155` — `SimpleImputer.__init__()` accepts `fill_value=None` as a parameter
+- `sklearn/impute/_base.py:_parameter_constraints` — Uses `"fill_value": "no_validation"` to allow any object
+
+## Edit sites
+
+1. **Parameter documentation** (`sklearn/impute/_iterative.py` lines ~130-140): Add `fill_value` parameter documentation after `initial_strategy`, describing it as the value used when `initial_strategy="constant"`, with the same semantics as `SimpleImputer.fill_value`
+
+2. **Parameter constraints** (`sklearn/impute/_iterative.py` lines 277-293): Add `"fill_value": "no_validation"` entry to the `_parameter_constraints` dict (matching `SimpleImputer`'s constraint)
+
+3. **`__init__` signature** (`sklearn/impute/_iterative.py` line ~301-320): Add `fill_value=None` parameter after `initial_strategy` in the `__init__()` method signature
+
+4. **`__init__` body** (`sklearn/impute/_iterative.py` line ~320): Add `self.fill_value = fill_value` assignment in the `__init__()` method body, after `self.initial_strategy = initial_strategy`
+
+5. **`SimpleImputer` instantiation** (`sklearn/impute/_iterative.py` lines 613-617): Add `fill_value=self.fill_value` to the `SimpleImputer` constructor call
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and matches the test expectations exactly.
+
+## Open questions
+
+None — the fix is straightforward parameter passthrough from `IterativeImputer` to `SimpleImputer`.
+
+---STDERR---
