@@ -81,8 +81,10 @@ for n in b_1 b_2 b_3 b_4 b_5; do bash driver/provision_box.sh $n & done; wait
 #    light ones pack onto the rest (avoids the batch_003 starvation bug)
 python driver/shard_batch.py tasks/batch_NNN.json 5 b   # writes /tmp/b.shard
 
-# 3. run all shards in parallel (each waits for its box's docker)
-bash driver/launch_generic.sh tasks/batch_NNN.json /tmp/b.shard
+# 3. run all shards in parallel (each waits for its box's docker).
+#    CLAUDE_SUBSCRIPTION=1 drops ANTHROPIC_API_KEY so claude bills the Max plan,
+#    not the metered API — omit it and a key in your shell racks up API charges.
+CLAUDE_SUBSCRIPTION=1 bash driver/launch_generic.sh tasks/batch_NNN.json /tmp/b.shard
 #    while it runs, arm a streaming monitor (see driver/MONITORING.md) so a
 #    silent failure surfaces mid-flight instead of after the whole run
 
