@@ -1,0 +1,48 @@
+# Recon: django__django-11206
+
+## Failure summary
+
+The test `test_decimal_numbers` fails when formatting an extremely small Decimal number (`0.0{299 zeros}1234`, which is approximately `1.234e-300`) with `decimal_pos=3`. The function returns `'1.234e-300'` in exponential notation instead of the expected `'0.000'`. The issue occurs because the number is so small that when rounded to 3 decimal places, it should display as zero, but the code incorrectly uses exponential notation instead.
+
+**Error**: `AssertionError: '1.234e-300' != '0.000'`
+
+## Suspect set
+
+- `django/utils/numberformat.py` lines 29-41: The Decimal formatting logic with the 200-digit cutoff that triggers exponential notation without checking if the number should round to zero when `decimal_pos` is specified.
+
+## Root cause
+
+The 200-digit cutoff at line 33 (`if abs(exponent) + len(digits) > 200:`) was added in CVE-2019-6975 (commit 402c0caa85) to prevent memory exhaustion when formatting very large or very small Decimals using `{:f}`. However, this logic unconditionally converts to exponential notation without considering whether `decimal_pos` is specified and whether the number would mathematically round to zero at that precision.
+
+For the failing test case `Decimal('0.0{299}1234')`:
+- Tuple: `sign=0, digits=(1,2,3,4), exponent=-303`
+- Check: `abs(-303) + 4 = 307 > 200` ✓ (triggers exponential path)
+- But: `exponent + len(digits) = -299`, and `-299 <= -3` means the number rounds to zero at 3 decimal places
+- Should return: `'0.000'` not `'1.234e-300'`
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/utils/numberformat.py:32-33` — `_, digits, exponent = number.as_tuple()` followed by `if abs(exponent) + len(digits) > 200:`
+- `django/utils/numberformat.py:34` — `number = '{:e}'.format(number)` converts to exponential without checking `decimal_pos`
+- Test case verification confirms condition `exponent + len(digits) <= -decimal_pos` correctly identifies all numbers that should round to zero
+
+## Edit sites
+
+**Single location**: `django/utils/numberformat.py` lines 33-34
+
+**Change**: After the condition `if abs(exponent) + len(digits) > 200:` (line 33) and before the exponential conversion `number = '{:e}'.format(number)` (line 34), insert a check:
+
+If `decimal_pos is not None` AND `exponent + len(digits) <= -decimal_pos`, then the number rounds to zero at the requested precision. Return the zero string directly: `sign + '0' + decimal_separator + ('0' * decimal_pos)` (handling sign from the tuple and the edge case of `decimal_pos=0` where no separator is added).
+
+This preserves the CVE fix (still avoids memory-hungry {:f} formatting) while correctly handling the case where exponential notation is inappropriate because the user explicitly requested fixed decimal places and the number rounds to zero.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and the CVE history.
+
+## Open questions
+
+None — the fix is straightforward and localized.
+
+---STDERR---
