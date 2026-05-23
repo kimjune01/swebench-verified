@@ -1,0 +1,50 @@
+diff --git a/lib/matplotlib/ticker.py b/lib/matplotlib/ticker.py
+index 209a3f92c..98995748d 100644
+--- a/lib/matplotlib/ticker.py
++++ b/lib/matplotlib/ticker.py
+@@ -2379,6 +2379,8 @@ class LogLocator(Locator):
+         if not np.isfinite(vmin) or not np.isfinite(vmax):
+             return 1, 10  # initial range, no data plotted yet
+ 
++        # Remember if order was inverted for axis inversion support
++        swapped = vmin > vmax
+         if vmin > vmax:
+             vmin, vmax = vmax, vmin
+         if vmax <= 0:
+@@ -2395,6 +2397,10 @@ class LogLocator(Locator):
+         if vmin == vmax:
+             vmin = _decade_less(vmin, self._base)
+             vmax = _decade_greater(vmax, self._base)
++
++        # Restore original order if it was inverted
++        if swapped:
++            return vmax, vmin
+         return vmin, vmax
+ 
+ 
+@@ -2624,6 +2630,8 @@ class LogitLocator(Locator):
+         if not np.isfinite(vmin) or not np.isfinite(vmax):
+             return initial_range  # no data plotted yet
+ 
++        # Remember if order was inverted for axis inversion support
++        swapped = vmin > vmax
+         if vmin > vmax:
+             vmin, vmax = vmax, vmin
+ 
+@@ -2645,8 +2653,14 @@ class LogitLocator(Locator):
+         if vmax >= 1:
+             vmax = 1 - minpos
+         if vmin == vmax:
+-            return 0.1 * vmin, 1 - 0.1 * vmin
+-
++            result = 0.1 * vmin, 1 - 0.1 * vmin
++            if swapped:
++                return result[1], result[0]
++            return result
++
++        # Restore original order if it was inverted
++        if swapped:
++            return vmax, vmin
+         return vmin, vmax
+ 
+ 

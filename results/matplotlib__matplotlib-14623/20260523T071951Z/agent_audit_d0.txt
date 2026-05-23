@@ -1,0 +1,82 @@
+# Audit: matplotlib__matplotlib-14623
+
+## FAIL_TO_PASS
+- test_inverted_limits: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+All 180 gate failures match the fail-on-base capture exactly:
+- test_canonical[png], test_canonical[pdf] - image comparison failures
+- test_arc_ellipse[pdf] - image comparison failure
+- test_markevery[png], test_markevery[pdf] - image comparison failures
+- test_markevery_line[png], test_markevery_line[pdf] - image comparison failures
+- test_markevery_linear_scales[pdf] - image comparison failure
+- test_markevery_linear_scales_zoomed[pdf] - image comparison failure
+- test_markevery_log_scales[pdf] - image comparison failure
+- test_markevery_polar[png], test_markevery_polar[pdf] - image comparison failures
+- test_marker_edges[pdf] - image comparison failure
+- test_bar_tick_label_single[png] - image comparison failure
+- test_bar_tick_label_multiple[png] - image comparison failure
+- test_bar_tick_label_multiple_old_alignment[png] - image comparison failure
+- test_barh_tick_label[png] - image comparison failure
+- test_hist_log[pdf], test_hist_steplog[png], test_hist_steplog[pdf] - image/histogram failures
+- test_hist_density[png] - image comparison failure
+- test_contour_hatching[pdf], test_contour_colorbar[png], test_contour_colorbar[pdf] - image failures
+- test_hist2d[png], test_hist2d[pdf] - histogram failures
+- test_hist2d_transpose[png], test_hist2d_transpose[pdf] - histogram failures
+- test_hist2d_density_normed - histogram failure
+- TestScatter::test_scatter_plot[pdf], TestScatter::test_scatter_marker[png] - scatter failures
+- test_as_mpl_axes_api - API test failure
+- test_log_scales[png], test_log_scales[pdf] - image comparison failures
+- test_stackplot[png], test_stackplot[pdf], test_stackplot_baseline[pdf] - image failures
+- test_bxp_baseline[png] through test_horiz_violinplot_custompoints_200[png] - boxplot/violin failures
+- test_errorbar[png], test_errorbar[pdf], test_errorbar_limits[png], test_errorbar_limits[pdf] - errorbar failures
+- test_hist_stacked_stepfilled[png], test_hist_stacked_stepfilled[pdf] - histogram failures
+- test_hist_offset[png], test_hist_offset[pdf] - histogram failures
+- test_hist_step_horiz[png], test_hist_stacked_weighted[png], test_hist_stacked_weighted[pdf] - histogram failures
+- test_hist_stacked_stepfilled_alpha[png], test_hist_stacked_stepfilled_alpha[pdf] - histogram failures
+- test_hist_stacked_step[png], test_hist_stacked_step[pdf] - histogram failures
+- test_hist_stacked_density[png], test_hist_stacked_density[pdf] - histogram failures
+- test_hist_stacked_bar[png], test_hist_stacked_bar[pdf] - histogram failures
+- test_hist_emptydata - histogram failure
+- test_transparent_markers[pdf], test_rgba_markers[pdf] - marker failures
+- test_mollweide_grid[pdf] - projection failure
+- test_alpha[pdf] - alpha rendering failure
+- test_eventplot[pdf] - eventplot failure
+- test_markers_fillstyle_rcparams[png] - marker failure
+- test_eb_line_zorder[png], test_eb_line_zorder[pdf] - zorder failures
+- test_vlines[png], test_hlines[png] - line failures
+- test_step_linestyle[pdf] - linestyle failure
+- test_mixed_collection[pdf] - collection failure
+- test_pie_default[png] through test_pie_nolabel_but_legend[png] - pie chart failures
+- test_set_get_ticklabels[png], test_retain_tick_visibility[png] - tick label failures
+- test_o_marker_path_snap[png] - marker path failure
+- test_rc_spines[png], test_rc_grid[png] - rc parameter failures
+- test_square_plot, test_pcolor_fast_RGB - plot failures
+- test_dash_offset[pdf] - dash offset failure
+- test_auto_numticks[png], test_auto_numticks_log[png] - tick count failures
+- test_date_timezone_x[png], test_date_timezone_y[png], test_date_timezone_x_and_y[png] - date timezone failures
+- test_titletwiny[png] - title positioning failure
+- test_polar_gridlines - polar plot failure
+- test_secondary_xy[png] - secondary axis failure
+- test_normal_axes - axes failure
+- test_get_tightbbox_polar - polar bounding box failure
+- test_hist_auto_bins - histogram binning failure
+
+(all failures present in fail-on-base capture due to FreeType version mismatch: expected 2.6.1, found 2.11.1)
+
+## Summary
+
+The patch successfully fixes the inverted limits issue for log and logit scales:
+- The FAIL_TO_PASS test (test_inverted_limits) now passes
+- No PASS_TO_PASS tests regressed
+- All 180 failures are pre-existing environmental issues unrelated to the LogLocator/LogitLocator changes
+
+The fix preserves inverted order by remembering when limits were swapped, normalizing for internal computation, then restoring the original order before return — matching the base Locator's `increasing=False` behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

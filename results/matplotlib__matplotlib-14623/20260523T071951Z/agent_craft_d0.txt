@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_inverted_limits` now passes. The fix successfully enables axis inversion for log-scale axes by preserving the original limit order in `LogLocator.nonsingular` and `LogitLocator.nonsingular`.
+
+**Summary**:
+- **Target test**: `lib/matplotlib/tests/test_axes.py::test_inverted_limits` → ✓ PASSED
+- **Fix**: Modified `LogLocator.nonsingular` and `LogitLocator.nonsingular` to remember if limits were inverted, apply constraints in increasing order, then restore original order
+- **Verification**: `ax.set_ylim(10, 1)` on log scale now correctly returns `(10, 1)` instead of `(1, 10)`
+
+The gate shows other test failures, but these are image comparison failures from FreeType version mismatch (environmental issue), not regressions from our changes.
+
+---STDERR---

@@ -1,0 +1,56 @@
+Now let me output the structured diagnosis to stdout:
+
+# Recon: matplotlib__matplotlib-14623
+
+## Failure summary
+The test `test_inverted_limits` expects that setting log-scale axis limits in reverse order (e.g., `ax.set_ylim(10, 1)`) will invert the axis, just like it works for linear scales. However, the test fails with:
+```
+AssertionError: assert (1.0, 10.0) == (10, 1)
+```
+The limits are being auto-sorted into increasing order instead of preserving the inverted order.
+
+## Suspect set
+- `lib/matplotlib/ticker.py` lines 2378-2397: `LogLocator.nonsingular` method
+- `lib/matplotlib/ticker.py` lines 2622-2650: `LogitLocator.nonsingular` method  
+- `lib/matplotlib/axes/_base.py` lines 3540-3650: `set_ylim` (calls locator.nonsingular)
+
+## Root cause
+When `set_ylim(bottom, top)` is called with bottom > top on a log-scale axis, the values are unconditionally swapped by `LogLocator.nonsingular`, preventing axis inversion.
+
+**Call chain**:
+1. `set_ylim(10, 1)` → `lib/matplotlib/axes/_base.py:3540`
+2. Line 3646: `bottom, top = self.yaxis.get_major_locator().nonsingular(bottom, top)`
+3. For log scale, this calls `LogLocator.nonsingular` → `lib/matplotlib/ticker.py:2378`
+4. Lines 2381-2383 unconditionally swap:
+   ```python
+   if vmin > vmax:
+       vmin, vmax = vmax, vmin
+   ```
+
+**Why this is wrong**: The base `Locator.nonsingular` (line 1523) calls `mtransforms.nonsingular(v0, v1, increasing=False, expander=.05)`, which preserves inverted order. LogLocator overrides this and forces increasing order, breaking axis inversion for log scales.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `lib/matplotlib/ticker.py:1523` — Base Locator passes `increasing=False`
+- `lib/matplotlib/ticker.py:2381-2383` — LogLocator unconditionally swaps
+- `lib/matplotlib/ticker.py:2627-2628` — LogitLocator has the same bug
+
+## Edit sites
+1. **`lib/matplotlib/ticker.py` lines 2378-2397** (`LogLocator.nonsingular`):
+   - Remove the unconditional swap `if vmin > vmax: vmin, vmax = vmax, vmin`
+   - Either delegate to base class behavior or call `mtransforms.nonsingular(..., increasing=False)` like base Locator does
+   - Still need to handle log-scale constraints (positive values only) but preserve the input order
+
+2. **`lib/matplotlib/ticker.py` lines 2622-2650** (`LogitLocator.nonsingular`):
+   - Same fix: remove the unconditional swap at lines 2627-2628
+   - Preserve order while enforcing domain constraints (0 < value < 1)
+
+## Rejected hypotheses
+None - first-pass diagnosis.
+
+## Open questions
+- Should SymmetricalLogLocator also be checked? (It doesn't override nonsingular, so it should be fine)
+- Are there other scale types with custom locators that might have this issue?
+
+---STDERR---
