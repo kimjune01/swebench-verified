@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_cv_generator_support` pass. The implementation normalizes the cv parameter once in the `fit()` method using `check_cv()`, preventing generator exhaustion when `_get_best_new_feature_score()` is called multiple times. All 73 tests pass with no regressions.
+
+---STDERR---

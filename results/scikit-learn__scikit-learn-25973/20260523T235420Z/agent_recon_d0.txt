@@ -1,0 +1,55 @@
+# Recon: scikit-learn__scikit-learn-25973
+
+## Failure summary
+The test `test_cv_generator_support` checks that `SequentialFeatureSelector` can accept a generator of cross-validation splits (from `cv.split(X, y, groups)`) as the `cv` parameter. When a generator is passed, the test fails with `IndexError: list index out of range` in `_aggregate_score_dicts` at `sklearn/model_selection/_validation.py:1950`. The error occurs because `_aggregate_score_dicts` receives an empty list and attempts to access `scores[0]`.
+
+## Suspect set
+- `sklearn/feature_selection/_sequential.py` lines 200-320: `SequentialFeatureSelector.fit()` and `_get_best_new_feature_score()` methods
+- `sklearn/feature_selection/_sequential.py` line 16: Missing imports for `check_cv` and `is_classifier`
+
+## Root cause
+`SequentialFeatureSelector._get_best_new_feature_score()` is called multiple times during feature selection (once per candidate feature). Each call invokes `cross_val_score(..., cv=self.cv, ...)`. When `self.cv` is a generator:
+
+1. The first call to `cross_val_score` triggers `check_cv(self.cv)`, which wraps the generator in `_CVIterableWrapper`. The wrapper's `__init__` consumes the generator by calling `list(cv)` (line 2357 of `_split.py`).
+2. Subsequent calls receive the same exhausted generator, which `check_cv` wraps again in `_CVIterableWrapper(exhausted_generator)`, producing an empty list.
+3. With an empty cv list, `cross_validate` produces no results, and `_aggregate_score_dicts([])` fails on `scores[0]`.
+
+Unlike `SequentialFeatureSelector`, similar estimators like `RFECV` normalize the cv parameter once at the start of `fit()` using `check_cv`, preventing re-consumption of generators.
+
+**Confidence**: deduction — 95%
+
+Supporting evidence:
+- `sklearn/model_selection/_split.py:2357` — `_CVIterableWrapper.__init__` does `self.cv = list(cv)`, consuming the iterable
+- `sklearn/model_selection/_split.py:2456` — `check_cv` wraps iterables without a `split` method in `_CVIterableWrapper`
+- `sklearn/feature_selection/_rfe.py:689` — `RFECV` normalizes cv with `cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))`
+- `sklearn/feature_selection/_sequential.py:308` — `cross_val_score` receives `cv=self.cv` directly without normalization
+- Stack trace shows `_aggregate_score_dicts` receives empty `scores = []`
+
+## Edit sites
+1. `sklearn/feature_selection/_sequential.py` line 16: Add imports
+   - Import `check_cv` from `..model_selection`
+   - Import `is_classifier` from `..base`
+
+2. `sklearn/feature_selection/_sequential.py` lines 260-275 (in `fit` method, after `_validate_data`): Normalize cv parameter
+   - Add: `cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))`
+   - Place after validation, before the feature selection loop
+
+3. `sklearn/feature_selection/_sequential.py` line 296: Update `_get_best_new_feature_score` signature
+   - Add `cv` parameter after `current_mask`
+
+4. `sklearn/feature_selection/_sequential.py` line 277: Update call site in `fit`
+   - Pass normalized `cv` to `_get_best_new_feature_score(cloned_estimator, X, y, current_mask, cv)`
+
+5. `sklearn/feature_selection/_sequential.py` line 308: Use parameter instead of instance variable
+   - Change `cv=self.cv` to `cv=cv` in the `cross_val_score` call
+
+## Competing hypotheses
+None — the root cause is clear from code inspection.
+
+## Rejected hypotheses
+None — first iteration.
+
+## Open questions
+None — the fix pattern matches the established pattern in `RFECV`.
+
+---STDERR---

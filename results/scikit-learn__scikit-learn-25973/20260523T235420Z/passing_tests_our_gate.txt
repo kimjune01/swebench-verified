@@ -1,0 +1,87 @@
+$ pytest -rA sklearn/feature_selection/tests/test_sequential.py
+
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.9.21, pytest-7.4.4, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+collected 73 items
+
+sklearn/feature_selection/tests/test_sequential.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 28%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                     [100%][0m
+
+==================================== PASSES ====================================
+[36m[1m=========================== short test summary info ============================[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_bad_n_features_to_select[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[1-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[1-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[5-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[5-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[9-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[9-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[auto-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select[auto-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_auto[forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_auto[backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_stopping_criterion[forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_stopping_criterion[backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[0.1-1-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[0.1-1-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[1.0-10-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[1.0-10-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[0.5-5-forward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_n_features_to_select_float[0.5-5-backward][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-0][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-1][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-2][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-4][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-5][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-6][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-7][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-8][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-forward-9][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-0][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-1][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-2][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-4][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-5][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-6][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-7][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-8][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[2-expected_selected_features0-backward-9][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-0][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-1][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-2][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-4][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-5][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-6][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-7][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-8][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-forward-9][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-0][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-1][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-2][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-4][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-5][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-6][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-7][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-8][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sanity[1-expected_selected_features1-backward-9][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_sparse_support[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_nan_support[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_pipeline_support[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_raise_deprecation_warning[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_unsupervised_model_fit[2][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_unsupervised_model_fit[3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_no_y_validation_model_fit[no_validation][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_no_y_validation_model_fit[1j][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_no_y_validation_model_fit[99.9][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_no_y_validation_model_fit[nan][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_no_y_validation_model_fit[3][0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_forward_neg_tol_error[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_backward_neg_tol[0m
+[32mPASSED[0m sklearn/feature_selection/tests/test_sequential.py::[1mtest_cv_generator_support[0m
+[32m============================== [32m[1m73 passed[0m[32m in 3.24s[0m[32m ==============================[0m

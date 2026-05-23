@@ -1,0 +1,27 @@
+# Audit: scikit-learn__scikit-learn-25973
+
+## FAIL_TO_PASS
+- `test_cv_generator_support`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Analysis
+
+The craft patch successfully resolves the issue. All 73 tests pass, including:
+
+1. **FAIL_TO_PASS test now passes**: `test_cv_generator_support` was failing on base with `IndexError: list index out of range` in `_aggregate_score_dicts` due to generator exhaustion. It now passes.
+
+2. **No regressions**: All PASS_TO_PASS tests from the baseline remain passing. No new failures introduced.
+
+3. **Fix correctness**: The patch normalizes the cv generator once before the loop using `check_cv()`, which converts it to a reusable splitter object. This prevents the generator from being consumed on the first iteration and exhausted for subsequent iterations. The normalized cv is passed through the call chain instead of repeatedly accessing `self.cv`.
+
+The implementation follows the established pattern used in `RFECV` and other scikit-learn estimators that perform repeated cross-validation.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
