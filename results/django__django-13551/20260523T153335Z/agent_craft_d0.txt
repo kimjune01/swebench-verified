@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes password reset tokens invalidate when the user's email changes. The patch adds the email field to the hash value computation in `_make_hash_value()` and updates the docstring to document this behavior.
+
+---STDERR---

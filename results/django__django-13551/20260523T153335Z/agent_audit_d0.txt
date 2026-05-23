@@ -1,0 +1,21 @@
+# Audit: django__django-13551
+
+## FAIL_TO_PASS
+- test_token_with_different_email (auth_tests.test_tokens.TokenGeneratorTest): **PASS** ✓
+- test_token_with_different_secret (auth_tests.test_tokens.TokenGeneratorTest): **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Gate output
+Ran 58 tests in 0.486s - **OK**
+
+All FAIL_TO_PASS tests now pass. Zero regressions in PASS_TO_PASS tests. The patch correctly adds the email field to the token hash state in `_make_hash_value()`, causing password reset tokens to be invalidated when a user's email address changes. The fix uses `getattr(user, user.get_email_field_name(), '') or ''` to safely handle custom user models with different email field names.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

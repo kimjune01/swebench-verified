@@ -1,0 +1,37 @@
+# Recon: django__django-13551
+
+## Failure summary
+
+The test `test_token_with_different_email` creates a password reset token for a user, then changes the user's email address, and expects the old token to become invalid. The test fails because `check_token(user, tk1)` returns `True` when it should return `False` after the email change. This occurs for all three test cases: `CustomEmailField` with `None` email, `CustomEmailField` with an email, and the standard `User` model.
+
+## Suspect set
+
+- `django/contrib/auth/tokens.py` lines 79-102: `_make_hash_value` method that generates the hash used in password reset tokens
+
+## Root cause
+
+The `_make_hash_value` method constructs the hash value from `user.pk + user.password + str(login_timestamp) + str(timestamp)` (line 102). The user's email address is not included in this concatenation. When a user changes their email, the hash remains unchanged because none of its input components change, making the old password reset token still valid.
+
+The docstring at lines 79-95 explicitly documents that the hash includes password (which changes on reset) and last_login (which updates after reset), but makes no mention of email. This is a deliberate omission that creates the security vulnerability described in the issue.
+
+**Confidence:** Deduction — 99%
+
+**Supporting evidence:**
+- `django/contrib/auth/tokens.py:102` — `return str(user.pk) + user.password + str(login_timestamp) + str(timestamp)` — email is absent
+- `django/contrib/auth/tokens.py:70` — `_make_hash_value` is called by `_make_token_with_timestamp` to generate the HMAC input
+- `django/contrib/auth/forms.py:288` — Existing code uses `getattr(user, email_field_name)` pattern to access email dynamically
+- `django/contrib/auth/base_user.py:144-149` — `get_email_field_name()` returns `EMAIL_FIELD` attribute or defaults to `'email'`
+
+## Edit sites
+
+- `django/contrib/auth/tokens.py` line 102: Change the return statement to include the user's email in the hash. Use `getattr(user, user.get_email_field_name(), '')` to retrieve the email value, which handles custom email field names (like `CustomEmailField.email_address`) and missing/None email values safely.
+
+## Rejected hypotheses
+
+None. The code reading directly confirms the root cause on first inspection.
+
+## Open questions
+
+None. The fix is straightforward: add email to the hash value calculation.
+
+---STDERR---
