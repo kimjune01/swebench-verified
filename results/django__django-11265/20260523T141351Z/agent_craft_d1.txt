@@ -1,0 +1,5 @@
+**NOT-RESOLVED — re-diagnose**
+
+The fix successfully enables the subquery to recognize the FilteredRelation (no more FieldError), but the query logic produces incorrect results. After 3 iterations attempting different copying strategies (manual alias setting, clone+clear path, deep copy condition), all produce the same empty QuerySet. The issue appears to be with how split_exclude's subquery logic handles FilteredRelations fundamentally, not just with the copying mechanism.
+
+---STDERR---

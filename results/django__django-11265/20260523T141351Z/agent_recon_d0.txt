@@ -1,0 +1,41 @@
+# Recon: django__django-11265
+
+## Failure summary
+
+The test `test_with_exclude` creates a queryset with a `FilteredRelation` annotation named `book_alice` that filters the `book` relation by title. When `.exclude(book_alice__isnull=False)` is called on this queryset, Django raises a `FieldError: Cannot resolve keyword 'book_alice' into field`. The error occurs because the `split_exclude()` method creates a subquery without copying the `_filtered_relations` dictionary from the parent query, so the subquery cannot resolve the FilteredRelation alias.
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 1645-1710: The `split_exclude()` method that creates the subquery
+- Specifically line 1668: `query = Query(self.model)` - creates new Query without copying `_filtered_relations`
+
+## Root cause
+
+When `exclude()` is used with a FilteredRelation on a many-to-one relation, Django's query builder detects this requires a subquery (to handle the NOT semantics correctly) and calls `split_exclude()`. This method creates a fresh `Query(self.model)` object at line 1668 and immediately calls `query.add_filter(filter_expr)` at line 1669. 
+
+However, the new Query object is created with an empty `_filtered_relations` dictionary (initialized in `__init__`), while the parent query (`self`) has the FilteredRelation stored in its `_filtered_relations` dict. When the subquery tries to resolve the filter expression `book_alice__isnull`, the `names_to_path()` method cannot find `book_alice` in `self._filtered_relations` (line 1418-1419) and raises a FieldError.
+
+The `clone()` method (line 330) shows the correct pattern: `obj._filtered_relations = self._filtered_relations.copy()`. The `split_exclude()` method should follow this pattern.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `query.py:1668` — `query = Query(self.model)` creates subquery without copying filtered relations
+- `query.py:330` — `obj._filtered_relations = self._filtered_relations.copy()` shows clone() does copy it
+- `query.py:1418-1419` — `elif name in self._filtered_relations and pos == 0:` shows how aliases are resolved
+- `query.py:231` — `self._filtered_relations = {}` shows default initialization is empty dict
+- Stack trace: `split_exclude()` line 1669 → `query.add_filter()` → `solve_lookup_type()` → `names_to_path()` → FieldError at line 1449
+
+## Edit sites
+
+- `django/db/models/sql/query.py` lines 1668-1669: After `query = Query(self.model)`, add `query._filtered_relations = self._filtered_relations.copy()` to copy the FilteredRelation annotations from the parent query to the subquery. This ensures the subquery can resolve FilteredRelation aliases when processing the filter expression.
+
+## Rejected hypotheses
+
+None — first diagnosis based on direct code trace.
+
+## Open questions
+
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---

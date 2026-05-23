@@ -1,0 +1,44 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index d69c24419b..c5da24d553 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -1239,7 +1239,14 @@ class Query(BaseExpression):
+ 
+         opts = self.get_meta()
+         alias = self.get_initial_alias()
+-        allow_many = not branch_negated or not split_subq
++        # Special handling for __isnull lookups on FilteredRelation aliases
++        # to avoid incorrect subquery logic - use LEFT OUTER JOIN instead
++        is_filtered_relation_isnull = (
++            lookups == ["isnull"]
++            and len(parts) == 1
++            and parts[0] in self._filtered_relations
++        )
++        allow_many = not branch_negated or not split_subq or is_filtered_relation_isnull
+ 
+         try:
+             join_info = self.setup_joins(
+diff --git a/test_debug.py b/test_debug.py
+new file mode 100644
+index 0000000000..57d3695a80
+--- /dev/null
++++ b/test_debug.py
+@@ -0,0 +1,18 @@
++import os
++import django
++
++os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.test_sqlite")
++django.setup()
++
++from django.db.models import Q
++from filtered_relation.models import Author
++from django.db.models import FilteredRelation
++
++# Recreate the test
++qs = Author.objects.annotate(
++    book_alice=FilteredRelation("book", condition=Q(book__title__iexact="poem by alice")),
++).exclude(book_alice__isnull=False)
++
++print("Query:", qs.query)
++print("Result:", list(qs))
++print("All authors:", list(Author.objects.all()))

@@ -1,0 +1,7 @@
+After 3 iterations with the same error (convergent-stuck), it's clear there's a deeper issue beyond just copying `_filtered_relations`. The recon diagnosis was correct about the FieldError, but the fix reveals a logic problem with how FilteredRelations work in split_exclude subqueries.
+
+NOT-RESOLVED — re-diagnose
+
+The fix successfully resolves `book_alice` (no more FieldError), but the subquery logic is incorrect - it returns an empty QuerySet when it should return [author2]. This suggests the FilteredRelation condition isn't being applied correctly in the subquery context, possibly due to how `trim_start()` or `bump_prefix()` manipulate the query structure.
+
+---STDERR---

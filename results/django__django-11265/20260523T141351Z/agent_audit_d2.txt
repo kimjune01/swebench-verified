@@ -1,0 +1,25 @@
+# Audit: django__django-11265
+
+## FAIL_TO_PASS
+- test_with_exclude (filtered_relation.tests.FilteredRelationTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 31 other tests continue to pass.
+
+## Pre-existing failures (not counted)
+None - the base capture showed only test_with_exclude failing with ERROR.
+
+## Gate summary
+Ran 32 tests in 0.026s - OK (skipped=1)
+
+The craft patch successfully:
+1. Resolved the FAIL_TO_PASS test by preventing split_exclude() from being called for `__isnull` lookups on FilteredRelation aliases
+2. Introduced zero regressions - all PASS_TO_PASS tests remain passing
+3. The fix is narrow and targeted: only affects the specific case of `__isnull` lookup on a single FilteredRelation alias
+
+The patch works by setting `allow_many=True` when `build_filter()` detects an `__isnull` lookup on a FilteredRelation alias. This prevents `MultiJoin` from being raised in `setup_joins()`, which in turn prevents the incompatible `split_exclude()` subquery path. Instead, the query uses a standard LEFT OUTER JOIN which correctly handles the existence check.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

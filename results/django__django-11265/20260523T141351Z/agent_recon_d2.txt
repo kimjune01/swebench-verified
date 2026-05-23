@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is that `split_exclude()` creates a subquery for many-to-one excludes, but this approach doesn't work for `__isnull` lookups on FilteredRelations. The `__isnull` check is an existence test that should be handled with a simple LEFT OUTER JOIN, not a subquery. The fix should prevent MultiJoin from being raised for FilteredRelation+isnull combinations by adjusting the `allow_many` logic in `build_filter()` before calling `setup_joins()`.
+
+---STDERR---

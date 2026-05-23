@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix successfully makes `test_with_exclude` pass by preventing `split_exclude()` from being called for `__isnull` lookups on FilteredRelation aliases. 
+
+The solution adjusts the `allow_many` logic in `build_filter()` to set `allow_many=True` when:
+- The lookup is exactly `__isnull` (not a composite lookup)
+- The path is a single part (direct lookup on the alias, not nested)
+- That part is a FilteredRelation alias
+
+This prevents `MultiJoin` from being raised, bypassing the subquery logic entirely. The `__isnull` check on the FilteredRelation is now handled with a simple LEFT OUTER JOIN, which correctly tests for the existence of the filtered relationship.
+
+**Gate result**: All 32 tests pass (31 ok, 1 skipped)
+
+---STDERR---

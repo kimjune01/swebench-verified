@@ -1,0 +1,79 @@
+# Recon: django__django-11265
+
+## Failure summary
+
+The test `test_with_exclude` annotates a queryset with a `FilteredRelation` named `book_alice` that filters the `book` relation to books with title 'poem by alice'. It then calls `.exclude(book_alice__isnull=False)` to exclude authors who have such a book. The test expects `[self.author2]` (Jane, who has no books matching the condition) but gets an empty QuerySet `[]`. 
+
+The prior diagnosis (H₁) attempted to fix a `FieldError` by copying `_filtered_relations` to the subquery in `split_exclude()`. While this resolved the FieldError, the subquery returned incorrect results - an empty set instead of the correct author IDs.
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 1670-1673: Where fresh `FilteredRelation` objects are created in `split_exclude()` subquery
+- `django/db/models/sql/query.py` line 747: Where `filtered_relation.alias` is used to determine table alias for joins
+- `django/db/models/sql/query.py` line 1565: Where `filtered_relation.alias` is used as `table_alias` during join setup
+
+## Root cause
+
+When `split_exclude()` creates a subquery to handle exclude operations on multi-valued relations, it creates fresh `FilteredRelation` objects at lines 1670-1673:
+
+```python
+query._filtered_relations = {
+    k: FilteredRelation(v.relation_name, condition=v.condition)
+    for k, v in self._filtered_relations.items()
+}
+```
+
+This code correctly avoids copying the `path` attribute (which contains parent query's join aliases that would be invalid after `trim_start()` manipulates the subquery structure). However, it also fails to set the `alias` attribute, which is essential for correct join construction.
+
+The `alias` is used in two critical places:
+1. Line 747: `alias = filtered_relation.alias if filtered_relation is not None else table_name` - determines the table alias for the first occurrence of a join
+2. Line 1565: `table_alias = filtered_relation.alias` - sets the table alias when creating Join objects
+
+Without the alias set, joins are created with incorrect table aliases (using the table name instead of the FilteredRelation's custom alias), causing the FilteredRelation's condition to fail or apply incorrectly.
+
+The audit kill report confirms that attempt 2 used `v.clone()`, which copies both `alias` and `path`. This fixed the FieldError but gave wrong results because the copied `path` contained stale join aliases from the parent query that became invalid in the subquery context.
+
+Confidence: **Deduction - 95%**
+
+Supporting evidence:
+- `django/db/models/sql/query.py:1670-1673` - creates FilteredRelation without setting alias
+- `django/db/models/sql/query.py:747` - uses `filtered_relation.alias` for table aliasing
+- `django/db/models/sql/query.py:1565` - uses `filtered_relation.alias` as table_alias
+- `django/db/models/sql/query.py:1585` - shows path is populated AFTER joins are created, not before
+- Audit report: clone() (which copies alias + path) fixed FieldError but gave wrong results
+
+## Edit sites
+
+**Primary fix**: `django/db/models/sql/query.py` lines 1670-1673
+
+Change from:
+```python
+query._filtered_relations = {
+    k: FilteredRelation(v.relation_name, condition=v.condition)
+    for k, v in self._filtered_relations.items()
+}
+```
+
+To a loop that creates fresh FilteredRelations and sets their `alias` attribute to match the dictionary key (which equals the parent FilteredRelation's alias):
+```python
+query._filtered_relations = {}
+for k, v in self._filtered_relations.items():
+    new_filtered_relation = FilteredRelation(v.relation_name, condition=v.condition)
+    new_filtered_relation.alias = k
+    query._filtered_relations[k] = new_filtered_relation
+```
+
+**Why this works**:
+- Creates fresh FilteredRelation with clean `path=[]` (will be populated during subquery's `setup_joins()`)
+- Sets `alias` to match the parent's alias (necessary for correct join table aliasing)
+- Avoids copying `path` (which would contain stale join aliases from parent query)
+
+## Rejected hypotheses
+
+- **H₁** (from audit kill): Copying `_filtered_relations` via `clone()` - killed because clone copies the `path` attribute, which contains parent query's join aliases that become invalid when `trim_start()` manipulates the subquery structure
+
+## Open questions
+
+None - the fix is straightforward and localized to a single location.
+
+---STDERR---
