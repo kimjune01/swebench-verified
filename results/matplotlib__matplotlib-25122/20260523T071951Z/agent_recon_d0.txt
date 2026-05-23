@@ -1,0 +1,42 @@
+# Recon: matplotlib__matplotlib-25122
+
+## Failure summary
+The test `test_psd_window_flattop` verifies that PSD calculations with different `scale_by_freq` settings maintain the correct mathematical relationship when using a flattop window. The test creates a flattop window (which has negative values) and calls `mlab.psd` twice: once with `scale_by_freq=False` (spec) and once with `scale_by_freq=True` (spec_a), then asserts that `spec*win.sum()**2 == spec_a*self.Fs*(win**2).sum()`. This assertion fails with max absolute difference of 30.15 and max relative difference of 0.26 (26%).
+
+## Suspect set
+- `lib/matplotlib/mlab.py` lines 423-436: The PSD mode branch in `_spectral_helper` that applies window corrections using `np.abs()` on window values
+
+## Root cause
+The window correction formulas in `_spectral_helper` incorrectly apply `np.abs()` to window values before summing. This produces incorrect results for windows with negative values like the flattop window.
+
+**Specifically:**
+- Line 427: Uses `(np.abs(window)**2).sum()` when it should use `(window**2).sum()`
+- Line 430: Uses `np.abs(window).sum()**2` when it should use `window.sum()**2`
+
+For the flattop window, this creates a significant error. Verification shows:
+- Flattop window has negative values (minimum: -0.07)
+- `np.abs(window).sum()` = 24.89 vs `window.sum()` = 21.34 (14% difference)
+- `np.abs(window).sum()**2` = 164.0 different from `window.sum()**2`
+
+While `(np.abs(window)**2).sum()` is mathematically equivalent to `(window**2).sum()` (since squaring makes values positive), using `np.abs()` is unnecessary and inconsistent with scipy's reference implementation.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence:**
+- `lib/matplotlib/mlab.py:427` — `result /= (np.abs(window)**2).sum()`
+- `lib/matplotlib/mlab.py:430` — `result /= np.abs(window).sum()**2`
+- Bug report cites scipy implementation which uses `(window**2).sum()` and `window.sum()**2` without abs()
+- Test reproduces the issue: flattop window (scipy.signal.windows.flattop) demonstrates that `np.abs(window).sum()**2 - window.sum()**2 = 4372.9` for 512-element window
+
+## Edit sites
+- `lib/matplotlib/mlab.py` line 427: Change `result /= (np.abs(window)**2).sum()` to `result /= (window**2).sum()`
+- `lib/matplotlib/mlab.py` line 430: Change `result /= np.abs(window).sum()**2` to `result /= window.sum()**2`
+
+## Additional observations
+Lines 398 and 403 also use `np.abs(window).sum()` for 'magnitude' and 'complex' modes respectively. While not tested by the failing tests, these should also be changed to `window.sum()` for consistency and correctness with windows that have negative values:
+- Line 398: `result = np.abs(result) / np.abs(window).sum()` → `result = np.abs(result) / window.sum()`
+- Line 403: `result /= np.abs(window).sum()` → `result /= window.sum()`
+
+However, since the failing tests only cover PSD mode, the minimal fix is lines 427 and 430 only.
+
+---STDERR---

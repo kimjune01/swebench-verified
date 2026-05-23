@@ -1,0 +1,42 @@
+# Audit: matplotlib__matplotlib-25122
+
+## Patch verification
+
+**Patch is live:** 1 file changed, 1 insertion(+), 1 deletion(-)
+
+The patch removes `np.abs()` from the window sum calculation at line 430 in `lib/matplotlib/mlab.py`, changing from `np.abs(window).sum()**2` to `window.sum()**2`.
+
+## Gate results
+
+**Total:** 2490 passed in 7.16s  
+**Failures:** 0  
+**Regressions:** 0
+
+## FAIL_TO_PASS
+
+All FAIL_TO_PASS tests now pass:
+
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[Fs4-twosided-complex]: PASS ✓
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[Fs4-twosided-real]: PASS ✓
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[Fs4-onesided-complex]: PASS ✓
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[Fs4-default-complex]: PASS ✓
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[Fs4-default-real]: PASS ✓
+- lib/matplotlib/tests/test_mlab.py::TestSpectral::test_psd_window_flattop[FsAll-default-complex]: PASS ✓
+- All other test_psd_window_flattop variants: PASS ✓
+
+## PASS_TO_PASS regressions
+
+**None.** All 2490 tests passed with no regressions introduced.
+
+## Pre-existing failures
+
+**None.** The base capture showed all tests passing, and the patched version maintains that state.
+
+## Summary
+
+The minimal fix correctly resolves all FAIL_TO_PASS tests without introducing any regressions. The patch preserves algebraic sign in the coherent-gain calculation for windows with negative values (like flattop), which is the exact behavior required by the test assertions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
