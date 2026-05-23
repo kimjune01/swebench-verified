@@ -1,0 +1,100 @@
+diff --git a/lib/matplotlib/backends/backend_agg.py b/lib/matplotlib/backends/backend_agg.py
+index 7d038a998f..22907b00d9 100644
+--- a/lib/matplotlib/backends/backend_agg.py
++++ b/lib/matplotlib/backends/backend_agg.py
+@@ -206,7 +206,7 @@ class RendererAgg(RendererBase):
+         # space) in the following call to draw_text_image).
+         font.set_text(s, 0, flags=get_hinting_flag())
+         font.draw_glyphs_to_bitmap(
+-            antialiased=mpl.rcParams['text.antialiased'])
++            antialiased=gc.get_antialiased())
+         d = font.get_descent() / 64.0
+         # The descent needs to be adjusted for the angle.
+         xo, yo = font.get_bitmap_offset()
+diff --git a/lib/matplotlib/backends/backend_cairo.py b/lib/matplotlib/backends/backend_cairo.py
+index 9ccadcdf1c..7f1888b4dd 100644
+--- a/lib/matplotlib/backends/backend_cairo.py
++++ b/lib/matplotlib/backends/backend_cairo.py
+@@ -205,7 +205,7 @@ class RendererCairo(RendererBase):
+             ctx.set_font_size(self.points_to_pixels(prop.get_size_in_points()))
+             opts = cairo.FontOptions()
+             opts.set_antialias(
+-                cairo.ANTIALIAS_DEFAULT if mpl.rcParams["text.antialiased"]
++                cairo.ANTIALIAS_DEFAULT if gc.get_antialiased()
+                 else cairo.ANTIALIAS_NONE)
+             ctx.set_font_options(opts)
+             if angle:
+diff --git a/lib/matplotlib/text.py b/lib/matplotlib/text.py
+index 4591316cf9..fdcb31004a 100644
+--- a/lib/matplotlib/text.py
++++ b/lib/matplotlib/text.py
+@@ -103,6 +103,7 @@ class Text(Artist):
+ 
+     def __init__(self,
+                  x=0, y=0, text='', *,
++                 antialiased=None,     # defaults to rc params
+                  color=None,           # defaults to rc params
+                  verticalalignment='baseline',
+                  horizontalalignment='left',
+@@ -139,6 +140,7 @@ class Text(Artist):
+             text=text,
+             color=color,
+             fontproperties=fontproperties,
++            antialiased=antialiased,
+             usetex=usetex,
+             parse_math=parse_math,
+             wrap=wrap,
+@@ -156,6 +158,7 @@ class Text(Artist):
+         self,
+         text='',
+         color=None,
++        antialiased=None,
+         fontproperties=None,
+         usetex=None,
+         parse_math=None,
+@@ -171,6 +174,8 @@ class Text(Artist):
+         self.set_text(text)
+         self.set_color(
+             color if color is not None else mpl.rcParams["text.color"])
++        self.set_antialiased(
++            antialiased if antialiased is not None else mpl.rcParams["text.antialiased"])
+         self.set_fontproperties(fontproperties)
+         self.set_usetex(usetex)
+         self.set_parse_math(parse_math if parse_math is not None else
+@@ -737,6 +742,7 @@ class Text(Artist):
+             gc.set_foreground(self.get_color())
+             gc.set_alpha(self.get_alpha())
+             gc.set_url(self._url)
++            gc.set_antialiased(self.get_antialiased())
+             self._set_gc_clip(gc)
+ 
+             angle = self.get_rotation()
+@@ -774,6 +780,10 @@ class Text(Artist):
+         """Return the color of the text."""
+         return self._color
+ 
++    def get_antialiased(self):
++        """Return whether antialiased rendering is used."""
++        return self._antialiased
++
+     def get_fontproperties(self):
+         """Return the `.font_manager.FontProperties`."""
+         return self._fontproperties
+@@ -962,6 +972,17 @@ class Text(Artist):
+         self._color = color
+         self.stale = True
+ 
++    def set_antialiased(self, b):
++        """
++        Set whether to use antialiased rendering.
++
++        Parameters
++        ----------
++        b : bool
++        """
++        self._antialiased = b
++        self.stale = True
++
+     def set_horizontalalignment(self, align):
+         """
+         Set the horizontal alignment relative to the anchor point.

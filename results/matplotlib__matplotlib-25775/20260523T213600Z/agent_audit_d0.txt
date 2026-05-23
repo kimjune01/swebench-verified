@@ -1,0 +1,26 @@
+# Audit: matplotlib__matplotlib-25775
+
+## FAIL_TO_PASS
+- test_set_antialiased: PASS ✓
+- test_get_antialiased: PASS ✓
+- test_annotation_antialiased: PASS ✓
+- test_text_antialiased_off_default_vs_manual[png]: PASS ✓
+- test_text_antialiased_off_default_vs_manual[pdf]: PASS ✓
+- test_text_antialiased_on_default_vs_manual[png]: PASS ✓
+- test_text_antialiased_on_default_vs_manual[pdf]: PASS ✓
+
+**All 7 FAIL_TO_PASS tests now passing.**
+
+## PASS_TO_PASS regressions
+None — all 99 tests passed with zero regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the baseline showed only the antialiased AttributeError; no other failures in the test suite.
+
+## Summary
+The craft patch successfully implemented the antialiased property for Text and Annotation classes. The implementation follows the established Line2D pattern with proper getter/setter methods, GraphicsContext integration, and backend support. All required tests pass, and no existing tests were broken.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

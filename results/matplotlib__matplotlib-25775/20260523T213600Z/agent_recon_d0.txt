@@ -1,0 +1,65 @@
+# Recon: matplotlib__matplotlib-25775
+
+## Failure summary
+The tests expect Text and Annotation objects to support per-instance antialiasing configuration via `antialiased` parameter in constructor and `get_antialiased()`/`set_antialiased()` methods. Currently, these fail with `AttributeError: 'Text' object has no property 'antialiased'` because the Text class lacks this property infrastructure entirely. Text rendering always reads antialiasing state from the global `mpl.rcParams['text.antialiased']` instead of allowing per-artist configuration like other artists (e.g., Line2D).
+
+## Suspect set
+- `lib/matplotlib/text.py` lines 95-200: Text class definition, `__init__`, and `_reset_visual_defaults` — missing antialiased property initialization
+- `lib/matplotlib/text.py` lines 704-770: Text.draw method — needs to set gc antialiased state from object attribute
+- `lib/matplotlib/text.py` lines 773-900: Property getters/setters section — missing get/set_antialiased methods
+- `lib/matplotlib/backends/backend_agg.py` line 209: Hardcoded rcParams access in draw_text
+- `lib/matplotlib/backends/backend_cairo.py` line 208: Hardcoded rcParams access in _draw_text
+- `lib/matplotlib/_mathtext.py` line 127: Hardcoded rcParams access in to_raster
+
+## Root cause
+Text class lacks the antialiased property infrastructure that other matplotlib artists have. Specifically:
+
+1. **Missing instance state**: No `_antialiased` attribute to store per-instance setting
+2. **Missing API methods**: No `set_antialiased()` or `get_antialiased()` methods
+3. **Missing initialization**: `__init__` doesn't accept `antialiased` parameter
+4. **Missing draw-time propagation**: `draw()` doesn't communicate the antialiased setting to the GraphicsContext
+5. **Backend bypass**: Backends read directly from `mpl.rcParams['text.antialiased']` instead of querying the GraphicsContext
+
+The pattern exists in Line2D (lib/matplotlib/lines.py:390-393, 771, 884, 1041) showing how artists should manage this property.
+
+**Confidence: Deduction — 95%**
+
+Supporting evidence:
+- `lib/matplotlib/lines.py:390` — Line2D initializes `_antialiased = None`
+- `lib/matplotlib/lines.py:771` — Line2D.draw sets `gc.set_antialiased(self._antialiased)`
+- `lib/matplotlib/backend_bases.py:820, 910` — GraphicsContext already has get/set_antialiased infrastructure
+- Error traceback points to artist.py:1192 where property lookup fails
+
+## Edit sites
+
+1. **lib/matplotlib/text.py** ~line 105 (`__init__` signature):
+   - Add `antialiased=None` parameter to match pattern of other optional properties (color, usetex, parse_math)
+
+2. **lib/matplotlib/text.py** ~line 157 (`_reset_visual_defaults` signature):
+   - Add `antialiased=None` parameter
+
+3. **lib/matplotlib/text.py** ~line 190 (`_reset_visual_defaults` body):
+   - Add `self.set_antialiased(antialiased)` after other property setters (following the pattern of set_usetex, set_parse_math)
+
+4. **lib/matplotlib/text.py** ~line 880 (in property methods section after get_color):
+   - Add `get_antialiased(self)` method that returns `self._antialiased` if not None, else `mpl.rcParams['text.antialiased']`
+
+5. **lib/matplotlib/text.py** ~line 980 (in setter methods section):
+   - Add `set_antialiased(self, b)` method that sets `self._antialiased = b` and marks stale (copy Line2D pattern)
+
+6. **lib/matplotlib/text.py** ~line 738 (in draw method after gc property setup):
+   - Add `gc.set_antialiased(self.get_antialiased())` after the existing gc.set_foreground/set_alpha/set_url calls
+
+7. **lib/matplotlib/backends/backend_agg.py** line 209:
+   - Replace `antialiased=mpl.rcParams['text.antialiased']` with `antialiased=gc.get_antialiased()`
+
+8. **lib/matplotlib/backends/backend_cairo.py** line 208:
+   - Replace `cairo.ANTIALIAS_DEFAULT if mpl.rcParams["text.antialiased"]` with `cairo.ANTIALIAS_DEFAULT if gc.get_antialiased()`
+
+9. **lib/matplotlib/_mathtext.py** line 127:
+   - Needs antialiased from gc — requires threading through parse() → _parse_cached() → to_raster() chain. Alternative: have backend pass it explicitly or read from context.
+
+## Open questions
+- For mathtext rendering, the antialiased setting is used deep in the parse chain (`_mathtext.py:127` in `to_raster()`). The cleanest solution may be to pass antialiased as a parameter through `MathTextParser.parse()` → `_parse_cached()` → `output.to_raster()`, but this requires careful handling of the LRU cache key. Need to verify if the cache should distinguish based on antialiasing or if to_raster can be called with the parameter post-cache.
+
+---STDERR---

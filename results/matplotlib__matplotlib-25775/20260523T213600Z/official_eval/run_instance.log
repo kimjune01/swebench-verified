@@ -1,0 +1,223 @@
+2026-05-23 21:33:43,201 - INFO - Creating container for matplotlib__matplotlib-25775...
+2026-05-23 21:33:53,396 - INFO - Container for matplotlib__matplotlib-25775 created: 7f78f9db05f11d6fd97e5fca6d4a5a4a619b3ca0094243fcd2aa6a6afbe85f3d
+2026-05-23 21:33:53,767 - INFO - Container for matplotlib__matplotlib-25775 started: 7f78f9db05f11d6fd97e5fca6d4a5a4a619b3ca0094243fcd2aa6a6afbe85f3d
+2026-05-23 21:33:53,768 - INFO - Intermediate patch for matplotlib__matplotlib-25775 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-25775/patch.diff, now applying to container...
+2026-05-23 21:33:53,883 - INFO - >>>>> Applied Patch:
+Checking patch lib/matplotlib/backends/backend_agg.py...
+Checking patch lib/matplotlib/backends/backend_cairo.py...
+Checking patch lib/matplotlib/text.py...
+Applied patch lib/matplotlib/backends/backend_agg.py cleanly.
+Applied patch lib/matplotlib/backends/backend_cairo.py cleanly.
+Applied patch lib/matplotlib/text.py cleanly.
+
+2026-05-23 21:33:54,785 - INFO - Git diff before:
+diff --git a/lib/matplotlib/backends/backend_agg.py b/lib/matplotlib/backends/backend_agg.py
+index 7d038a998f..22907b00d9 100644
+--- a/lib/matplotlib/backends/backend_agg.py
++++ b/lib/matplotlib/backends/backend_agg.py
+@@ -206,7 +206,7 @@ class RendererAgg(RendererBase):
+         # space) in the following call to draw_text_image).
+         font.set_text(s, 0, flags=get_hinting_flag())
+         font.draw_glyphs_to_bitmap(
+-            antialiased=mpl.rcParams['text.antialiased'])
++            antialiased=gc.get_antialiased())
+         d = font.get_descent() / 64.0
+         # The descent needs to be adjusted for the angle.
+         xo, yo = font.get_bitmap_offset()
+diff --git a/lib/matplotlib/backends/backend_cairo.py b/lib/matplotlib/backends/backend_cairo.py
+index 9ccadcdf1c..7f1888b4dd 100644
+--- a/lib/matplotlib/backends/backend_cairo.py
++++ b/lib/matplotlib/backends/backend_cairo.py
+@@ -205,7 +205,7 @@ class RendererCairo(RendererBase):
+             ctx.set_font_size(self.points_to_pixels(prop.get_size_in_points()))
+             opts = cairo.FontOptions()
+             opts.set_antialias(
+-                cairo.ANTIALIAS_DEFAULT if mpl.rcParams["text.antialiased"]
++                cairo.ANTIALIAS_DEFAULT if gc.get_antialiased()
+                 else cairo.ANTIALIAS_NONE)
+             ctx.set_font_options(opts)
+             if angle:
+diff --git a/lib/matplotlib/text.py b/lib/matplotlib/text.py
+index 4591316cf9..fdcb31004a 100644
+--- a/lib/matplotlib/text.py
++++ b/lib/matplotlib/text.py
+@@ -103,6 +103,7 @@ class Text(Artist):
+ 
+     def __init__(self,
+                  x=0, y=0, text='', *,
++                 antialiased=None,     # defaults to rc params
+                  color=None,           # defaults to rc params
+                  verticalalignment='baseline',
+                  horizontalalignment='left',
+@@ -139,6 +140,7 @@ class Text(Artist):
+             text=text,
+             color=color,
+             fontproperties=fontproperties,
++            antialiased=antialiased,
+             usetex=usetex,
+             parse_math=parse_math,
+             wrap=wrap,
+@@ -156,6 +158,7 @@ class Text(Artist):
+         self,
+         text='',
+         color=None,
++        antialiased=None,
+         fontproperties=None,
+         usetex=None,
+         parse_math=None,
+@@ -171,6 +174,8 @@ class Text(Artist):
+         self.set_text(text)
+         self.set_color(
+             color if color is not None else mpl.rcParams["text.color"])
++        self.set_antialiased(
++            antialiased if antialiased is not None else mpl.rcParams["text.antialiased"])
+         self.set_fontproperties(fontproperties)
+         self.set_usetex(usetex)
+         self.set_parse_math(parse_math if parse_math is not None else
+@@ -737,6 +742,7 @@ class Text(Artist):
+             gc.set_foreground(self.get_color())
+             gc.set_alpha(self.get_alpha())
+             gc.set_url(self._url)
++            gc.set_antialiased(self.get_antialiased())
+             self._set_gc_clip(gc)
+ 
+             angle = self.get_rotation()
+@@ -774,6 +780,10 @@ class Text(Artist):
+         """Return the color of the text."""
+         return self._color
+ 
++    def get_antialiased(self):
++        """Return whether antialiased rendering is used."""
++        return self._antialiased
++
+     def get_fontproperties(self):
+         """Return the `.font_manager.FontProperties`."""
+         return self._fontproperties
+@@ -962,6 +972,17 @@ class Text(Artist):
+         self._color = color
+         self.stale = True
+ 
++    def set_antialiased(self, b):
++        """
++        Set whether to use antialiased rendering.
++
++        Parameters
++        ----------
++        b : bool
++        """
++        self._antialiased = b
++        self.stale = True
++
+     def set_horizontalalignment(self, align):
+         """
+         Set the horizontal alignment relative to the anchor point.
+2026-05-23 21:33:54,785 - INFO - Eval script for matplotlib__matplotlib-25775 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-25775/eval.sh; copying to container...
+2026-05-23 21:34:51,237 - INFO - Test runtime: 56.37 seconds
+2026-05-23 21:34:51,237 - INFO - Test output for matplotlib__matplotlib-25775 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-25775/test_output.txt
+2026-05-23 21:34:51,360 - INFO - Git diff after:
+diff --git a/lib/matplotlib/backends/backend_agg.py b/lib/matplotlib/backends/backend_agg.py
+index 7d038a998f..22907b00d9 100644
+--- a/lib/matplotlib/backends/backend_agg.py
++++ b/lib/matplotlib/backends/backend_agg.py
+@@ -206,7 +206,7 @@ class RendererAgg(RendererBase):
+         # space) in the following call to draw_text_image).
+         font.set_text(s, 0, flags=get_hinting_flag())
+         font.draw_glyphs_to_bitmap(
+-            antialiased=mpl.rcParams['text.antialiased'])
++            antialiased=gc.get_antialiased())
+         d = font.get_descent() / 64.0
+         # The descent needs to be adjusted for the angle.
+         xo, yo = font.get_bitmap_offset()
+diff --git a/lib/matplotlib/backends/backend_cairo.py b/lib/matplotlib/backends/backend_cairo.py
+index 9ccadcdf1c..7f1888b4dd 100644
+--- a/lib/matplotlib/backends/backend_cairo.py
++++ b/lib/matplotlib/backends/backend_cairo.py
+@@ -205,7 +205,7 @@ class RendererCairo(RendererBase):
+             ctx.set_font_size(self.points_to_pixels(prop.get_size_in_points()))
+             opts = cairo.FontOptions()
+             opts.set_antialias(
+-                cairo.ANTIALIAS_DEFAULT if mpl.rcParams["text.antialiased"]
++                cairo.ANTIALIAS_DEFAULT if gc.get_antialiased()
+                 else cairo.ANTIALIAS_NONE)
+             ctx.set_font_options(opts)
+             if angle:
+diff --git a/lib/matplotlib/text.py b/lib/matplotlib/text.py
+index 4591316cf9..fdcb31004a 100644
+--- a/lib/matplotlib/text.py
++++ b/lib/matplotlib/text.py
+@@ -103,6 +103,7 @@ class Text(Artist):
+ 
+     def __init__(self,
+                  x=0, y=0, text='', *,
++                 antialiased=None,     # defaults to rc params
+                  color=None,           # defaults to rc params
+                  verticalalignment='baseline',
+                  horizontalalignment='left',
+@@ -139,6 +140,7 @@ class Text(Artist):
+             text=text,
+             color=color,
+             fontproperties=fontproperties,
++            antialiased=antialiased,
+             usetex=usetex,
+             parse_math=parse_math,
+             wrap=wrap,
+@@ -156,6 +158,7 @@ class Text(Artist):
+         self,
+         text='',
+         color=None,
++        antialiased=None,
+         fontproperties=None,
+         usetex=None,
+         parse_math=None,
+@@ -171,6 +174,8 @@ class Text(Artist):
+         self.set_text(text)
+         self.set_color(
+             color if color is not None else mpl.rcParams["text.color"])
++        self.set_antialiased(
++            antialiased if antialiased is not None else mpl.rcParams["text.antialiased"])
+         self.set_fontproperties(fontproperties)
+         self.set_usetex(usetex)
+         self.set_parse_math(parse_math if parse_math is not None else
+@@ -737,6 +742,7 @@ class Text(Artist):
+             gc.set_foreground(self.get_color())
+             gc.set_alpha(self.get_alpha())
+             gc.set_url(self._url)
++            gc.set_antialiased(self.get_antialiased())
+             self._set_gc_clip(gc)
+ 
+             angle = self.get_rotation()
+@@ -774,6 +780,10 @@ class Text(Artist):
+         """Return the color of the text."""
+         return self._color
+ 
++    def get_antialiased(self):
++        """Return whether antialiased rendering is used."""
++        return self._antialiased
++
+     def get_fontproperties(self):
+         """Return the `.font_manager.FontProperties`."""
+         return self._fontproperties
+@@ -962,6 +972,17 @@ class Text(Artist):
+         self._color = color
+         self.stale = True
+ 
++    def set_antialiased(self, b):
++        """
++        Set whether to use antialiased rendering.
++
++        Parameters
++        ----------
++        b : bool
++        """
++        self._antialiased = b
++        self.stale = True
++
+     def set_horizontalalignment(self, align):
+         """
+         Set the horizontal alignment relative to the anchor point.
+2026-05-23 21:34:51,360 - INFO - Grading answer for matplotlib__matplotlib-25775...
+2026-05-23 21:34:51,361 - INFO - report: {'matplotlib__matplotlib-25775': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['lib/matplotlib/tests/test_text.py::test_set_antialiased', 'lib/matplotlib/tests/test_text.py::test_get_antialiased', 'lib/matplotlib/tests/test_text.py::test_annotation_antialiased', 'lib/matplotlib/tests/test_text.py::test_text_antialiased_off_default_vs_manual[png]', 'lib/matplotlib/tests/test_text.py::test_text_antialiased_off_default_vs_manual[pdf]', 'lib/matplotlib/tests/test_text.py::test_text_antialiased_on_default_vs_manual[png]', 'lib/matplotlib/tests/test_text.py::test_text_antialiased_on_default_vs_manual[pdf]'], 'failure': []}, 'PASS_TO_PASS': {'success': ['lib/matplotlib/tests/test_text.py::test_font_styles[png]', 'lib/matplotlib/tests/test_text.py::test_font_styles[pdf]', 'lib/matplotlib/tests/test_text.py::test_multiline[png]', 'lib/matplotlib/tests/test_text.py::test_multiline[pdf]', 'lib/matplotlib/tests/test_text.py::test_multiline2[png]', 'lib/matplotlib/tests/test_text.py::test_multiline2[pdf]', 'lib/matplotlib/tests/test_text.py::test_antialiasing[png]', 'lib/matplotlib/tests/test_text.py::test_afm_kerning', 'lib/matplotlib/tests/test_text.py::test_contains[png]', 'lib/matplotlib/tests/test_text.py::test_annotation_contains', 'lib/matplotlib/tests/test_text.py::test_annotate_errors[TypeError-print-xycoords', "lib/matplotlib/tests/test_text.py::test_annotate_errors[TypeError-xycoords1-'xycoords'", "lib/matplotlib/tests/test_text.py::test_annotate_errors[ValueError-foo-'foo'", 'lib/matplotlib/tests/test_text.py::test_annotate_errors[ValueError-foo', 'lib/matplotlib/tests/test_text.py::test_annotate_errors[ValueError-offset', 'lib/matplotlib/tests/test_text.py::test_annotate_errors[ValueError-axes', 'lib/matplotlib/tests/test_text.py::test_titles[png]', 'lib/matplotlib/tests/test_text.py::test_titles[pdf]', 'lib/matplotlib/tests/test_text.py::test_alignment[png]', 'lib/matplotlib/tests/test_text.py::test_alignment[pdf]', 'lib/matplotlib/tests/test_text.py::test_axes_titles[png]', 'lib/matplotlib/tests/test_text.py::test_set_position', 'lib/matplotlib/tests/test_text.py::test_char_index_at', 'lib/matplotlib/tests/test_text.py::test_non_default_dpi[empty]', 'lib/matplotlib/tests/test_text.py::test_non_default_dpi[non-empty]', 'lib/matplotlib/tests/test_text.py::test_get_rotation_string', 'lib/matplotlib/tests/test_text.py::test_get_rotation_float', 'lib/matplotlib/tests/test_text.py::test_get_rotation_int', 'lib/matplotlib/tests/test_text.py::test_get_rotation_raises', 'lib/matplotlib/tests/test_text.py::test_get_rotation_none', 'lib/matplotlib/tests/test_text.py::test_get_rotation_mod360', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center-center]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center-right]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center-left]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[top-center]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[top-right]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[top-left]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[bottom-center]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[bottom-right]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[bottom-left]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[baseline-center]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[baseline-right]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[baseline-left]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center_baseline-center]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center_baseline-right]', 'lib/matplotlib/tests/test_text.py::test_null_rotation_with_rotation_mode[center_baseline-left]', 'lib/matplotlib/tests/test_text.py::test_bbox_clipping[png]', 'lib/matplotlib/tests/test_text.py::test_bbox_clipping[pdf]', 'lib/matplotlib/tests/test_text.py::test_annotation_negative_ax_coords[png]', 'lib/matplotlib/tests/test_text.py::test_annotation_negative_fig_coords[png]', 'lib/matplotlib/tests/test_text.py::test_text_stale', 'lib/matplotlib/tests/test_text.py::test_agg_text_clip[png]', 'lib/matplotlib/tests/test_text.py::test_text_size_binding', 'lib/matplotlib/tests/test_text.py::test_font_scaling[pdf]', 'lib/matplotlib/tests/test_text.py::test_two_2line_texts[0.4-2]', 'lib/matplotlib/tests/test_text.py::test_two_2line_texts[2-0.4]', 'lib/matplotlib/tests/test_text.py::test_two_2line_texts[2-2]', 'lib/matplotlib/tests/test_text.py::test_validate_linespacing', 'lib/matplotlib/tests/test_text.py::test_nonfinite_pos', 'lib/matplotlib/tests/test_text.py::test_hinting_factor_backends', 'lib/matplotlib/tests/test_text.py::test_single_artist_usenotex[png]', 'lib/matplotlib/tests/test_text.py::test_single_artist_usenotex[pdf]', 'lib/matplotlib/tests/test_text.py::test_single_artist_usenotex[svg]', 'lib/matplotlib/tests/test_text.py::test_text_repr', 'lib/matplotlib/tests/test_text.py::test_annotation_update', 'lib/matplotlib/tests/test_text.py::test_annotation_units[png]', 'lib/matplotlib/tests/test_text.py::test_large_subscript_title[png]', 'lib/matplotlib/tests/test_text.py::test_wrap[0.7-0-left]', 'lib/matplotlib/tests/test_text.py::test_wrap[0.5-95-left]', 'lib/matplotlib/tests/test_text.py::test_wrap[0.3-0-right]', 'lib/matplotlib/tests/test_text.py::test_wrap[0.3-185-left]', 'lib/matplotlib/tests/test_text.py::test_mathwrap', 'lib/matplotlib/tests/test_text.py::test_get_window_extent_wrapped', 'lib/matplotlib/tests/test_text.py::test_long_word_wrap', 'lib/matplotlib/tests/test_text.py::test_wrap_no_wrap', 'lib/matplotlib/tests/test_text.py::test_buffer_size[png]', 'lib/matplotlib/tests/test_text.py::test_fontproperties_kwarg_precedence', 'lib/matplotlib/tests/test_text.py::test_transform_rotates_text', 'lib/matplotlib/tests/test_text.py::test_update_mutate_input', 'lib/matplotlib/tests/test_text.py::test_invalid_rotation_values[invalid', 'lib/matplotlib/tests/test_text.py::test_invalid_rotation_values[rotation1]', 'lib/matplotlib/tests/test_text.py::test_invalid_color', 'lib/matplotlib/tests/test_text.py::test_pdf_kerning[pdf]', 'lib/matplotlib/tests/test_text.py::test_unsupported_script', 'lib/matplotlib/tests/test_text.py::test_parse_math', 'lib/matplotlib/tests/test_text.py::test_parse_math_rcparams', 'lib/matplotlib/tests/test_text.py::test_pdf_font42_kerning[pdf]', 'lib/matplotlib/tests/test_text.py::test_pdf_chars_beyond_bmp[pdf]', 'lib/matplotlib/tests/test_text.py::test_annotate_offset_fontsize'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for matplotlib__matplotlib-25775: resolved: True
+2026-05-23 21:34:51,361 - INFO - Attempting to stop container sweb.eval.matplotlib__matplotlib-25775.batch...
+2026-05-23 21:35:06,966 - INFO - Attempting to remove container sweb.eval.matplotlib__matplotlib-25775.batch...
+2026-05-23 21:35:06,980 - INFO - Container sweb.eval.matplotlib__matplotlib-25775.batch removed.

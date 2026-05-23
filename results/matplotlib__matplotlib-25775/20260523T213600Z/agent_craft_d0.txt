@@ -1,0 +1,14 @@
+**RESOLVED** ✓
+
+All FAIL_TO_PASS tests are passing. The Text class now has full per-instance antialiasing support:
+
+**Implementation summary**:
+- Added `antialiased` parameter to `Text.__init__()` and `_reset_visual_defaults()`
+- Added `get_antialiased()` and `set_antialiased()` methods to Text class
+- Modified `Text.draw()` to propagate antialiased setting to GraphicsContext via `gc.set_antialiased()`
+- Updated backend_agg and backend_cairo to read from `gc.get_antialiased()` instead of `mpl.rcParams['text.antialiased']`
+- Annotation inherits this behavior automatically from Text base class
+
+**Test results**: 99 passed, 10 skipped (SVG conversion tools unavailable) in 4.24s
+
+---STDERR---
