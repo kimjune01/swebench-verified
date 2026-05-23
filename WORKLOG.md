@@ -109,5 +109,13 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 6. **Tear down** (last batch of session): `for n in $(seq 1 10); do ( . /tmp/b_$n.env; aws ec2 terminate-instances --instance-ids "$IID" --region "$REGION"; ) & done; wait` — then leak-sweep.
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
+
+## 2026-05-24 — batch_009 archived: 28/30 (first genuine reasoning loss); session close
+
+batch_009 (seed=9, 30 disjoint: 16 django, 4 matplotlib, 4 sympy, +spread) graded + archived, RUNID 20260523T173023Z. **Official 28/30.** Scoreboard now **221/226 (~98%)**, 230 total runs. Two losses, two *different* kinds:
+- `django__django-15957` — **DNF**: exhausted outer-loop attempts (audit kept catching a regression, re-diagnosed, never converged within MAX_OUTER=3). No patch. The outer loop did its job (didn't ship a regression) but ran out of budget.
+- `sympy__sympy-20438` — **first genuine reasoning loss**: patch applied cleanly, graded UNRESOLVED. Not a DNF, not contamination, not capture — the fix was simply wrong. This is the honest failure class we *want* to see (the machine got the answer wrong, transparently), distinct from the infra/serialization losses.
+- **5 standing losses now:** django-15987 (contamination, rerun-pending), sympy-19040 + matplotlib-25311 + django-15957 (DNFs), sympy-20438 (reasoning). 4 of 5 are sympy/matplotlib/heavy or contamination; only 1 is a clean reasoning miss.
+- Boxes torn down at session close. Re-runs (django-15987 esp.) deferred to campaign end per plan.
 - **Monitor (fixed zsh-safe form) worked** — counter advanced 0→29 correctly (vs the silently-zero old one); only missed the late craft timeout because it hit its own 60-min cap first.
 - **Grade-retrieval gotcha (noted, not blocking):** boxes accumulate `/tmp/logs/run_evaluation/...` across gradings, so `scp -r` of instance_logs mixed batch_005 + batch_006 dirs (58 reports for 30 instances). `archive_batch.py` filters by the batch's own IDs so archiving was correct, but ad-hoc tallies must filter too.
