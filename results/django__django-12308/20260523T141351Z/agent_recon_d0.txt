@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is clear: `display_for_field` lacks JSONField handling and falls through to generic `display_for_value`, which formats based on Python types rather than JSON serialization.
+
+---STDERR---

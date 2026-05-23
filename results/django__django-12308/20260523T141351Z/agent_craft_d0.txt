@@ -1,0 +1,15 @@
+**RESOLVED**
+
+The fix is complete and verified. Both FAIL_TO_PASS tests now pass:
+- ✅ test_json_display_for_field (admin_utils.tests.UtilsTests)
+- ✅ test_label_for_field (admin_utils.tests.UtilsTests)
+
+**Changes made:**
+1. Added `import json` to django/contrib/admin/utils.py
+2. Added JSONField handling in `display_for_field` that:
+   - Uses `json.dumps(value, cls=field.encoder)` to properly serialize JSON and respect custom encoders
+   - Falls back to `display_for_value()` on TypeError for invalid JSON (e.g., dicts with tuple keys)
+
+The gate is green on first iteration — all 22 tests pass. The working tree contains the fix and is ready for the driver to capture via `git diff`.
+
+---STDERR---

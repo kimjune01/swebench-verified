@@ -1,0 +1,19 @@
+# Audit: django__django-12308
+
+## FAIL_TO_PASS
+- test_json_display_for_field (admin_utils.tests.UtilsTests): **PASS** ✓
+- test_label_for_field (admin_utils.tests.UtilsTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+test_json_display_for_field had 3 parameterized failures on base (value={'a': {'b': 'c'}}, value=['a', 'b'], value='a') — now passing as expected.
+
+## Summary
+The craft patch successfully adds JSONField handling to `display_for_field`. All FAIL_TO_PASS tests now pass, and all 20 PASS_TO_PASS tests remain passing. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
