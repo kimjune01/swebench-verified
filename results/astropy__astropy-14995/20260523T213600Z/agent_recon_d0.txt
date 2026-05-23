@@ -1,0 +1,55 @@
+Now I'll create the handoff document:
+
+```markdown
+# Recon: astropy__astropy-14995
+
+## Failure summary
+
+The test `test_nddata_bitmask_arithmetic` verifies that NDDataRef arithmetic operations correctly propagate bitmask values when using `handle_mask=np.bitwise_or`. The test fails when multiplying a masked NDDataRef by either a scalar constant (which has no mask) or another NDDataRef without a mask. The error is `TypeError: unsupported operand type(s) for |: 'int' and 'NoneType'` occurring at line 527 in `astropy/nddata/mixins/ndarithmetic.py` when `np.bitwise_or` is called with one valid mask array and one None value.
+
+## Suspect set
+
+- `astropy/nddata/mixins/ndarithmetic.py` lines 485-527: The `_arithmetic_mask` method has incomplete conditional logic that doesn't handle the case where one operand has a mask and the other operand exists but has `mask=None`.
+
+## Root cause
+
+In commit `feeb716b74` (Dec 2022, introducing collapse operations), line 523 was changed from `elif operand.mask is None:` to `elif operand is None:`. This change was intended to support collapse operations where the operand parameter itself is None (e.g., for sum/mean operations on a single NDData object). However, this inadvertently removed the check for the case where `operand` exists as an object but has `operand.mask = None`.
+
+The current logic flow in `_arithmetic_mask`:
+1. Line 516-518: Returns None if both masks are None OR if handle_mask is None
+2. Line 520-522: Returns operand.mask if self.mask is None (and operand exists)
+3. Line 523-524: Returns self.mask if operand is None
+4. Line 526-527: Calls `handle_mask(self.mask, operand.mask)` in all other cases
+
+The missing case: when `self.mask` is not None, `operand` is not None, but `operand.mask` is None. In this scenario, the code falls through to line 527 and attempts `np.bitwise_or(integer_array, None)`, which fails.
+
+**Confidence**: Deduction — 95%
+
+Supporting evidence:
+- `astropy/nddata/mixins/ndarithmetic.py:527` — Stack trace shows TypeError originates here when calling `handle_mask(self.mask, operand.mask, **kwds)` with operand.mask=None
+- `astropy/nddata/mixins/ndarithmetic.py:520-524` — No conditional branch handles the case `operand is not None and operand.mask is None` when `self.mask is not None`
+- Commit `feeb716b74` line 523 — Changed from checking `operand.mask is None` to checking `operand is None`, removing the necessary guard
+
+## Edit sites
+
+- `astropy/nddata/mixins/ndarithmetic.py` lines 523-526: Add a new conditional branch after the `elif operand is None:` check (line 523) to handle when operand exists but has no mask. Insert:
+  ```python
+  elif operand.mask is None:
+      return deepcopy(self.mask)
+  ```
+  This should be placed between current line 524 and line 525 (before the final `else:`).
+
+## Competing hypotheses
+
+None — the code path is deterministic and the fix location is unambiguous.
+
+## Rejected hypotheses
+
+- H₁: The issue is in how scalar operands are wrapped into NDDataRef — Rejected because the stack trace shows the wrapper correctly creates an NDDataRef with mask=None, and the issue is purely in the mask propagation logic.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single method.
+```
+
+---STDERR---

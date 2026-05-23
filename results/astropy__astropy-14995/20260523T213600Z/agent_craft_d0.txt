@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_nddata_bitmask_arithmetic` now passes. Fixed by modifying the conditional in `_arithmetic_mask` to handle the case where `operand` exists but `operand.mask is None`, preventing `np.bitwise_or(mask_array, None)` from being called.
+
+---STDERR---

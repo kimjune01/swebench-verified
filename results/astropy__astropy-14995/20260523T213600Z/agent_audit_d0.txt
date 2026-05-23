@@ -1,0 +1,20 @@
+# Audit: astropy__astropy-14995
+
+## FAIL_TO_PASS
+- `test_nddata_bitmask_arithmetic`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 180 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Kill report
+Not applicable — patch resolves the issue without regressions.
+
+The fix changed line 523 in `ndarithmetic.py` from `elif operand is None:` to `elif operand is None or operand.mask is None:`, correctly handling the case where an operand exists but has no mask. This prevents the TypeError when `handle_mask(self.mask, None, **kwds)` would be called with `np.bitwise_or` as the handler.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
