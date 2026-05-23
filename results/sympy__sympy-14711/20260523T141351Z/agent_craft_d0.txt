@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_Vector` pass by adding a zero-check in `Vector.__add__` before type validation, following the same pattern already used in `Vector.__eq__`. The test `assert A.x + 0 == A.x` now works correctly.
+
+---STDERR---

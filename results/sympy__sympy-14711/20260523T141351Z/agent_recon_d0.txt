@@ -1,0 +1,47 @@
+# Recon: sympy__sympy-14711
+
+## Failure summary
+The test `test_Vector` in `sympy/physics/vector/tests/test_vector.py` checks that adding the integer 0 to a Vector returns the same Vector (`assert A.x + 0 == A.x`). The test fails with `TypeError: A Vector must be supplied` raised from `sympy/physics/vector/vector.py:725` in the `_check_vector` function. The error occurs because `Vector.__add__` unconditionally validates that the operand is a Vector before checking for the special case of adding 0.
+
+## Suspect set
+- `sympy/physics/vector/vector.py` lines 58-61: `Vector.__add__` method - lacks zero-check before type validation
+- `sympy/physics/vector/vector.py` lines 723-726: `_check_vector` helper - raises TypeError for non-Vector types (working as intended, not the bug)
+- `sympy/physics/vector/vector.py` line 452: `__radd__ = __add__` - aliasing means fixing `__add__` fixes both left and right addition
+
+## Root cause
+The `Vector.__add__` method (lines 58-61) immediately calls `_check_vector(other)` at line 60 without first checking if `other == 0`. Python's `sum()` function and explicit additions like `A.x + 0` pass the integer 0, which causes `_check_vector` to raise `TypeError: A Vector must be supplied`.
+
+The codebase already demonstrates the correct pattern in `Vector.__eq__` (lines 124-125):
+```python
+if other == 0:
+    other = Vector(0)
+```
+
+This converts the integer 0 to a zero vector (empty args list) before validation. The `__add__` method needs the same check.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sympy/physics/vector/vector.py:60` — `other = _check_vector(other)` called without preceding zero-check
+- `sympy/physics/vector/vector.py:124-125` — `__eq__` shows the correct pattern for handling 0
+- `sympy/physics/vector/vector.py:39-40` — `Vector(0)` creates zero vector by converting 0 to empty list
+- `sympy/physics/vector/tests/test_vector.py:16` — test expects `A.x + 0 == A.x` to work
+
+## Edit sites
+- `sympy/physics/vector/vector.py` lines 58-61: In the `__add__` method, add a zero-check between the docstring (line 59) and the `_check_vector` call (line 60). Insert:
+  ```python
+  if other == 0:
+      other = Vector(0)
+  ```
+  This matches the pattern already used in `__eq__` and converts the integer 0 to a zero vector before type validation.
+
+## Competing hypotheses
+None. The root cause is clear from code inspection and the existing `__eq__` pattern.
+
+## Rejected hypotheses
+None explicitly considered — the failure stack trace led directly to the root cause.
+
+## Open questions
+None. The fix is straightforward and follows an existing pattern in the same file.
+
+---STDERR---
