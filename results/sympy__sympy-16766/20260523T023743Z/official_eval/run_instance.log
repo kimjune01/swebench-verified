@@ -1,0 +1,57 @@
+2026-05-23 02:36:03,679 - INFO - Creating container for sympy__sympy-16766...
+2026-05-23 02:36:03,841 - INFO - Container for sympy__sympy-16766 created: 42d677e7d3ac35d6a11a94d1e39e29e62cd109e921133292ab0607744a6f67e7
+2026-05-23 02:36:04,441 - INFO - Container for sympy__sympy-16766 started: 42d677e7d3ac35d6a11a94d1e39e29e62cd109e921133292ab0607744a6f67e7
+2026-05-23 02:36:04,441 - INFO - Intermediate patch for sympy__sympy-16766 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-16766/patch.diff, now applying to container...
+2026-05-23 02:36:04,543 - INFO - >>>>> Applied Patch:
+Checking patch sympy/printing/pycode.py...
+Applied patch sympy/printing/pycode.py cleanly.
+
+2026-05-23 02:36:04,788 - INFO - Git diff before:
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index a3f031073..db858fe12 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -357,6 +357,14 @@ def _print_Not(self, expr):
+         PREC = precedence(expr)
+         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+ 
++    def _print_IndexedBase(self, expr):
++        return self._print(expr.label)
++
++    def _print_Indexed(self, expr):
++        return "{}[{}]".format(
++            self._print(expr.base),
++            ", ".join(self._print(i) for i in expr.indices))
++
+ 
+ for k in PythonCodePrinter._kf:
+     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
+2026-05-23 02:36:04,788 - INFO - Eval script for sympy__sympy-16766 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-16766/eval.sh; copying to container...
+2026-05-23 02:36:07,319 - INFO - Test runtime: 2.45 seconds
+2026-05-23 02:36:07,319 - INFO - Test output for sympy__sympy-16766 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-16766/test_output.txt
+2026-05-23 02:36:07,420 - INFO - Git diff after:
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index a3f031073..db858fe12 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -357,6 +357,14 @@ def _print_Not(self, expr):
+         PREC = precedence(expr)
+         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+ 
++    def _print_IndexedBase(self, expr):
++        return self._print(expr.label)
++
++    def _print_Indexed(self, expr):
++        return "{}[{}]".format(
++            self._print(expr.base),
++            ", ".join(self._print(i) for i in expr.indices))
++
+ 
+ for k in PythonCodePrinter._kf:
+     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
+2026-05-23 02:36:07,420 - INFO - Grading answer for sympy__sympy-16766...
+2026-05-23 02:36:07,421 - INFO - report: {'sympy__sympy-16766': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_PythonCodePrinter'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_MpmathPrinter', 'test_NumPyPrinter', 'test_SciPyPrinter', 'test_pycode_reserved_words', 'test_printmethod', 'test_codegen_ast_nodes', 'test_issue_14283'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-16766: resolved: True
+2026-05-23 02:36:07,421 - INFO - Attempting to stop container sweb.eval.sympy__sympy-16766.batch...
+2026-05-23 02:36:22,784 - INFO - Attempting to remove container sweb.eval.sympy__sympy-16766.batch...
+2026-05-23 02:36:22,799 - INFO - Container sweb.eval.sympy__sympy-16766.batch removed.

@@ -1,0 +1,40 @@
+Now let me output the diagnosis:
+
+# Recon: sympy__sympy-16766
+
+## Failure summary
+
+The test `test_PythonCodePrinter` in `sympy/printing/tests/test_pycode.py` fails at line 38 when asserting that `prntr.doprint(p[0, 1]) == 'p[0, 1]'` where `p = IndexedBase("p")`. The actual output includes warning comments indicating that `Indexed` is not supported in Python: `'  # Not supported in Python:\n  # Indexed\np[0, 1]'`. The test expects clean output without the warning comments.
+
+## Suspect set
+
+- `sympy/printing/pycode.py` lines 350-359: `PythonCodePrinter` class definition - missing `_print_Indexed` method
+- `sympy/printing/codeprinter.py` lines 70-115: `CodePrinter.doprint` method - handles `_not_supported` set and generates warning comments for unsupported types
+
+## Root cause
+
+The `PythonCodePrinter` class does not define a `_print_Indexed` method to handle `Indexed` objects (array indexing expressions). When the printer encounters an `Indexed` object, it cannot find a corresponding `_print_Indexed` method and falls back to the base `CodePrinter` behavior, which adds the expression to the `_not_supported` set. This triggers the generation of warning comments (`# Not supported in Python:` and `# Indexed`) that are prepended to the output.
+
+The call path is: `prntr.doprint(p[0, 1])` → `CodePrinter.doprint` → searches for `_print_Indexed` → not found → adds to `_not_supported` → outputs warning comments.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `sympy/printing/pycode.py:350-359` — `PythonCodePrinter` class only defines `_print_sign` and `_print_Not` methods, no `_print_Indexed`
+- `sympy/printing/codeprinter.py:100-107` — When `_not_supported` is non-empty, warning comments are added to output
+- Multiple other code printers (`ccode.py`, `jscode.py`, `octave.py`, `rust.py`, etc.) all implement `_print_Indexed` successfully
+- `Indexed` object structure: `expr.args = (base, index1, index2, ...)`, where base is an `IndexedBase` and remaining args are indices
+
+## Edit sites
+
+- `sympy/printing/pycode.py` lines 350-359: Add `_print_Indexed` method to the `PythonCodePrinter` class. The method should be added after the existing `_print_Not` method (around line 358). Implementation should extract the base and indices from `expr.args` and format them as `"base[index1, index2, ...]"` using Python's bracket notation for array indexing.
+
+## Rejected hypotheses
+
+None — this is the first diagnosis and the root cause is clear from code inspection.
+
+## Open questions
+
+None — the fix is straightforward and follows established patterns in other code printers.
+
+---STDERR---

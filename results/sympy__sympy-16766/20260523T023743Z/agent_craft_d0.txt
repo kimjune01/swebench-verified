@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `_print_IndexedBase` and `_print_Indexed` methods to `PythonCodePrinter` to handle indexed array expressions. The test `test_PythonCodePrinter` now passes with `p[0, 1]` printing cleanly as `'p[0, 1]'` instead of including unsupported-type warning comments.
+
+---STDERR---

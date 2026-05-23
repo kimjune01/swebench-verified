@@ -1,0 +1,19 @@
+{"instance": "sympy__sympy-16766", "stage": "start"}
+{"instance": "sympy__sympy-16766", "stage": "recon", "depth": 0, "wall_s": 164, "fixed_point": false}
+{"instance": "sympy__sympy-16766", "stage": "craft", "depth": 0, "wall_s": 171, "claim": true, "wants_rediagnose": false}
+{"instance": "sympy__sympy-16766", "stage": "audit", "depth": 0, "wall_s": 37, "verdict": "RESOLVED", "route": "none"}
+{"instance": "sympy__sympy-16766", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_sympy__sympy-16766.txt"}
+{"instance": "sympy__sympy-16766", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": false, "patch_bytes": 681, "patch_file": "/tmp/swebench-abduction/r4_patch_sympy__sympy-16766.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_sympy__sympy-16766.md"}
+{"instance": "sympy__sympy-16766", "stage": "start"}
+{"instance": "sympy__sympy-16766", "stage": "recon", "depth": 0, "wall_s": 1, "fixed_point": false}
+{"instance": "sympy__sympy-16766", "stage": "craft", "depth": 0, "wall_s": 1, "claim": false, "wants_rediagnose": false}
+{"instance": "sympy__sympy-16766", "stage": "audit", "depth": 0, "wall_s": 1, "verdict": "UNKNOWN", "route": "none"}
+{"instance": "sympy__sympy-16766", "stage": "verify_gate", "agent_verdict": "UNKNOWN", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_sympy__sympy-16766.txt"}
+{"instance": "sympy__sympy-16766", "stage": "capture", "msg": "EMPTY patch \u2014 see capture_diag"}
+{"instance": "sympy__sympy-16766", "stage": "done", "final_verdict": "UNKNOWN", "driver_f2p_pass": false, "patch_bytes": 0, "patch_file": "/tmp/swebench-abduction/r4_patch_sympy__sympy-16766.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_sympy__sympy-16766.md"}
+{"instance": "sympy__sympy-16766", "stage": "start"}
+{"instance": "sympy__sympy-16766", "stage": "recon", "depth": 0, "wall_s": 149, "fixed_point": false}
+{"instance": "sympy__sympy-16766", "stage": "craft", "depth": 0, "wall_s": 266, "claim": true, "wants_rediagnose": false}
+{"instance": "sympy__sympy-16766", "stage": "audit", "depth": 0, "wall_s": 38, "verdict": "RESOLVED", "route": "none"}
+{"instance": "sympy__sympy-16766", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_sympy__sympy-16766.txt"}
+{"instance": "sympy__sympy-16766", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": false, "patch_bytes": 650, "patch_file": "/tmp/swebench-abduction/r4_patch_sympy__sympy-16766.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_sympy__sympy-16766.md"}
