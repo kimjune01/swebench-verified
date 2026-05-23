@@ -1,0 +1,24 @@
+# Audit: django__django-11490
+
+## FAIL_TO_PASS
+- `test_union_with_values`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 25+ tests in the suite passed.
+
+## Pre-existing failures (not counted)
+None applicable. The fail-on-base capture showed 1 failure before the patch, but with the patch applied all tests now pass.
+
+## Classification Summary
+- **FAIL_TO_PASS**: 1/1 passed ✓
+- **PASS_TO_PASS**: 0 regressions ✓  
+- **Contract fulfilled**: All FAIL_TO_PASS tests pass AND zero regressions
+
+**Patch**: Single-line insertion of `compiler.query = compiler.query.clone()` before `set_values()` call in `django/db/models/sql/compiler.py:428`. This prevents mutation of shared query objects in `combined_queries` while preserving the original semantic guard that prevents overwriting intentional column selections from different models.
+
+**Gate result**: `OK (skipped=2)` — full test suite passed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,41 @@
+# Recon: django__django-11490
+
+## Failure summary
+The test `test_union_with_values` verifies that calling `values_list()` with different field lists on a union queryset should change the columns returned. The test creates a union query, calls `values_list('name', 'order', 'id')` to get all three columns, then calls `values_list('order')` to get only the order column. The second call fails, returning `('a', 2, 1)` instead of the expected `(2,)`, because the query continues using the column list from the first `values_list()` call.
+
+## Suspect set
+- `django/db/models/sql/compiler.py` lines 428-433: The conditional check that prevents updating `values_select` on child queries when already set
+- `django/db/models/query.py` line 934: Stores direct references to query objects in `combined_queries` instead of clones
+
+## Root cause
+The SQL compiler modifies query objects in `combined_queries` during compilation, causing state to leak between different compilations. 
+
+When compiling a union query, the code at `django/db/models/sql/compiler.py:428` checks:
+```python
+if not compiler.query.values_select and self.query.values_select:
+    compiler.query.set_values((
+        *self.query.extra_select,
+        *self.query.values_select,
+        *self.query.annotation_select,
+    ))
+```
+
+The call to `compiler.query.set_values()` modifies the child query object directly. Since `combined_queries` stores references to the original query objects (not clones), this modification persists. When the same base queryset is used in a subsequent union with a different `values_list()`, the child queries already have `values_select` set from the previous compilation, so the condition `if not compiler.query.values_select` is False and the values are not updated to match the new parent query's `values_select`.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/query.py:934` — `clone.query.combined_queries = (self.query,) + tuple(qs.query for qs in other_qs)` stores direct references
+- `django/db/models/sql/compiler.py:428-433` — Conditional modification that only applies when child query doesn't have `values_select`
+- Git commit `0b66c3b4428` added this check to fix #29286 but introduced the current bug
+
+## Edit sites
+- `django/db/models/sql/compiler.py` line 428: Change the condition from `if not compiler.query.values_select and self.query.values_select:` to `if self.query.values_select:`. This ensures the child query's `values_select` is always updated to match the parent's when the parent has `values_select` set, preventing stale values from previous compilations.
+
+## Rejected hypotheses
+None - the root cause is clear from code analysis.
+
+## Open questions
+- Should we verify that the fix doesn't break the test added in commit `0b66c3b4428` (`test_union_with_values_list_on_annotated_and_unannotated`)? The new logic should still handle that case correctly since it will still call `set_values()` when needed, just without the restrictive "not already set" check.
+
+---STDERR---

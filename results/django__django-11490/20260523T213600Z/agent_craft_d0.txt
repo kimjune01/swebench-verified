@@ -1,0 +1,23 @@
+Perfect! The fix is complete and minimal:
+
+**RESOLVED**
+
+The fix adds a single line to clone the query before modification, preventing state leakage between compilations:
+
+```python
+if not compiler.query.values_select and self.query.values_select:
+    compiler.query = compiler.query.clone()  # ← Added
+    compiler.query.set_values((
+        *self.query.extra_select,
+        *self.query.values_select,
+        *self.query.annotation_select,
+    ))
+```
+
+**Gate result**: All 26 tests pass (OK, skipped=2)
+- ✓ FAIL_TO_PASS: `test_union_with_values` passes
+- ✓ All PASS_TO_PASS tests pass, including `test_combining_multiple_models`
+
+The clone prevents mutation of the original query objects in `combined_queries`, so repeated calls to `values_list()` with different columns now work correctly without affecting each other.
+
+---STDERR---
