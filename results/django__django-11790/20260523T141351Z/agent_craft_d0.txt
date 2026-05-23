@@ -1,0 +1,13 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix addresses the root cause identified in recon: AuthenticationForm was setting `max_length` dynamically after field initialization, so the widget's `maxlength` HTML attribute was never populated.
+
+**Final fix:**
+- Refactored to avoid repeated field access
+- Added `widget.attrs['maxlength']` update when setting `max_length`
+- Included hidden widget check (matching CharField.widget_attrs behavior)
+- Used integer value (not string) to match test expectations
+
+The gate confirms all 79 tests pass, including both target tests.
+
+---STDERR---

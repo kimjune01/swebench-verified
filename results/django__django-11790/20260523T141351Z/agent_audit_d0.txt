@@ -1,0 +1,19 @@
+# Audit: django__django-11790
+
+## FAIL_TO_PASS
+- test_username_field_max_length_defaults_to_254 (auth_tests.test_forms.AuthenticationFormTest): **PASS**
+- test_username_field_max_length_matches_user_model (auth_tests.test_forms.AuthenticationFormTest): **PASS**
+
+## PASS_TO_PASS regressions
+**None** — all 79 tests passed, zero regressions detected.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — baseline capture showed same test suite fully passing on unpatched repo.
+
+## Summary
+Patch is live (django/contrib/auth/forms.py modified). Full gate ran 79 tests in 0.136s with result OK. Both FAIL_TO_PASS tests now pass. No regressions introduced. The fix correctly sets the maxlength widget attribute when max_length is dynamically updated in AuthenticationForm.__init__, addressing the root cause identified in recon without side effects.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

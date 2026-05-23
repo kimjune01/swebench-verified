@@ -1,0 +1,40 @@
+# Recon: django__django-11790
+
+## Failure summary
+The tests verify that AuthenticationForm's username field renders with the correct `maxlength` HTML attribute based on the user model's USERNAME_FIELD max_length (or defaulting to 254). Both tests fail with `AssertionError: None != 254` and `AssertionError: None != 255`, indicating that `form.fields['username'].widget.attrs.get('maxlength')` returns None instead of the expected value.
+
+## Suspect set
+- `django/contrib/auth/forms.py` lines 168-197: AuthenticationForm class declaration and __init__ method
+- `django/forms/fields.py` lines 95-115, 231-239: CharField initialization and widget_attrs method
+
+## Root cause
+The maxlength HTML attribute is missing because widget attributes are populated only once during field initialization, but AuthenticationForm sets the username field's max_length dynamically in __init__ after the field has already been created.
+
+**Flow:**
+1. At class level (line 168), username field is declared without max_length: `username = UsernameField(widget=forms.TextInput(attrs={'autofocus': True}))`
+2. During CharField.__init__, widget_attrs() is called and checks if self.max_length is not None (fields.py:233-235)
+3. Since max_length is None at this point, no maxlength attribute is added to widget.attrs
+4. Later in AuthenticationForm.__init__ (line 194), max_length is set: `self.fields['username'].max_length = self.username_field.max_length or 254`
+5. However, this assignment doesn't trigger widget_attrs() again, so widget.attrs remains unchanged
+
+This regression was introduced in commit 5ceaf14686ce626404afb6a5fbd3d8286410bf13 which changed from declaring the field with `max_length=254` at class level to setting it dynamically in __init__.
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `django/contrib/auth/forms.py:168` — username field declared without max_length parameter
+- `django/contrib/auth/forms.py:194` — max_length set post-initialization without updating widget attrs
+- `django/forms/fields.py:103-104` — widget attrs populated once during Field.__init__: `extra_attrs = self.widget_attrs(widget); widget.attrs.update(extra_attrs)`
+- `django/forms/fields.py:233-235` — CharField.widget_attrs only adds maxlength if self.max_length is not None
+- `git show 5ceaf14686` — shows the exact change that moved max_length setting from class-level to __init__
+
+## Edit sites
+- `django/contrib/auth/forms.py` line 194: After setting `self.fields['username'].max_length`, also update the widget attrs with `self.fields['username'].widget.attrs['maxlength'] = str(self.username_field.max_length or 254)`. This mirrors the behavior in CharField.widget_attrs() which converts max_length to string for the HTML attribute.
+
+## Rejected hypotheses
+None — the root cause is straightforward from code inspection and git history.
+
+## Open questions
+None — the fix location and approach are clear.
+
+---STDERR---
