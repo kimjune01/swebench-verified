@@ -1,0 +1,56 @@
+Now I'll print the diagnosis handoff:
+
+# Recon: django__django-14608
+
+## Failure summary
+
+Four tests fail because FormSet's `non_form_errors()` method returns ErrorList instances without the `nonform` CSS class. The tests check validation errors from:
+1. `validate_max` constraint (max_num exceeded)
+2. `validate_min` constraint (min_num not met)  
+3. Custom formset-level validation in `clean()`
+4. Admin changelist formset validation
+
+All tests expect HTML output like `<ul class="errorlist nonform"><li>...</li></ul>` but receive `<ul class="errorlist"><li>...</li></ul>` (missing the `nonform` class).
+
+## Suspect set
+
+- `django/forms/formsets.py` lines 336, 383: ErrorList creation without `error_class` parameter
+- `django/forms/utils.py` lines 84-90: ErrorList.__init__ implementation (reference only, no changes needed)
+- `django/forms/forms.py` lines 317, 359: Form.non_field_errors() pattern to follow (reference only)
+
+## Root cause
+
+FormSet's `full_clean()` method creates ErrorList instances for `_non_form_errors` without passing the `error_class='nonform'` parameter, while Forms correctly pass `error_class='nonfield'` for non-field errors.
+
+**Confidence: deduction — 99%**
+
+**Supporting evidence:**
+- `django/forms/formsets.py:336` — `self._non_form_errors = self.error_class()` creates empty ErrorList without CSS class
+- `django/forms/formsets.py:383` — `self._non_form_errors = self.error_class(e.error_list)` replaces with new ErrorList when ValidationError is caught, also without CSS class
+- `django/forms/utils.py:84-90` — ErrorList.__init__ accepts `error_class` parameter and formats as `'errorlist {}'.format(error_class)`
+- `django/forms/forms.py:317` — Form.non_field_errors() uses `self.error_class(error_class='nonfield')` as the pattern
+- `django/forms/forms.py:359` — When adding NON_FIELD_ERRORS to _errors dict, Forms use `self.error_class(error_class='nonfield')`
+
+**Code flow:**
+1. Line 336 creates initial empty ErrorList for non-form errors
+2. Line 353 may append management form validation errors to this list
+3. Lines 366-381 validate max/min constraints and call custom clean()
+4. Line 383 catches any ValidationError and creates a new ErrorList from the error_list
+5. Both creation points (336, 383) must pass `error_class='nonform'` to match the Form pattern
+
+## Edit sites
+
+- `django/forms/formsets.py` line 336: Change `self.error_class()` to `self.error_class(error_class='nonform')`
+- `django/forms/formsets.py` line 383: Change `self.error_class(e.error_list)` to `self.error_class(e.error_list, error_class='nonform')`
+
+Both edit sites are in the `full_clean()` method. Line 336 is the initial creation; line 383 is the replacement when ValidationError is caught from validate_max, validate_min, or custom clean() methods.
+
+## Rejected hypotheses
+
+None. The root cause is unambiguous from code inspection. Forms already implement this pattern for non-field errors; FormSets need the parallel implementation for non-form errors.
+
+## Open questions
+
+None. The fix is a direct parameter addition at two call sites, following the established Form pattern.
+
+---STDERR---

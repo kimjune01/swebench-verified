@@ -1,0 +1,22 @@
+# Audit: django__django-14608
+
+## FAIL_TO_PASS
+All 4 tests now **PASS**:
+- test_formset_validate_max_flag (forms_tests.tests.test_formsets.FormsFormsetTestCase): **PASS**
+- test_formset_validate_min_flag (forms_tests.tests.test_formsets.FormsFormsetTestCase): **PASS**
+- test_non_form_errors (forms_tests.tests.test_formsets.FormsFormsetTestCase): **PASS**
+- test_non_form_errors_is_errorlist (admin_views.tests.AdminViewListEditable): **PASS**
+
+## PASS_TO_PASS regressions
+**None**. Full gate shows 417 tests passed, 0 failures, 15 skipped.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**. All tests pass cleanly.
+
+## Summary
+The patch adds `error_class='nonform'` to both ErrorList creation sites in `BaseFormSet.full_clean()` (lines 336 and 383). This produces the expected `<ul class="errorlist nonform">` CSS class for formset non-form errors, matching Django's existing Form pattern for non-field errors. All FAIL_TO_PASS tests now pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

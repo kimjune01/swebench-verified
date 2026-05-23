@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix passed on the first gate iteration. Both edit sites were correct:
+- Line 336: Added `error_class='nonform'` to initial ErrorList creation
+- Line 383: Added `error_class='nonform'` to ValidationError ErrorList replacement
+
+All 417 tests passed, including the FAIL_TO_PASS tests that expected the `nonform` CSS class in FormSet error output. The working tree contains the complete fix.
+
+---STDERR---
