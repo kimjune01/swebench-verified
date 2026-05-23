@@ -1,0 +1,38 @@
+# Recon: astropy__astropy-14365
+
+## Failure summary
+
+The test `test_roundtrip[True]` verifies QDP file round-trip with lowercase commands. It converts a valid QDP file's commands (e.g., "READ TERR 1") to lowercase ("read terr 1") using the `lowercase_header` helper, then attempts to read it. The test fails with `ValueError: Unrecognized QDP line: read terr 1` raised from `astropy/io/ascii/qdp.py:78` in the `_line_type` function. QDP format is case-insensitive, but astropy's parser rejects lowercase commands.
+
+## Suspect set
+
+- `astropy/io/ascii/qdp.py` lines 62-71: `_line_type` function's regex pattern definitions — the command pattern is case-sensitive
+- `astropy/io/ascii/qdp.py` line 78: Where ValueError is raised when regex doesn't match
+
+## Root cause
+
+The `_command_re` regex pattern on line 63 is `r"READ [TS]ERR(\s+[0-9]+)+"`, which only matches uppercase "READ", "SERR", and "TERR". The pattern is compiled without case-insensitive flags on line 71. When the `_line_type` function encounters lowercase commands like "read terr 1", the regex fails to match and raises ValueError. 
+
+The command processing code at line 300 already handles case-insensitivity by using `.lower()` on command tokens, confirming the design intent is case-insensitive parsing. Only the initial regex matching is case-sensitive.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `astropy/io/ascii/qdp.py:63` — `_command_re = r"READ [TS]ERR(\s+[0-9]+)+"` (uppercase only)
+- `astropy/io/ascii/qdp.py:71` — `_line_type_re = re.compile(_type_re)` (no `re.IGNORECASE` flag)
+- `astropy/io/ascii/qdp.py:300` — `err_specs[command[1].lower()]` (processing is already case-insensitive)
+- Problem description: "QDP itself is not case sensitive"
+
+## Edit sites
+
+- `astropy/io/ascii/qdp.py` line 63: Add inline case-insensitive flag to command regex pattern. Change `_command_re = r"READ [TS]ERR(\s+[0-9]+)+"` to `_command_re = r"(?i)READ [TS]ERR(\s+[0-9]+)+"`. The inline `(?i)` flag makes only the command pattern case-insensitive while leaving other patterns (data, NO markers) unchanged.
+
+## Rejected hypotheses
+
+None. First pass identified clear root cause with deductive confidence.
+
+## Open questions
+
+None. The fix is straightforward and localized to a single regex pattern.
+
+---STDERR---

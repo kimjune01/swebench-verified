@@ -1,0 +1,11 @@
+**RESOLVED**
+
+Fixed QDP case-insensitivity in 6 gate iterations. The solution required changes in both regex patterns and data processing:
+
+**Changes:**
+1. **Regex patterns** (lines 63-71): Made commands, "NO", and "nan" case-insensitive using character classes (`[Rr][Ee][Aa][Dd]`, `[Nn][Oo]`, `[Nn][Aa][Nn]`)
+2. **Data processing** (line 310): Changed `if v == "NO":` to `if v.upper() == "NO":` to handle lowercase data sentinels
+
+The gate is green - `test_roundtrip[True]` now passes along with all other tests.
+
+---STDERR---

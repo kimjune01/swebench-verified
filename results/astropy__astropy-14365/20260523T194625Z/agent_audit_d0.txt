@@ -1,0 +1,26 @@
+# Audit: astropy__astropy-14365
+
+## FAIL_TO_PASS
+- `astropy/io/ascii/tests/test_qdp.py::test_roundtrip[True]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 8 PASS_TO_PASS tests remain passing:
+- `test_get_tables_from_qdp_file`: PASS
+- `test_roundtrip[False]`: PASS
+- `test_read_example`: PASS
+- `test_roundtrip_example`: PASS
+- `test_roundtrip_example_comma`: PASS
+- `test_read_write_simple`: PASS
+- `test_read_write_simple_specify_name`: PASS
+- `test_get_lines_from_qdp`: PASS
+
+## Pre-existing failures
+None confirmed against base capture.
+
+## Kill report
+N/A - patch resolves the issue completely with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,83 @@
+2026-05-23 19:42:22,408 - INFO - Creating container for astropy__astropy-14365...
+2026-05-23 19:42:22,578 - INFO - Container for astropy__astropy-14365 created: beb1e5a244555b23924a046a7a2d7e0ede131e73cf53adedc9ed7f2eb8322205
+2026-05-23 19:42:22,885 - INFO - Container for astropy__astropy-14365 started: beb1e5a244555b23924a046a7a2d7e0ede131e73cf53adedc9ed7f2eb8322205
+2026-05-23 19:42:22,885 - INFO - Intermediate patch for astropy__astropy-14365 written to logs/run_evaluation/batch/recon-craft-audit/astropy__astropy-14365/patch.diff, now applying to container...
+2026-05-23 19:42:23,051 - INFO - >>>>> Applied Patch:
+Checking patch astropy/io/ascii/qdp.py...
+Applied patch astropy/io/ascii/qdp.py cleanly.
+
+2026-05-23 19:42:23,339 - INFO - Git diff before:
+diff --git a/astropy/io/ascii/qdp.py b/astropy/io/ascii/qdp.py
+index 83a4f004a..e1b84fc31 100644
+--- a/astropy/io/ascii/qdp.py
++++ b/astropy/io/ascii/qdp.py
+@@ -60,13 +60,14 @@ def _line_type(line, delimiter=None):
+     ValueError: Unrecognized QDP line...
+     """
+     _decimal_re = r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?"
+-    _command_re = r"READ [TS]ERR(\s+[0-9]+)+"
+-
++    _no_re = r"[Nn][Oo]"
++    _nan_re = r"[-+]?[Nn][Aa][Nn]"
++    _command_re = r"[Rr][Ee][Aa][Dd] [TtSs][Ee][Rr][Rr](\s+[0-9]+)+"
+     sep = delimiter
+     if delimiter is None:
+         sep = r"\s+"
+-    _new_re = rf"NO({sep}NO)+"
+-    _data_re = rf"({_decimal_re}|NO|[-+]?nan)({sep}({_decimal_re}|NO|[-+]?nan))*)"
++    _new_re = rf"{_no_re}({sep}{_no_re})+"
++    _data_re = rf"({_decimal_re}|{_no_re}|{_nan_re})({sep}({_decimal_re}|{_no_re}|{_nan_re}))*)"
+     _type_re = rf"^\s*((?P<command>{_command_re})|(?P<new>{_new_re})|(?P<data>{_data_re})?\s*(\!(?P<comment>.*))?\s*$"
+     _line_type_re = re.compile(_type_re)
+     line = line.strip()
+@@ -306,7 +307,7 @@ def _get_tables_from_qdp_file(qdp_file, input_colnames=None, delimiter=None):
+ 
+             values = []
+             for v in line.split(delimiter):
+-                if v == "NO":
++                if v.upper() == "NO":
+                     values.append(np.ma.masked)
+                 else:
+                     # Understand if number is int or float
+2026-05-23 19:42:23,339 - INFO - Eval script for astropy__astropy-14365 written to logs/run_evaluation/batch/recon-craft-audit/astropy__astropy-14365/eval.sh; copying to container...
+2026-05-23 19:42:54,872 - INFO - Test runtime: 31.47 seconds
+2026-05-23 19:42:54,872 - INFO - Test output for astropy__astropy-14365 written to logs/run_evaluation/batch/recon-craft-audit/astropy__astropy-14365/test_output.txt
+2026-05-23 19:42:54,967 - INFO - Git diff after:
+diff --git a/astropy/io/ascii/qdp.py b/astropy/io/ascii/qdp.py
+index 83a4f004a..e1b84fc31 100644
+--- a/astropy/io/ascii/qdp.py
++++ b/astropy/io/ascii/qdp.py
+@@ -60,13 +60,14 @@ def _line_type(line, delimiter=None):
+     ValueError: Unrecognized QDP line...
+     """
+     _decimal_re = r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?"
+-    _command_re = r"READ [TS]ERR(\s+[0-9]+)+"
+-
++    _no_re = r"[Nn][Oo]"
++    _nan_re = r"[-+]?[Nn][Aa][Nn]"
++    _command_re = r"[Rr][Ee][Aa][Dd] [TtSs][Ee][Rr][Rr](\s+[0-9]+)+"
+     sep = delimiter
+     if delimiter is None:
+         sep = r"\s+"
+-    _new_re = rf"NO({sep}NO)+"
+-    _data_re = rf"({_decimal_re}|NO|[-+]?nan)({sep}({_decimal_re}|NO|[-+]?nan))*)"
++    _new_re = rf"{_no_re}({sep}{_no_re})+"
++    _data_re = rf"({_decimal_re}|{_no_re}|{_nan_re})({sep}({_decimal_re}|{_no_re}|{_nan_re}))*)"
+     _type_re = rf"^\s*((?P<command>{_command_re})|(?P<new>{_new_re})|(?P<data>{_data_re})?\s*(\!(?P<comment>.*))?\s*$"
+     _line_type_re = re.compile(_type_re)
+     line = line.strip()
+@@ -306,7 +307,7 @@ def _get_tables_from_qdp_file(qdp_file, input_colnames=None, delimiter=None):
+ 
+             values = []
+             for v in line.split(delimiter):
+-                if v == "NO":
++                if v.upper() == "NO":
+                     values.append(np.ma.masked)
+                 else:
+                     # Understand if number is int or float
+2026-05-23 19:42:54,967 - INFO - Grading answer for astropy__astropy-14365...
+2026-05-23 19:42:54,968 - INFO - report: {'astropy__astropy-14365': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['astropy/io/ascii/tests/test_qdp.py::test_roundtrip[True]'], 'failure': []}, 'PASS_TO_PASS': {'success': ['astropy/io/ascii/tests/test_qdp.py::test_get_tables_from_qdp_file', 'astropy/io/ascii/tests/test_qdp.py::test_roundtrip[False]', 'astropy/io/ascii/tests/test_qdp.py::test_read_example', 'astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example', 'astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example_comma', 'astropy/io/ascii/tests/test_qdp.py::test_read_write_simple', 'astropy/io/ascii/tests/test_qdp.py::test_read_write_simple_specify_name', 'astropy/io/ascii/tests/test_qdp.py::test_get_lines_from_qdp'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for astropy__astropy-14365: resolved: True
+2026-05-23 19:42:54,968 - INFO - Attempting to stop container sweb.eval.astropy__astropy-14365.batch...
+2026-05-23 19:43:10,390 - INFO - Attempting to remove container sweb.eval.astropy__astropy-14365.batch...
+2026-05-23 19:43:10,402 - INFO - Container sweb.eval.astropy__astropy-14365.batch removed.

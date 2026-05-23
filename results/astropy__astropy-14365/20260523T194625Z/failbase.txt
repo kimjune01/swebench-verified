@@ -1,0 +1,122 @@
+$ pytest -rA astropy/io/ascii/tests/test_qdp.py
+
+        ! WT -- hard data
+        !MJD            Err (pos)       Err(neg)        Rate            Error
+        53000.123456 2.37847222222222e-05    -2.37847222222222e-05   NO       0.212439
+        55045.099887 1.14467592592593e-05    -1.14467592592593e-05   0.000000        0.000000
+        NO NO NO NO NO
+        ! WT -- soft data
+        !MJD            Err (pos)       Err(neg)        Rate            Error
+        53000.123456 2.37847222222222e-05    -2.37847222222222e-05   0.726155        0.583890
+        55045.099887 1.14467592592593e-05    -1.14467592592593e-05   2.410935        1.393592
+        NO NO NO NO NO
+        ! WT -- hardness ratio
+        !MJD            Err (pos)       Err(neg)        Rate            Error
+        53000.123456 2.37847222222222e-05    -2.37847222222222e-05   -0.292553       -0.374935
+        55045.099887 1.14467592592593e-05    -1.14467592592593e-05   0.000000        NO
+        ! Add command, just to raise the warning.
+        READ TERR 1
+        ! WT -- whatever
+        !MJD            Err (pos)       Err(neg)        Rate            Error
+        53000.123456 2.37847222222222e-05    -2.37847222222222e-05   -0.292553       -0.374935
+        NO 1.14467592592593e-05    -1.14467592592593e-05   0.000000        NO
+        """
+        if lowercase:
+            example_qdp = lowercase_header(example_qdp)
+    
+        path = str(tmp_path / "test.qdp")
+        path2 = str(tmp_path / "test2.qdp")
+    
+        with open(path, "w") as fp:
+            print(example_qdp, file=fp)
+        with pytest.warns(AstropyUserWarning) as record:
+>           table = _read_table_qdp(path, names=["MJD", "Rate"], table_id=0)
+
+[1m[31mastropy/io/ascii/tests/test_qdp.py[0m:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mastropy/io/ascii/qdp.py[0m:418: in _read_table_qdp
+    tables = _get_tables_from_qdp_file(
+[1m[31mastropy/io/ascii/qdp.py[0m:259: in _get_tables_from_qdp_file
+    contents, ncol = _get_type_from_list_of_lines(lines, delimiter=delimiter)
+[1m[31mastropy/io/ascii/qdp.py[0m:122: in _get_type_from_list_of_lines
+    types = [_line_type(line, delimiter=delimiter) for line in lines]
+[1m[31mastropy/io/ascii/qdp.py[0m:122: in <listcomp>
+    types = [_line_type(line, delimiter=delimiter) for line in lines]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+line = 'read terr 1', delimiter = None
+
+    def _line_type(line, delimiter=None):
+        """Interpret a QDP file line.
+    
+        Parameters
+        ----------
+        line : str
+            a single line of the file
+    
+        Returns
+        -------
+        type : str
+            Line type: "comment", "command", or "data"
+    
+        Examples
+        --------
+        >>> _line_type("READ SERR 3")
+        'command'
+        >>> _line_type(" \\n    !some gibberish")
+        'comment'
+        >>> _line_type("   ")
+        'comment'
+        >>> _line_type(" 21345.45")
+        'data,1'
+        >>> _line_type(" 21345.45 1.53e-3 1e-3 .04 NO nan")
+        'data,6'
+        >>> _line_type(" 21345.45,1.53e-3,1e-3,.04,NO,nan", delimiter=',')
+        'data,6'
+        >>> _line_type(" 21345.45 ! a comment to disturb")
+        'data,1'
+        >>> _line_type("NO NO NO NO NO")
+        'new'
+        >>> _line_type("NO,NO,NO,NO,NO", delimiter=',')
+        'new'
+        >>> _line_type("N O N NOON OON O")
+        Traceback (most recent call last):
+            ...
+        ValueError: Unrecognized QDP line...
+        >>> _line_type(" some non-comment gibberish")
+        Traceback (most recent call last):
+            ...
+        ValueError: Unrecognized QDP line...
+        """
+        _decimal_re = r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?"
+        _command_re = r"READ [TS]ERR(\s+[0-9]+)+"
+    
+        sep = delimiter
+        if delimiter is None:
+            sep = r"\s+"
+        _new_re = rf"NO({sep}NO)+"
+        _data_re = rf"({_decimal_re}|NO|[-+]?nan)({sep}({_decimal_re}|NO|[-+]?nan))*)"
+        _type_re = rf"^\s*((?P<command>{_command_re})|(?P<new>{_new_re})|(?P<data>{_data_re})?\s*(\!(?P<comment>.*))?\s*$"
+        _line_type_re = re.compile(_type_re)
+        line = line.strip()
+        if not line:
+            return "comment"
+        match = _line_type_re.match(line)
+    
+        if match is None:
+>           raise ValueError(f"Unrecognized QDP line: {line}")
+[1m[31mE           ValueError: Unrecognized QDP line: read terr 1[0m
+
+[1m[31mastropy/io/ascii/qdp.py[0m:78: ValueError
+==================================== PASSES ====================================
+[36m[1m=========================== short test summary info ============================[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_get_tables_from_qdp_file[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_roundtrip[False][0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_read_example[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_roundtrip_example[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_roundtrip_example_comma[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_read_write_simple[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_read_write_simple_specify_name[0m
+[32mPASSED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_get_lines_from_qdp[0m
+[31mFAILED[0m astropy/io/ascii/tests/test_qdp.py::[1mtest_roundtrip[True][0m - ValueError: Unrecognized QDP line: read terr 1
+[31m========================= [31m[1m1 failed[0m, [32m8 passed[0m[31m in 0.07s[0m[31m ==========================[0m
