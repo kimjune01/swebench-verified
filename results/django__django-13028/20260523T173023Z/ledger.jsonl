@@ -1,0 +1,6 @@
+{"instance": "django__django-13028", "stage": "start"}
+{"instance": "django__django-13028", "stage": "recon", "depth": 0, "wall_s": 198, "fixed_point": false}
+{"instance": "django__django-13028", "stage": "craft", "depth": 0, "wall_s": 299, "claim": true, "wants_rediagnose": false}
+{"instance": "django__django-13028", "stage": "audit", "depth": 0, "wall_s": 131, "verdict": "RESOLVED", "route": "none"}
+{"instance": "django__django-13028", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": null, "passgate_file": "/tmp/swebench-abduction/r4_passgate_django__django-13028.txt"}
+{"instance": "django__django-13028", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": null, "patch_bytes": 702, "patch_file": "/tmp/swebench-abduction/r4_patch_django__django-13028.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_django__django-13028.md"}

@@ -1,0 +1,39 @@
+# Recon: django__django-13028
+
+## Failure summary
+
+The tests `test_field_with_filterable` and `test_ticket8439` fail when filtering with model instances that have a `filterable` database field set to `False`. Django raises `NotSupportedError: ExtraInfo is disallowed in the filter clause` when executing `Author.objects.filter(extra=self.e2)` where `e2` is an `ExtraInfo` instance with `filterable=False`. The error message incorrectly suggests the entire ExtraInfo model is disallowed in filters, when in fact only the specific instance has a false `filterable` field value.
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 1125-1135: `check_filterable` method that incorrectly checks the `filterable` attribute on arbitrary objects instead of only SQL expressions
+
+## Root cause
+
+The `check_filterable` method uses `getattr(expression, 'filterable', True)` to determine if an expression can be used in a WHERE clause. This is designed to prevent SQL expressions like `Window` (which have a class attribute `filterable = False`) from being used in filters per SQL standard restrictions.
+
+However, the method doesn't verify that the object is actually a SQL expression (`BaseExpression` subclass) before checking the attribute. When a model instance is passed as a filter value, and that model has a database field named `filterable`, the method inadvertently reads the field value instead of checking for SQL expression metadata.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/sql/query.py:1127` — `if not getattr(expression, 'filterable', True):` checks any object without type discrimination
+- `django/db/models/expressions.py:138` — `BaseExpression` defines `filterable = True` as a class attribute for SQL expressions
+- `django/db/models/expressions.py:1063` — `Window` expression overrides with `filterable = False`
+- `tests/queries/models.py:45` — `ExtraInfo` model has `filterable = models.BooleanField(default=True)` database field
+- `tests/queries/tests.py:1215` — Test filters with `extra=self.e2` where `e2.filterable == False` (database field value)
+- `tests/expressions_window/tests.py:686` — Existing tests verify Window expressions correctly raise NotSupportedError when used in filters
+
+## Edit sites
+
+- `django/db/models/sql/query.py` lines 1125-1135: Modify `check_filterable` to only check the `filterable` attribute on `BaseExpression` instances. Add an `isinstance(expression, BaseExpression)` check before accessing the `filterable` attribute. `BaseExpression` is already imported at line 26.
+
+## Rejected hypotheses
+
+None — the code path is deterministic and the fix location is unambiguous.
+
+## Open questions
+
+None — the fix is straightforward: guard the `filterable` attribute access with an isinstance check.
+
+---STDERR---

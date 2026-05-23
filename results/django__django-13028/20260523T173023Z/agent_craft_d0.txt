@@ -1,0 +1,15 @@
+**RESOLVED**
+
+The fix is complete and verified:
+
+**Change:** Modified `check_filterable` in `django/db/models/sql/query.py:1125-1131` to only check the `filterable` attribute on `BaseExpression` instances, preventing false positives when model instances have a `filterable` database field.
+
+**Results:**
+- ✅ `test_field_with_filterable` passes
+- ✅ `test_ticket8439` passes  
+- ✅ Window expression filtering still correctly rejected (387 queries tests pass)
+- ✅ No regressions
+
+The fix allows model instances with a `filterable` field to be used in filters while maintaining SQL standard compliance for Window expressions.
+
+---STDERR---
