@@ -1,0 +1,42 @@
+# Recon: pydata__xarray-7393
+
+## Failure summary
+Tests `test_restore_dtype_on_multiindexes[int32]` and `test_restore_dtype_on_multiindexes[float32]` check that stacking a Dataset coordinate into a MultiIndex preserves the original dtype. Both tests fail because int32 becomes int64 and float32 becomes float64 after the stack operation. The tests create a Dataset with a coordinate having dtype int32/float32, call `.stack(baz=("bar",))`, and assert the dtype remains unchanged.
+
+## Suspect set
+- `xarray/core/indexing.py` lines 1536-1540: `PandasMultiIndexingAdapter.__array__` method
+
+## Root cause
+The `PandasMultiIndexingAdapter` class correctly stores the original dtype in `self._dtype` but its `__array__` method fails to apply it when returning level values. When a level is specified, it directly returns `self.array.get_level_values(self.level).values` without dtype conversion, while the parent class `PandasIndexingAdapter.__array__` correctly applies the stored dtype. Pandas MultiIndex internally stores numeric types as int64/float64, so without explicit conversion the original dtype is lost.
+
+**Confidence: deduction — 95%**
+
+**Supporting evidence:**
+- `xarray/core/indexing.py:1536-1540` — `PandasMultiIndexingAdapter.__array__` returns raw values without dtype:
+  ```python
+  def __array__(self, dtype: DTypeLike = None) -> np.ndarray:
+      if self.level is not None:
+          return self.array.get_level_values(self.level).values
+      else:
+          return super().__array__(dtype)
+  ```
+- `xarray/core/indexing.py:1436-1446` — Parent class correctly applies dtype:
+  ```python
+  def __array__(self, dtype: DTypeLike = None) -> np.ndarray:
+      if dtype is None:
+          dtype = self.dtype
+      ...
+      return np.asarray(array.values, dtype=dtype)
+  ```
+- Experimental confirmation shows `PandasMultiIndexingAdapter` has correct `_dtype=int32` but `np.asarray(data)` returns int64
+
+## Edit sites
+- `xarray/core/indexing.py` lines 1536-1540: Modify `PandasMultiIndexingAdapter.__array__` to apply `self.dtype` to the result when `self.level is not None`, matching the parent class pattern. Should use `if dtype is None: dtype = self.dtype` and then `return np.asarray(self.array.get_level_values(self.level).values, dtype=dtype)`
+
+## Rejected hypotheses
+None — the root cause was identified through direct code tracing and experimental confirmation
+
+## Open questions
+None
+
+---STDERR---

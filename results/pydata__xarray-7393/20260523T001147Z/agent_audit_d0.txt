@@ -1,0 +1,38 @@
+# Audit: pydata__xarray-7393
+
+## FAIL_TO_PASS
+- `test_restore_dtype_on_multiindexes[int32]`: **PASS** ✅
+- `test_restore_dtype_on_multiindexes[float32]`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 71 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The two FAIL_TO_PASS tests were the only failures on base, and they now pass.
+
+## Resolution Summary
+
+The patch successfully fixed the dtype preservation issue in `xarray/core/indexing.py`:
+
+**The fix:**
+```python
+def __array__(self, dtype: DTypeLike = None) -> np.ndarray:
+    if self.level is not None:
+        if dtype is None:
+            dtype = self.dtype  # Use stored dtype when none provided
+        return np.asarray(self.array.get_level_values(self.level).values, dtype=dtype)
+    else:
+        return super().__array__(dtype)
+```
+
+**Impact:**
+- Prevents pandas MultiIndex from upcasting int32→int64 and float32→float64
+- Aligns child class behavior with parent class pattern
+- Zero side effects on existing functionality
+
+**Gate results:** 73/73 tests passed, including both target tests that were failing on base.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
