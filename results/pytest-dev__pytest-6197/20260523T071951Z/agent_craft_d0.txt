@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Removed the eager `self._mount_obj_if_needed()` call from `Package.collect()` line 642. Both FAIL_TO_PASS tests now pass, and all existing tests remain passing. The lazy marker loading via `Package.obj` property access preserved the #5830 marker inheritance behavior without the eager import side effects.
+
+---STDERR---

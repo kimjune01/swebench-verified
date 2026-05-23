@@ -1,0 +1,33 @@
+Now I'll output the final recon report to stdout:
+
+# Recon: pytest-dev__pytest-6197
+
+## Failure summary
+The failing tests verify that pytest does not eagerly collect or import arbitrary __init__.py files during collection. `test_does_not_eagerly_collect_packages` creates a package with __init__.py containing `assert False` and expects pytest to succeed (the package has no test files, so should be ignored). `test_does_not_put_src_on_path` creates src/nope/__init__.py and expects that `import nope` fails in a test (src/ should not be on sys.path). Both tests fail because pytest 5.2.3 imports these __init__.py files during collection, triggering the assertion failure and adding src/ to sys.path respectively.
+
+## Suspect set
+- `src/_pytest/python.py` line 641: `Package.collect()` method calls `self._mount_obj_if_needed()` unconditionally
+- `src/_pytest/python.py` lines 260-268: `_mount_obj_if_needed()` imports the module via `_getobj()`
+- `src/_pytest/python.py` lines 508-530: `_importtestmodule()` performs the actual import via `fspath.pyimport(ensuresyspath=importmode)`
+
+## Root cause
+Package.collect() (line 641) calls `self._mount_obj_if_needed()` at the very beginning, before checking whether the package's __init__.py should actually be collected. This unconditionally imports every __init__.py file that pytest discovers, even those that don't match the python_files pattern and contain no tests. The call was added in commit 9275012ef to fix issue #5830 (ensuring markers like `pytestmark = pytest.mark.skip` in __init__.py apply to package tests), but it's too aggressive - it imports ALL packages, not just those being collected.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `src/_pytest/python.py:641` — `self._mount_obj_if_needed()` called at start of Package.collect()
+- `src/_pytest/python.py:260-268` — _mount_obj_if_needed() calls _getobj() which imports the module
+- `src/_pytest/python.py:444` — Package inherits Module._getobj() which calls _importtestmodule()
+- `src/_pytest/python.py:511` — _importtestmodule() uses fspath.pyimport(ensuresyspath=importmode), which imports the module and may modify sys.path
+
+## Edit sites
+- `src/_pytest/python.py` line 641: Remove the `self._mount_obj_if_needed()` call from the beginning of Package.collect(), allowing lazy import only when the package object is actually accessed (e.g., when checking markers for collected tests, or in Package.setup())
+
+## Competing hypotheses
+None - the root cause is clear from code tracing.
+
+## Open questions
+- Will removing the eager mount break the fix for issue #5830? The original issue required markers from __init__.py to be available for tests in the package. However, those markers should still be loaded lazily when test items access parent markers (triggering Package.obj property access). If PASS_TO_PASS tests exist for #5830, audit will catch any regression and the outer loop will iterate.
+
+---STDERR---

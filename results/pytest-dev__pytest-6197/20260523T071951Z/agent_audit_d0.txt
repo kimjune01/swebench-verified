@@ -1,0 +1,23 @@
+# Audit: pytest-dev__pytest-6197
+
+## FAIL_TO_PASS
+- testing/test_collection.py::test_does_not_eagerly_collect_packages: **PASSED** ✓
+- testing/test_collection.py::test_does_not_put_src_on_path: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None. All 146 PASS_TO_PASS tests passed successfully.
+
+## Pre-existing (not counted, confirmed against base capture)
+- testing/test_collection.py::TestPrunetraceback::test_collect_report_postprocessing: XFAIL (expected failure marked in test, not a regression)
+
+## Kill report
+N/A - patch is RESOLVED.
+
+**Gate summary**: 148 passed, 1 xfailed in 5.05s
+**Patch**: Single-line deletion of `self._mount_obj_if_needed()` call from `Package.collect()` line 642 in `src/_pytest/python.py`
+**Analysis**: Removing the eager mount prevents unconditional import of all `__init__.py` files. Markers are still loaded lazily when test items access parent markers via the `Package.obj` property, so marker inheritance (issue #5830) continues to work correctly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
