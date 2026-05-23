@@ -1,0 +1,15 @@
+**RESOLVED**
+
+The fix is complete and verified. The gate shows all 26 tests passing, including both FAIL_TO_PASS tests.
+
+## Summary
+
+**Root cause**: `SelectDateWidget.value_from_datadict()` only caught `ValueError` when constructing dates, but extremely large integers (> `sys.maxsize`) raise `OverflowError` instead.
+
+**Fix applied**: Added a separate `except OverflowError:` clause to return `"0-0-0"` for overflow cases, while preserving the existing `ValueError` behavior that returns partially invalid dates like `"2000-0-1"`.
+
+**Edit site**: `django/forms/widgets.py:1160` — inserted `except OverflowError: return "0-0-0"` before the existing `except ValueError:` clause.
+
+**Codex contribution**: Caught that my initial approach (combining both exceptions) would fail the test by returning `"9223372036854775808-12-1"` instead of `"0-0-0"`.
+
+---STDERR---

@@ -1,0 +1,36 @@
+# Recon: django__django-16667
+
+## Failure summary
+The tests verify that `SelectDateWidget` handles overflow conditions gracefully when extremely large integers (greater than `sys.maxsize`) are supplied as year, month, or day values. Currently, these inputs cause an unhandled `OverflowError` at `django/forms/widgets.py:1159` when `datetime.date(int(y), int(m), int(d))` is called. The tests expect the widget to return a pseudo-ISO date string like `"0-0-0"`, which the `DateField` validation then rejects with the error message `"Enter a valid date."` instead of crashing the server.
+
+## Suspect set
+- `django/forms/widgets.py` lines 1156-1165: `SelectDateWidget.value_from_datadict()` method — the try-except block only catches `ValueError` but not `OverflowError`
+
+## Root cause
+The `SelectDateWidget.value_from_datadict()` method attempts to construct a `datetime.date` object from user-supplied year, month, and day values. At line 1159, it calls `datetime.date(int(y), int(m), int(d))` inside a try-except block that only handles `ValueError`. When integers larger than `sys.maxsize` are passed to `datetime.date()`, Python raises `OverflowError` (not `ValueError`) because the integer cannot be converted to a C long. This exception propagates uncaught, crashing the form validation instead of gracefully handling the invalid input.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/forms/widgets.py:1159-1161` — Only catches `ValueError`:
+  ```python
+  try:
+      date_value = datetime.date(int(y), int(m), int(d))
+  except ValueError:
+      # Return pseudo-ISO dates with zeros for any unselected values,
+      # e.g. '2017-0-23'.
+      return "%s-%s-%s" % (y or 0, m or 0, d or 0)
+  ```
+- Python behavior confirmed: `datetime.date(sys.maxsize + 1, 3, 4)` raises `OverflowError: Python int too large to convert to C long`
+- The existing fallback path (returning pseudo-ISO date string) is the correct behavior — it just needs to trigger for `OverflowError` as well
+
+## Edit sites
+- `django/forms/widgets.py` line 1160: Change `except ValueError:` to `except (ValueError, OverflowError):` to catch both exception types that can arise from invalid date construction
+
+## Rejected hypotheses
+None — the root cause is unambiguous from the stack trace and code reading.
+
+## Open questions
+None — the fix is straightforward.
+
+---STDERR---

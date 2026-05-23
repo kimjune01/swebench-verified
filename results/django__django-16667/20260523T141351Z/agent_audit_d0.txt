@@ -1,0 +1,38 @@
+# Audit: django__django-16667
+
+## FAIL_TO_PASS
+- test_form_field (forms_tests.field_tests.test_datefield.DateFieldTest.test_form_field): **PASS** ✅
+- test_value_from_datadict (forms_tests.widget_tests.test_selectdatewidget.SelectDateWidgetTest.test_value_from_datadict): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 24 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None — both FAIL_TO_PASS tests were failing with ERROR on base (OverflowError), not pre-existing test suite issues.
+
+## Gate result
+All 26 tests passed in 0.076s. Both FAIL_TO_PASS tests now pass, zero regressions introduced.
+
+## Patch applied
+```diff
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 842b73e95c..6f6cbca8dc 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -1157,6 +1157,8 @@ class SelectDateWidget(Widget):
+             input_format = formats.sanitize_strftime_format(input_format)
+             try:
+                 date_value = datetime.date(int(y), int(m), int(d))
++            except OverflowError:
++                return "0-0-0"
+             except ValueError:
+                 # Return pseudo-ISO dates with zeros for any unselected values,
+                 # e.g. '2017-0-23'.
+```
+
+The fix correctly handles integer overflow by adding a dedicated `except OverflowError:` handler that returns `"0-0-0"`, which DateField validation then rejects with "Enter a valid date." This matches the expected behavior from the tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

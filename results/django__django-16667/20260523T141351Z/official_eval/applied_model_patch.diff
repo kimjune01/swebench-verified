@@ -1,0 +1,13 @@
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 842b73e95c..6f6cbca8dc 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -1157,6 +1157,8 @@ class SelectDateWidget(Widget):
+             input_format = formats.sanitize_strftime_format(input_format)
+             try:
+                 date_value = datetime.date(int(y), int(m), int(d))
++            except OverflowError:
++                return "0-0-0"
+             except ValueError:
+                 # Return pseudo-ISO dates with zeros for any unselected values,
+                 # e.g. '2017-0-23'.
