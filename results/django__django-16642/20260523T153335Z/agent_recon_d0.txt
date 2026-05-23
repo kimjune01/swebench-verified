@@ -1,0 +1,54 @@
+# Recon: django__django-16642
+
+## Failure summary
+
+The test `test_compressed_response` verifies that compressed file responses serve the compression format's MIME type (e.g., `application/x-brotli` for `.br` files) rather than the base file's MIME type (e.g., `application/x-tar`). This prevents browsers from automatically decompressing files when they see a Content-Encoding header. The test fails for `.tar.br` and `.tar.Z` files because FileResponse returns `application/x-tar` instead of the expected `application/x-brotli` and `application/x-compress` respectively.
+
+**Error messages:**
+- `.tar.br`: `AssertionError: 'application/x-tar' != 'application/x-brotli'`
+- `.tar.Z`: `AssertionError: 'application/x-tar' != 'application/x-compress'`
+
+## Suspect set
+
+- `django/http/response.py` lines 608-617: FileResponse.set_headers() method's MIME type detection logic
+
+## Root cause
+
+When FileResponse determines the Content-Type for a file, it calls `mimetypes.guess_type(filename)` which returns a tuple of `(content_type, encoding)`. For compressed files like `test.tar.br`, this returns `("application/x-tar", "br")`. 
+
+To prevent browsers from auto-decompressing files, FileResponse maps the encoding value to a compression-specific MIME type using a dictionary at lines 611-615. However, this dictionary only contains three entries: `{"bzip2": "application/x-bzip", "gzip": "application/gzip", "xz": "application/x-xz"}`. When the encoding is `"br"` or `"compress"`, the dictionary lookup via `.get(encoding, content_type)` falls back to the base content_type (`"application/x-tar"`), which is incorrect.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/http/response.py:611-615` — Dictionary contains only 3 encodings: bzip2, gzip, xz
+- Verified via Python REPL: `mimetypes.guess_type("test.tar.br")` returns `("application/x-tar", "br")`
+- Verified via Python REPL: `mimetypes.guess_type("test.tar.Z")` returns `("application/x-tar", "compress")`
+- `tests/responses/test_fileresponse.py:256-265` — Test expects `application/x-brotli` for `.tar.br` and `application/x-compress` for `.tar.Z`
+
+## Edit sites
+
+- `django/http/response.py` lines 611-615: Add two missing entries to the encoding-to-MIME-type mapping dictionary:
+  - Add `"br": "application/x-brotli"` for Brotli compression
+  - Add `"compress": "application/x-compress"` for Unix compress (.Z files)
+
+The dictionary should become:
+```python
+{
+    "bzip2": "application/x-bzip",
+    "gzip": "application/gzip",
+    "xz": "application/x-xz",
+    "br": "application/x-brotli",
+    "compress": "application/x-compress",
+}
+```
+
+## Rejected hypotheses
+
+None. The root cause is directly observable from the code and test failures.
+
+## Open questions
+
+None. The fix is straightforward.
+
+---STDERR---

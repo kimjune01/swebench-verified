@@ -1,0 +1,23 @@
+# Audit: django__django-16642
+
+## FAIL_TO_PASS
+- test_compressed_response (If compressed responses are served with the uncompressed Content-Type): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 22 tests pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The baseline showed `.tar.br` and `.tar.Z` subtests failing; now all pass.
+
+## Gate output
+All 22 tests in `responses.test_fileresponse` passed in 0.004s.
+
+**Full contract met:**
+- All FAIL_TO_PASS tests now pass ✓
+- Zero PASS_TO_PASS regressions ✓
+- Fix correctly maps Brotli (`"br": "application/x-brotli"`) and Unix compress (`"compress": "application/x-compress"`) encodings to proper MIME types
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

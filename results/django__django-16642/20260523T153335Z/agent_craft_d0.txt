@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed on the first gate iteration. Added the missing `"br": "application/x-brotli"` and `"compress": "application/x-compress"` entries to the encoding dictionary in FileResponse.set_headers(), allowing compressed `.tar.br` and `.tar.Z` files to be served with their correct compression-specific MIME types instead of falling back to the base `application/x-tar`.
+
+---STDERR---
