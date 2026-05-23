@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully resolved the issue in a single gate iteration. The `Y()` method in `django/utils/dateformat.py` now returns a 4-digit zero-padded year string (`'%04d' % self.data.year`) instead of an unformatted integer, matching the pattern used in the previously-fixed `y()` method. All tests pass, including `test_Y_format_year_before_1000`.
+
+---STDERR---

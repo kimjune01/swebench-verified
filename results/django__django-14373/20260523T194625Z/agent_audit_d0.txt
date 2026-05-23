@@ -1,0 +1,23 @@
+# Audit: django__django-14373
+
+## Patch Applied
+The craft edit changed `DateFormat.Y()` from `return self.data.year` to `return '%04d' % self.data.year` in `django/utils/dateformat.py:317`.
+
+## FAIL_TO_PASS
+- test_Y_format_year_before_1000: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none — all 19 PASS_TO_PASS tests remain passing
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+Not applicable — patch successfully resolves the issue with zero regressions.
+
+The fix formats the year as a zero-padded 4-digit string, ensuring year 1 renders as "0001" instead of "1", matching the documented behavior and test expectation.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

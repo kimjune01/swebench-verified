@@ -1,0 +1,36 @@
+# Recon: django__django-14373
+
+## Failure summary
+
+The test `test_Y_format_year_before_1000` validates that the 'Y' format specifier returns a 4-digit zero-padded year string. When formatting `datetime(1, 1, 1)` with format 'Y', it expects `'0001'` but receives `'1'`. The test assertion fails: `AssertionError: '1' != '0001'`.
+
+## Suspect set
+
+- `django/utils/dateformat.py` lines 315-317: The `Y()` method in the `DateFormat` class that handles the 'Y' format specifier
+
+## Root cause
+
+The `Y()` method returns `self.data.year` as a raw integer, which the `Formatter.format()` method converts to a string via `str()` without zero-padding. For year 1, this produces `'1'` instead of `'0001'`. The method should format the year as a 4-digit zero-padded string.
+
+This is identical to a previously-fixed bug in the `y()` method. Git commit 895f6e4992 ("Fixed #32149 -- Added support for years < 1000 to DateFormat.y()") changed the 2-digit year formatter from `str(self.data.year)[2:]` to `'%02d' % (self.data.year % 100)`, but the same fix was not applied to the 4-digit `Y()` formatter.
+
+**Confidence:** Deduction — 99%
+
+**Supporting evidence:**
+- `django/utils/dateformat.py:315-317` — `def Y(self): ... return self.data.year` (returns unformatted integer)
+- `django/utils/dateformat.py:310-312` — `def y(self): ... return '%02d' % (self.data.year % 100)` (correctly formats with zero-padding)
+- `django/utils/dateformat.py:43` — `pieces.append(str(getattr(self, piece)()))` (the Formatter stringifies the return value)
+
+## Edit sites
+
+- `django/utils/dateformat.py` line 317: Change `return self.data.year` to `return '%04d' % self.data.year` to format the year as a 4-digit zero-padded string, mirroring the fix previously applied to the `y()` method.
+
+## Rejected hypotheses
+
+None — the root cause is directly visible in the code.
+
+## Open questions
+
+None — the fix is straightforward and follows the established pattern from the `y()` method fix.
+
+---STDERR---
