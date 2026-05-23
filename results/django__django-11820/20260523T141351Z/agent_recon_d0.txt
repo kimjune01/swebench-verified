@@ -1,0 +1,55 @@
+# Recon: django__django-11820
+
+## Failure summary
+
+Two tests in `invalid_models_tests.test_models.OtherModelTests` are failing:
+
+1. **test_ordering_pointing_to_related_model_pk**: Tests that `ordering = ('parent__pk',)` should be valid (no errors), but Django raises models.E015 error claiming 'parent__pk' is nonexistent.
+
+2. **test_ordering_pointing_multiple_times_to_model_fields**: Tests that `ordering = ('parent__field1__field2',)` should raise E015 (because field1 is CharField, not a relation, so field2 is invalid), but Django returns no errors.
+
+This is a regression introduced in commit 440505cb2c which added validation for related fields in Meta.ordering.
+
+## Suspect set
+
+- `django/db/models/base.py` lines 1706-1724: The related fields validation loop in `_check_ordering()` method
+
+## Root cause
+
+The related fields validation loop has two bugs:
+
+**Bug 1 - 'pk' alias not recognized**: When validating `parent__pk`, the code calls `_cls._meta.get_field('pk')` after traversing to the Parent model. Since 'pk' is an alias (not an actual field), `get_field()` raises FieldDoesNotExist. The except handler then checks `fld.get_transform('pk')` which returns None, causing E015 to be incorrectly raised.
+
+**Bug 2 - Non-relation fields allow invalid continuation**: When validating `parent__field1__field2`, after getting field1 (a CharField), the code doesn't update `_cls` because `fld.is_relation` is False. On the next iteration, it looks up 'field2' on the Parent model (not as a transform on the CharField), which succeeds when it shouldn't.
+
+The code path for `parent__pk`:
+- `part='parent'`: Gets ForeignKey, `_cls` becomes Parent model
+- `part='pk'`: `get_field('pk')` raises FieldDoesNotExist → `get_transform('pk')` returns None → E015 raised ❌
+
+The code path for `parent__field1__field2`:  
+- `part='parent'`: Gets ForeignKey, `_cls` becomes Parent model
+- `part='field1'`: Gets CharField, `is_relation=False`, `_cls` stays Parent
+- `part='field2'`: Gets field2 from Parent model (wrong!) → No error ❌
+
+**Confidence**: deduction - 95%
+
+Supporting evidence:
+- `django/db/models/base.py:1711` - `fld = _cls._meta.get_field(part)` doesn't handle 'pk' alias
+- `django/db/models/base.py:1713` - Only updates `_cls` when `fld.is_relation` is True, leaving non-relation fields incorrectly positioned for next iteration
+- `django/db/models/base.py:1725-1727` - Comment shows 'pk' is recognized as a special alias for non-related fields
+
+## Edit sites
+
+- `django/db/models/base.py` lines 1706-1724: Modify the related fields validation loop to:
+  1. Before calling `get_field(part)`, check if `part == 'pk'` - if so, treat it as valid (it's an alias for the model's primary key). For a related field like `parent__pk`, 'pk' is valid after traversing to the related model.
+  2. After successfully getting a field with `is_relation=False`, ensure that any remaining parts in the path are validated as transforms/lookups on that field (via `get_transform()`), not as fields on `_cls`. The current code continues using `_cls._meta.get_field()` which looks up fields on the wrong model.
+
+## Rejected hypotheses
+
+None - the issue is clearly localized to the related field validation loop added in commit 440505cb2c.
+
+## Open questions
+
+- Should `pk` be valid only as the last part of a related field path, or also in the middle (e.g., `parent__pk__something`)? Based on Django's alias semantics, 'pk' should resolve to the actual primary key field, so it should be treatable like any other field (can be followed by transforms/lookups).
+
+---STDERR---

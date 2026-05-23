@@ -1,0 +1,10 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix addresses the two bugs in Django's ordering validation:
+
+1. **Bug 1 (pk alias)**: Now recognizes 'pk' as a valid alias by resolving it to `_cls._meta.pk` instead of raising FieldDoesNotExist
+2. **Bug 2 (non-relation fields)**: After encountering a non-relation field, subsequent parts are validated as transforms (via `get_transform()`) rather than being looked up as fields on the wrong model
+
+The patch was refined based on codex feedback to ensure 'pk' is only valid when traversing models, not after non-relation fields.
+
+---STDERR---

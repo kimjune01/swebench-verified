@@ -1,0 +1,23 @@
+# Audit: django__django-11820
+
+## FAIL_TO_PASS
+- `test_ordering_pointing_multiple_times_to_model_fields`: **PASS** ✓
+- `test_ordering_pointing_to_related_model_pk`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 65 tests passed (2 skipped)
+
+## Pre-existing failures (not counted)
+**None** - clean gate run
+
+## Summary
+The craft patch successfully resolves both FAIL_TO_PASS tests with zero regressions. The fix correctly:
+1. Handles 'pk' alias by resolving it to `_cls._meta.pk` before field lookup
+2. Validates that non-relation fields cannot be traversed as model fields
+
+Full test suite: 65 tests ran, all OK.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
