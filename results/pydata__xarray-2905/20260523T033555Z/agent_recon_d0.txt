@@ -1,0 +1,33 @@
+# Recon: pydata__xarray-2905
+
+## Failure summary
+Test `xarray/tests/test_variable.py::TestAsCompatibleData::test_unsupported_type` fails when creating a Variable with a custom object that has a `.values` attribute. The test creates a `CustomWithValuesAttr` object containing `np.arange(3)` in its `.values` attribute, then attempts to store this object as a scalar in a 0-dimensional Variable via `Variable(dims=(), data=array)`. The test expects the Variable's `_data` to be a 0-dimensional numpy array containing the custom object as a scalar, but instead the Variable constructor extracts the `.values` attribute (a 1D array with 3 elements), resulting in a dimension mismatch error: `ValueError: dimensions () must have the same length as the number of data dimensions, ndim=1`.
+
+## Suspect set
+- `xarray/core/variable.py` lines 189-260: The `as_compatible_data()` function that processes data before storing it in a Variable, specifically line 221 which unconditionally extracts `.values` attributes from any object.
+
+## Root cause
+The `as_compatible_data()` function at line 221 uses `data = getattr(data, "values", data)` to extract the `.values` attribute from objects. This line is too broad—it extracts `.values` from ANY object that has one, not just pandas/xarray objects as intended by the docstring. The docstring states: "If data is already a pandas or xarray object (other than an Index), just use the values." But the implementation doesn't check the object type, causing arbitrary objects like `CustomWithValuesAttr` to have their `.values` attribute extracted when they should be treated as opaque objects. This was introduced in PR #1746 (commit 5e801894) to handle vectorized item assignment.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `xarray/core/variable.py:221` — `data = getattr(data, "values", data)` extracts `.values` without type checking
+- `xarray/core/variable.py:195-197` — Docstring states pandas/xarray objects should have values extracted, but implementation doesn't enforce this
+- Test creates `CustomWithValuesAttr(np.arange(3))` where `.values = np.arange(3)` (shape (3,))
+- Variable constructor expects `dims=()` (0-dimensional) but receives 1-dimensional data after extraction
+- Type hierarchy: `pd.Series` and `pd.DataFrame` inherit from `pd.core.generic.NDFrame`; `DataArray` and `Dataset` inherit from `common.DataWithCoords`; these are the types that should have `.values` extracted
+
+## Edit sites
+- `xarray/core/variable.py` lines 220-221: Replace `data = getattr(data, "values", data)` with explicit type checking using `isinstance(data, (pd.core.generic.NDFrame, common.DataWithCoords))` to only extract `.values` from pandas Series/DataFrame and xarray DataArray/Dataset, not from arbitrary objects. Keep the comment but clarify that this only applies to specific pandas/xarray types.
+
+## Competing hypotheses
+None - the root cause is clear from code inspection and the failure mode directly matches the problematic line.
+
+## Rejected hypotheses
+None - this is the initial diagnosis.
+
+## Open questions
+None - the fix location is confirmed as the only place in variable.py that extracts `.values`, and the type hierarchy has been verified to ensure the proposed fix correctly targets only pandas Series/DataFrame and xarray DataArray/Dataset.
+
+---STDERR---

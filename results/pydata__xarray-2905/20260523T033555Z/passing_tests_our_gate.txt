@@ -1,0 +1,302 @@
+$ pytest -rA xarray/tests/test_variable.py
+
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile[axis3-dim3-q1-True]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile[axis3-dim3-q1-False]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile[axis3-dim3-q2-True]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile[axis3-dim3-q2-False]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[1-y-0.25]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[1-y-q1]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[1-y-q2]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[axis1-dim1-0.25]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[axis1-dim1-q1]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_dask[axis1-dim1-q2]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_chunked_dim_error
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_out_of_bounds[-0.1]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_out_of_bounds[1.1]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_out_of_bounds[q2]
+PASSED xarray/tests/test_variable.py::TestVariable::test_quantile_out_of_bounds[q3]
+PASSED xarray/tests/test_variable.py::TestVariable::test_rank_dask_raises
+PASSED xarray/tests/test_variable.py::TestVariable::test_rank
+PASSED xarray/tests/test_variable.py::TestVariable::test_big_endian_reduce
+PASSED xarray/tests/test_variable.py::TestVariable::test_reduce_funcs
+PASSED xarray/tests/test_variable.py::TestVariable::test_reduce_keepdims
+PASSED xarray/tests/test_variable.py::TestVariable::test_reduce_keepdims_dask
+PASSED xarray/tests/test_variable.py::TestVariable::test_reduce_keep_attrs
+PASSED xarray/tests/test_variable.py::TestVariable::test_binary_ops_keep_attrs
+PASSED xarray/tests/test_variable.py::TestVariable::test_count
+PASSED xarray/tests/test_variable.py::TestVariable::test_setitem
+PASSED xarray/tests/test_variable.py::TestVariable::test_setitem_fancy
+PASSED xarray/tests/test_variable.py::TestVariable::test_coarsen
+PASSED xarray/tests/test_variable.py::TestVariable::test_coarsen_2d
+PASSED xarray/tests/test_variable.py::TestVariable::test_coarsen_keep_attrs
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_properties
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_attrs
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_dict
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_1d
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_with_mask
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_with_mask_size_zero
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_int
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_float
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_string
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_datetime
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_timedelta64
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_not_a_time
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_0d_object
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_index_and_concat_datetime
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_0d_time_data
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_datetime64_conversion
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_timedelta64_conversion
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_object_conversion
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_datetime64_valid_range
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pandas_data
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pandas_period_index
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_1d_math
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_1d_reduce
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test___array__
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_equals_all_dtypes
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_encoding_preserved
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_concat
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_concat_attrs
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_concat_fixed_len_str
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_concat_number_strings
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_concat_mixed_dtypes
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[float-True]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[float-False]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[int-True]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[int-False]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[str-True]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy[str-False]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy_with_data
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy_with_data_errors
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy_index_with_data
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_copy_index_with_data_errors
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_replace
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_real_and_imag
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_aggregate_complex
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pandas_cateogrical_dtype
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pandas_datetime64_with_tz
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_multiindex
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_load
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_advanced
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_uint_1d
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_uint
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_0d_array
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_error
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-mean]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-edge]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-maximum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-minimum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-symmetric]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-wrap]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-mean]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-edge]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-maximum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-minimum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-symmetric]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-wrap]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-mean]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-edge]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-maximum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-minimum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-symmetric]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-wrap]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-mean]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-edge]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-maximum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-minimum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-symmetric]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-wrap]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-mean]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-edge]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-maximum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-minimum]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-symmetric]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-wrap]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad_constant_values[xr_arg0-np_arg0]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad_constant_values[xr_arg1-np_arg1]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad_constant_values[xr_arg2-np_arg2]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad_constant_values[xr_arg3-np_arg3]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_pad_constant_values[xr_arg4-np_arg4]
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_rolling_window
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_fancy
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_1d_fancy
+PASSED xarray/tests/test_variable.py::TestVariableWithDask::test_getitem_with_mask_nd_indexer
+PASSED xarray/tests/test_variable.py::TestVariableWithSparse::test_as_sparse
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_properties
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_attrs
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_dict
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_1d
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_1d_fancy
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_with_mask
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_with_mask_size_zero
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_with_mask_nd_indexer
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_int
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_float
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_string
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_datetime
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_timedelta64
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_not_a_time
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_0d_object
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_0d_object_array_with_list
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_index_and_concat_datetime
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_0d_time_data
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_datetime64_conversion
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_timedelta64_conversion
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_object_conversion
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_datetime64_valid_range
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_pandas_data
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_pandas_period_index
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_1d_math
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_1d_reduce
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_array_interface
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test___array__
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_equals_all_dtypes
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_eq_all_dtypes
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_encoding_preserved
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_attrs
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_fixed_len_str
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_number_strings
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_mixed_dtypes
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[float-True]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[float-False]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[int-True]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[int-False]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[str-True]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy[str-False]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy_index
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy_with_data
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy_with_data_errors
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy_index_with_data
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_copy_index_with_data_errors
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_replace
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_real_and_imag
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_aggregate_complex
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_pandas_cateogrical_dtype
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_pandas_datetime64_with_tz
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_multiindex
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_load
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_uint_1d
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_getitem_0d_array
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_init
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_to_index
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_multiindex_default_level_names
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_data
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_name
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_level_names
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_get_level_variable
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_periods
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_multiindex
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_str_dtype[str]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_concat_str_dtype[bytes]
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_coordinate_alias
+PASSED xarray/tests/test_variable.py::TestIndexVariable::test_datetime64
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_unchanged_types
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_converted_types
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_masked_array
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_datetime
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_full_like
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_full_like_dask
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_zeros_like
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_ones_like
+PASSED xarray/tests/test_variable.py::TestAsCompatibleData::test_unsupported_type
+PASSED xarray/tests/test_variable.py::test_raise_no_warning_for_nan_in_binary_ops
+PASSED xarray/tests/test_variable.py::TestBackendIndexing::test_NumpyIndexingAdapter
+PASSED xarray/tests/test_variable.py::TestBackendIndexing::test_LazilyOuterIndexedArray
+PASSED xarray/tests/test_variable.py::TestBackendIndexing::test_CopyOnWriteArray
+PASSED xarray/tests/test_variable.py::TestBackendIndexing::test_MemoryCachedArray
+PASSED xarray/tests/test_variable.py::TestBackendIndexing::test_DaskIndexingAdapter
+XFAIL xarray/tests/test_variable.py::TestVariable::test_timedelta64_valid_range - pandas issue 36615
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_timedelta64_valid_range - pandas issue 36615
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-median] - median is not implemented by Dask
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-median] - median is not implemented by Dask
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-median] - median is not implemented by Dask
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-reflect] - dask.array.pad bug
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-median] - median is not implemented by Dask
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-reflect] - dask.array.pad bug
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-median] - median is not implemented by Dask
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-reflect] - dask.array.pad bug
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_0d_object_array_with_list
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_array_interface
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_copy_index
+XFAIL xarray/tests/test_variable.py::TestVariableWithDask::test_eq_all_dtypes
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_timedelta64_valid_range - pandas issue 36615
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_getitem_error
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_getitem_advanced
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_getitem_fancy
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_getitem_uint
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-mean]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-median]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-reflect]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-edge]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-linear_ramp]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-maximum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-minimum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-symmetric]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg0-np_arg0-wrap]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-mean]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-median]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-reflect]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-edge]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-linear_ramp]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-maximum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-minimum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-symmetric]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg1-np_arg1-wrap]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-mean]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-median]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-reflect]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-edge]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-linear_ramp]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-maximum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-minimum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-symmetric]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg2-np_arg2-wrap]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-mean]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-median]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-reflect]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-edge]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-linear_ramp]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-maximum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-minimum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-symmetric]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg3-np_arg3-wrap]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-mean]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-median]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-reflect]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-edge]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-linear_ramp]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-maximum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-minimum]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-symmetric]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad[xr_arg4-np_arg4-wrap]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad_constant_values[xr_arg0-np_arg0]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad_constant_values[xr_arg1-np_arg1]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad_constant_values[xr_arg2-np_arg2]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad_constant_values[xr_arg3-np_arg3]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_pad_constant_values[xr_arg4-np_arg4]
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_rolling_window
+XFAIL xarray/tests/test_variable.py::TestIndexVariable::test_coarsen_2d
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg0-np_arg0-median] median is not implemented by Dask
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg0-np_arg0-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg0-np_arg0-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg1-np_arg1-median] median is not implemented by Dask
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg1-np_arg1-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg1-np_arg1-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg2-np_arg2-median] median is not implemented by Dask
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg2-np_arg2-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg2-np_arg2-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg3-np_arg3-median] median is not implemented by Dask
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg3-np_arg3-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg3-np_arg3-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg4-np_arg4-median] median is not implemented by Dask
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg4-np_arg4-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariable::test_pad[xr_arg4-np_arg4-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg0-np_arg0-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-reflect] dask.array.pad bug
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg1-np_arg1-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg2-np_arg2-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg3-np_arg3-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+XPASS xarray/tests/test_variable.py::TestVariableWithDask::test_pad[xr_arg4-np_arg4-linear_ramp] pint bug: https://github.com/hgrecco/pint/issues/1026
+========== 365 passed, 71 xfailed, 22 xpassed, 112 warnings in 14.95s ==========

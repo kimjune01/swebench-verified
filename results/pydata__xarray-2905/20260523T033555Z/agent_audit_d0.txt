@@ -1,0 +1,21 @@
+# Audit: pydata__xarray-2905
+
+## FAIL_TO_PASS
+- `xarray/tests/test_variable.py::TestAsCompatibleData::test_unsupported_type`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- All 71 XFAIL tests match baseline exactly (pandas/dask known issues)
+- 22 XPASS tests are improvements, not failures
+
+## Summary
+The craft patch successfully restricts `.values` extraction to only pandas Series/DataFrame (via `pd.core.generic.NDFrame`) and xarray DataArray/Dataset (via `common.DataWithCoords`). Custom objects with `.values` attributes are now correctly treated as opaque scalars instead of being unpacked.
+
+Gate results: 365 passed, 71 xfailed, 22 xpassed — identical to baseline except the FAIL_TO_PASS test now passes.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

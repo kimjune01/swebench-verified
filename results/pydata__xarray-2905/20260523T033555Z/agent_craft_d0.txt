@@ -1,0 +1,13 @@
+Good findings from codex. Key points:
+
+1. **Fix works** - Gate passes with 365 tests passing, `test_unsupported_type` now passes ✓
+2. **Dataset.values quirk** - Dataset.values is a method (not array data), but this matches existing behavior and doesn't cause test failures
+3. **Private API** - Uses `pd.core.generic.NDFrame` (pandas internal), but this is what recon specified and is consistent with the codebase
+4. **Test exists** - `test_unsupported_type` already exists in the test suite, so the behavior is locked down
+5. **Behavioral change** - Third-party duck objects with `.values` will no longer be auto-unpacked, which is the intended fix
+
+The gate is green, the FAIL_TO_PASS test passes, and no regressions were detected. The codex concerns about Dataset.values being a method and using pandas private API are noted but don't block resolution since the gate outcome is the final arbiter.
+
+**Final status: RESOLVED** - The fix successfully addresses the root cause identified by recon, makes the failing test pass, and introduces no regressions.
+
+---STDERR---
