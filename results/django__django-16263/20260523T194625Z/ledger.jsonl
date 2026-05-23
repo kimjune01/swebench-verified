@@ -1,0 +1,11 @@
+{"instance": "django__django-16263", "stage": "start"}
+{"instance": "django__django-16263", "stage": "recon", "depth": 0, "wall_s": 337, "fixed_point": false}
+{"instance": "django__django-16263", "stage": "craft", "depth": 0, "wall_s": 998, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-16263", "stage": "recon", "depth": 1, "wall_s": 407, "fixed_point": false}
+{"instance": "django__django-16263", "stage": "craft", "depth": 1, "wall_s": 988, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-16263", "stage": "recon", "depth": 2, "wall_s": 585, "fixed_point": false}
+{"instance": "django__django-16263", "stage": "craft", "depth": 2, "wall_s": 626, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-16263", "stage": "audit", "depth": 2, "wall_s": 110, "verdict": "PARTIAL", "route": "recon"}
+{"instance": "django__django-16263", "stage": "halt", "msg": "depth budget exhausted at PARTIAL"}
+{"instance": "django__django-16263", "stage": "verify_gate", "agent_verdict": "PARTIAL", "driver_f2p_pass": null, "passgate_file": "/tmp/swebench-abduction/r4_passgate_django__django-16263.txt"}
+{"instance": "django__django-16263", "stage": "done", "final_verdict": "PARTIAL", "driver_f2p_pass": null, "patch_bytes": 10292, "patch_file": "/tmp/swebench-abduction/r4_patch_django__django-16263.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_django__django-16263.md"}

@@ -1,0 +1,62 @@
+# Recon: django__django-16263
+
+## Failure summary
+
+Three tests verify that Django prunes unused annotations from count() queries:
+- `test_non_aggregate_annotation_pruned`: Tests that non-aggregate annotations like `Lower("name")` are excluded from the SQL when calling `.annotate(name_lower=Lower("name")).count()`
+- `test_unreferenced_aggregate_annotation_pruned`: Tests that unreferenced aggregate annotations like `Count("authors")` are excluded when calling `.annotate(authors_count=Count("authors")).count()`
+- `test_unused_aliased_aggregate_pruned`: Tests that aliased aggregates are excluded when calling `.alias(authors_count=Count("authors")).count()`
+
+The first test fails with: `AssertionError: 'name_lower' unexpectedly found in 'select lower("aggregation_book"."name") as "name_lower", count(*) as "__count" from "aggregation_book"'`
+
+The annotation `name_lower` appears in the SELECT clause even though it's not referenced anywhere. Only `__count` should be selected.
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 483-610: `get_aggregation()` method - handles count queries and annotation pruning
+- Specifically lines 597-600: the non-subquery else branch that doesn't set annotation_select_mask
+
+## Root cause
+
+The `get_aggregation()` method computes which existing annotations are referenced (via `_get_referenced_annotations()`), and correctly prunes unreferenced annotations in the **subquery path** by calling `inner_query.set_annotation_mask(referenced_annotations)`.
+
+However, in the **non-subquery path** (the else branch at lines 597-600), it only clears `select`, `default_cols`, and `extra`, but never sets the annotation mask. This means all annotations in `annotation_select` remain selected, including unreferenced ones.
+
+The non-subquery path is taken when `existing_annotations` is empty. This happens when:
+1. Non-aggregate annotations are present (like `Lower("name")`) - they don't have `contains_aggregate`, so they don't populate `existing_annotations`
+2. Only aliased annotations are present - `.alias()` annotations aren't in `annotation_select`
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `query.py:548-551` — subquery path sets mask: `inner_query.set_annotation_mask(referenced_annotations) ... else: inner_query.set_annotation_mask(set())`
+- `query.py:597-600` — non-subquery path missing: `outer_query = self; self.select = (); self.default_cols = False; self.extra = {}`
+- `query.py:500-502` — referenced_annotations is computed but not used in non-subquery path
+- `query.py:504-508` — only annotations with contains_aggregate go into existing_annotations
+
+## Edit sites
+
+- `django/db/models/sql/query.py` line 600 (after the `self.extra = {}` line): Add a call to prune unreferenced annotations in the non-subquery path:
+  ```python
+  self.set_annotation_mask(referenced_annotations | set(added_aggregate_names))
+  ```
+  This will include only:
+  - Existing annotations that are actually referenced (`referenced_annotations`)
+  - Newly added aggregates like `__count` (`added_aggregate_names`)
+  
+  All unreferenced annotations will be excluded from the SELECT clause.
+
+## Rejected hypotheses
+
+None - this is the first diagnosis after audit kill. Previous diagnosis details not available.
+
+## Open questions
+
+The test run shows SQL syntax errors in other tests (`test_ticket12886`, `test_values_aggregation`). These may be:
+1. Pre-existing failures unrelated to this issue
+2. Side effects of a previous incomplete fix attempt that the audit killed
+3. A symptom of the same root cause manifesting differently
+
+The three target tests fail with the expected symptom (annotations not pruned), so the diagnosis focuses on that primary issue.
+
+---STDERR---

@@ -1,0 +1,51 @@
+# Audit: django__django-16263
+
+## FAIL_TO_PASS
+- test_non_aggregate_annotation_pruned: PASS ✓
+- test_unreferenced_aggregate_annotation_pruned: ERROR - `sqlite3.OperationalError: near "FROM": syntax error` at query.py:586 in get_aggregation()
+- test_unused_aliased_aggregate_pruned: PASS ✓
+
+## PASS_TO_PASS regressions
+- test_aggregation_subquery_annotation_multivalued: ERROR - `sqlite3.OperationalError: near "FROM": syntax error` (confirmed passing in baseline as "ok")
+- test_aggregation_default_after_annotation: FAIL - AssertionError: 0 != 40 (expected value not computed)
+- test_annotate_values_aggregate: FAIL - AssertionError: 0 != 337 (expected value not computed)
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+
+**For RE-ENTER: recon** (1 out of 3 FAIL_TO_PASS still failing indicates the fix is partially effective but the diagnosis missed something):
+
+### Failing FAIL_TO_PASS test
+`test_unreferenced_aggregate_annotation_pruned` errors with `sqlite3.OperationalError: near "FROM": syntax error` when executing the count query. The SQL compiler is generating invalid SQL with an empty SELECT clause before FROM.
+
+**Stack trace:**
+```
+File "/testbed/django/db/models/query.py", line 625, in count
+    return self.query.get_count(using=self.db)
+File "/testbed/django/db/models/sql/query.py", line 601, in get_count  
+    return obj.get_aggregation(using, ["__count"])["__count"]
+File "/testbed/django/db/models/sql/query.py", line 586, in get_aggregation
+    result = compiler.execute_sql(SINGLE)
+```
+
+**What this implicates:**
+The patch's annotation pruning logic (via `set_annotation_mask()`) is removing all annotations from the SELECT clause in cases where GROUP BY is present, creating malformed SQL. The subquery path in `get_aggregation()` is setting an annotation mask that results in zero selected fields before the FROM clause.
+
+**Evidence from regressions:**
+The SQL syntax error also affects `test_aggregation_subquery_annotation_multivalued` (a PASS_TO_PASS test), suggesting the mask-based pruning approach breaks GROUP BY queries more broadly. The two FAIL assertions (0 vs expected values) indicate annotations that should be included are being incorrectly pruned, causing aggregate calculations to return 0.
+
+**Root cause pattern:**
+The annotation mask approach conflicts with Django's SQL compiler requirements for GROUP BY queries. When the mask excludes all annotations but a GROUP BY is present, the compiler generates `SELECT FROM ...` (invalid). The safeguards that should add PK to an empty SELECT (lines 534-541 per hypothesis graph) aren't working, OR the mask is being applied at a stage where those safeguards can't see it.
+
+**Needed for next recon:**
+Diagnose why `set_annotation_mask()` produces invalid SQL for GROUP BY queries, or identify an alternative pruning mechanism that doesn't break SQL generation. The fix may need to:
+1. Ensure at least PK is selected when mask is empty and GROUP BY is present
+2. Prune annotations at a different stage (post-SQL generation?)
+3. Use a different mechanism than annotation mask entirely
+
+VERDICT: PARTIAL
+RE-ENTER: recon
+
+---STDERR---

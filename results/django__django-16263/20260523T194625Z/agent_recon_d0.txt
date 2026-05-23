@@ -1,0 +1,5 @@
+Perfect! I've completed the read-only diagnosis phase. The recon handoff has been printed to stdout and the hypothesis has been appended to the graph document.
+
+**Summary:** Django's `get_aggregation()` method doesn't prune unreferenced annotations from count queries. All annotations force a subquery and appear in the SQL, even when unused. The fix requires adding logic to identify which annotations are actually referenced (in WHERE, ORDER BY, or other annotations) and excluding the unreferenced ones from the query generation.
+
+---STDERR---

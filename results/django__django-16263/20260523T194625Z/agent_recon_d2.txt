@@ -1,0 +1,64 @@
+# Recon: django__django-16263
+
+## Failure summary
+
+Three tests check that Django strips unused annotations from `.count()` queries to optimize performance:
+
+1. **test_unused_aliased_aggregate_pruned**: `.alias(authors_count=Count(...)).count()` expects no subquery and no "authors_count" in SQL
+2. **test_non_aggregate_annotation_pruned**: `.annotate(name_lower=Lower(...)).count()` expects no subquery and no "name_lower" in SQL  
+3. **test_unreferenced_aggregate_annotation_pruned**: `.annotate(authors_count=Count(...)).count()` expects a subquery (for GROUP BY) but "authors_count" should NOT appear in the SQL
+
+All three fail because `get_aggregation()` doesn't properly prune unreferenced annotations. The previous diagnosis addressed test #1 but broke PASS_TO_PASS tests and missed tests #2 and #3.
+
+**Current errors:**
+- Test #1: PASS (annotation pruned in non-subquery path via line 548)
+- Test #2: FAIL - creates subquery when it shouldn't (2 SELECTs instead of 1)
+- Test #3: FAIL - "authors_count" appears in subquery: `select count(*) from (select count(...) as "authors_count" ...) subquery`
+- PASS_TO_PASS: 2 regressions returning 0 instead of expected aggregate values
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 438-610: `get_aggregation()` method
+  - Line 469: Determines `existing_annotations` that trigger subquery path
+  - Line 508: Sets annotation mask for inner subquery
+  - Lines 544-548: Non-subquery path pruning logic
+
+## Root cause
+
+The `get_aggregation()` method has two defects:
+
+**Defect 1 (test #2 failure):** Line 469 uses `self.annotations.items()` to build `existing_annotations`, which includes `.alias()` annotations even though they have `select=False` and don't appear in query results. This causes unnecessary subqueries when `.alias()` is used with aggregates.
+
+**Defect 2 (test #3 failure):** Line 508 sets the inner query annotation mask to `self.annotation_select` (all selected annotations), but should only include `referenced_annotations` (annotations actually referenced by outer aggregates). This causes unreferenced annotations to appear in the subquery SELECT clause.
+
+The previous fix correctly added the `contains_aggregate` filter and non-subquery pruning, but changing to `annotations.items()` broke the fix for test #2. The PASS_TO_PASS regressions are a false alarm - they occur because tests with `.values()` would take the subquery path anyway (via `isinstance(self.group_by, tuple)` check on line 473), not because of the `contains_aggregate` filter.
+
+**Confidence:** deduction — 90%
+
+**Supporting evidence:**
+- `django/db/models/query.py:1614` — `.alias()` calls `_annotate(select=False)`, excluding these annotations from `annotation_select` 
+- `django/db/models/sql/query.py:1135` — When `select=False`, annotation is removed from mask via `difference({alias})`
+- `django/db/models/sql/query.py:2464-2481` — `annotation_select` property filters annotations by mask, excluding `.alias()` annotations
+- `django/db/models/sql/query.py:469` — Uses `self.annotations.items()` which includes `.alias()` annotations
+- `django/db/models/sql/query.py:508` — Sets mask to all selected annotations, not just referenced ones
+- `django/db/models/query.py:1664` — `.values()` calls `set_group_by()` which sets `group_by` to tuple, triggering subquery via line 473 check
+
+## Edit sites
+
+**django/db/models/sql/query.py**
+
+1. **Line 469**: Change the list comprehension to use `self.annotation_select.items()` instead of `self.annotations.items()`. Keep the existing `contains_aggregate` filter. This excludes `.alias()` annotations from triggering the subquery path.
+
+2. **Line 508**: Change `inner_query.set_annotation_mask(self.annotation_select)` to `inner_query.set_annotation_mask(referenced_annotations)`. This prunes unreferenced annotations from the inner subquery while keeping referenced ones. The `referenced_annotations` set is already computed on lines 448-464.
+
+## Rejected hypotheses
+
+- H₀ (graph): Reference-finding logic doesn't work — REJECTED: The logic correctly finds references for Ref expressions; the issue is the mask isn't being applied correctly in the subquery path
+- H₁ (graph): Non-subquery path needs pruning — PARTIALLY CORRECT: This fixes test #1 but doesn't address tests #2 and #3
+- Prior craft attempts: Over-pruning annotations — INCORRECT: The PASS_TO_PASS failures will be avoided because `.values()` triggers subquery via `group_by` tuple check, not via `existing_annotations`
+
+## Open questions
+
+None - the fix is straightforward with two targeted line changes.
+
+---STDERR---

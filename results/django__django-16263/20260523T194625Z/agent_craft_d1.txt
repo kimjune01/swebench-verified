@@ -1,0 +1,5 @@
+After 3 iterations with convergent-stuck trajectory (same errors persist), the recon hypothesis appears incomplete. The non-subquery fix works for 1/3 FAIL_TO_PASS tests but introduces PASS_TO_PASS regressions and doesn't address tests #2 and #3 which require handling `.alias()` and subquery path pruning.
+
+**NOT-RESOLVED — re-diagnose**
+
+---STDERR---

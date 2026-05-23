@@ -1,0 +1,217 @@
+diff --git a/apply_fix.py b/apply_fix.py
+new file mode 100644
+index 0000000000..5439578753
+--- /dev/null
++++ b/apply_fix.py
+@@ -0,0 +1,74 @@
++import sys
++
++with open("django/db/models/sql/query.py", "r") as f:
++    lines = f.readlines()
++
++# Find the line "if not self.annotation_select:" in get_aggregation
++insert_after = None
++for i, line in enumerate(lines):
++    if "if not self.annotation_select:" in line and i > 430:
++        # Next line should be "return {}"
++        if "return {}" in lines[i+1]:
++            insert_after = i + 1
++            break
++
++if insert_after is None:
++    print("Could not find insertion point")
++    sys.exit(1)
++
++# Insert the reference-finding code
++new_code = """        # Get names of existing selected annotations (exclude newly added aggregates)
++        existing_annotation_names = set(self.annotation_select.keys()) - set(added_aggregate_names)
++        
++        # Find which existing annotations are referenced by the newly added aggregates
++        referenced_annotations = set()
++        for agg_name in added_aggregate_names:
++            agg_expr = self.annotations[agg_name]
++            # Recursively check all source expressions
++            stack = list(agg_expr.get_source_expressions())
++            while stack:
++                expr = stack.pop()
++                # Check if this expression references an existing annotation by name
++                if hasattr(expr, name) and expr.name in existing_annotation_names:
++                    referenced_annotations.add(expr.name)
++                # Also check Ref expressions
++                if hasattr(expr, refs) and expr.refs in existing_annotation_names:
++                    referenced_annotations.add(expr.refs)
++                # Recurse into nested expressions
++                if hasattr(expr, get_source_expressions):
++                    stack.extend(expr.get_source_expressions())
++        
++"""
++
++lines.insert(insert_after + 1, new_code)
++
++# Now find and modify the existing_annotations list comprehension
++# It should be a few lines after our insertion
++for i in range(insert_after, min(insert_after + 30, len(lines))):
++    if "existing_annotations = [" in lines[i]:
++        # Find the closing bracket
++        for j in range(i, min(i + 10, len(lines))):
++            if "if alias not in added_aggregate_names" in lines[j]:
++                # Replace this line to add the contains_aggregate check
++                indent = len(lines[j]) - len(lines[j].lstrip())
++                lines[j] = " " * indent + "if alias not in added_aggregate_names and getattr(annotation, contains_aggregate, False)\n"
++                break
++        break
++
++# Now find the non-subquery else branch and add the annotation mask
++for i, line in enumerate(lines):
++    if "outer_query = self" in line and i > 500:
++        # Find the "self.extra = {}" line
++        for j in range(i, min(i + 10, len(lines))):
++            if "self.extra = {}" in lines[j]:
++                indent = len(lines[j]) - len(lines[j].lstrip())
++                # Insert the annotation mask call after this line
++                lines.insert(j + 1, " " * indent + "# Only keep annotations that are referenced by the new aggregates\n")
++                lines.insert(j + 2, " " * indent + "self.set_annotation_mask(referenced_annotations | set(added_aggregate_names))\n")
++                break
++        break
++
++with open("django/db/models/sql/query.py", "w") as f:
++    f.writelines(lines)
++
++print("Fix applied successfully")
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 9735ce10c8..64067d1415 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -8,8 +8,8 @@ all about the internals of models in order to get the information it needs.
+ """
+ import copy
+ import difflib
+-import functools
+ import sys
++import functools
+ from collections import Counter, namedtuple
+ from collections.abc import Iterator, Mapping
+ from itertools import chain, count, product
+@@ -441,10 +441,31 @@ class Query(BaseExpression):
+         """
+         if not self.annotation_select:
+             return {}
++        # Get names of existing selected annotations (exclude newly added aggregates)
++        existing_annotation_names = set(self.annotation_select.keys()) - set(added_aggregate_names)
++        
++        # Find which existing annotations are referenced by the newly added aggregates
++        referenced_annotations = set()
++        for agg_name in added_aggregate_names:
++            agg_expr = self.annotations[agg_name]
++            # Recursively check all source expressions
++            stack = list(agg_expr.get_source_expressions())
++            while stack:
++                expr = stack.pop()
++                # Check if this expression references an existing annotation by name
++                if hasattr(expr, 'name') and expr.name in existing_annotation_names:
++                    referenced_annotations.add(expr.name)
++                # Also check Ref expressions
++                if hasattr(expr, 'refs') and expr.refs in existing_annotation_names:
++                    referenced_annotations.add(expr.refs)
++                # Recurse into nested expressions
++                if hasattr(expr, 'get_source_expressions'):
++                    stack.extend(expr.get_source_expressions())
++        
+         existing_annotations = [
+             annotation
+-            for alias, annotation in self.annotations.items()
+-            if alias not in added_aggregate_names
++            for alias, annotation in self.annotation_select.items()
++            if alias not in added_aggregate_names and getattr(annotation, 'contains_aggregate', False)
+         ]
+         # Decide if we need to use a subquery.
+         #
+@@ -471,7 +492,29 @@ class Query(BaseExpression):
+             outer_query = AggregateQuery(self.model, inner_query)
+             inner_query.select_for_update = False
+             inner_query.select_related = False
+-            inner_query.set_annotation_mask(self.annotation_select)
++            # Only prune unreferenced aggregate annotations for count() queries when subquery
++            # is triggered solely by existing_annotations (not by distinct, values, etc.)
++            if (
++                added_aggregate_names == ["__count"]
++                and existing_annotations
++                and not isinstance(self.group_by, tuple)
++                and not self.is_sliced
++                and not self.distinct
++                and not self.combinator
++            ):
++                # Keep referenced annotations and non-aggregate annotations; prune unreferenced aggregates
++                annotations_to_select = referenced_annotations | {
++                    alias for alias, annotation in self.annotation_select.items()
++                    if not getattr(annotation, 'contains_aggregate', False)
++                }
++                inner_query.set_annotation_mask(annotations_to_select)
++                # Ensure the inner query has at least the PK in SELECT if no annotations are selected
++                if not annotations_to_select and inner_query.select == ():
++                    inner_query.select = (
++                        self.model._meta.pk.get_col(inner_query.get_initial_alias()),
++                    )
++            else:
++                inner_query.set_annotation_mask(self.annotation_select)
+             # Queries with distinct_fields need ordering and when a limit is
+             # applied we must take the slice from the ordered query. Otherwise
+             # no need for ordering.
+@@ -525,6 +568,10 @@ class Query(BaseExpression):
+             self.select = ()
+             self.default_cols = False
+             self.extra = {}
++            # Only keep annotations that are referenced by the new aggregates
++            # Only prune for count() operations to avoid breaking aggregate() with annotation references
++            if added_aggregate_names == ["__count"]:
++                self.set_annotation_mask(referenced_annotations | set(added_aggregate_names))
+ 
+         empty_set_result = [
+             expression.empty_result_set_value
+diff --git a/fix.patch b/fix.patch
+new file mode 100644
+index 0000000000..313c9c9ad7
+--- /dev/null
++++ b/fix.patch
+@@ -0,0 +1,41 @@
++--- a/django/db/models/sql/query.py
+++++ b/django/db/models/sql/query.py
++@@ -441,10 +441,26 @@ class Query(BaseExpression):
++         """
++         if not self.annotation_select:
++             return {}
+++        # Get names of existing selected annotations (exclude newly added aggregates)
+++        existing_annotation_names = set(self.annotation_select.keys()) - set(added_aggregate_names)
+++        
+++        # Find which existing annotations are referenced by the newly added aggregates
+++        referenced_annotations = set()
+++        for agg_name in added_aggregate_names:
+++            agg_expr = self.annotations[agg_name]
+++            # Recursively check all source expressions
+++            stack = list(agg_expr.get_source_expressions())
+++            while stack:
+++                expr = stack.pop()
+++                # Check if this expression references an existing annotation by name
+++                if hasattr(expr, 'name') and expr.name in existing_annotation_names:
+++                    referenced_annotations.add(expr.name)
+++                # Also check get_source_expressions recursively
+++                if hasattr(expr, 'get_source_expressions'):
+++                    stack.extend(expr.get_source_expressions())
+++        
++         existing_annotations = [
++             annotation
++             for alias, annotation in self.annotations.items()
++-            if alias not in added_aggregate_names
+++            if alias not in added_aggregate_names and getattr(annotation, 'contains_aggregate', False)
++         ]
++         # Decide if we need to use a subquery.
++         #
++@@ -526,6 +542,8 @@ class Query(BaseExpression):
++             self.select = ()
++             self.default_cols = False
++             self.extra = {}
+++            # Only keep annotations that are referenced by the new aggregates
+++            self.set_annotation_mask(referenced_annotations | set(added_aggregate_names))
++ 
++         empty_set_result = [
++             expression.empty_result_set_value
