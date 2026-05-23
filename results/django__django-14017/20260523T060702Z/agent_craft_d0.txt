@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully implements the recon diagnosis in two parts:
+
+1. **Q._combine()** now accepts conditional expressions by checking `getattr(other, 'conditional', False)` and wrapping them in Q objects, enabling `Q() & Exists(...)` and `Q() | Exists(...)`
+
+2. **Q.deconstruct()** now checks `isinstance(self.children[0], tuple)` before treating single children as kwargs, preventing errors when Q contains wrapped expression objects
+
+Both FAIL_TO_PASS tests pass, and all 152 expression tests remain green.
+
+---STDERR---

@@ -1,0 +1,49 @@
+# Recon: django__django-14017
+
+## Failure summary
+
+The tests check that Q objects can be combined with Exists expressions using the `&` and `|` operators in both orders. Currently, `Exists(...) & Q()` works but `Q() & Exists(...)` raises a TypeError. The error message is:
+
+```
+TypeError: <django.db.models.expressions.Exists object at 0x7f4e9c669460>
+```
+
+This occurs in `django/db/models/query_utils.py:44` in the `_combine` method, which is called from `Q.__and__` at line 65.
+
+## Suspect set
+
+- `django/db/models/query_utils.py` lines 40-68: The `Q._combine`, `__and__`, and `__or__` methods that handle combining Q objects
+
+## Root cause
+
+Q's `_combine` method only accepts Q objects, checking `isinstance(other, Q)` at line 44 and raising TypeError if false. However, Exists (and other expressions with `conditional=True`) should also be acceptable for logical combination with Q.
+
+The asymmetry occurs because:
+1. When `Exists(...) & Q()` is called, it invokes `Exists.__and__` (inherited from Combinable at `expressions.py:92`)
+2. Combinable's `__and__` checks if both operands have `conditional=True` and wraps them: `return Q(self) & Q(other)`
+3. This creates two Q objects which combine successfully
+
+But when `Q() & Exists(...)` is called:
+1. It invokes `Q.__and__` which calls `_combine(other, self.AND)`
+2. `_combine` checks `isinstance(other, Q)` which is False for Exists
+3. Raises TypeError without attempting to wrap the conditional expression
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `query_utils.py:44` — `if not isinstance(other, Q): raise TypeError(other)`
+- `expressions.py:92-94` — Combinable checks `getattr(self, 'conditional', False) and getattr(other, 'conditional', False)` then returns `Q(self) & Q(other)`
+- `expressions.py:256-257` — BaseExpression's conditional property: `return isinstance(self.output_field, fields.BooleanField)`
+- `expressions.py:1152` — `Exists` has `output_field = fields.BooleanField()`, so its `conditional` property returns True
+
+## Edit sites
+
+- `django/db/models/query_utils.py` lines 40-57 (the `_combine` method): Before checking `isinstance(other, Q)`, check if `other` has `conditional=True` (using `getattr(other, 'conditional', False)`). If true, wrap it: `other = type(self)(other)` to convert it to a Q object, then proceed with the normal logic.
+
+- `django/db/models/query_utils.py` after line 68: Optionally add `__rand__` and `__ror__` methods to Q for symmetry, though this may not be strictly necessary since Combinable already handles the reverse case.
+
+## Open questions
+
+None. The root cause is clear from code inspection and the fix is straightforward: make Q's `_combine` accept conditional expressions by wrapping them in Q objects, matching Combinable's behavior.
+
+---STDERR---

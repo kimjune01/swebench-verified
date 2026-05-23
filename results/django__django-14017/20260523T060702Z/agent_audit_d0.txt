@@ -1,0 +1,30 @@
+# Audit: django__django-14017
+
+## FAIL_TO_PASS
+- test_boolean_expression_combined (expressions.tests.BasicExpressionsTests): **PASS**
+- test_boolean_expression_combined_with_empty_Q (expressions.tests.BasicExpressionsTests): **PASS**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing failures (confirmed against base capture)
+None
+
+## Summary
+
+The craft patch successfully resolves the issue. The fix modified `django/db/models/query_utils.py` with two targeted changes:
+
+1. **Q._combine()** (lines 43-46): Added conditional expression support by checking for `conditional=True` attribute and wrapping in Q before the isinstance check
+2. **Q.deconstruct()** (line 91): Added tuple type check to prevent treating wrapped expression objects as lookup key-value pairs
+
+All 152 tests in the expressions suite passed:
+- Both FAIL_TO_PASS tests now pass (previously raised TypeError)
+- All 15 PASS_TO_PASS tests remain passing
+- No regressions introduced
+
+The fix correctly implements the recon diagnosis that Q._combine should accept conditional expressions symmetrically with Combinable's behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
