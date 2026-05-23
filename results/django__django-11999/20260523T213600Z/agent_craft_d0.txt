@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete. The test `test_overriding_FIELD_display` now passes. 
+
+**Summary:** Added a guard check `if 'get_%s_display' % self.name not in cls.__dict__:` before Django's auto-generated `get_FOO_display()` method in `django/db/models/fields/__init__.py:766`. This preserves custom `get_FIELD_display()` methods defined directly on model classes while still auto-generating them when not overridden. The `cls.__dict__` check (rather than `getattr()`) ensures inheritance works correctly when subclasses override fields with different choices.
+
+---STDERR---

@@ -1,0 +1,34 @@
+# Recon: django__django-11999
+
+## Failure summary
+The test `test_overriding_FIELD_display` defines a model `FooBar` with a custom `get_foo_bar_display()` method that returns 'something', but when called, it returns 'foo' (the display value from the field's choices). The test expects the custom method to be called but Django is overriding it with its auto-generated version. Error: `AssertionError: 'foo' != 'something'`
+
+## Suspect set
+- `django/db/models/fields/__init__.py` lines 766-767: Where `get_FOO_display` is unconditionally set via `setattr`
+
+## Root cause
+Django's `Field.contribute_to_class()` unconditionally overwrites any custom `get_FOO_display()` methods defined in model classes. When a field has choices (checked with `if self.choices is not None:`), Django uses `setattr()` to attach a `partialmethod` that calls the internal `_get_FIELD_display()` helper. This happens during model class construction, after the user's custom method has been defined, so it replaces the custom implementation.
+
+The pattern for checking existing attributes before setting them already exists in the same method (lines 763-764) for the field descriptor, but is not applied to `get_FOO_display`.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `django/db/models/fields/__init__.py:766-767` — unconditional `setattr(cls, 'get_%s_display' % self.name, partialmethod(cls._get_FIELD_display, field=self))`
+- `django/db/models/fields/__init__.py:763-764` — existing guard pattern: `if not getattr(cls, self.attname, None): setattr(cls, self.attname, self.descriptor_class(self))`
+- Only one location in codebase sets `get_*_display` (verified via grep)
+- Python REPL test confirms `setattr()` overwrites existing methods
+
+## Edit sites
+- `django/db/models/fields/__init__.py` lines 766-767: Add a guard check `if not hasattr(cls, 'get_%s_display' % self.name):` before the `setattr()` call, mirroring the pattern used for the descriptor on lines 763-764. This will preserve custom `get_FOO_display()` methods while still auto-generating them when not overridden.
+
+## Competing hypotheses
+None - the root cause is definitive.
+
+## Rejected hypotheses
+None - first-pass diagnosis confirmed by code inspection and direct testing.
+
+## Open questions
+None - the fix is straightforward.
+
+---STDERR---

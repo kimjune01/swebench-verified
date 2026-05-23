@@ -1,0 +1,20 @@
+# Audit: django__django-11999
+
+## FAIL_TO_PASS
+- test_overriding_FIELD_display (model_fields.tests.GetFieldDisplayTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 30 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Gate summary
+Ran 31 tests in 0.008s - **OK**
+
+All FAIL_TO_PASS tests now pass, zero regressions introduced. The fix successfully preserves custom `get_FIELD_display()` methods by checking `cls.__dict__` before setting the auto-generated method.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
