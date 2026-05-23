@@ -1,0 +1,25 @@
+# Audit: django__django-11400
+
+## FAIL_TO_PASS
+- test_get_choices_default_ordering (model_fields.tests.GetChoicesOrderingTests): **PASS**
+- test_get_choices_reverse_related_field_default_ordering (model_fields.tests.GetChoicesOrderingTests): **PASS**
+- RelatedFieldListFilter ordering respects Model.ordering: **PASS**
+- test_relatedfieldlistfilter_reverse_relationships_default_ordering (admin_filters.tests.ListFiltersTests): **PASS**
+- RelatedOnlyFieldListFilter ordering respects Meta.ordering: **PASS**
+- RelatedOnlyFieldListFilter ordering respects ModelAdmin.ordering: **PASS**
+
+## PASS_TO_PASS regressions
+None. All 64 tests passed cleanly.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. Gate passed with OK status.
+
+## Summary
+The patch successfully resolves all failing tests by changing the default `ordering` parameter from `()` (empty tuple) to `None` in `get_choices()` methods, with fallback logic to use `Model._meta.ordering` when `ordering=None`. This preserves model-level ordering defaults while still allowing explicit ordering to be specified or cleared.
+
+Gate result: **64 tests passed, 0 failures**
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

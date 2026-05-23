@@ -1,0 +1,67 @@
+diff --git a/django/contrib/admin/filters.py b/django/contrib/admin/filters.py
+index d65e01d5e2..2776aaa297 100644
+--- a/django/contrib/admin/filters.py
++++ b/django/contrib/admin/filters.py
+@@ -194,7 +194,7 @@ class RelatedFieldListFilter(FieldListFilter):
+         return [self.lookup_kwarg, self.lookup_kwarg_isnull]
+ 
+     def field_choices(self, field, request, model_admin):
+-        ordering = ()
++        ordering = None
+         related_admin = model_admin.admin_site._registry.get(field.remote_field.model)
+         if related_admin is not None:
+             ordering = related_admin.get_ordering(request)
+@@ -419,4 +419,8 @@ FieldListFilter.register(lambda f: True, AllValuesFieldListFilter)
+ class RelatedOnlyFieldListFilter(RelatedFieldListFilter):
+     def field_choices(self, field, request, model_admin):
+         pk_qs = model_admin.get_queryset(request).distinct().values_list('%s__pk' % self.field_path, flat=True)
+-        return field.get_choices(include_blank=False, limit_choices_to={'pk__in': pk_qs})
++        ordering = None
++        related_admin = model_admin.admin_site._registry.get(field.remote_field.model)
++        if related_admin is not None:
++            ordering = related_admin.get_ordering(request)
++        return field.get_choices(include_blank=False, limit_choices_to={'pk__in': pk_qs}, ordering=ordering)
+diff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py
+index 194514c900..4547dfa376 100644
+--- a/django/db/models/fields/__init__.py
++++ b/django/db/models/fields/__init__.py
+@@ -806,7 +806,7 @@ class Field(RegisterLookupMixin):
+             return return_None
+         return str  # return empty string
+ 
+-    def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, limit_choices_to=None, ordering=()):
++    def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, limit_choices_to=None, ordering=None):
+         """
+         Return choices with a default blank choices included, for use
+         as <select> choices for this field.
+@@ -819,6 +819,8 @@ class Field(RegisterLookupMixin):
+                     choices = blank_choice + choices
+             return choices
+         rel_model = self.remote_field.model
++        if ordering is None:
++            ordering = rel_model._meta.ordering
+         limit_choices_to = limit_choices_to or self.get_limit_choices_to()
+         choice_func = operator.attrgetter(
+             self.remote_field.get_related_field().attname
+diff --git a/django/db/models/fields/reverse_related.py b/django/db/models/fields/reverse_related.py
+index eb6b934259..751155b8e9 100644
+--- a/django/db/models/fields/reverse_related.py
++++ b/django/db/models/fields/reverse_related.py
+@@ -114,7 +114,7 @@ class ForeignObjectRel(FieldCacheMixin):
+             self.related_model._meta.model_name,
+         )
+ 
+-    def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, ordering=()):
++    def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, ordering=None):
+         """
+         Return choices with a default blank choices included, for use
+         as <select> choices for this field.
+@@ -122,6 +122,8 @@ class ForeignObjectRel(FieldCacheMixin):
+         Analog of django.db.models.fields.Field.get_choices(), provided
+         initially for utilization by RelatedFieldListFilter.
+         """
++        if ordering is None:
++            ordering = self.related_model._meta.ordering
+         return (blank_choice if include_blank else []) + [
+             (x.pk, str(x)) for x in self.related_model._default_manager.order_by(*ordering)
+         ]

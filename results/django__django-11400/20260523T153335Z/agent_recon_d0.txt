@@ -1,0 +1,74 @@
+Now I'll output the recon handoff to stdout:
+
+# Recon: django__django-11400
+
+## Failure summary
+
+The tests verify that when filtering related fields in Django admin, the choices should be ordered according to the related model's Meta.ordering when no explicit ordering is configured in ModelAdmin. Six tests fail:
+
+1. `test_get_choices_default_ordering` - Field.get_choices() should respect Model.ordering
+2. `test_get_choices_reverse_related_field_default_ordering` - Reverse field should respect Model.ordering  
+3. `test_relatedfieldlistfilter_foreignkey_default_ordering` - RelatedFieldListFilter should respect Model.ordering
+4. `test_relatedfieldlistfilter_reverse_relationships_default_ordering` - RelatedFieldListFilter reverse relations should respect Model.ordering
+5. `test_relatedonlyfieldlistfilter_foreignkey_ordering` - RelatedOnlyFieldListFilter should respect ModelAdmin.ordering
+6. `test_relatedonlyfieldlistfilter_foreignkey_default_ordering` (implied) - RelatedOnlyFieldListFilter should respect Model.ordering
+
+All failures show the same symptom: choices are returned in PK order [(1, '...'), (2, '...')] instead of the expected ordering [(2, '...'), (1, '...')] based on the model's Meta.ordering or ModelAdmin.ordering.
+
+## Suspect set
+
+- `django/contrib/admin/filters.py` lines 196-201: RelatedFieldListFilter.field_choices() initializes ordering to empty tuple
+- `django/contrib/admin/filters.py` lines 420-422: RelatedOnlyFieldListFilter.field_choices() doesn't pass ordering at all
+- `django/db/models/fields/__init__.py` lines 809-831: Field.get_choices() applies ordering without fallback
+- `django/db/models/fields/reverse_related.py` lines 117-127: ManyToOneRel.get_choices() applies ordering without fallback
+- `django/contrib/admin/options.py` line 338: ModelAdmin.get_ordering() returns empty tuple instead of model ordering
+
+## Root cause
+
+When RelatedFieldListFilter.field_choices() gets ordering from a related ModelAdmin, it falls back to an empty tuple `()` if:
+1. The related model has no registered admin, OR
+2. The related admin has no ordering configured (get_ordering returns `()`)
+
+This empty tuple is then passed to field.get_choices(ordering=()), which calls `.order_by(*ordering)`. With an empty tuple, this becomes `order_by()` with no arguments, which **clears all ordering** including the model's default Meta.ordering.
+
+The get_choices() methods in both `fields/__init__.py:831` and `reverse_related.py:127` apply the ordering parameter directly without checking if it's empty and falling back to the related model's `_meta.ordering`.
+
+Additionally, RelatedOnlyFieldListFilter completely omits the ordering parameter when calling field.get_choices(), so even explicitly configured ModelAdmin.ordering is ignored.
+
+**Confidence: Deduction — 95%**
+
+**Supporting evidence:**
+- `django/contrib/admin/filters.py:197` — `ordering = ()` default initialization
+- `django/contrib/admin/options.py:338` — `return self.ordering or ()` doesn't consult model ordering
+- `django/db/models/fields/__init__.py:831` — `for x in rel_model._default_manager.complex_filter(limit_choices_to).order_by(*ordering)` applies ordering directly
+- `django/db/models/fields/reverse_related.py:127` — `for x in self.related_model._default_manager.order_by(*ordering)` applies ordering directly
+- `django/contrib/admin/filters.py:422` — `field.get_choices(include_blank=False, limit_choices_to={'pk__in': pk_qs})` has no ordering parameter
+
+## Edit sites
+
+**Site 1:** `django/db/models/fields/__init__.py` lines 809-831
+- In Field.get_choices(), before calling order_by(*ordering), check if ordering is empty
+- If empty, use the related model's _meta.ordering as fallback: `ordering = ordering or rel_model._meta.ordering`
+- This ensures model default ordering is used when no explicit ordering is provided
+
+**Site 2:** `django/db/models/fields/reverse_related.py` lines 117-127
+- In ManyToOneRel.get_choices(), before calling order_by(*ordering), check if ordering is empty
+- If empty, use self.related_model._meta.ordering as fallback: `ordering = ordering or self.related_model._meta.ordering`
+- This ensures model default ordering is used for reverse relations
+
+**Site 3:** `django/contrib/admin/filters.py` lines 420-422
+- In RelatedOnlyFieldListFilter.field_choices(), get ordering the same way RelatedFieldListFilter does:
+  - Check if related admin is registered
+  - Get ordering from related_admin.get_ordering(request) if it exists
+  - Pass this ordering to field.get_choices()
+- This makes RelatedOnlyFieldListFilter respect ModelAdmin.ordering
+
+## Rejected hypotheses
+
+None - the root cause is straightforward from code inspection.
+
+## Open questions
+
+None - the fix locations are clear and the behavior is well-defined by the failing tests.
+
+---STDERR---

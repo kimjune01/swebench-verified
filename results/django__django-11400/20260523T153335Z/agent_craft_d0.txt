@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The gate passed all 64 tests including the FAIL_TO_PASS tests:
+- ✓ test_get_choices_default_ordering (model_fields.tests.GetChoicesOrderingTests)
+- ✓ test_get_choices_reverse_related_field_default_ordering (model_fields.tests.GetChoicesOrderingTests)
+
+The fix changes `ordering=()` default to `ordering=None` in Field.get_choices() and ManyToOneRel.get_choices(), with a fallback to Model._meta.ordering when None is passed. This preserves both the ability to explicitly clear ordering with `ordering=()` and respects Model.ordering by default.
+
+---STDERR---
