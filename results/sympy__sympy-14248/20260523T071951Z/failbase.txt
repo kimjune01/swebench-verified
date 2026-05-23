@@ -1,0 +1,122 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/printing/pretty/tests/test_pretty.py sympy/printing/tests/test_ccode.py sympy/printing/tests/test_fcode.py sympy/printing/tests/test_jscode.py sympy/printing/tests/test_julia.py sympy/printing/tests/test_latex.py sympy/printing/tests/test_octave.py sympy/printing/tests/test_rcode.py sympy/printing/tests/test_str.py
+
+  File "/testbed/sympy/simplify/simplify.py", line 1042, in <listcomp>
+    args = tuple([bottom_up(a, F, atoms, nonbasic)
+  File "/testbed/sympy/simplify/simplify.py", line 1046, in bottom_up
+    rv = F(rv)
+  File "/testbed/sympy/simplify/trigsimp.py", line 539, in exp_trig
+    choices.append(e.rewrite(exp))
+  File "/testbed/sympy/core/basic.py", line 1670, in rewrite
+    return self._eval_rewrite(None, rule, **hints)
+  File "/testbed/sympy/core/basic.py", line 1578, in _eval_rewrite
+    rewritten = getattr(self, rule)(*args)
+  File "/testbed/sympy/functions/elementary/trigonometric.py", line 1138, in _eval_rewrite_as_exp
+    neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
+  File "/testbed/sympy/core/function.py", line 441, in __new__
+    result = super(Function, cls).__new__(cls, *args, **options)
+  File "/testbed/sympy/core/function.py", line 250, in __new__
+    evaluated = cls.eval(*args)
+  File "/testbed/sympy/functions/elementary/exponential.py", line 254, in eval
+    if ask(Q.integer(2*coeff)):
+  File "/testbed/sympy/assumptions/ask.py", line 1247, in ask
+    from sympy.assumptions.satask import satask
+  File "/testbed/sympy/assumptions/satask.py", line 9, in <module>
+    from sympy.assumptions.sathandlers import fact_registry
+  File "/testbed/sympy/assumptions/sathandlers.py", line 3, in <module>
+    from collections import MutableMapping, defaultdict
+  File "<frozen importlib._bootstrap>", line 1055, in _handle_fromlist
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+__________ sympy/printing/pretty/tests/test_pretty.py:test_issue_8292 __________
+  File "/testbed/sympy/printing/pretty/tests/test_pretty.py", line 5835, in test_issue_8292
+    e = sympify('((x+x**4)/(x-1))-(2*(x-1)**4/(x-1)**4)', evaluate=False)
+  File "/testbed/sympy/core/sympify.py", line 368, in sympify
+    expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+  File "/testbed/sympy/parsing/sympy_parser.py", line 948, in parse_expr
+    code = compile(evaluateFalse(code), '<string>', 'eval')
+ValueError: Name node can't be used with 'False' constant
+________________________________________________________________________________
+__________ sympy/printing/pretty/tests/test_pretty.py:test_issue_8344 __________
+  File "/testbed/sympy/printing/pretty/tests/test_pretty.py", line 5876, in test_issue_8344
+    e = sympify('2*x*y**2/1**2 + 1', evaluate=False)
+  File "/testbed/sympy/core/sympify.py", line 368, in sympify
+    expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+  File "/testbed/sympy/parsing/sympy_parser.py", line 948, in parse_expr
+    code = compile(evaluateFalse(code), '<string>', 'eval')
+ValueError: Name node can't be used with 'False' constant
+________________________________________________________________________________
+______________ sympy/printing/tests/test_latex.py:test_issue_8470 ______________
+  File "/testbed/sympy/printing/tests/test_latex.py", line 1652, in test_issue_8470
+    e = parse_expr("-B*A", evaluate=False)
+  File "/testbed/sympy/parsing/sympy_parser.py", line 948, in parse_expr
+    code = compile(evaluateFalse(code), '<string>', 'eval')
+ValueError: Name node can't be used with 'False' constant
+________________________________________________________________________________
+_____________ sympy/printing/tests/test_latex.py:test_issue_13559 ______________
+  File "/testbed/sympy/printing/tests/test_latex.py", line 1685, in test_issue_13559
+    expr = parse_expr('5/1', evaluate=False)
+  File "/testbed/sympy/parsing/sympy_parser.py", line 948, in parse_expr
+    code = compile(evaluateFalse(code), '<string>', 'eval')
+ValueError: Name node can't be used with 'False' constant
+
+________________________________________________________________________________
+____ sympy/printing/pretty/tests/test_pretty.py:test_MatrixSymbol_printing _____
+  File "/testbed/sympy/printing/pretty/tests/test_pretty.py", line 6100, in test_MatrixSymbol_printing
+    assert pretty(A*B*C - A*B - B*C) == "-A*B -B*C + A*B*C"
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_ccode.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_ccode.py", line 758, in test_MatrixElement_printing
+    assert(ccode(F) == "(-B + A)[0]")
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_fcode.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_fcode.py", line 759, in test_MatrixElement_printing
+    assert(fcode(F) == "      (-B + A)(1, 1)")
+AssertionError
+________________________________________________________________________________
+_______ sympy/printing/tests/test_jscode.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_jscode.py", line 385, in test_MatrixElement_printing
+    assert(jscode(F) == "(-B + A)[0]")
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_julia.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_julia.py", line 377, in test_MatrixElement_printing
+    assert(julia_code(F) == "(-B + A)[1,1]")
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_latex.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_latex.py", line 1713, in test_MatrixElement_printing
+    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_latex.py:test_MatrixSymbol_printing _________
+  File "/testbed/sympy/printing/tests/test_latex.py", line 1722, in test_MatrixSymbol_printing
+    assert latex(-A) == r"-A"
+AssertionError
+________________________________________________________________________________
+_______ sympy/printing/tests/test_octave.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_octave.py", line 397, in test_MatrixElement_printing
+    assert mcode(F) == "(-B + A)(1, 1)"
+AssertionError
+________________________________________________________________________________
+________ sympy/printing/tests/test_rcode.py:test_MatrixElement_printing ________
+  File "/testbed/sympy/printing/tests/test_rcode.py", line 491, in test_MatrixElement_printing
+    assert(rcode(F) == "(-B + A)[0]")
+AssertionError
+________________________________________________________________________________
+_________ sympy/printing/tests/test_str.py:test_MatrixElement_printing _________
+  File "/testbed/sympy/printing/tests/test_str.py", line 787, in test_MatrixElement_printing
+    assert str(F) == "(-B + A)[0, 0]"
+AssertionError
+________________________________________________________________________________
+_________ sympy/printing/tests/test_str.py:test_MatrixSymbol_printing __________
+  File "/testbed/sympy/printing/tests/test_str.py", line 794, in test_MatrixSymbol_printing
+    assert str(A - A*B - B) == "-B - A*B + A"
+AssertionError
+
+ tests finished: 498 passed, 11 failed, 5 expected to fail, 
+1 expected to fail but passed, 5 exceptions, in 7.91 seconds 
+DO *NOT* COMMIT!

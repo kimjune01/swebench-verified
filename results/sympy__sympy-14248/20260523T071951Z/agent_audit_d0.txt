@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-14248
+
+## FAIL_TO_PASS
+- test_MatrixElement_printing: PASS ✓
+- test_MatrixSymbol_printing: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_pretty_geometry (DeprecationWarning in collections import - in base capture)
+- test_issue_8292 (ValueError in parse_expr - in base capture)
+- test_issue_8344 (ValueError in parse_expr - in base capture)
+- test_issue_8470 (ValueError in parse_expr - same error signature, parser code untouched)
+- test_issue_13559 (ValueError in parse_expr - same error signature, parser code untouched)
+
+All failures occur in code paths (sympy/parsing/sympy_parser.py, sympy/simplify/) not modified by the patch. The ValueError failures share identical error signatures and root cause.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

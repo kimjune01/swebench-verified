@@ -1,0 +1,185 @@
+diff --git a/fix_latex.py b/fix_latex.py
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 8253b2f68..b2c196f00 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -1477,11 +1477,34 @@ def _print_Adjoint(self, expr):
+             return r"%s^\dagger" % self._print(mat)
+ 
+     def _print_MatAdd(self, expr):
+-        terms = list(expr.args)
+-        tex = " + ".join(map(self._print, terms))
+-        return tex
++        l = []
++        for term in expr.args:
++            t = self._print(term)
++            if t.startswith("-"):
++                sign = "-"
++                t = t[1:]
++            else:
++                sign = "+"
++            l.extend([sign, t])
++        sign = l.pop(0)
++        if sign == "+":
++            sign = ""
++        return sign + " ".join(l)
+ 
+     def _print_MatMul(self, expr):
++        # Handle negative coefficient (-1)
++        from sympy.core import S
++        if expr.args and expr.args[0] == S.NegativeOne:
++            from sympy import Add, MatAdd, HadamardProduct
++            def parens(x):
++                if isinstance(x, (Add, MatAdd, HadamardProduct)):
++                    return r"\left(%s\right)" % self._print(x)
++                return self._print(x)
++            if len(expr.args) == 2:
++                return "-" + parens(expr.args[1])
++            else:
++                return "-" + " ".join(map(parens, expr.args[1:]))
++        
+         from sympy import Add, MatAdd, HadamardProduct
+ 
+         def parens(x):
+diff --git a/sympy/printing/pretty/pretty.py b/sympy/printing/pretty/pretty.py
+index db24f4c61..a0e1cec48 100644
+--- a/sympy/printing/pretty/pretty.py
++++ b/sympy/printing/pretty/pretty.py
+@@ -819,9 +819,88 @@ def _print_BlockMatrix(self, B):
+         return self._print(B.blocks)
+ 
+     def _print_MatAdd(self, expr):
+-        return self._print_seq(expr.args, None, None, ' + ')
+-
++        from sympy import S
++        if not expr.args:
++            return prettyForm("")
++        terms = []
++        for term in expr.args:
++            # Check if term is MatMul with -1
++            is_negative = (hasattr(term, "args") and term.args and 
++                          term.args[0] == S.NegativeOne)
++            
++            if is_negative and terms:
++                # Negative term (not first): print without the -1, then prepend -
++                # We need to manually construct the term without -1
++                if len(term.args) == 2:
++                    inner_pform = self._print(term.args[1])
++                else:
++                    # Multiple args after -1
++                    rest = [self._print(a) for a in term.args[1:]]
++                    from sympy import Add, MatAdd, HadamardProduct
++                    for i, a in enumerate(term.args[1:]):
++                        if isinstance(a, (Add, MatAdd, HadamardProduct)):
++                            rest[i] = prettyForm(*rest[i].parens())
++                    inner_pform = prettyForm.__mul__(*rest)
++                terms.append(" -")
++                terms.append(inner_pform)
++            elif terms:
++                # Positive term (not first)
++                pform = self._print(term)
++                terms.append(" + ")
++                terms.append(pform)
++            else:
++                # First term
++                pform = self._print(term)
++                terms.append(pform)
++        
++        # Join all parts
++        result = terms[0]
++        for i in range(1, len(terms)):
++            if isinstance(terms[i], str):
++                result = prettyForm(*result.right(terms[i]))
++            else:
++                result = prettyForm(*result.right(terms[i]))
++        return result
++        if not expr.args:
++            return prettyForm("")
++        terms = []
++        for term in expr.args:
++            pform = self._print(term)
++            s = sstr(term)
++            if s.startswith("-") and terms:
++                terms.append(" - ")
++                terms.append(pform)
++            elif terms:
++                terms.append(" + ")
++                terms.append(pform)
++            else:
++                terms.append(pform)
++        result = terms[0]
++        for i in range(1, len(terms)):
++            if isinstance(terms[i], str):
++                result = prettyForm(*result.right(terms[i]))
++            else:
++                result = prettyForm(*result.right(terms[i]))
++        return result
+     def _print_MatMul(self, expr):
++        from sympy import S
++        # Handle negative coefficient (-1)
++        if expr.args and expr.args[0] == S.NegativeOne:
++            if len(expr.args) == 2:
++                # Just -X
++                pform = self._print(expr.args[1])
++                return prettyForm(*prettyForm("-").right(pform))
++            else:
++                # -X*Y*..., print rest and prepend minus
++                rest_args = [self._print(a) for a in expr.args[1:]]
++                # Need to handle parenthesization
++                from sympy import Add, MatAdd, HadamardProduct
++                for i, a in enumerate(expr.args[1:]):
++                    if isinstance(a, (Add, MatAdd, HadamardProduct)):
++                        rest_args[i] = prettyForm(*rest_args[i].parens())
++                mul_form = prettyForm.__mul__(*rest_args)
++                return prettyForm(*prettyForm("-").right(mul_form))
++        
+         args = list(expr.args)
+         from sympy import Add, MatAdd, HadamardProduct
+         for i, a in enumerate(args):
+diff --git a/sympy/printing/str.py b/sympy/printing/str.py
+index 0baefe0f7..cbfa7062f 100644
+--- a/sympy/printing/str.py
++++ b/sympy/printing/str.py
+@@ -304,6 +304,13 @@ def _print_Mul(self, expr):
+             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
+ 
+     def _print_MatMul(self, expr):
++        # Handle negative coefficient (-1)
++        if expr.args and expr.args[0] == S.NegativeOne:
++            if len(expr.args) == 2:
++                return '-' + self.parenthesize(expr.args[1], precedence(expr))
++            else:
++                return '-' + '*'.join([self.parenthesize(arg, precedence(expr))
++                                           for arg in expr.args[1:]])
+         return '*'.join([self.parenthesize(arg, precedence(expr))
+             for arg in expr.args])
+ 
+@@ -312,9 +319,23 @@ def _print_HadamardProduct(self, expr):
+             for arg in expr.args])
+ 
+     def _print_MatAdd(self, expr):
+-        return ' + '.join([self.parenthesize(arg, precedence(expr))
+-            for arg in expr.args])
+-
++        PREC = precedence(expr)
++        l = []
++        for term in expr.args:
++            t = self._print(term)
++            if t.startswith('-'):
++                sign = "-"
++                t = t[1:]
++            else:
++                sign = "+"
++            if precedence(term) < PREC:
++                l.extend([sign, "(%s)" % t])
++            else:
++                l.extend([sign, t])
++        sign = l.pop(0)
++        if sign == '+':
++            sign = ""
++        return sign + ' '.join(l)
+     def _print_NaN(self, expr):
+         return 'nan'
+ 

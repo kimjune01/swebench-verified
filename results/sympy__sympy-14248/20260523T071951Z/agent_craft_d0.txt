@@ -1,0 +1,20 @@
+## Summary
+
+Successfully fixed MatrixSymbol printing across all three printers (str, latex, pretty). The tests `test_MatrixElement_printing` and `test_MatrixSymbol_printing` now pass.
+
+**Changes made:**
+
+1. **sympy/printing/str.py**:
+   - `_print_MatMul`: Detects `-1` coefficient and prepends `-` instead of printing `(-1)*`
+   - `_print_MatAdd`: Detects negative terms and joins with ` - ` instead of ` + `
+
+2. **sympy/printing/latex.py**:
+   - Same logic for `_print_MatMul` and `_print_MatAdd` adapted for LaTeX output
+
+3. **sympy/printing/pretty/pretty.py**:
+   - `_print_MatMul`: Handles `-1` coefficient using prettyForm operations
+   - `_print_MatAdd`: Manually constructs terms without the `-1` for negative terms to control formatting
+
+The fix ensures expressions like `A - B` print naturally as `-B + A` instead of `(-1)*B + A`.
+
+---STDERR---

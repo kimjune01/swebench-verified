@@ -1,0 +1,49 @@
+# Recon: sympy__sympy-14248
+
+## Failure summary
+The tests check that MatrixSymbol arithmetic expressions print correctly across multiple printers (str, latex, pretty, and code generators). The failing tests expect subtraction to print naturally (e.g., `A - B` → `-B + A`), but instead get internal representation format (e.g., `(-1)*B + A`). Specifically:
+- `test_MatrixSymbol_printing` expects `str(A - A*B - B) == "-B - A*B + A"` but gets `"(-1)*B + (-1)*A*B + A"`
+- `test_MatrixElement_printing` expects `latex(F) == r"\left(-B + A\right)_{0, 0}"` where `F = C[0,0].subs(C, A-B)`, but gets `\left(-1 B + A\right)_{0, 0}`
+
+## Suspect set
+- `sympy/printing/str.py` lines 303-307: `_print_MatMul` - joins args with `*` without checking for -1 coefficient
+- `sympy/printing/str.py` lines 313-315: `_print_MatAdd` - joins args with ` + ` without detecting negative terms
+- `sympy/printing/latex.py` lines 1479-1483: `_print_MatAdd` - same issue
+- `sympy/printing/latex.py` lines 1484-1492: `_print_MatMul` - same issue  
+- `sympy/printing/pretty/pretty.py` lines 821-822: `_print_MatAdd` - same issue
+- `sympy/printing/pretty/pretty.py` lines 824-835: `_print_MatMul` - same issue
+
+## Root cause
+When a MatrixSymbol is negated (e.g., `-B`), SymPy internally represents it as a `MatMul` with args `(-1, B)`. The printing system has two cascading failures:
+
+1. **MatMul printing doesn't handle -1 coefficient**: The `_print_MatMul` methods in str/latex/pretty printers naively join all args (e.g., `'*'.join(args)`), producing `(-1)*B` or `-1 B` instead of checking if the first arg is -1 and prepending a `-` sign. By contrast, `_print_Mul` for regular expressions (sympy/printing/str.py:259-305) explicitly checks for negative coefficients via `as_coeff_Mul()` and `c < 0`.
+
+2. **MatAdd printing doesn't detect negative terms**: The `_print_MatAdd` methods unconditionally join terms with ` + `, while `_print_Add` for regular expressions uses `_coeff_isneg()` (sympy/core/function.py:63-85) to detect negative terms and print them as ` - ` instead. However, `_coeff_isneg()` only works on `Mul` objects (checks `a.is_Mul`), and `MatMul` has `is_Mul = False`, so the detection fails for matrix expressions.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `sympy/printing/str.py:303-307` — `return '*'.join([self.parenthesize(arg, precedence(expr)) for arg in expr.args])`
+- `sympy/printing/latex.py:1484-1492` — `return ' '.join(map(parens, expr.args))`
+- `sympy/printing/str.py:49-72` — `_print_Add` checks `if t.startswith('-')` to detect negative terms
+- `sympy/printing/pretty/pretty.py:1440` — `_print_Add` uses `if term.is_Mul and _coeff_isneg(term)`
+- Tested: `-B` has type `MatMul`, args `(-1, B)`, and `is_Mul = False`
+
+## Edit sites
+All printers (str, latex, pretty) need both fixes:
+
+### _print_MatMul fix (3 files)
+- `sympy/printing/str.py` lines 303-307: Check if `expr.args[0] == S.NegativeOne` (or `== -1`). If true, prepend `-` and join remaining args `expr.args[1:]`. Otherwise use existing logic.
+- `sympy/printing/latex.py` lines 1484-1492: Same check; prepend `-` and process `expr.args[1:]`.
+- `sympy/printing/pretty/pretty.py` lines 824-835: Same check; prepend negative sign to pretty form.
+
+### _print_MatAdd fix (3 files)  
+- `sympy/printing/str.py` lines 313-315: Adapt logic from `_print_Add` (lines 49-72) to detect negative MatMul terms (first arg is -1) and join with ` - ` instead of ` + `.
+- `sympy/printing/latex.py` lines 1479-1483: Same adaptation; build term strings checking for leading `-` and adjust separator.
+- `sympy/printing/pretty/pretty.py` lines 821-822: Replace simple join with logic from `_print_Add` (lines 1411-1478), but check MatMul terms directly (since `_coeff_isneg` won't work due to `is_Mul = False`).
+
+## Open questions
+- Do other code printers (fcode, ccode, jscode, julia, octave, rcode) inherit from str printer or need separate fixes? The test failures suggest they inherit, since they show same symptoms and don't have their own `_print_MatMul`/`_print_MatAdd` methods.
+- Should `_coeff_isneg` be extended to recognize MatMul, or should each printer check MatMul explicitly? The latter is safer since MatMul semantics differ (non-commutative).
+
+---STDERR---
