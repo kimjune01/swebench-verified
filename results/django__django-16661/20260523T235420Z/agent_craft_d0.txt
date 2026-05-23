@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully addresses the root cause. The `lookup_allowed` method now correctly distinguishes between:
+- **Non-relational target fields** (e.g., `id`) - still skipped as before
+- **Parent-link fields** (concrete inheritance) - still skipped as before  
+- **User-defined relational primary keys** (e.g., `OneToOneField(primary_key=True)`) - now correctly included in the relation path
+
+Gate result: ✅ 37/37 tests pass, including the FAIL_TO_PASS test `test_lookup_allowed_foreign_primary`.
+
+---STDERR---

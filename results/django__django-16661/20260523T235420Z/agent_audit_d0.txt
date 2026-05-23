@@ -1,0 +1,18 @@
+# Audit: django__django-16661
+
+## FAIL_TO_PASS
+- test_lookup_allowed_foreign_primary (modeladmin.tests.ModelAdminTests.test_lookup_allowed_foreign_primary): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 37 tests passed
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — no failures in base or patched run
+
+## Summary
+The craft patch successfully resolves the issue. The fix in `django/contrib/admin/options.py` correctly distinguishes between parent-link fields (concrete inheritance) that should be skipped and OneToOneField with `primary_key=True` but `parent_link=False` that must be traversed. All tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

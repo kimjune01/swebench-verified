@@ -1,0 +1,5 @@
+Recon complete. The diagnosis is ready for /craft.
+
+**Summary**: The `lookup_allowed` method in Django's ModelAdmin incorrectly treats `OneToOneField(primary_key=True)` the same as concrete model inheritance `parent_link` fields. When processing `"restaurant__place__country"`, it skips `"place"` from the relation path because it's in the FK's target_fields, producing `"restaurant__country"` which doesn't match the `list_filter`. The fix is to add a `parent_link` check at line 467-472 to only skip true inheritance relationships.
+
+---STDERR---
