@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully addresses the root cause identified in the recon handoff. By using a temporary variable `adapted_handler` instead of directly mutating `handler` before middleware instantiation, we prevent the state mismatch that occurred when `MiddlewareNotUsed` was raised.
+
+**Summary:**
+- **Problem**: Handler was adapted before middleware instantiation. When `MiddlewareNotUsed` was raised, the adapted handler persisted but `handler_is_async` tracking was never updated, creating a state mismatch.
+- **Fix**: Use temporary variable `adapted_handler` for the adaptation, preventing mutation of the loop-carried `handler` until after successful instantiation.
+- **Result**: All 33 tests pass, including the target test `test_async_and_sync_middleware_chain_async_call`.
+
+---STDERR---

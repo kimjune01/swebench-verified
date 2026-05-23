@@ -1,0 +1,53 @@
+# Recon: django__django-13810
+
+## Failure summary
+
+The test `test_async_and_sync_middleware_chain_async_call` sets up two middleware: `SyncAndAsyncMiddleware` (async-capable) followed by `MyMiddleware` (sync-only, raises `MiddlewareNotUsed` in `__init__`). When an async client makes a request, it expects a 200 response with appropriate log messages. Instead, it fails with `TypeError: object HttpResponse can't be used in 'await' expression` at line 148 of `django/core/handlers/base.py` when attempting `await self._middleware_chain(request)`. The middleware chain is supposed to be a coroutine for async requests, but it's a synchronous function.
+
+## Suspect set
+
+- `django/core/handlers/base.py` lines 38-88: The `load_middleware()` method that builds the middleware chain and adapts handlers between sync/async modes.
+
+## Root cause
+
+In `load_middleware()`, the `handler` variable is adapted (wrapped with `async_to_sync` or `sync_to_async`) at line 54-57 **before** the middleware is instantiated at line 58. When `middleware(handler)` raises `MiddlewareNotUsed` during initialization, the exception is caught at line 59 and `continue` jumps to the next middleware iteration. However, the adapted `handler` persists, and critically, the `handler_is_async` tracking variable is never updated (lines 87-88 are skipped). This creates a state mismatch: the handler has been sync-wrapped but `handler_is_async` still believes it's async. Subsequent middleware iterations use this corrupted state, resulting in a sync function being installed as the async middleware chain.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/core/handlers/base.py:54-58` — Handler adaptation happens before middleware instantiation:
+  ```python
+  handler = self.adapt_method_mode(
+      middleware_is_async, handler, handler_is_async,
+      debug=settings.DEBUG, name='middleware %s' % middleware_path,
+  )
+  mw_instance = middleware(handler)
+  ```
+- `django/core/handlers/base.py:59-63` — MiddlewareNotUsed caught, continues without reverting handler:
+  ```python
+  except MiddlewareNotUsed as exc:
+      if settings.DEBUG:
+          # ... logging ...
+      continue
+  ```
+- `django/core/handlers/base.py:87-88` — State update only happens on success (skipped by continue):
+  ```python
+  handler = convert_exception_to_response(mw_instance)
+  handler_is_async = middleware_is_async
+  ```
+
+## Edit sites
+
+- `django/core/handlers/base.py` lines 53-63: Move the `handler = self.adapt_method_mode(...)` call to execute AFTER `mw_instance = middleware(handler)` succeeds. The adaptation should only persist if the middleware is actually used. Place it after line 58 but still within the try block, before the `MiddlewareNotUsed` exception can cause a continue.
+
+Alternatively, lines 87-88 show that handler is supposed to be reassigned anyway after successful instantiation, so the adaptation at lines 54-57 should use a temporary variable that doesn't mutate the loop-carried `handler` until after the instantiation check passes.
+
+## Rejected hypotheses
+
+None — the code directly demonstrates the issue through sequential reading.
+
+## Open questions
+
+None — the root cause and fix location are clear from code inspection.
+
+---STDERR---
