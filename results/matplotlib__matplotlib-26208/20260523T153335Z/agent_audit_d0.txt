@@ -1,0 +1,29 @@
+# Audit: matplotlib__matplotlib-26208
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_axes.py::test_twin_units[x]`: **PASS** ✓
+- `lib/matplotlib/tests/test_axes.py::test_twin_units[y]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None.** All 815 tests passed, matching baseline (815 passed, 66 skipped).
+
+## Pre-existing (not counted, confirmed against base capture)
+**None.** Baseline showed all tests passing; current gate matches.
+
+## Kill report
+Not applicable — patch is RESOLVED.
+
+---
+
+**Patch details:**
+- 4 lines added to `lib/matplotlib/axes/_base.py`
+- Copies `units` and `converter` attributes in both `sharex()` (lines 1239-1240) and `sharey()` (lines 1260-1261)
+- Consistent with existing code patterns (direct assignment matching `major`/`minor`/`_scale`)
+- Minimal, targeted fix addressing the root cause identified in recon
+
+**Gate results:** 815 passed, 66 skipped in 45.54s — no failures, no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

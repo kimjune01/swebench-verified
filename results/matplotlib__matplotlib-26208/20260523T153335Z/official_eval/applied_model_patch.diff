@@ -1,0 +1,22 @@
+diff --git a/lib/matplotlib/axes/_base.py b/lib/matplotlib/axes/_base.py
+index 5203e3232c..02fdc8c31e 100644
+--- a/lib/matplotlib/axes/_base.py
++++ b/lib/matplotlib/axes/_base.py
+@@ -1236,6 +1236,8 @@ class _AxesBase(martist.Artist):
+         x0, x1 = other.get_xlim()
+         self.set_xlim(x0, x1, emit=False, auto=other.get_autoscalex_on())
+         self.xaxis._scale = other.xaxis._scale
++        self.xaxis.units = other.xaxis.units
++        self.xaxis.converter = other.xaxis.converter
+ 
+     def sharey(self, other):
+         """
+@@ -1255,6 +1257,8 @@ class _AxesBase(martist.Artist):
+         y0, y1 = other.get_ylim()
+         self.set_ylim(y0, y1, emit=False, auto=other.get_autoscaley_on())
+         self.yaxis._scale = other.yaxis._scale
++        self.yaxis.units = other.yaxis.units
++        self.yaxis.converter = other.yaxis.converter
+ 
+     def __clear(self):
+         """Clear the Axes."""

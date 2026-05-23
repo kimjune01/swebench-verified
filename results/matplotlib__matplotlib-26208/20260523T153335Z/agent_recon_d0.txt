@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is that `sharex()` and `sharey()` methods in `lib/matplotlib/axes/_base.py` copy axis attributes (tickers, limits, scale) but omit `units` and `converter`, which are needed for converting non-numeric data like strings. The fix is to add two lines to each method to copy these attributes.
+
+---STDERR---
