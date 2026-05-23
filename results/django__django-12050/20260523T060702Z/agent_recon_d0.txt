@@ -1,0 +1,62 @@
+Now I'll write the complete recon output to stdout:
+
+```markdown
+# Recon: django__django-12050
+
+## Failure summary
+
+The test `test_iterable_lookup_value` creates a query with a list value `Q(name=['a', 'b'])` and expects the Exact lookup's rhs to be the string representation of a list `"['a', 'b']"`. Instead, it gets the string representation of a tuple `"('a', 'b')"`. This is because the `resolve_lookup_value` method unconditionally converts all iterable values (both lists and tuples) to tuples, breaking exact value queries for ORM field types that depend on matching input types (such as PickledField).
+
+**Error message**:
+```
+AssertionError: "('a', 'b')" != "['a', 'b']"
+```
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 1053-1077: The `resolve_lookup_value` method, specifically line 1076 which converts the resolved values to a tuple unconditionally.
+
+## Root cause
+
+In `django/db/models/sql/query.py` at line 1076, the `resolve_lookup_value` method contains:
+```python
+value = tuple(resolved_values)
+```
+
+This line always converts the result to a tuple, regardless of whether the input was a list or tuple. This was introduced in commit 8a281aa7fe (Fixed #30687) which fixed an issue where expressions inside iterables weren't being resolved, but the fix incorrectly hard-coded the return type to tuple.
+
+**Call path**:
+1. Test calls `query.build_where(Q(name=['a', 'b']))` with a list
+2. `build_where` → `_add_q` → `build_filter` (line 1206)
+3. `build_filter` line 1258 calls `resolve_lookup_value(['a', 'b'], ...)`
+4. `resolve_lookup_value` processes the list, then line 1076 converts to tuple `('a', 'b')`
+5. The tuple is passed to create an `Exact` lookup
+6. `Exact.__init__` (lookups.py:23) calls `get_prep_lookup()`
+7. `get_prep_lookup` (lookups.py:73) calls `CharField.get_prep_value()`
+8. `CharField.to_python` (fields/__init__.py:1017) calls `str(value)` on the tuple
+9. Result: `"('a', 'b')"` instead of `"['a', 'b']"`
+
+Confidence: **deduction** — **95%**
+
+Supporting evidence:
+- `django/db/models/sql/query.py:1076` — `value = tuple(resolved_values)`
+- `django/db/models/fields/__init__.py:1017` — `return str(value)` (converts tuple/list to string)
+- Git commit 8a281aa7fe introduced this line as part of fixing #30687
+
+## Edit sites
+
+- `django/db/models/sql/query.py` line 1076: Change from `value = tuple(resolved_values)` to preserve the input iterable type. The fix should check whether the input `value` is a list or tuple and return the same type. Specifically:
+  - Replace `value = tuple(resolved_values)` with type-preserving code
+  - If `isinstance(value, list)`, return `list(resolved_values)`
+  - If `isinstance(value, tuple)`, return `tuple(resolved_values)`
+
+## Rejected hypotheses
+
+None — the root cause was immediately clear from tracing the code path and examining the git history.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+```
+
+---STDERR---

@@ -1,0 +1,20 @@
+# Audit: django__django-12050
+
+## FAIL_TO_PASS
+- test_iterable_lookup_value: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully resolves the issue. The FAIL_TO_PASS test now passes, converting list `['a', 'b']` to string representation `"['a', 'b']"` as expected instead of `"('a', 'b')"`. All 10 PASS_TO_PASS tests remain passing with no regressions.
+
+The fix changed line 1076 in `django/db/models/sql/query.py` from `tuple(resolved_values)` to `type(value)(resolved_values)`, preserving the original iterable type rather than unconditionally converting to tuple.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

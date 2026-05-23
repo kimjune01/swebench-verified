@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully preserves the original iterable type (list vs tuple) in `resolve_lookup_value` by changing line 1076 from `value = tuple(resolved_values)` to `value = type(value)(resolved_values)`. All tests pass, including the FAIL_TO_PASS test `test_iterable_lookup_value`.
+
+---STDERR---
