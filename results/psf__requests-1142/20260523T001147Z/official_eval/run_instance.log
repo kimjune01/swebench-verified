@@ -1,0 +1,59 @@
+2026-05-23 00:09:52,541 - INFO - Creating container for psf__requests-1142...
+2026-05-23 00:10:10,299 - INFO - Container for psf__requests-1142 created: 3b3ab4062d8abc61d7dd09b719d7b65a2c9a3310e375b3b80a9f0e2d7fe480cb
+2026-05-23 00:10:10,606 - INFO - Container for psf__requests-1142 started: 3b3ab4062d8abc61d7dd09b719d7b65a2c9a3310e375b3b80a9f0e2d7fe480cb
+2026-05-23 00:10:10,607 - INFO - Intermediate patch for psf__requests-1142 written to logs/run_evaluation/batch/recon-craft-audit/psf__requests-1142/patch.diff, now applying to container...
+2026-05-23 00:10:10,748 - INFO - >>>>> Applied Patch:
+Checking patch requests/models.py...
+Applied patch requests/models.py cleanly.
+
+2026-05-23 00:10:10,796 - INFO - Git diff before:
+diff --git a/requests/models.py b/requests/models.py
+index 9926045..ed7e7ae 100644
+--- a/requests/models.py
++++ b/requests/models.py
+@@ -386,13 +386,14 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
+         self.body = body
+ 
+     def prepare_content_length(self, body):
+-        self.headers['Content-Length'] = '0'
+         if hasattr(body, 'seek') and hasattr(body, 'tell'):
+             body.seek(0, 2)
+             self.headers['Content-Length'] = str(body.tell())
+             body.seek(0, 0)
+         elif body is not None:
+             self.headers['Content-Length'] = str(len(body))
++        elif self.method not in ('GET', 'HEAD') and self.headers.get('Content-Length') is None:
++            self.headers['Content-Length'] = '0'
+ 
+     def prepare_auth(self, auth):
+         """Prepares the given HTTP auth data."""
+2026-05-23 00:10:10,796 - INFO - Eval script for psf__requests-1142 written to logs/run_evaluation/batch/recon-craft-audit/psf__requests-1142/eval.sh; copying to container...
+2026-05-23 00:10:13,209 - INFO - Test runtime: 2.38 seconds
+2026-05-23 00:10:13,209 - INFO - Test output for psf__requests-1142 written to logs/run_evaluation/batch/recon-craft-audit/psf__requests-1142/test_output.txt
+2026-05-23 00:10:13,277 - INFO - Git diff after:
+diff --git a/requests/models.py b/requests/models.py
+index 9926045..ed7e7ae 100644
+--- a/requests/models.py
++++ b/requests/models.py
+@@ -386,13 +386,14 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
+         self.body = body
+ 
+     def prepare_content_length(self, body):
+-        self.headers['Content-Length'] = '0'
+         if hasattr(body, 'seek') and hasattr(body, 'tell'):
+             body.seek(0, 2)
+             self.headers['Content-Length'] = str(body.tell())
+             body.seek(0, 0)
+         elif body is not None:
+             self.headers['Content-Length'] = str(len(body))
++        elif self.method not in ('GET', 'HEAD') and self.headers.get('Content-Length') is None:
++            self.headers['Content-Length'] = '0'
+ 
+     def prepare_auth(self, auth):
+         """Prepares the given HTTP auth data."""
+2026-05-23 00:10:13,277 - INFO - Grading answer for psf__requests-1142...
+2026-05-23 00:10:13,280 - INFO - report: {'psf__requests-1142': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_requests.py::RequestsTestCase::test_no_content_length'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_requests.py::RequestsTestCase::test_basic_building', 'test_requests.py::RequestsTestCase::test_entry_points', 'test_requests.py::RequestsTestCase::test_invalid_url', 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment', 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for psf__requests-1142: resolved: True
+2026-05-23 00:10:13,280 - INFO - Attempting to stop container sweb.eval.psf__requests-1142.batch...
+2026-05-23 00:10:28,701 - INFO - Attempting to remove container sweb.eval.psf__requests-1142.batch...
+2026-05-23 00:10:28,709 - INFO - Container sweb.eval.psf__requests-1142.batch removed.

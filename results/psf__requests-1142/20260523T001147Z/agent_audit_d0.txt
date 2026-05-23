@@ -1,0 +1,26 @@
+# Audit: psf__requests-1142
+
+## FAIL_TO_PASS
+- test_requests.py::RequestsTestCase::test_no_content_length: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 5 PASS_TO_PASS tests remain passing:
+- test_basic_building: PASS
+- test_entry_points: PASS
+- test_invalid_url: PASS
+- test_params_are_added_before_fragment: PASS
+- test_path_is_not_double_encoded: PASS
+
+## Pre-existing failures (not counted, confirmed against base capture)
+All 21 other test failures exhibit the same `TypeError: __init__() got an unexpected keyword argument 'strict'` error from `requests/packages/urllib3/connectionpool.py:196` that was present in the fail-on-base capture. These are environment/compatibility issues with the bundled urllib3, unrelated to the Content-Length fix.
+
+## Kill report
+Not applicable — fix is RESOLVED. The patch successfully:
+1. Makes GET/HEAD requests omit Content-Length when body is None
+2. Preserves POST/PUT/PATCH/DELETE behavior (Content-Length: 0 for empty body)
+3. Passes all FAIL_TO_PASS requirements with zero regressions
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

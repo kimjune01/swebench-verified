@@ -1,0 +1,47 @@
+# Recon: psf__requests-1142
+
+## Failure summary
+
+The test `test_no_content_length` creates GET and HEAD requests using `requests.Request().prepare()` and asserts that the prepared requests should not contain a `Content-Length` header. The test fails because both GET and HEAD requests have `Content-Length: 0` in their headers when they should have no Content-Length header at all. This is problematic because some servers (like amazon.com mentioned in the issue) reject GET requests that contain a Content-Length header.
+
+## Suspect set
+
+- `requests/models.py` lines 388-396: `prepare_content_length()` method unconditionally sets Content-Length header
+- `requests/models.py` lines 332-387: `prepare_body()` method calls `prepare_content_length()`
+
+## Root cause
+
+The `prepare_content_length()` method at line 388 has an unconditional assignment `self.headers['Content-Length'] = '0'` as its first line (line 389). This means every request that goes through `prepare_body()` gets a Content-Length header set to '0', even when there is no body.
+
+For GET/HEAD requests with no data:
+1. `prepare_body(data=None, files=None)` is called
+2. Since data and files are None/empty, `body` remains `None`
+3. `prepare_content_length(None)` is called
+4. Line 389 executes: `self.headers['Content-Length'] = '0'`
+5. The subsequent conditions check if body has seek/tell or if body is not None
+6. Since `body is None`, neither condition matches
+7. Result: Content-Length remains '0'
+
+The HTTP specification doesn't require Content-Length for requests without a body, and many servers expect GET/HEAD requests to not have this header.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `requests/models.py:389` — `self.headers['Content-Length'] = '0'` (unconditional assignment)
+- `requests/models.py:394` — `elif body is not None:` (doesn't match when body is None)
+- Verified: `requests.Request('GET', 'http://test.com').prepare().headers` contains `{'Content-Length': '0'}`
+- Git history: Introduced in commit f003025 with message "Attach Content-Length to everything"
+
+## Edit sites
+
+- `requests/models.py` lines 388-396: Modify `prepare_content_length()` to only set Content-Length when there is actually a body. Remove the unconditional `self.headers['Content-Length'] = '0'` assignment on line 389. The method should only set the header in the two conditional branches (file-like body with seek/tell, or non-None body with length).
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and verified through testing.
+
+## Open questions
+
+None — the fix is straightforward: don't set Content-Length when body is None.
+
+---STDERR---

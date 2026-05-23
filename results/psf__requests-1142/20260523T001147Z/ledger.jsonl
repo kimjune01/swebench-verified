@@ -1,0 +1,6 @@
+{"instance": "psf__requests-1142", "stage": "start"}
+{"instance": "psf__requests-1142", "stage": "recon", "depth": 0, "wall_s": 218, "fixed_point": false}
+{"instance": "psf__requests-1142", "stage": "craft", "depth": 0, "wall_s": 129, "claim": true, "wants_rediagnose": false}
+{"instance": "psf__requests-1142", "stage": "audit", "depth": 0, "wall_s": 55, "verdict": "RESOLVED", "route": "none"}
+{"instance": "psf__requests-1142", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_psf__requests-1142.txt"}
+{"instance": "psf__requests-1142", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 847, "patch_file": "/tmp/swebench-abduction/r4_patch_psf__requests-1142.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_psf__requests-1142.md"}

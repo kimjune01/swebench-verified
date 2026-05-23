@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. GET and HEAD requests now correctly omit the Content-Length header when they have no body, while POST/PUT/PATCH/DELETE requests still include `Content-Length: 0` when appropriate.
+
+---STDERR---
