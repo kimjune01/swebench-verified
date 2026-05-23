@@ -1,0 +1,22 @@
+# Audit: scikit-learn__scikit-learn-11310
+
+## FAIL_TO_PASS
+- `sklearn/model_selection/tests/test_search.py::test_search_cv_timing`: **PASSED** ✅
+
+## PASS_TO_PASS regressions
+None. All explicitly listed PASS_TO_PASS tests passed (51 total).
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_validate_parameter_grid_input[0-TypeError-Parameter grid is not a dict or a list (0)]`
+- `test_validate_parameter_grid_input[input1-TypeError-Parameter grid is not a dict (0)]`
+- `test_validate_parameter_grid_input[input2-TypeError-Parameter grid value is not iterable (key='foo', value=0)]`
+
+**Rationale**: These failures are caused by deprecated `pytest.raises(message=...)` syntax (line 139 of test file), unrelated to the patch which only added timing instrumentation for `refit_time_`.
+
+## Kill report
+N/A — All FAIL_TO_PASS tests pass, zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

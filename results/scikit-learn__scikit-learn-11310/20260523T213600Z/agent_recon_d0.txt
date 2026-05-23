@@ -1,0 +1,50 @@
+# Recon: scikit-learn__scikit-learn-11310
+
+## Failure summary
+
+The test `test_search_cv_timing` checks that GridSearchCV and RandomizedSearchCV instances have a `refit_time_` attribute after fitting, which should be a float >= 0 representing the time taken to refit the best model on the full dataset. The test fails with `AssertionError: False is not true` at the `hasattr(search, "refit_time_")` assertion because this attribute is never set.
+
+## Suspect set
+
+- `sklearn/model_selection/_search.py` lines 1-30: imports section — needs `import time`
+- `sklearn/model_selection/_search.py` lines 766-772: refit block in BaseSearchCV.fit() — performs refit without timing instrumentation
+
+## Root cause
+
+The `refit_time_` attribute is never initialized in BaseSearchCV. When `self.refit` is True, the best estimator is cloned and fitted on the full dataset (lines 766-772), but this operation is not timed. The codebase already uses `time.time()` for timing CV fold fits (in `_fit_and_score`), but the same pattern is not applied to the final refit.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sklearn/model_selection/_search.py:766-772` — Refit happens here without timing:
+  ```python
+  if self.refit:
+      self.best_estimator_ = clone(base_estimator).set_params(
+          **self.best_params_)
+      if y is not None:
+          self.best_estimator_.fit(X, y, **fit_params)
+      else:
+          self.best_estimator_.fit(X, **fit_params)
+  ```
+- `sklearn/model_selection/_validation.py:476+` — Established timing pattern:
+  ```python
+  start_time = time.time()
+  # ... fit operation ...
+  fit_time = time.time() - start_time
+  ```
+
+## Edit sites
+
+1. **Import time module**: `sklearn/model_selection/_search.py` lines 1-30 (imports section)
+   - Add `import time` to the module imports
+
+2. **Add refit timing**: `sklearn/model_selection/_search.py` lines 766-772
+   - Capture start time before the `self.best_estimator_.fit()` call
+   - Set `self.refit_time_ = time.time() - start_time` after the fit completes
+   - Consider also setting `self.refit_time_ = 0.0` when `self.refit is False` for consistency with the test's expectation that the attribute should always exist as a float >= 0
+
+## Open questions
+
+- Should `refit_time_` be set when `refit=False`? The test only checks the default case (refit=True), but for consistency it may make sense to set it to 0.0 when no refit happens. The existing `best_estimator_` attribute is only set when refit=True, but `refit_time_` represents "time spent refitting" which would naturally be 0.0 if no refit occurred.
+
+---STDERR---

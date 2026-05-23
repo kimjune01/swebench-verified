@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix successfully makes `test_search_cv_timing` pass:
+
+1. **Added `import time`** at line 20 (after `import operator`)
+2. **Added refit timing** in the `if self.refit:` block (lines 768-775):
+   - Start timer before creating and fitting best estimator
+   - Set `self.refit_time_` attribute after fit completes
+
+The FAIL_TO_PASS test now passes. The minimal fix adds the missing `refit_time_` attribute as a float representing seconds spent refitting, consistent with the existing timing patterns in the codebase.
+
+---STDERR---
