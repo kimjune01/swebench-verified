@@ -1,0 +1,39 @@
+Now I'll output the structured handoff:
+
+# Recon: scikit-learn__scikit-learn-11578
+
+## Failure summary
+
+The test `test_logistic_cv_multinomial_score[neg_log_loss-multiclass_agg_list3]` checks that `_log_reg_scoring_path()` produces the same scores as directly scoring a fitted `LogisticRegression(multi_class='multinomial')` model. The test fails because the scores differ: -0.795553 from `_log_reg_scoring_path()` vs -0.752428 from the fitted model (difference of ~0.043, or ~5.7% relative error). The `neg_log_loss` scorer uses `.predict_proba()` to get probability estimates, and these estimates are computed differently depending on the `multi_class` setting: OvR uses logistic sigmoid + normalization, while multinomial uses softmax.
+
+## Suspect set
+
+- `sklearn/linear_model/logistic.py` lines 774-968: `_log_reg_scoring_path()` function — creates a temporary LogisticRegression instance for scoring that doesn't inherit the multi_class parameter
+- `sklearn/linear_model/logistic.py` lines 1318-1351: `predict_proba()` method — branches on self.multi_class to use different probability computation approaches
+
+## Root cause
+
+Line 925 of `sklearn/linear_model/logistic.py` creates a temporary LogisticRegression instance without passing the `multi_class` parameter: `log_reg = LogisticRegression(fit_intercept=fit_intercept)`. This causes the instance to default to `multi_class='ovr'` even when the function was called with `multi_class='multinomial'`. When the scorer calls `predict_proba()` on this instance, it branches at line 1342 and uses the OvR approach (logistic sigmoid + normalization) instead of the multinomial approach (softmax), producing different probability estimates and thus different scores.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `sklearn/linear_model/logistic.py:925` — `log_reg = LogisticRegression(fit_intercept=fit_intercept)` missing multi_class parameter
+- `sklearn/linear_model/logistic.py:782` — function receives multi_class as a parameter
+- `sklearn/linear_model/logistic.py:1165` — LogisticRegression.__init__ defaults multi_class='ovr'
+- `sklearn/linear_model/logistic.py:1342-1351` — predict_proba branches: if multi_class=='ovr' uses _predict_proba_lr(), else uses softmax()
+- `sklearn/linear_model/tests/test_logistic.py:526` — assertion failure showing score mismatch
+
+## Edit sites
+
+- `sklearn/linear_model/logistic.py` line 925: Add `multi_class=multi_class` parameter to the LogisticRegression constructor call. Change from `log_reg = LogisticRegression(fit_intercept=fit_intercept)` to `log_reg = LogisticRegression(fit_intercept=fit_intercept, multi_class=multi_class)`.
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward via code tracing. The test directly compares two scoring approaches that should be equivalent, and the only difference in the code path is the missing parameter.
+
+## Open questions
+
+None — the fix is clear and localized to a single line.
+
+---STDERR---

@@ -1,0 +1,20 @@
+# Audit: scikit-learn__scikit-learn-11578
+
+## FAIL_TO_PASS
+- `test_logistic_cv_multinomial_score[neg_log_loss-multiclass_agg_list3]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 93 PASS_TO_PASS tests passed successfully.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None — the baseline capture showed only the F2P test failing, which now passes.
+
+## Summary
+The craft patch successfully resolved the issue. The one-line fix added `multi_class=multi_class` to the LogisticRegression constructor at line 925, ensuring the temporary instance used for scoring in `_log_reg_scoring_path()` uses the same probability computation method (softmax for multinomial vs sigmoid+normalization for OvR) as the fitted model being compared against.
+
+**Gate outcome**: 94/94 tests passed, including the target F2P test. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
