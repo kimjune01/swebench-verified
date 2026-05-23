@@ -1,0 +1,75 @@
+2026-05-23 15:30:48,443 - INFO - Creating container for sympy__sympy-23413...
+2026-05-23 15:30:48,720 - INFO - Container for sympy__sympy-23413 created: f09bfe0808f564b1db516f278d5a74c255e57eb49aefd7e1be983e71619297f1
+2026-05-23 15:30:49,039 - INFO - Container for sympy__sympy-23413 started: f09bfe0808f564b1db516f278d5a74c255e57eb49aefd7e1be983e71619297f1
+2026-05-23 15:30:49,039 - INFO - Intermediate patch for sympy__sympy-23413 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23413/patch.diff, now applying to container...
+2026-05-23 15:30:49,148 - INFO - >>>>> Applied Patch:
+Checking patch sympy/polys/matrices/normalforms.py...
+Applied patch sympy/polys/matrices/normalforms.py cleanly.
+
+2026-05-23 15:30:49,452 - INFO - Git diff before:
+diff --git a/sympy/polys/matrices/normalforms.py b/sympy/polys/matrices/normalforms.py
+index 30f5534b08..fb75b26edc 100644
+--- a/sympy/polys/matrices/normalforms.py
++++ b/sympy/polys/matrices/normalforms.py
+@@ -205,16 +205,19 @@ def _hermite_normal_form(A):
+     if not A.domain.is_ZZ:
+         raise DMDomainError('Matrix must be over domain ZZ.')
+     # We work one row at a time, starting from the bottom row, and working our
+-    # way up. The total number of rows we will consider is min(m, n), where
+-    # A is an m x n matrix.
++    # way up, until either all rows are considered or all n pivot columns are filled.
+     m, n = A.shape
+-    rows = min(m, n)
+     A = A.to_dense().rep.copy()
+     # Our goal is to put pivot entries in the rightmost columns.
+     # Invariant: Before processing each row, k should be the index of the
+     # leftmost column in which we have so far put a pivot.
+     k = n
+-    for i in range(m - 1, m - 1 - rows, -1):
++    for i in range(m - 1, -1, -1):
++        if k == 0:
++            # This case can arise when n < m and we have already found n pivots.
++            # We do not need to consider any more rows, because this is already
++            # the maximum possible number of pivots.
++            break
+         k -= 1
+         # k now points to the column in which we want to put a pivot.
+         # We want zeros in all entries to the left of the pivot column.
+2026-05-23 15:30:49,452 - INFO - Eval script for sympy__sympy-23413 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23413/eval.sh; copying to container...
+2026-05-23 15:30:51,893 - INFO - Test runtime: 2.36 seconds
+2026-05-23 15:30:51,893 - INFO - Test output for sympy__sympy-23413 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23413/test_output.txt
+2026-05-23 15:30:52,012 - INFO - Git diff after:
+diff --git a/sympy/polys/matrices/normalforms.py b/sympy/polys/matrices/normalforms.py
+index 30f5534b08..fb75b26edc 100644
+--- a/sympy/polys/matrices/normalforms.py
++++ b/sympy/polys/matrices/normalforms.py
+@@ -205,16 +205,19 @@ def _hermite_normal_form(A):
+     if not A.domain.is_ZZ:
+         raise DMDomainError('Matrix must be over domain ZZ.')
+     # We work one row at a time, starting from the bottom row, and working our
+-    # way up. The total number of rows we will consider is min(m, n), where
+-    # A is an m x n matrix.
++    # way up, until either all rows are considered or all n pivot columns are filled.
+     m, n = A.shape
+-    rows = min(m, n)
+     A = A.to_dense().rep.copy()
+     # Our goal is to put pivot entries in the rightmost columns.
+     # Invariant: Before processing each row, k should be the index of the
+     # leftmost column in which we have so far put a pivot.
+     k = n
+-    for i in range(m - 1, m - 1 - rows, -1):
++    for i in range(m - 1, -1, -1):
++        if k == 0:
++            # This case can arise when n < m and we have already found n pivots.
++            # We do not need to consider any more rows, because this is already
++            # the maximum possible number of pivots.
++            break
+         k -= 1
+         # k now points to the column in which we want to put a pivot.
+         # We want zeros in all entries to the left of the pivot column.
+2026-05-23 15:30:52,012 - INFO - Grading answer for sympy__sympy-23413...
+2026-05-23 15:30:52,012 - INFO - report: {'sympy__sympy-23413': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_hermite_normal'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_smith_normal', 'test_smith_normal_deprecated'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-23413: resolved: True
+2026-05-23 15:30:52,012 - INFO - Attempting to stop container sweb.eval.sympy__sympy-23413.batch...
+2026-05-23 15:31:07,433 - INFO - Attempting to remove container sweb.eval.sympy__sympy-23413.batch...
+2026-05-23 15:31:07,443 - INFO - Container sweb.eval.sympy__sympy-23413.batch removed.

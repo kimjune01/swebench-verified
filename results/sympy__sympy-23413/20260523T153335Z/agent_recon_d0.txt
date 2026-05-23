@@ -1,0 +1,44 @@
+# Recon: sympy__sympy-23413
+
+## Failure summary
+
+The tests check that `hermite_normal_form` correctly computes the Hermite Normal Form of integer matrices. Two test cases fail:
+
+1. `Matrix([[2, 7], [0, 0], [0, 0]])` returns an empty 3×0 matrix instead of `Matrix([[1], [0], [0]])`  
+2. `Matrix([[1, 12], [0, 8], [0, 5]])` returns `Matrix([[12], [8], [5]])` instead of `Matrix([[1, 0], [0, 8], [0, 5]])`
+
+Both cases involve tall matrices (m > n) where the algorithm fails to process all rows, missing non-zero entries in the upper rows and producing truncated results with missing columns/pivots.
+
+## Suspect set
+
+- `sympy/polys/matrices/normalforms.py` lines 207-217: The `_hermite_normal_form` function initializes the number of rows to process and sets up the main loop. The variable `rows = min(m, n)` at line 211 limits processing to only `min(m, n)` rows instead of all `m` rows.
+
+## Root cause
+
+The `_hermite_normal_form` algorithm processes rows bottom-to-top to create pivots in a column-style Hermite Normal Form. The number of rows processed is incorrectly limited to `min(m, n)` (line 211), causing the algorithm to skip the top `m - min(m, n)` rows when m > n.
+
+For a 3×2 matrix, only the bottom 2 rows are examined (rows 2 and 1), skipping row 0. When the bottom rows are all zeros or rank-deficient, the algorithm fails to find pivots that exist in the skipped upper rows, resulting in an incomplete or empty result matrix.
+
+The loop at line 217 is `for i in range(m - 1, m - 1 - rows, -1)`, which for a 3×2 matrix expands to `range(2, 0, -1)`, processing only rows [2, 1]. Row 0, containing the non-zero data `[2, 7]`, is never processed.
+
+**Confidence: deduction — 95%**
+
+Supporting evidence:
+- `sympy/polys/matrices/normalforms.py:211` — `rows = min(m, n)` limits the number of rows processed
+- `sympy/polys/matrices/normalforms.py:217` — `for i in range(m - 1, m - 1 - rows, -1):` creates the loop that skips top rows when m > min(m, n)
+- Verified by tracing: for input `[[2,7],[0,0],[0,0]]`, the loop processes only rows [2, 1], missing row 0
+
+## Edit sites
+
+- `sympy/polys/matrices/normalforms.py` line 211: Change `rows = min(m, n)` to `rows = m`. This ensures all rows are processed, allowing the algorithm to find all possible pivots regardless of matrix shape.
+- `sympy/polys/matrices/normalforms.py` lines 207-209: Update the comment to reflect that all `m` rows are processed, not just `min(m, n)` rows.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and tracing.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

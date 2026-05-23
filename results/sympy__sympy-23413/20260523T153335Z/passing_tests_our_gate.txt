@@ -1,0 +1,23 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/matrices/tests/test_normalforms.py sympy/polys/matrices/tests/test_normalforms.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        91928132
+hash randomization: on (PYTHONHASHSEED=290826241)
+
+sympy/matrices/tests/test_normalforms.py[4] 
+test_smith_normal ok
+test_smith_normal_deprecated ok
+test_hermite_normal ok
+test_issue_23410 ok                                                         [OK]
+
+sympy/polys/matrices/tests/test_normalforms.py[2] 
+test_smith_normal ok
+test_hermite_normal ok                                                      [OK]
+
+
+================== tests finished: 6 passed, in 0.06 seconds ===================

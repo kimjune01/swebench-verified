@@ -1,0 +1,21 @@
+# Audit: sympy__sympy-23413
+
+## FAIL_TO_PASS
+- test_hermite_normal (sympy/matrices/tests/test_normalforms.py): **PASS** ✓
+- test_hermite_normal (sympy/polys/matrices/tests/test_normalforms.py): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all PASS_TO_PASS tests remain passing:
+- test_smith_normal: PASS ✓
+- test_smith_normal_deprecated: PASS ✓
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — bonus fix: test_issue_23410 was failing on base, now passes.
+
+## Summary
+The craft patch successfully resolved the issue. Both `test_hermite_normal` tests now pass (were failing on base), all PASS_TO_PASS tests remain passing, and zero regressions were introduced. The patch modified `sympy/polys/matrices/normalforms.py` to correctly handle the D == 0 case during column reduction in hermite_normal_form.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

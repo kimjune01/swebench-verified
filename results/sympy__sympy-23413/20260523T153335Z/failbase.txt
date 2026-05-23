@@ -1,0 +1,43 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/matrices/tests/test_normalforms.py sympy/polys/matrices/tests/test_normalforms.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        44191121
+hash randomization: on (PYTHONHASHSEED=1308233985)
+
+sympy/matrices/tests/test_normalforms.py[4] 
+test_smith_normal ok
+test_smith_normal_deprecated ok
+test_hermite_normal F
+test_issue_23410 F                                                        [FAIL]
+
+sympy/polys/matrices/tests/test_normalforms.py[2] 
+test_smith_normal ok
+test_hermite_normal F                                                     [FAIL]
+
+
+________________________________________________________________________________
+_________ sympy/matrices/tests/test_normalforms.py:test_hermite_normal _________
+Traceback (most recent call last):
+  File "/testbed/sympy/matrices/tests/test_normalforms.py", line 81, in test_hermite_normal
+    assert hermite_normal_form(m) == hnf
+AssertionError
+________________________________________________________________________________
+__________ sympy/matrices/tests/test_normalforms.py:test_issue_23410 ___________
+Traceback (most recent call last):
+  File "/testbed/sympy/matrices/tests/test_normalforms.py", line 87, in test_issue_23410
+    assert hermite_normal_form(A) == H
+AssertionError
+________________________________________________________________________________
+______ sympy/polys/matrices/tests/test_normalforms.py:test_hermite_normal ______
+Traceback (most recent call last):
+  File "/testbed/sympy/polys/matrices/tests/test_normalforms.py", line 66, in test_hermite_normal
+    assert hermite_normal_form(m) == hnf
+AssertionError
+
+============= tests finished: 3 passed, 3 failed, in 0.11 seconds ==============
+DO *NOT* COMMIT!
