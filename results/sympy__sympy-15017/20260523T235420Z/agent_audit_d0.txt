@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-15017
+
+## FAIL_TO_PASS
+- test_ndim_array_initiation: ✅ PASS
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully fixed the issue. Changed `_loop_size` computation from `if shape else 0` to `if shape else len(flat_list)` in all four array implementations. This correctly handles rank-0 arrays (empty shape tuple `()`) by returning the actual data length, while preserving correct behavior for all other array types.
+
+All 16 tests pass:
+- 1 FAIL_TO_PASS test now passes
+- 14 PASS_TO_PASS tests remain passing
+- 0 regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

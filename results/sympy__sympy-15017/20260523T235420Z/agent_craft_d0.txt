@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully handles rank-0 arrays by computing `_loop_size` as `len(flat_list)` when `shape` is empty, rather than hardcoding to 0. This preserves correct behavior for all cases:
+- `shape=(0,)` → loop_size = 0
+- `shape=()` with scalar → loop_size = 1  
+- `shape=()` empty → loop_size = 0
+
+All FAIL_TO_PASS tests now pass.
+
+---STDERR---

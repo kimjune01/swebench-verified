@@ -1,0 +1,39 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/tensor/array/tests/test_immutable_ndim_array.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        92209444
+hash randomization: on (PYTHONHASHSEED=3019910242)
+
+sympy/tensor/array/tests/test_immutable_ndim_array.py[16] 
+test_ndim_array_initiation F
+test_reshape ok
+test_iterator ok
+test_sparse ok
+test_calculation ok
+test_ndim_array_converting ok
+test_converting_functions ok
+test_equality ok
+test_arithmetic ok
+test_higher_dimenions ok
+test_rebuild_immutable_arrays ok
+test_slices ok
+test_diff_and_applyfunc ok
+test_op_priority ok
+test_symbolic_indexing ok
+test_issue_12665 ok                                                       [FAIL]
+
+
+________________________________________________________________________________
+ sympy/tensor/array/tests/test_immutable_ndim_array.py:test_ndim_array_initiation 
+Traceback (most recent call last):
+  File "/testbed/sympy/tensor/array/tests/test_immutable_ndim_array.py", line 80, in test_ndim_array_initiation
+    assert len(rank_zero_array) == 1
+AssertionError
+
+============= tests finished: 15 passed, 1 failed, in 0.04 seconds =============
+DO *NOT* COMMIT!
