@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully prevents duplicate file yields in `post_process()` while preserving error handling:
+
+- **Target test passes**: `test_post_processing` (no file yielded twice) ✓
+- **No regressions**: All 32 tests pass including `test_post_processing_failure` ✓
+
+**Implementation:** Buffer adjustable file results and yield them once after multi-pass processing completes. Non-adjustable files are yielded immediately in the first pass. Exceptions are never buffered—they're yielded immediately to preserve error reporting behavior.
+
+---STDERR---

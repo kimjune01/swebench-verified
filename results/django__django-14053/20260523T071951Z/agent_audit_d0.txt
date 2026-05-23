@@ -1,0 +1,24 @@
+# Audit: django__django-14053
+
+## FAIL_TO_PASS
+- test_post_processing (post_processing behaves correctly): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 32 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - test_post_processing was failing on base, now passes. All other tests were passing on base and still pass.
+
+## Gate output summary
+Ran 32 tests in 0.438s - **OK**
+
+All tests in the staticfiles_tests.test_storage suite passed, including:
+- The target FAIL_TO_PASS test (test_post_processing)
+- All 31 PASS_TO_PASS tests including test_post_processing_failure (which regressed in earlier iterations but is now fixed)
+
+The craft patch successfully fixes the duplicate yields bug by buffering adjustable file results and yielding them once after multi-pass processing completes, while preserving error reporting behavior through immediate exception yields.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

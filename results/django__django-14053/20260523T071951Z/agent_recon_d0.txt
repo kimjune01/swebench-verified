@@ -1,0 +1,73 @@
+Now let me print the structured handoff:
+
+```markdown
+# Recon: django__django-14053
+
+## Failure summary
+
+The test `test_post_processing` in `tests/staticfiles_tests/test_storage.py:207` checks that no file should be yielded twice from the `post_process()` method. The test fails because `stats['post_processed']` contains duplicate entries - the same files appear multiple times in the list. The assertion `self.assertCountEqual(stats['post_processed'], set(stats['post_processed']))` fails when duplicate entries exist, since converting to a set removes duplicates and makes the element counts unequal.
+
+## Suspect set
+
+- `django/contrib/staticfiles/storage.py` lines 203-247: The `HashedFilesMixin.post_process()` method that yields file processing results back to collectstatic
+- `django/contrib/staticfiles/storage.py` lines 225-227: Definition of `adjustable_paths` (files that need URL reference adjustments)
+- `django/contrib/staticfiles/storage.py` lines 231-232: First pass that yields ALL files
+- `django/contrib/staticfiles/storage.py` lines 234-239: Subsequent passes that yield adjustable files again
+
+## Root cause
+
+The `post_process()` method uses a multi-pass architecture to handle nested references between static files (introduced in commit 53bffe8d03 to fix #24452). However, it yields adjustable files multiple times:
+
+1. **First pass** (lines 231-232): Processes ALL files (including adjustable ones) and yields each
+2. **Subsequent passes** (lines 234-239): Processes ONLY adjustable files and yields them again (potentially multiple times until no more substitutions occur)
+
+Files in `adjustable_paths` (e.g., CSS files with URL references) are therefore yielded at least twice: once in the first pass, and one or more times in subsequent passes. Non-adjustable files (e.g., images, fonts) are only yielded once in the first pass.
+
+**Call path**:
+- collectstatic.collect() calls storage.post_process()
+- For each yielded (name, hashed_name, processed), if processed=True, collectstatic appends name to `self.post_processed_files`
+- The list is returned as `stats['post_processed']`
+- Duplicate yields → duplicate list entries
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `storage.py:225-227` — `adjustable_paths = [path for path in paths if matches_patterns(path, self._patterns)]`
+- `storage.py:231-232` — First loop yields all files: `for name, hashed_name, processed, _ in self._post_process(paths, adjustable_paths, hashed_files): yield name, hashed_name, processed`
+- `storage.py:234` — Filters paths: `paths = {path: paths[path] for path in adjustable_paths}`
+- `storage.py:238-239` — Second loop yields adjustable files again: `for name, hashed_name, processed, subst in self._post_process(paths, adjustable_paths, hashed_files): yield name, hashed_name, processed`
+
+## Edit sites
+
+**Primary fix** - `django/contrib/staticfiles/storage.py` lines 231-232:
+
+The first pass should NOT yield adjustable files, since they will be yielded in subsequent passes. Only yield non-adjustable files here.
+
+Change from:
+```python
+for name, hashed_name, processed, _ in self._post_process(paths, adjustable_paths, hashed_files):
+    yield name, hashed_name, processed
+```
+
+To:
+```python
+for name, hashed_name, processed, _ in self._post_process(paths, adjustable_paths, hashed_files):
+    # Only yield non-adjustable files in the first pass.
+    # Adjustable files will be yielded in subsequent passes.
+    if name not in adjustable_paths:
+        yield name, hashed_name, processed
+```
+
+This ensures each file is yielded exactly once: non-adjustable files in the first pass, adjustable files in subsequent passes.
+
+## Rejected hypotheses
+
+- **H₁**: "collectstatic incorrectly appends duplicates" — REJECTED. The `collect()` method at `collectstatic.py:53` correctly appends each yielded file with `processed=True`. The bug is that `post_process()` shouldn't be yielding duplicates.
+- **H₂**: "Need to deduplicate in collectstatic" — REJECTED. The contract is that `post_process()` should yield each file once. Fixing the symptom in collectstatic doesn't address the root cause and violates the expected behavior documented in the issue.
+
+## Open questions
+
+None. The fix is straightforward and localized to a single location.
+```
+
+---STDERR---

@@ -1,0 +1,56 @@
+diff --git a/django/contrib/staticfiles/storage.py b/django/contrib/staticfiles/storage.py
+index 494890cc23..57da258c15 100644
+--- a/django/contrib/staticfiles/storage.py
++++ b/django/contrib/staticfiles/storage.py
+@@ -226,22 +226,48 @@ class HashedFilesMixin:
+             path for path in paths
+             if matches_patterns(path, self._patterns)
+         ]
++
++        # Buffer results for adjustable files to yield them once after processing completes
++        processed_adjustable_files = {}
++        failed_adjustable_files = set()
++
+         # Do a single pass first. Post-process all files once, then repeat for
+         # adjustable files.
+         for name, hashed_name, processed, _ in self._post_process(paths, adjustable_paths, hashed_files):
+-            yield name, hashed_name, processed
++            if isinstance(processed, Exception):
++                failed_adjustable_files.add(name)
++                processed_adjustable_files.pop(name, None)
++                yield name, hashed_name, processed
++            elif name in adjustable_paths:
++                processed_adjustable_files[name] = (name, hashed_name, processed)
++            else:
++                yield name, hashed_name, processed
+ 
+-        paths = {path: paths[path] for path in adjustable_paths}
++        paths = {
++            path: paths[path]
++            for path in adjustable_paths
++            if path not in failed_adjustable_files
++        }
+ 
+         for i in range(self.max_post_process_passes):
+             substitutions = False
+             for name, hashed_name, processed, subst in self._post_process(paths, adjustable_paths, hashed_files):
+-                yield name, hashed_name, processed
++                if isinstance(processed, Exception):
++                    failed_adjustable_files.add(name)
++                    processed_adjustable_files.pop(name, None)
++                    yield name, hashed_name, processed
++                    continue
++
++                processed_adjustable_files[name] = (name, hashed_name, processed)
+                 substitutions = substitutions or subst
+ 
+             if not substitutions:
+                 break
+ 
++        # Yield adjustable files once with their final results
++        for result in processed_adjustable_files.values():
++            yield result
++
+         if substitutions:
+             yield 'All', None, RuntimeError('Max post-process passes exceeded.')
+ 
