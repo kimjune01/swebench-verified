@@ -1,0 +1,34 @@
+# Recon: django__django-16901
+
+## Failure summary
+The test `test_filter_multiple` validates that chaining multiple XOR operations on Q objects produces correct parity behavior. It filters numbers 0-9 using `Q(num__gte=1) ^ Q(num__gte=3) ^ Q(num__gte=5) ^ Q(num__gte=7) ^ Q(num__gte=9)` and expects results [1, 2, 5, 6, 9] — numbers satisfying an odd count of conditions. The test fails with only [1, 2] returned, missing 5, 6, and 9 which satisfy 3 conditions each.
+
+## Suspect set
+- `django/db/models/sql/where.py` lines 133-144: XOR fallback implementation for databases lacking native XOR support
+
+## Root cause
+The XOR fallback in `where.py:142` uses `Exact(1, rhs_sum)` which checks if exactly one condition is true (`sum == 1`). This is mathematically incorrect for n-ary XOR, which should return true when an **odd number** of conditions are true (parity semantics: `sum % 2 == 1`). 
+
+In boolean algebra, `a XOR b XOR c = (a + b + c) mod 2`. The current implementation only matches when sum equals 1, missing cases where sum is 3, 5, 7, etc.
+
+For the failing test, numbers 5 and 6 satisfy 3 conditions (>=1, >=3, >=5), and number 9 satisfies all 5 conditions — all odd counts that should evaluate to true but are rejected by the `sum == 1` check.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/models/sql/where.py:136-144` — Comment says "AND (a + b + c + ...) == 1" and code implements exactly this with `rhs = Exact(1, rhs_sum)`
+- Mathematical definition of XOR is cumulative mod 2, not "exactly one"
+- Test failure pattern: returns [1,2] (sum=1) but misses [5,6,9] (sum=3,3,5)
+
+## Edit sites
+- `django/db/models/sql/where.py` line 8: Add import `from django.db.models.functions import Mod`
+- `django/db/models/sql/where.py` line 142: Change `rhs = Exact(1, rhs_sum)` to `rhs = Exact(1, Mod(rhs_sum, 2))` to check parity instead of exact equality
+- `django/db/models/sql/where.py` line 138: Update comment from `(a + b + c + ...) == 1` to `(a + b + c + ...) % 2 == 1` to document correct semantics
+
+## Rejected hypotheses
+None — the code path is deterministic and the mathematical error is unambiguous.
+
+## Open questions
+None — fix is straightforward modulo operation substitution.
+
+---STDERR---

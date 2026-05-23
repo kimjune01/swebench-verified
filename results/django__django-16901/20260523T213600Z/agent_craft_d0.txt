@@ -1,0 +1,13 @@
+**RESOLVED**
+
+The XOR parity fix is complete and verified. The gate shows all 7 tests passing, including `test_filter_multiple` from FAIL_TO_PASS.
+
+**Fix summary:**
+- Added `Mod` import from `django.db.models.functions`
+- Updated XOR fallback to check odd parity (`sum % 2 == 1`) instead of exactly-one (`sum == 1`)
+- Applied `Mod(rhs_sum, 2)` only for 3+ operands, preserving binary XOR SQL unchanged
+- Updated comment to document correct parity semantics
+
+The working tree now contains the minimal fix that makes FAIL_TO_PASS pass without breaking existing tests.
+
+---STDERR---

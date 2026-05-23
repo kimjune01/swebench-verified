@@ -1,0 +1,27 @@
+# Audit: django__django-16901
+
+## FAIL_TO_PASS
+- `test_filter_multiple`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing failures (not counted)
+None
+
+## Verification
+All 7 tests in `xor_lookups.tests.XorLookupsTests` pass:
+- test_empty_in: ok
+- test_exclude: ok
+- test_filter: ok
+- test_filter_multiple: ok ← **FIXED** (was FAIL on base)
+- test_filter_negated: ok
+- test_pk_q: ok
+- test_stages: ok
+
+The patch correctly implements n-ary XOR parity semantics by wrapping `rhs_sum` with `Mod(rhs_sum, 2)` for cases with 3+ operands, while preserving the existing binary XOR behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
