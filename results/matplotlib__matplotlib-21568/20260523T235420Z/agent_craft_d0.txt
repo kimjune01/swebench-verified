@@ -1,0 +1,10 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix required two changes to `lib/matplotlib/dates.py`:
+
+1. **Line 599** (`_wrap_in_tex`): Added `.replace(':', '{:}')` to escape colons for TeX math mode, matching the existing dash escaping
+2. **Lines 967-969** (`AutoDateFormatter.__call__`): Added space-to-`\;` conversion when `usetex=True` to ensure proper TeX thin spacing between date/time components
+
+The recon diagnosis correctly identified the colon escaping issue but missed the AutoDateFormatter space conversion requirement.
+
+---STDERR---

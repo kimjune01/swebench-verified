@@ -1,0 +1,47 @@
+Now I'll output the diagnosis handoff to stdout:
+
+# Recon: matplotlib__matplotlib-21568
+
+## Failure summary
+The tests verify that datetime axis labels are properly formatted for TeX math mode when `usetex=True`. Four tests fail because colons in time formats (like `04:00`) are not being escaped. TeX expects colons to be braced as `{:}` within `\mathdefault{}` to ensure proper spacing. The test assertions show expected format `$\mathdefault{04{:}00}$` but actual output is `$\mathdefault{04:00}$`.
+
+**Error**: AssertionError comparing formatted tick labels - colons appear unescaped in math mode.
+
+## Suspect set
+- `lib/matplotlib/dates.py` lines 594-601: `_wrap_in_tex()` function - handles escaping of special characters for TeX math mode
+
+## Root cause
+The `_wrap_in_tex()` function (lib/matplotlib/dates.py:594-601) wraps datetime strings in TeX math mode formatting. Line 599 escapes dashes as `{-}` to prevent them being treated as binary operators, but does not escape colons. In TeX math mode, colons require the same treatment - they should be braced as `{:}` to ensure proper spacing. This is identical to the dash-escaping logic already implemented.
+
+Both `AutoDateFormatter` and `ConciseDateFormatter` call `_wrap_in_tex()` when `usetex=True`, so the missing colon escaping affects both formatters.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `lib/matplotlib/dates.py:599` — `.replace('-', '{-}')` escapes dashes but no colon handling
+- `lib/matplotlib/dates.py:634` — `DateFormatter.__call__` uses `_wrap_in_tex()` when `usetex=True`
+- `lib/matplotlib/dates.py:846` — `ConciseDateFormatter.format_ticks()` uses `_wrap_in_tex()` for labels
+- Git commit 5a8fc07d5d simplified `_wrap_in_tex` but didn't escape colons
+- Test patch 43ce4b7cb6 added expectations for escaped colons to fix the TeX spacing regression
+
+## Edit sites
+- `lib/matplotlib/dates.py` line 599: Add `.replace(':', '{:}')` chained after the dash replacement. The comment on line 598 should be updated to mention both dashes and colons.
+
+The fix is a single-line change:
+```python
+# Current (line 599):
+ret_text = '$\\mathdefault{'+ret_text.replace('-', '{-}')+'}$'
+
+# Should become:
+ret_text = '$\\mathdefault{'+ret_text.replace('-', '{-}').replace(':', '{:}')+'}$'
+```
+
+And update the comment (line 598) from "dashes are not spaced" to "dashes and colons are not spaced".
+
+## Rejected hypotheses
+None - direct path from symptom to root cause.
+
+## Open questions
+None - the fix is straightforward and localized to a single function.
+
+---STDERR---

@@ -1,0 +1,25 @@
+# Audit: matplotlib__matplotlib-21568
+
+## FAIL_TO_PASS
+- test_date_formatter_usetex[delta2-expected2]: ✅ PASS
+- test_date_formatter_usetex[delta3-expected3]: ✅ PASS
+- test_concise_formatter_usetex[t_delta2-expected2]: ✅ PASS
+- test_concise_formatter_usetex[t_delta3-expected3]: ✅ PASS
+
+## PASS_TO_PASS regressions
+None - all 73 other tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - the baseline showed the delta2 and delta3 tests failing (which are now fixed).
+
+## Patch summary
+The craft patch modified two locations in `lib/matplotlib/dates.py`:
+1. `_wrap_in_tex()` (line 598-599): Added `.replace(':', '{:}')` to escape colons in TeX math mode, matching the dash escaping behavior
+2. `AutoDateFormatter.__call__()` (line 967-969): Added space-to-`\;` conversion for TeX thin spaces when usetex=True
+
+Both changes are minimal, targeted, and address the root causes identified in recon. All 77 tests in the gate passed with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

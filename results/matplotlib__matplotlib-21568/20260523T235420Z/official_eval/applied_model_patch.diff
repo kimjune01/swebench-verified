@@ -1,0 +1,25 @@
+diff --git a/lib/matplotlib/dates.py b/lib/matplotlib/dates.py
+index 0766156d64..a14f5d54de 100644
+--- a/lib/matplotlib/dates.py
++++ b/lib/matplotlib/dates.py
+@@ -595,8 +595,8 @@ def _wrap_in_tex(text):
+     p = r'([a-zA-Z]+)'
+     ret_text = re.sub(p, r'}$\1$\\mathdefault{', text)
+ 
+-    # Braces ensure dashes are not spaced like binary operators.
+-    ret_text = '$\\mathdefault{'+ret_text.replace('-', '{-}')+'}$'
++    # Braces prevent TeX math mode from adding operator spacing.
++    ret_text = '$\\mathdefault{'+ret_text.replace('-', '{-}').replace(':', '{:}')+'}$'
+     ret_text = ret_text.replace('$\\mathdefault{}$', '')
+     return ret_text
+ 
+@@ -964,6 +964,9 @@ class AutoDateFormatter(ticker.Formatter):
+                    self.defaultfmt)
+ 
+         if isinstance(fmt, str):
++            if self._usetex:
++                # Convert spaces to TeX thin spaces for proper math mode spacing.
++                fmt = fmt.replace(' ', r'\;')
+             self._formatter = DateFormatter(fmt, self._tz, usetex=self._usetex)
+             result = self._formatter(x, pos)
+         elif callable(fmt):
