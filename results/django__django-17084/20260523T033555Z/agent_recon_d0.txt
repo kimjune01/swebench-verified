@@ -1,0 +1,32 @@
+Now let me output the full recon report:
+
+# Recon: django__django-17084
+
+## Failure summary
+The test `test_referenced_window_requires_wrapping` verifies that when aggregating over annotations containing Window functions, Django should wrap the query in a subquery to avoid invalid SQL. The test fails with `sqlite3.OperationalError: misuse of window function AVG()` because Django attempts to inline the window function directly into the aggregate expression, producing SQL like `SELECT SUM(AVG(pages) OVER (...))` which is invalid. The test expects 2 SELECT statements (indicating subquery wrapping) but receives only 1.
+
+## Suspect set
+- `django/db/models/sql/query.py` lines 397-570: `get_aggregation()` method, specifically lines 418-421 where subquery requirement detection occurs
+- `django/db/models/sql/query.py` lines 448-460: Conditional that determines whether to use subquery wrapping
+
+## Root cause
+The `get_aggregation()` method in `query.py` checks whether aggregating over referenced annotations requires subquery wrapping. At lines 418-421, it only checks if referenced annotations have a `subquery` attribute (added in commit e5c844d6f2 to fix #34551). It does not check for `contains_over_clause`, which identifies Window expressions. This causes Django to take the "inline" path (line 526 onwards) instead of the "subquery wrapping" path (line 461 onwards), resulting in invalid SQL where aggregate functions directly contain window function calls.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/db/models/sql/query.py:418-421` — only checks `getattr(self.annotations[ref], "subquery", False)` without checking `contains_over_clause`
+- `django/db/models/expressions.py:1703` — Window class defines `contains_over_clause = True`
+- `django/db/models/expressions.py:247-249` — Base Expression class provides recursive `@cached_property contains_over_clause` that checks source expressions
+- Commit e5c844d6f2 added identical pattern for Subquery with `test_referenced_subquery_requires_wrapping` test
+
+## Edit sites
+- `django/db/models/sql/query.py` lines 418-421: Modify the `refs_subquery` check to also test for `contains_over_clause` attribute. Change the any() expression to include `or getattr(self.annotations[ref], "contains_over_clause", False)` alongside the existing subquery check.
+
+## Rejected hypotheses
+None — the code path is deterministic and the Window class structure confirms this is the only missing check.
+
+## Open questions
+None — the fix is well-precedented by the Subquery fix in commit e5c844d6f2.
+
+---STDERR---

@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix is complete and verified:
+
+**Change:** Added `or getattr(self.annotations[ref], "contains_over_clause", False)` to line 420 of `django/db/models/sql/query.py` to check for Window expressions alongside the existing Subquery check.
+
+**Result:**
+- ✅ `test_referenced_window_requires_wrapping` now passes
+- ✅ All 7 tests in AggregateAnnotationPruningTests pass (no regressions)
+- ✅ All 108+ tests in aggregation.tests pass (no regressions)
+
+The fix mirrors the pattern established in commit e5c844d6f2 for Subquery handling, ensuring that aggregations over annotations containing Window functions are properly wrapped in a subquery to generate valid SQL.
+
+---STDERR---
