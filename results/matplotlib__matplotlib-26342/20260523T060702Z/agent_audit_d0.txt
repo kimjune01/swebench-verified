@@ -1,0 +1,30 @@
+# Audit: matplotlib__matplotlib-26342
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_contour.py::test_contour_set_paths[png]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- `lib/matplotlib/tests/test_contour.py::test_deprecated_apis` - Failed on base with MatplotlibDeprecationWarning context manager issue; still failing with identical error
+
+## Analysis
+The craft patch successfully implemented `set_paths` in `_CollectionWithSizes`:
+```python
+def set_paths(self, paths):
+    self._paths = paths
+    self.stale = True
+```
+
+This replaced the `raise NotImplementedError` stub, allowing the FAIL_TO_PASS test to pass. The implementation correctly:
+1. Stores the paths in `self._paths`
+2. Marks the collection as stale for re-rendering
+3. Matches the pattern used by sibling classes in the hierarchy
+
+All 82 PASS_TO_PASS tests remain passing. The sole failure (`test_deprecated_apis`) was already present on base and is unrelated to the `set_paths` implementation.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

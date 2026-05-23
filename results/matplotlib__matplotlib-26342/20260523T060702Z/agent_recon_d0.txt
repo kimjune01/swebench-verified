@@ -1,0 +1,41 @@
+# Recon: matplotlib__matplotlib-26342
+
+## Failure summary
+
+The test `test_contour_set_paths` creates two `ContourSet` objects, retrieves paths from one using `get_paths()`, and attempts to set them on the other using `set_paths()`. The test fails with `NotImplementedError` raised at `lib/matplotlib/collections.py:210`. This is testing the enhancement request to add a `ContourSet.set_paths()` method to replace Cartopy's current workaround of `paths = cs.get_paths(); paths[:] = transformed_paths`.
+
+## Suspect set
+
+- `lib/matplotlib/contour.py` lines 706-1100: `ContourSet` class — inherits from `Collection` but doesn't override `set_paths()`
+- `lib/matplotlib/collections.py` lines 207-210: Base `Collection.set_paths()` — raises `NotImplementedError`
+
+## Root cause
+
+`ContourSet` inherits `set_paths()` from the base `Collection` class, which intentionally raises `NotImplementedError` as a stub. The test expects `ContourSet` to provide a working implementation. Other `Collection` subclasses like `PathCollection` override this method with a simple implementation that sets `self._paths` and marks the artist as stale.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `lib/matplotlib/collections.py:210` — `def set_paths(self, paths): raise NotImplementedError`
+- `lib/matplotlib/contour.py:706` — `class ContourSet(ContourLabeler, mcoll.Collection):` — inherits from Collection, no `set_paths` override found
+- `lib/matplotlib/collections.py:1010-1012` — PathCollection implementation: `self._paths = paths; self.stale = True`
+- `lib/matplotlib/contour.py:352-353` — Existing code pattern for invalidating cached collections when paths change
+
+## Edit sites
+
+- `lib/matplotlib/contour.py` — Add `set_paths()` method to `ContourSet` class (after line 897 where paths are used, or near other path-related methods)
+  - Set `self._paths = paths`
+  - Mark as stale: `self.stale = True`
+  - Invalidate cached old-style collections: `if hasattr(self, "_old_style_split_collections"): del self._old_style_split_collections`
+
+The implementation follows the same pattern as `PathCollection.set_paths()` with the addition of invalidating the deprecated collections cache (which ContourSet uses at line 952-978).
+
+## Rejected hypotheses
+
+None — the call stack directly points to the stub implementation in Collection.
+
+## Open questions
+
+None — the fix is straightforward.
+
+---STDERR---
