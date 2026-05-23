@@ -98,7 +98,7 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Boxes ALIVE:** 10 boxes (b_1..b_10), watchdog extended to **+720min ≈ alive until ~21:35 2026-05-24**. IPs/keys in `/tmp/b_*.env`. Local bg procs (launch `bjnknqlxy`, monitor) may have died with the session — the EC2 boxes did not.
 
-**batch_009 status:** 29/30 captured locally (patches in `/tmp/swebench-abduction/rung4_patches_b_*.jsonl` + `r4_patch_*.diff`), **NOT yet graded or archived**. Holdout `django__django-15957` (b_7) was in outer-loop attempt 2 (audit caught a regression, re-diagnosing) when paused — may have finished or not.
+**batch_009 status (updated):** launch COMPLETED. 29/30 captured; `django__django-15957` (b_7) is a **confirmed DNF** (exhausted outer-loop attempts, no patch — 4th standing loss). **Grading launched** (bg `bv07ch181`, `/tmp/grade_b9.log`) — if it finished, just archive; if the bg proc died with the session, re-run `grade_batch.sh` then archive.
 
 **To resume (from repo root):**
 1. Check holdout: `cat /tmp/swebench-abduction/rung4_results_b_7.jsonl | grep 15957` — see if it reached `done`.
