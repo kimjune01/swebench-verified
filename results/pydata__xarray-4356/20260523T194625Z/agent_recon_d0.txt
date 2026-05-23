@@ -1,0 +1,44 @@
+Now I'll output the recon handoff to stdout:
+
+# Recon: pydata__xarray-4356
+
+## Failure summary
+
+The test `test_min_count_nd` verifies that reduction operations (`sum`, `prod`) with `min_count` parameter work correctly when reducing over multiple dimensions. When calling `da.sum(dim=["x", "y", "z"], skipna=True, min_count=3)`, the operation should succeed and produce the same result as `da.sum(dim=..., skipna=True, min_count=3)`. However, the code explicitly raises `ValueError: min_count is not available for reduction with more than one dimensions` at `xarray/core/nanops.py:30`, blocking this functionality entirely.
+
+## Suspect set
+
+- `xarray/core/nanops.py` lines 25-45: The `_maybe_null_out` function contains:
+  - Lines 28-31: Explicit ValueError preventing multi-dimensional reduction with min_count
+  - Line 35: Uses `mask.shape[axis]` which only works when axis is a single integer, not a tuple
+
+## Root cause
+
+The `_maybe_null_out` function has an incomplete implementation that was never extended to handle tuple/list axis values. Line 35 attempts `mask.shape[axis]`, which is a TypeError when axis is a tuple like `(0, 1, 2)` (you cannot index a tuple with a tuple). The ValueError on lines 28-31 was added as a guard to prevent this unimplemented case from being reached. The rest of the logic already supports tuple axes—`mask.sum(axis)` handles tuples correctly via numpy's built-in behavior.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `xarray/core/nanops.py:30` — Raises `ValueError` with message "min_count is not available for reduction with more than one dimensions"
+- `xarray/core/nanops.py:35` — Expression `(mask.shape[axis] - mask.sum(axis) - min_count) < 0` fails for tuple axis because `mask.shape[axis]` is invalid when axis is a tuple
+- Verified via `python3`: `np.prod(np.take((16,8,4), axis))` correctly returns `16` when `axis=0` and `512` when `axis=(0,1,2)`
+- Git log shows this ValueError has existed since the function's creation, indicating it was a deliberate limitation rather than a bug
+
+## Edit sites
+
+- `xarray/core/nanops.py` lines 28-31: **Delete** the ValueError check that blocks multi-dimensional reduction. This check serves only to prevent reaching the unimplemented code below it.
+
+- `xarray/core/nanops.py` line 35: **Replace** `mask.shape[axis]` with `np.prod(np.take(mask.shape, axis))`. This change makes the calculation work for both single-axis (int) and multi-axis (tuple/list) cases:
+  - When `axis=0`: `np.prod(np.take(mask.shape, 0))` returns the size of dimension 0
+  - When `axis=(0,1,2)`: `np.prod(np.take(mask.shape, (0,1,2)))` returns the product of all three dimension sizes
+  - The rest of the expression (`mask.sum(axis)`, `min_count`, comparison) already handles tuple axes correctly
+
+## Rejected hypotheses
+
+None. The failure mode is unambiguous—an explicit ValueError with a clear message pointing to the exact limitation. Code inspection and testing confirmed that the suggested fix (`np.prod(np.take(mask.shape, axis))`) handles all cases correctly.
+
+## Open questions
+
+None. The fix is localized to two changes in a single function, and the test suite covers both single-axis and multi-axis cases for both `sum` and `prod` operations.
+
+---STDERR---

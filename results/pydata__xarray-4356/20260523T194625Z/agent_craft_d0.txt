@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully enables multi-dimensional reduction with `min_count` parameter. All FAIL_TO_PASS tests now pass (612 total tests passed, no regressions). The implementation removed the artificial ValueError guard and added proper tuple-axis support by computing `axis_size = np.prod(np.take(mask.shape, axis))` for multi-dimensional cases while preserving single-axis behavior.
+
+---STDERR---

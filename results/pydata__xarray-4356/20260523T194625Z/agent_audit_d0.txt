@@ -1,0 +1,25 @@
+# Audit: pydata__xarray-4356
+
+## FAIL_TO_PASS
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[sum-False-float]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[sum-False-int]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[sum-False-float32]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[sum-False-bool_]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[prod-False-float]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[prod-False-int]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[prod-False-float32]`: PASS ✓
+- `xarray/tests/test_duck_array_ops.py::test_min_count_nd[prod-False-bool_]`: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves the issue. The fix removes the ValueError blocking multi-dimensional reductions with `min_count` and implements proper axis size calculation using `np.prod(np.take(mask.shape, axis))` for tuple axes. All FAIL_TO_PASS tests now pass. Gate shows 612 passed, 0 failed — no regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
