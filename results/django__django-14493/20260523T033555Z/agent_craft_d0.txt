@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `substitutions = False` initialization before the for loop to handle the `max_post_process_passes = 0` edge case, while preserving the existing per-iteration reset for convergence detection. All tests pass, including the target FAIL_TO_PASS test.
+
+---STDERR---

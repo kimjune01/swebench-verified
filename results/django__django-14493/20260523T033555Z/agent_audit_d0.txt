@@ -1,0 +1,18 @@
+# Audit: django__django-14493
+
+## FAIL_TO_PASS
+- test_collectstatistic_no_post_process_replaced_paths: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing failures (not counted)
+None
+
+## Summary
+The patch successfully resolves the issue. The fix initializes `substitutions = False` before the for loop at line 264, ensuring the variable is defined even when `max_post_process_passes = 0` (when the loop body never executes). All 37 tests passed, including the target FAIL_TO_PASS test, with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,31 @@
+# Recon: django__django-14493
+
+## Failure summary
+The test `test_collectstatistic_no_post_process_replaced_paths` creates a custom storage class `NoPostProcessReplacedPathStorage` that inherits from `ManifestStaticFilesStorage` and sets `max_post_process_passes = 0`. When running `collectstatic`, the code crashes with `UnboundLocalError: local variable 'substitutions' referenced before assignment` at line 274 of `django/contrib/staticfiles/storage.py`.
+
+## Suspect set
+- `django/contrib/staticfiles/storage.py` lines 264-275: The `post_process` method in `HashedFilesMixin` class where the variable scope bug exists
+
+## Root cause
+In `HashedFilesMixin.post_process()`, the variable `substitutions` is initialized inside the for loop at line 265, but is referenced outside the loop at line 274. When `max_post_process_passes = 0`, the expression `range(0)` produces an empty sequence, so the loop body never executes and `substitutions` is never initialized, causing an `UnboundLocalError`.
+
+The bug was introduced in commit 53bffe8d03 (Fixed #24452, 2017-01-11) which added support for multiple post-processing passes but failed to account for the edge case where the number of passes could be set to 0.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/contrib/staticfiles/storage.py:264` — `for i in range(self.max_post_process_passes):`
+- `django/contrib/staticfiles/storage.py:265` — `substitutions = False` (only set inside loop body)
+- `django/contrib/staticfiles/storage.py:274` — `if substitutions:` (referenced after loop)
+- When `max_post_process_passes = 0`, `range(0)` is empty, loop body never executes
+
+## Edit sites
+- `django/contrib/staticfiles/storage.py` lines 264-265: Move the initialization of `substitutions = False` to BEFORE the for loop (line 263) instead of inside the loop body (line 265). This ensures the variable is always defined regardless of whether the loop executes.
+
+## Rejected hypotheses
+None — the root cause is definitively identified through code tracing.
+
+## Open questions
+None — the fix is straightforward: move one line of initialization outside the loop.
+
+---STDERR---
