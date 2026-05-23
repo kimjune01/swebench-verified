@@ -1,0 +1,18 @@
+# Audit: astropy__astropy-13453
+
+## FAIL_TO_PASS
+- `astropy/io/ascii/tests/test_html.py::test_write_table_formatted_columns`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Verdict Summary
+The patch resolves the issue completely. All FAIL_TO_PASS tests now pass (1/1), zero PASS_TO_PASS regressions (0/9), and no new failures introduced. The fix correctly applies user-supplied formats to HTML table columns by calling `_set_col_formats()` after setting `self.data.cols`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

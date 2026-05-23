@@ -1,0 +1,45 @@
+# Recon: astropy__astropy-13453
+
+## Failure summary
+
+The test `test_write_table_formatted_columns` verifies that HTML table output respects the `formats` parameter passed to `Table.write()`. The test creates a table with two columns and specifies formats `{"C1": "04d", "C2": ".2e"}` to format integers with leading zeros and floats in scientific notation with 2 decimal places. The test fails because the HTML output shows unformatted values: `<td>1</td>` instead of `<td>0001</td>`, and `<td>1.234567e-11</td>` instead of `<td>1.23e-11</td>`. Other formats (CSV, RST) correctly apply the formatting.
+
+## Suspect set
+
+- `astropy/io/ascii/html.py` lines 342-515: `HTML.write()` method that generates HTML output
+- `astropy/io/ascii/core.py` lines 934-938: `BaseData._set_col_formats()` that applies formats
+- `astropy/io/ascii/core.py` lines 1472-1520: `BaseReader.write()` showing the correct flow
+
+## Root cause
+
+The HTML writer's `write()` method overrides the base writer completely and bypasses the format-setting step. In the base writer flow (`core.py:1472-1520`), the `BaseReader.write()` method sets `self.data.cols = new_cols` (line 1510) and then calls `self.data.write()` (line 1517), which eventually calls `_set_col_formats()` via `str_vals()` (line 907). This applies column formats before getting string representations.
+
+The HTML writer reimplements `write()` at the `HTML` class level (not the data level), so it never calls the base data writer. While it correctly calls `self.data._set_fill_values(cols)` at line 354, it never sets `self.data.cols` or calls `self.data._set_col_formats()`. Then at lines 439 and 502, it calls `col.info.iter_str_vals()` which returns unformatted strings because `col.info.format` was never set.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `core.py:1727` — `writer.data.formats = kwargs['formats']` sets formats from user input
+- `core.py:1510` — `self.data.cols = new_cols` is set by base writer
+- `core.py:907` — `self._set_col_formats()` is called by base `str_vals()` method
+- `core.py:934-938` — `_set_col_formats()` iterates `self.cols` and sets `col.info.format = self.formats[col.info.name]`
+- `html.py:354` — Only calls `self.data._set_fill_values(cols)`, missing the format step
+- `html.py:439, 502` — Calls `col.info.iter_str_vals()` without formats applied
+
+## Edit sites
+
+- `astropy/io/ascii/html.py` lines 354-356: After the call to `self.data._set_fill_values(cols)`, add two lines:
+  1. `self.data.cols = cols` — Set the data columns so `_set_col_formats()` can iterate them
+  2. `self.data._set_col_formats()` — Apply the formats to each column's `col.info.format` attribute
+
+The fix ensures that before calling `col.info.iter_str_vals()`, the column's format attribute has been set from the user-supplied `formats` dictionary, matching the behavior of other ASCII format writers.
+
+## Rejected hypotheses
+
+None — the root cause was immediately clear from tracing the code path and comparing to the working base implementation.
+
+## Open questions
+
+None — the fix location and required changes are unambiguous.
+
+---STDERR---

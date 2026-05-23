@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix makes `test_write_table_formatted_columns` pass. The HTML writer now calls `self.data.cols = cols` and `self.data._set_col_formats()` after `_set_fill_values()`, applying user-specified formats before generating string values.
+
+---STDERR---
