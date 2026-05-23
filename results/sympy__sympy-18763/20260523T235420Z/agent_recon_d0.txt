@@ -1,0 +1,45 @@
+# Recon: sympy__sympy-18763
+
+## Failure summary
+
+The test `test_latex_subs` in `sympy/printing/tests/test_latex.py` checks that Subs expressions are properly parenthesized when rendered to LaTeX. The test fails with AssertionError because the expected parentheses around the substituted expression are missing:
+
+- `Subs(x*y, (x, y), (1, 2))` currently produces `\left. x y \right|_{\substack{ x=1\\ y=2 }}` but should produce `\left. \left(x y\right) \right|_{\substack{ x=1\\ y=2 }}`
+- `3*Subs(-x+y, (x,),(1,))` currently produces `3 \left. - x + y \right|_{\substack{ x=1 }}` but should produce `3 \left. \left(- x + y\right) \right|_{\substack{ x=1 }}`
+
+When a Subs expression is multiplied by a coefficient (like `3*Subs(...)`), the lack of parentheses creates ambiguity in the mathematical notation.
+
+## Suspect set
+
+- `sympy/printing/latex.py` lines 699-707: The `_print_Subs` method that generates LaTeX output for Subs expressions
+
+## Root cause
+
+The `_print_Subs` method directly prints the expression without applying precedence-based parenthesization. Line 701 uses `latex_expr = self._print(expr)` instead of using the `parenthesize` method that checks operator precedence.
+
+Similar LaTeX printer methods for analogous mathematical constructs (Integral, Derivative) use `self.parenthesize(expr, PRECEDENCE["Mul"])` to ensure proper parenthesization based on operator precedence. The Subs printer should follow the same pattern.
+
+The key difference is that while Integral and Derivative use `strict=True` (which only parenthesizes expressions with strictly lower precedence), Subs needs `strict=False` (the default) to also parenthesize expressions at the same precedence level as Mul (precedence 50). This is why the test expects both `x*y` (precedence 50) and `-x+y` (precedence 40) to be parenthesized.
+
+**Confidence: deduction — 98%**
+
+Supporting evidence:
+- `sympy/printing/latex.py:701` — `latex_expr = self._print(expr)` directly prints without precedence checking
+- `sympy/printing/latex.py:695-697` (Derivative) — `return r"%s %s" % (tex, self.parenthesize(expr.expr, PRECEDENCE["Mul"], strict=True))`
+- `sympy/printing/latex.py:738-740` (Integral) — `return r"%s %s%s" % (tex, self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True), "".join(symbols))`
+- Precedence values: `x*y` = 50 (Mul), `-x+y` = 40 (Add), Mul level = 50
+- PRECEDENCE is already imported at line 21: `from sympy.printing.precedence import precedence, PRECEDENCE`
+
+## Edit sites
+
+- `sympy/printing/latex.py` line 701: Change `latex_expr = self._print(expr)` to `latex_expr = self.parenthesize(expr, PRECEDENCE["Mul"])`. This ensures expressions with precedence ≤ 50 (Mul level) get wrapped in `\left(...\right)`, matching the behavior of Integral and Derivative but without strict mode.
+
+## Rejected hypotheses
+
+None — the root cause is straightforward and directly observable from the code.
+
+## Open questions
+
+None — the fix is localized to a single line and follows an established pattern in the codebase.
+
+---STDERR---

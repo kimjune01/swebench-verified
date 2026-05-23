@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_latex_subs` pass by changing line 701 in `sympy/printing/latex.py` from `self._print(expr)` to `self.parenthesize(expr, PRECEDENCE["Mul"])`. This ensures Subs expressions are properly parenthesized in LaTeX output, matching the pattern used by Derivative and Integral printers. No regressions introduced.
+
+---STDERR---
