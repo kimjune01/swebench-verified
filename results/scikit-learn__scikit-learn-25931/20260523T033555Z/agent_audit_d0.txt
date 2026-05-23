@@ -1,0 +1,32 @@
+# Audit: scikit-learn__scikit-learn-25931
+
+## FAIL_TO_PASS
+- `sklearn/ensemble/tests/test_iforest.py::test_iforest_preserve_feature_names`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — All 21 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+**None** — The FAIL_TO_PASS test was the only failure on base, and it now passes.
+
+## Patch Analysis
+
+The craft patch successfully resolves Issue #25844 by eliminating an unnecessary re-validation during the contamination offset calculation. The fix:
+
+**Root cause**: `fit()` called the public `score_samples(X)` method after X had been converted to numpy, triggering a feature names consistency check that raised a UserWarning.
+
+**Solution**: Replace the `score_samples(X)` call with direct internal computation using `_compute_chunked_score_samples()`, bypassing the validation layer entirely.
+
+**Impact**: Surgical change affecting only the `contamination != "auto"` code path. No behavioral changes to scoring logic—just eliminates the spurious warning.
+
+## Gate Results Summary
+- **Total tests**: 22
+- **Passed**: 22  
+- **Failed**: 0
+- **FAIL_TO_PASS resolved**: 1/1 (100%)
+- **PASS_TO_PASS regressions**: 0/21 (0%)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

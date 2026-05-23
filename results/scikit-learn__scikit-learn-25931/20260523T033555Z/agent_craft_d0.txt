@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes `test_iforest_preserve_feature_names` pass. The issue was that `fit()` called `self.score_samples(X)` with already-validated data, triggering an unnecessary re-validation that raised a feature names warning.
+
+**Fix applied**: Replaced the `score_samples(X)` call with direct computation using `_compute_chunked_score_samples()`, bypassing the problematic re-validation. The change converts X to the expected format (csr sparse/float32) and negates the result, matching what `score_samples()` does internally.
+
+**Gate result**: ✅ All 22 tests pass (1 iteration, no regressions)
+
+---STDERR---

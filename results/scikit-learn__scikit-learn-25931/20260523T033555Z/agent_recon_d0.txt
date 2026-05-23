@@ -1,0 +1,44 @@
+# Recon: scikit-learn__scikit-learn-25931
+
+## Failure summary
+
+Test `test_iforest_preserve_feature_names` verifies that fitting an `IsolationForest` with a pandas DataFrame and `contamination != "auto"` should not raise feature name warnings. The test fails because a `UserWarning` is raised: "X does not have valid feature names, but IsolationForest was fitted with feature names". This warning is incorrectly triggered during the `fit()` method when the estimator internally calls `score_samples()` on already-validated training data.
+
+## Suspect set
+
+- `sklearn/ensemble/_iforest.py` lines 268-351 (fit method) — calls `score_samples(X)` at line 348 with numpy array after X was validated/converted at line 291
+- `sklearn/ensemble/_iforest.py` lines 407-441 (score_samples method) — calls `_validate_data(..., reset=False)` at line 436, triggering feature names check
+- `sklearn/base.py` lines 426-451 (_check_feature_names method) — raises the warning when X lacks feature names but model was fitted with them
+
+## Root cause
+
+When `contamination != "auto"`, the `fit` method must compute an offset based on training data scores. At line 291, `X = self._validate_data(X, accept_sparse=["csc"], dtype=tree_dtype)` validates the input DataFrame, sets `self.feature_names_in_ = ["a"]`, and converts X to a numpy array. Later at line 348, `self.score_samples(X)` is called with this numpy array to compute the offset. The `score_samples` method calls `_validate_data(X, accept_sparse="csr", dtype=np.float32, reset=False)` at line 436, which triggers `_check_feature_names(X, reset=False)`. Since X is now a numpy array (no feature names) but the model has `feature_names_in_` set, the check at `base.py:451` raises the warning.
+
+The issue is that `score_samples` is a public API method that expects potentially unvalidated input, so it always validates. But when called internally from `fit` on already-validated training data, this re-validation triggers an inappropriate feature names consistency check.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `_iforest.py:291` — `X = self._validate_data(X, accept_sparse=["csc"], dtype=tree_dtype)` sets feature_names_in_ and converts DataFrame to ndarray
+- `_iforest.py:348` — `self.offset_ = np.percentile(self.score_samples(X), 100.0 * self.contamination)` passes the converted ndarray
+- `_iforest.py:436` — `X = self._validate_data(X, accept_sparse="csr", dtype=np.float32, reset=False)` in score_samples re-validates with feature names check
+- `base.py:451` — Raises warning when `X_feature_names is None and fitted_feature_names is not None`
+
+## Edit sites
+
+- `sklearn/ensemble/_iforest.py` line 348: Replace the call to `self.score_samples(X)` with direct computation using the internal `_compute_chunked_score_samples(X)` method. Before calling, convert X to the expected format (csr sparse matrix or ndarray, float32 dtype). Negate the result since `score_samples` returns negative scores. This bypasses the unnecessary validation and feature names check when scoring already-validated training data during fit.
+
+Specifically:
+1. Convert X to csr format (if sparse) and float32 dtype
+2. Call `scores = -self._compute_chunked_score_samples(X_converted)` directly
+3. Compute offset from scores: `self.offset_ = np.percentile(scores, 100.0 * self.contamination)`
+
+## Rejected hypotheses
+
+None — the root cause is clear from tracing the stack trace through the code.
+
+## Open questions
+
+None — the fix is straightforward and well-contained.
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ pytest -rA sklearn/ensemble/tests/test_iforest.py
+
+platform linux -- Python 3.9.21, pytest-7.4.4, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+collected 22 items
+
+sklearn/ensemble/tests/test_iforest.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[31m            [100%][0m
+
+=================================== FAILURES ===================================
+[31m[1m_____________________ test_iforest_preserve_feature_names ______________________[0m
+
+    def test_iforest_preserve_feature_names():
+        """Check that feature names are preserved when contamination is not "auto".
+    
+        Feature names are required for consistency checks during scoring.
+    
+        Non-regression test for Issue #25844
+        """
+        pd = pytest.importorskip("pandas")
+        rng = np.random.RandomState(0)
+    
+        X = pd.DataFrame(data=rng.randn(4), columns=["a"])
+        model = IsolationForest(random_state=0, contamination=0.05)
+    
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+>           model.fit(X)
+
+[1m[31msklearn/ensemble/tests/test_iforest.py[0m:359: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31msklearn/ensemble/_iforest.py[0m:348: in fit
+    self.offset_ = np.percentile(self.score_samples(X), 100.0 * self.contamination)
+[1m[31msklearn/ensemble/_iforest.py[0m:436: in score_samples
+    X = self._validate_data(X, accept_sparse="csr", dtype=np.float32, reset=False)
+[1m[31msklearn/base.py[0m:566: in _validate_data
+    self._check_feature_names(X, reset=reset)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = IsolationForest(contamination=0.05, random_state=0)
+X = array([[1.7640524],
+       [0.4001572],
+       [0.978738 ],
+       [2.2408931]], dtype=float32)
+
+    def _check_feature_names(self, X, *, reset):
+        """Set or check the `feature_names_in_` attribute.
+    
+        .. versionadded:: 1.0
+    
+        Parameters
+        ----------
+        X : {ndarray, dataframe} of shape (n_samples, n_features)
+            The input samples.
+    
+        reset : bool
+            Whether to reset the `feature_names_in_` attribute.
+            If False, the input will be checked for consistency with
+            feature names of data provided when reset was last True.
+            .. note::
+               It is recommended to call `reset=True` in `fit` and in the first
+               call to `partial_fit`. All other methods that validate `X`
+               should set `reset=False`.
+        """
+    
+        if reset:
+            feature_names_in = _get_feature_names(X)
+            if feature_names_in is not None:
+                self.feature_names_in_ = feature_names_in
+            elif hasattr(self, "feature_names_in_"):
+                # Delete the attribute when the estimator is fitted on a new dataset
+                # that has no feature names.
+                delattr(self, "feature_names_in_")
+            return
+    
+        fitted_feature_names = getattr(self, "feature_names_in_", None)
+        X_feature_names = _get_feature_names(X)
+    
+        if fitted_feature_names is None and X_feature_names is None:
+            # no feature names seen in fit and in X
+            return
+    
+        if X_feature_names is not None and fitted_feature_names is None:
+            warnings.warn(
+                f"X has feature names, but {self.__class__.__name__} was fitted without"
+                " feature names"
+            )
+            return
+    
+        if X_feature_names is None and fitted_feature_names is not None:
+>           warnings.warn(
+                "X does not have valid feature names, but"
+                f" {self.__class__.__name__} was fitted with feature names"
+            )
+[1m[31mE           UserWarning: X does not have valid feature names, but IsolationForest was fitted with feature names[0m
+
+[1m[31msklearn/base.py[0m:451: UserWarning
+==================================== PASSES ====================================
+[36m[1m=========================== short test summary info ============================[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest[42][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_sparse[42][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_error[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_recalculate_max_depth[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_max_samples_attribute[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_parallel_regression[42][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_performance[42][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_works[42-0.25][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_works[42-auto][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_max_samples_consistency[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_subsampled_features[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_average_path_length[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_score_samples[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_warm_start[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_chunks_works1[42-0.25-3][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_chunks_works1[42-auto-2][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_chunks_works2[42-0.25-3][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_chunks_works2[42-auto-2][0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_with_uniform_data[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_with_n_jobs_does_not_segfault[0m
+[32mPASSED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_base_estimator_property_deprecated[0m
+[31mFAILED[0m sklearn/ensemble/tests/test_iforest.py::[1mtest_iforest_preserve_feature_names[0m - UserWarning: X does not have valid feature names, but IsolationForest was f...
+[31m=================== [31m[1m1 failed[0m, [32m21 passed[0m, [33m3 warnings[0m[31m in 2.83s[0m[31m ===================[0m
