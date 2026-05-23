@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-24539
+
+## Failure summary
+The test `test_PolyElement_as_expr` checks that when a polynomial is converted to an expression using `as_expr()` with custom symbols, those symbols should be used in the resulting expression. The test creates a polynomial `f = 3*x**2*y - x*y*z + 7*z**3 + 1` in a ring with symbols x, y, z, then calls `f.as_expr(U, V, W)` expecting to get `3*U**2*V - U*V*W + 7*W**3 + 1`. However, it fails the assertion because the method ignores the provided symbols and returns `3*x**2*y - x*y*z + 7*z**3 + 1` instead.
+
+## Suspect set
+- `sympy/polys/rings.py` lines 618-623: The `PolyElement.as_expr()` method contains a logic error in its if-else structure that unconditionally overwrites the provided symbols parameter.
+
+## Root cause
+The `as_expr` method has an incorrect if-else structure. Line 621's `else` clause executes whenever the symbols parameter either (a) is empty or (b) has the correct length. In case (b), the method should USE the provided symbols, but instead it overwrites them with `self.ring.symbols`. The bug is that the else clause doesn't distinguish between "no symbols provided" and "correct symbols provided".
+
+Code path: When `f.as_expr(U, V, W)` is called with three symbols matching the ring's three generators, the condition `symbols and len(symbols) != self.ring.ngens` evaluates to False (no error to raise), so execution falls through to the else clause which assigns `symbols = self.ring.symbols`, discarding the user's symbols.
+
+Confidence: Deduction — 99%
+
+Supporting evidence:
+- `sympy/polys/rings.py:618-623` — The if-else logic:
+  ```python
+  def as_expr(self, *symbols):
+      if symbols and len(symbols) != self.ring.ngens:
+          raise ValueError("not enough symbols, expected %s got %s" % (self.ring.ngens, len(symbols)))
+      else:
+          symbols = self.ring.symbols  # BUG: overwrites even valid provided symbols
+      return expr_from_dict(self.as_expr_dict(), *symbols)
+  ```
+- Reproduction confirms the bug: calling `f.as_expr(U, V, W)` returns an expression using x, y, z instead of U, V, W
+
+## Edit sites
+- `sympy/polys/rings.py` lines 621-622: Change the `else` clause to only assign `self.ring.symbols` when no symbols were provided. The fix is to replace the unconditional `else` with a conditional check: `if not symbols: symbols = self.ring.symbols`. This preserves the provided symbols when they exist and pass the length check, while still defaulting to ring symbols when none are provided.
+
+## Rejected hypotheses
+None — the root cause is immediately evident from reading the code and reproducing the failure.
+
+## Open questions
+None — the fix is straightforward and localized to a single location.
+
+---STDERR---

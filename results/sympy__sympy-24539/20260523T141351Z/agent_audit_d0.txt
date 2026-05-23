@@ -1,0 +1,25 @@
+# Audit: sympy__sympy-24539
+
+## FAIL_TO_PASS
+- test_PolyElement_as_expr: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- None — all 64 tests passed
+
+## Pre-existing failures (not counted)
+- None
+
+## Resolution summary
+
+The craft patch successfully resolved the issue. The one-line change from `else:` to `if not symbols:` on line 621 of `sympy/polys/rings.py` corrects the logic flow:
+
+**Before:** The `else` clause unconditionally overwrote any provided symbols with `self.ring.symbols`, even when valid symbols were passed.
+
+**After:** The `if not symbols:` condition only assigns defaults when no symbols are provided, preserving user-supplied symbols when they pass validation.
+
+All 64 tests in the suite passed, including the target FAIL_TO_PASS test `test_PolyElement_as_expr`. Zero regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

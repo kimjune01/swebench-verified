@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `sympy/polys/rings.py` line 621 from `else:` to `if not symbols:` - this preserves user-provided symbols when valid and only defaults to ring symbols when none are provided. Gate confirms all tests pass.
+
+---STDERR---
