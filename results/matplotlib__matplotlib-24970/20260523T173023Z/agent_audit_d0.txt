@@ -1,0 +1,18 @@
+# Audit: matplotlib__matplotlib-24970
+
+## FAIL_TO_PASS
+- test_index_dtype[uint8]: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_double_register_builtin_cmap: Already failing on base (r4_failbase_matplotlib__matplotlib-24970.txt line 121). Expects UserWarning but receives MatplotlibDeprecationWarning in cm.register_cmap call. Completely unrelated to dtype conversion fix in Colormap.__call__.
+
+## Kill report
+Not applicable — fix is RESOLVED.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

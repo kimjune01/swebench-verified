@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `lib/matplotlib/tests/test_colors.py::test_index_dtype[uint8]` now passes. The fix widened integer dtypes that cannot represent sentinel values (256-258) to `int` before assignment, preventing NumPy deprecation warnings when uint8 inputs are used with colormaps.
+
+---STDERR---

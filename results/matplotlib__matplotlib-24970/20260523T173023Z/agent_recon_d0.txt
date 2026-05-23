@@ -1,0 +1,45 @@
+# Recon: matplotlib__matplotlib-24970
+
+## Failure summary
+The test `test_index_dtype[uint8]` verifies that colormaps work correctly with different input dtypes. It fails when called with `np.uint8(0)` because NumPy 1.24+ emits a DeprecationWarning when matplotlib tries to assign out-of-bound Python integers (256, 257, 258) to a uint8 array. These values are sentinel indices used to mark over-range, under-range, and bad data values in the colormap lookup table.
+
+**Error message:**
+```
+DeprecationWarning: NumPy will stop allowing conversion of out-of-bound Python integers to integer arrays.
+The conversion of 257 to uint8 will fail in the future.
+```
+
+## Suspect set
+- `lib/matplotlib/colors.py` lines 647-760: `Colormap` class and its `__call__` method
+- Specifically lines 673-675: sentinel value definitions (`self._i_under = self.N`, `self._i_over = self.N + 1`, `self._i_bad = self.N + 2`)
+- Lines 730-732: sentinel value assignments to the index array `xa`
+
+## Root cause
+The `Colormap.__call__` method preserves the input dtype when creating the working array `xa = np.array(X, copy=True)` at line 711. For integer inputs, when the dtype cannot represent the sentinel values (e.g., uint8 can only hold 0-255 but needs to hold 256-258), the direct assignments at lines 730-732 trigger NumPy deprecation warnings.
+
+The float conversion path (lines 716-727) already converts to `int` (int64), avoiding this issue. But integer inputs bypass this conversion, retaining their original dtype even when it's insufficient.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `lib/matplotlib/colors.py:673-675` — sentinel values are N, N+1, N+2 (typically 256, 257, 258 for 256-color maps)
+- `lib/matplotlib/colors.py:711` — `xa = np.array(X, copy=True)` preserves input dtype
+- `lib/matplotlib/colors.py:716-727` — floats are converted to `astype(int)`, giving int64
+- `lib/matplotlib/colors.py:730-732` — direct assignment of sentinel values to `xa` without dtype check
+- `lib/matplotlib/colors.py:2021` — similar code elsewhere uses explicit `astype(np.int16)` for sentinel values
+
+## Edit sites
+- `lib/matplotlib/colors.py` lines 728-729: Insert dtype conversion check immediately after the float conversion block (after line 727) and before the sentinel assignments (before line 730).
+  - Check if `xa` has integer dtype (`xa.dtype.kind in 'iu'`)
+  - Check if the dtype cannot represent `self._i_bad` (the maximum sentinel value)
+  - If both conditions are true, convert: `xa = xa.astype(int)` to match the pattern at line 727
+
+This ensures that any integer dtype that cannot hold the sentinel values is promoted to a dtype that can, preventing the NumPy deprecation warnings while maintaining correctness.
+
+## Rejected hypotheses
+None — the diagnosis is straightforward from reading the error message and code path.
+
+## Open questions
+None — the fix is localized and clear. The only implementation choice is which target dtype to use (`int`, `int16`, or `np.intp`), but `int` matches the existing pattern at line 727.
+
+---STDERR---
