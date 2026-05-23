@@ -1,0 +1,5 @@
+**RESOLVED** ✅
+
+Fixed in 1 gate iteration. The bug was in `astropy/modeling/separable.py` line 245, where `_cstack` incorrectly set nested compound model matrices to 1 instead of copying the actual separability matrix. Changed `= 1` to `= right` to preserve separability information from nested models on the right-hand side of the `&` operator.
+
+---STDERR---
