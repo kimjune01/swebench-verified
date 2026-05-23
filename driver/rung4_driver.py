@@ -240,19 +240,33 @@ def audit(inst, box, gate, hgraph, failbase, depth):
 
 # ── patch capture / teardown ──────────────────────────────────────────────────
 
+import fnmatch
+
+# Build artifacts / agent backups that are never part of a real fix. Matched on the
+# diff's b/ path; dropped from the captured prediction regardless of whether the
+# in-container `find` cleanup fired (it silently missed *.bak on django-13023).
+_DETRITUS_GLOBS = ("*.bak", "*.bak[0-9]*", "*.orig", "*.rej", "*.pyc", "*.so")
+_DETRITUS_DIRS = ("__pycache__/", ".pytest_cache/", "result_images/", ".egg-info/")
+
+def _is_detritus(path):
+    if any(fnmatch.fnmatch(path, g) for g in _DETRITUS_GLOBS): return True
+    return any(seg in path for seg in _DETRITUS_DIRS)
+
 def _strip_test_blocks(diff, testfiles):
-    """Drop per-file blocks for paths the official harness owns (the test files).
-    Done in Python on the full diff — shell-side `:(exclude)` pathspecs collide with
-    the bash -lc single-quote wrapping and silently empty the whole capture."""
-    if not testfiles: return diff
-    tf = set(testfiles)
+    """Drop per-file blocks the official harness owns (test files) or that are pure
+    detritus (build artifacts, *.bak backups). Done in Python on the full diff —
+    shell-side `:(exclude)` pathspecs collide with the bash -lc single-quote wrapping
+    and silently empty the whole capture; the `find -delete` cleanup is also unreliable
+    through that quoting. This pass is the quoting-safe backstop. Subtractive only:
+    these paths are never a legitimate fix, so dropping them can't break a valid patch."""
+    tf = set(testfiles or [])
     out, keep = [], True
     for line in diff.splitlines(keepends=True):
         if line.startswith("diff --git "):
             # "diff --git a/<p> b/<p>" — take the b/ path
             parts = line.split()
             bpath = parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else None
-            keep = bpath not in tf
+            keep = (bpath not in tf) and not (bpath and _is_detritus(bpath))
         if keep:
             out.append(line)
     return "".join(out)
