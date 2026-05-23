@@ -1,0 +1,35 @@
+# Recon: sympy__sympy-13647
+
+## Failure summary
+The test `test_col_insert` checks that `Matrix.col_insert()` correctly inserts columns at a specified position. When inserting a 6×2 matrix of 2's at position 3 into a 6×6 identity matrix, the test expects the result to have the identity matrix elements preserved in their correct rows (rows 3-5 for columns after the insertion). However, the actual output shows these identity elements shifted to rows 0-2, with zeros in rows 3-5.
+
+Error: AssertionError (the actual matrix doesn't match expected)
+
+## Suspect set
+- `sympy/matrices/common.py` lines 81-90: `_eval_col_insert` method - contains incorrect index calculation for columns after insertion point
+
+## Root cause
+During the matrix refactor (commit 19f49a943), the original slicing-based `col_insert` implementation was converted to a lambda-based implementation in `_eval_col_insert`. The index calculation for accessing original matrix columns that come after the inserted columns was incorrectly translated.
+
+The buggy line 88 computes: `self[i, j - pos - other.cols]`
+This should be: `self[i, j - other.cols]`
+
+For the test case (inserting 2 columns at position 3), when accessing result column j=5:
+- Buggy formula: `self[i, 5 - 3 - 2] = self[i, 0]` (accesses original column 0)
+- Correct formula: `self[i, 5 - 2] = self[i, 3]` (accesses original column 3)
+
+The original implementation used `newmat[:,pos+mti.cols:] = self[:,pos:]`, which correctly maps result column `j` to original column `pos + (j - pos - mti.cols)` = `j - mti.cols`.
+
+Confidence: deduction — 98%
+
+Supporting evidence:
+- `sympy/matrices/common.py:88` — `return self[i, j - pos - other.cols]`
+- `git show f2c0c30de:sympy/matrices/matrices.py` — original correct implementation: `newmat[:,pos+mti.cols:] = self[:,pos:]`
+
+## Edit sites
+- `sympy/matrices/common.py` line 88: Change `return self[i, j - pos - other.cols]` to `return self[i, j - other.cols]`. This fixes the column index calculation for elements that come after the inserted columns.
+
+## Open questions
+None - the fix is straightforward and the root cause is confirmed by comparing with the original implementation.
+
+---STDERR---

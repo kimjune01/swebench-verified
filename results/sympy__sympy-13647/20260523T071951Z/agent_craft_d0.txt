@@ -1,0 +1,13 @@
+**RESOLVED**
+
+Fixed `_eval_col_insert` index calculation bug in `sympy/matrices/common.py:88`. Changed `self[i, j - pos - other.cols]` to `self[i, j - other.cols]` as diagnosed by recon.
+
+**Gate evidence:**
+- Baseline: 76 passed, 1 failed
+- After fix: 77 passed, 0 failed  
+- test_col_insert: ✓ PASSED (verified directly)
+- Pre-existing exceptions in test_limit unchanged (unrelated to col_insert)
+
+The FAIL_TO_PASS test now passes with no regressions.
+
+---STDERR---
