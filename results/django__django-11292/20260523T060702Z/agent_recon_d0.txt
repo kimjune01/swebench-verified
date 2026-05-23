@@ -1,0 +1,40 @@
+# Recon: django__django-11292
+
+## Failure summary
+
+The test `test_skip_checks` verifies that management commands can accept a `--skip-checks` flag from the command line to skip system checks. The test creates invalid settings (STATICFILES_DIRS as a string instead of list/tuple) that would normally fail system checks, then runs `manage.py set_option --skip-checks --set foo`. The test expects this to succeed with output "Set foo" and no errors. However, the command fails with: `manage.py set_option: error: unrecognized arguments: --skip-checks`
+
+## Suspect set
+
+- `django/core/management/base.py` lines 97-99: `show_last` set that lists common options for help text ordering
+- `django/core/management/base.py` lines 249-290: `create_parser` method where command-line arguments are defined
+- `django/core/management/base.py` line 226: `base_stealth_options` tuple defining options available programmatically but not via command line
+- `django/core/management/base.py` line 360: The code that checks `options.get('skip_checks')` to decide whether to run system checks
+
+## Root cause
+
+The `--skip-checks` option is not added to the argument parser in the `create_parser` method. While `skip_checks` exists as a "stealth option" (line 226) that can be passed programmatically via `call_command(skip_checks=True)`, it has never been exposed as a command-line argument. The option is already handled correctly in the `execute` method (line 360: `if self.requires_system_checks and not options.get('skip_checks')`), so the infrastructure to support it exists—only the command-line interface is missing.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/core/management/base.py:226` — `base_stealth_options = ('skip_checks', 'stderr', 'stdout')` - comment on lines 224-225 states these are "Arguments, common to all commands, which aren't defined by the argument parser"
+- `django/core/management/base.py:249-290` — The `create_parser` method adds `--version`, `--verbosity`, `--settings`, `--pythonpath`, `--traceback`, `--no-color`, `--force-color` but not `--skip-checks`
+- `django/core/management/base.py:360` — `if self.requires_system_checks and not options.get('skip_checks'): self.check()` - the option is already checked and handled
+- `tests/user_commands/tests.py:166-176` — Existing test `test_call_command_no_checks` shows `skip_checks` works programmatically: `management.call_command("dance", verbosity=0, skip_checks=False)`
+
+## Edit sites
+
+- `django/core/management/base.py` lines 97-99: Add `'--skip-checks'` to the `show_last` set that controls help text ordering for common options
+- `django/core/management/base.py` line 281-282: Add `parser.add_argument('--skip-checks', action='store_true', help='Skip system checks.')` immediately after the `--traceback` argument definition
+- `django/core/management/base.py` line 226: Remove `'skip_checks'` from the `base_stealth_options` tuple, changing it to `base_stealth_options = ('stderr', 'stdout')` since the option will now be defined by the argument parser
+
+## Rejected hypotheses
+
+None. The failure mode is straightforward: argument parser rejects the unrecognized `--skip-checks` flag.
+
+## Open questions
+
+None. The fix is mechanical: expose an existing internal option on the command line.
+
+---STDERR---

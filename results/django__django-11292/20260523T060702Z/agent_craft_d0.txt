@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully exposes `--skip-checks` as a command-line argument. All FAIL_TO_PASS tests pass, and backward compatibility is confirmed (programmatic `call_command(skip_checks=True)` still works via `test_call_command_no_checks`).
+
+---STDERR---
