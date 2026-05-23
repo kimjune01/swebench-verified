@@ -1,0 +1,53 @@
+# Recon: scikit-learn__scikit-learn-25747
+
+## Failure summary
+
+The test `test_set_output_pandas_keep_index` checks that when a transformer returns a DataFrame with a custom index (different from the input), that custom index is preserved by the `set_output` wrapping mechanism. The test creates an estimator that transforms a 2-row DataFrame by returning a new DataFrame with a custom index `["s0", "s1"]`. However, after wrapping, the output has the original input's index `[0, 1]` instead of the transformer's custom index `["s0", "s1"]`, causing the assertion to fail with:
+
+```
+AssertionError: Arrays are not equal
+ x: array([0, 1])
+ y: array(['s0', 's1'], dtype='<U2')
+```
+
+## Suspect set
+
+- `sklearn/utils/_set_output.py` lines 55-60: The `_wrap_in_pandas_container` function unconditionally overwrites the index when the data is already a DataFrame
+- `sklearn/utils/_set_output.py` lines 130-134: The caller `_wrap_data_with_container` passes the original input's index to the wrapping function
+
+## Root cause
+
+When a transformer returns a DataFrame with a custom index, `_wrap_in_pandas_container` (lines 58-59) unconditionally overwrites that index with the original input's index. This is incorrect for transformers that intentionally change the index, such as aggregating transformers that change the number of rows or transformers that assign meaningful row identifiers.
+
+The call path is:
+1. `EstimatorWithSetOutputIndex.transform(X)` returns a DataFrame with index `["s0", "s1"]`
+2. `_wrap_method_output` calls `_wrap_data_with_container(method, data_to_wrap, X, self)` where `X` is the original input with index `[0, 1]`
+3. `_wrap_data_with_container` (line 132) extracts `index=getattr(original_input, "index", None)` which is `[0, 1]`
+4. `_wrap_in_pandas_container` (lines 58-59) does `if index is not None: data_to_wrap.index = index`, overwriting `["s0", "s1"]` with `[0, 1]`
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sklearn/utils/_set_output.py:58-59` — `if index is not None: data_to_wrap.index = index` unconditionally assigns the original index
+- `sklearn/utils/_set_output.py:132` — `index=getattr(original_input, "index", None)` always passes the original input's index when input is a DataFrame
+- Test output shows index `[0, 1]` (original) instead of `["s0", "s1"]` (transformer's custom index)
+
+## Edit sites
+
+- `sklearn/utils/_set_output.py` lines 58-59: Remove the index assignment when `data_to_wrap` is already a DataFrame. When the transformer returns a DataFrame, it may have intentionally set a specific index, and that should be preserved. Only set the index when creating a new DataFrame from ndarray (line 62).
+
+The fix: delete or comment out lines 58-59. When `data_to_wrap` is already a DataFrame, respect its existing index. The index parameter should only be used when creating a new DataFrame from an ndarray (line 62), where the ndarray has no index and needs one.
+
+## Competing hypotheses
+
+None. The root cause is clear from code inspection.
+
+## Rejected hypotheses
+
+- H₁: The issue is in `_wrap_data_with_container` passing the wrong index — rejected because passing the original index is intentional for the case when creating a DataFrame from ndarray. The bug is in how `_wrap_in_pandas_container` handles the already-DataFrame case.
+
+## Open questions
+
+None. The fix is straightforward: don't override the index when `data_to_wrap` is already a DataFrame.
+
+---STDERR---

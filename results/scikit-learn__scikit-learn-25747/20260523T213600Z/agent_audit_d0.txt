@@ -1,0 +1,31 @@
+# Audit: scikit-learn__scikit-learn-25747
+
+## FAIL_TO_PASS
+- `sklearn/utils/tests/test_set_output.py::test_set_output_pandas_keep_index`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 14 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Classification summary
+
+**Baseline (fail-on-base):**
+- 14 tests passed
+- 1 test failed: `test_set_output_pandas_keep_index`
+
+**With patch:**
+- All 15 tests passed
+- 0 regressions
+
+**Contract verification:**
+- FAIL_TO_PASS: 1/1 tests now pass ✓
+- PASS_TO_PASS: 14/14 tests still pass ✓
+
+**The patch** removed lines 58-59 in `sklearn/utils/_set_output.py` that unconditionally overwrote DataFrame indices. When a transformer returns a DataFrame with a custom index (e.g., `["s0", "s1"]`), that index is now preserved. When transformers return ndarrays, the original index is still correctly applied during DataFrame construction.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

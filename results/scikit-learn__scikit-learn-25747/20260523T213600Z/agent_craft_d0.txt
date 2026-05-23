@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_set_output_pandas_keep_index` pass. The change removes the unconditional index override when `data_to_wrap` is already a DataFrame, preserving custom indices set by transformers while maintaining backward compatibility for ndarray outputs.
+
+---STDERR---

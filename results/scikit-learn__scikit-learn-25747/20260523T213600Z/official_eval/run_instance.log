@@ -1,0 +1,63 @@
+2026-05-23 21:33:55,647 - INFO - Creating container for scikit-learn__scikit-learn-25747...
+2026-05-23 21:33:56,691 - INFO - Container for scikit-learn__scikit-learn-25747 created: 39241bd27a11f5adca201e5c4acd575516c7e553a2b0a8cf8844aa91e58e9b47
+2026-05-23 21:33:57,072 - INFO - Container for scikit-learn__scikit-learn-25747 started: 39241bd27a11f5adca201e5c4acd575516c7e553a2b0a8cf8844aa91e58e9b47
+2026-05-23 21:33:57,072 - INFO - Intermediate patch for scikit-learn__scikit-learn-25747 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-25747/patch.diff, now applying to container...
+2026-05-23 21:33:57,175 - INFO - >>>>> Applied Patch:
+Checking patch sklearn/utils/_set_output.py...
+Applied patch sklearn/utils/_set_output.py cleanly.
+
+2026-05-23 21:33:57,388 - INFO - Git diff before:
+diff --git a/sklearn/utils/_set_output.py b/sklearn/utils/_set_output.py
+index 335773c6a..56db1182c 100644
+--- a/sklearn/utils/_set_output.py
++++ b/sklearn/utils/_set_output.py
+@@ -15,7 +15,7 @@ def _wrap_in_pandas_container(
+ ):
+     """Create a Pandas DataFrame.
+ 
+-    If `data_to_wrap` is a DataFrame, then the `columns` and `index` will be changed
++    If `data_to_wrap` is a DataFrame, then the `columns` will be changed
+     inplace. If `data_to_wrap` is a ndarray, then a new DataFrame is created with
+     `columns` and `index`.
+ 
+@@ -55,8 +55,6 @@ def _wrap_in_pandas_container(
+     if isinstance(data_to_wrap, pd.DataFrame):
+         if columns is not None:
+             data_to_wrap.columns = columns
+-        if index is not None:
+-            data_to_wrap.index = index
+         return data_to_wrap
+ 
+     return pd.DataFrame(data_to_wrap, index=index, columns=columns)
+2026-05-23 21:33:57,388 - INFO - Eval script for scikit-learn__scikit-learn-25747 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-25747/eval.sh; copying to container...
+2026-05-23 21:34:01,712 - INFO - Test runtime: 4.24 seconds
+2026-05-23 21:34:01,713 - INFO - Test output for scikit-learn__scikit-learn-25747 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-25747/test_output.txt
+2026-05-23 21:34:01,805 - INFO - Git diff after:
+diff --git a/sklearn/utils/_set_output.py b/sklearn/utils/_set_output.py
+index 335773c6a..56db1182c 100644
+--- a/sklearn/utils/_set_output.py
++++ b/sklearn/utils/_set_output.py
+@@ -15,7 +15,7 @@ def _wrap_in_pandas_container(
+ ):
+     """Create a Pandas DataFrame.
+ 
+-    If `data_to_wrap` is a DataFrame, then the `columns` and `index` will be changed
++    If `data_to_wrap` is a DataFrame, then the `columns` will be changed
+     inplace. If `data_to_wrap` is a ndarray, then a new DataFrame is created with
+     `columns` and `index`.
+ 
+@@ -55,8 +55,6 @@ def _wrap_in_pandas_container(
+     if isinstance(data_to_wrap, pd.DataFrame):
+         if columns is not None:
+             data_to_wrap.columns = columns
+-        if index is not None:
+-            data_to_wrap.index = index
+         return data_to_wrap
+ 
+     return pd.DataFrame(data_to_wrap, index=index, columns=columns)
+2026-05-23 21:34:01,805 - INFO - Grading answer for scikit-learn__scikit-learn-25747...
+2026-05-23 21:34:01,806 - INFO - report: {'scikit-learn__scikit-learn-25747': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['sklearn/utils/tests/test_set_output.py::test_set_output_pandas_keep_index'], 'failure': []}, 'PASS_TO_PASS': {'success': ['sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense', 'sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense_update_columns_and_index', 'sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_error_validation', 'sklearn/utils/tests/test_set_output.py::test__safe_set_output', 'sklearn/utils/tests/test_set_output.py::test_set_output_mixin', 'sklearn/utils/tests/test_set_output.py::test__safe_set_output_error', 'sklearn/utils/tests/test_set_output.py::test_set_output_method', 'sklearn/utils/tests/test_set_output.py::test_set_output_method_error', 'sklearn/utils/tests/test_set_output.py::test__get_output_config', 'sklearn/utils/tests/test_set_output.py::test_get_output_auto_wrap_false', 'sklearn/utils/tests/test_set_output.py::test_auto_wrap_output_keys_errors_with_incorrect_input', 'sklearn/utils/tests/test_set_output.py::test_set_output_mixin_custom_mixin', 'sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_column_errors', 'sklearn/utils/tests/test_set_output.py::test_set_output_mro'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for scikit-learn__scikit-learn-25747: resolved: True
+2026-05-23 21:34:01,806 - INFO - Attempting to stop container sweb.eval.scikit-learn__scikit-learn-25747.batch...
+2026-05-23 21:34:17,191 - INFO - Attempting to remove container sweb.eval.scikit-learn__scikit-learn-25747.batch...
+2026-05-23 21:34:17,202 - INFO - Container sweb.eval.scikit-learn__scikit-learn-25747.batch removed.
