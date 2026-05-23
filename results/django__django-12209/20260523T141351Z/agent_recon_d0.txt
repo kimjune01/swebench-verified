@@ -1,0 +1,39 @@
+# Recon: django__django-12209
+
+## Failure summary
+The test creates a model instance with a UUID primary key that has a default value (`default=uuid.uuid4`), saves it, then creates a second instance with the same explicit pk value and tries to save it. Django 2.2 correctly performed an UPDATE on the second save, but Django 3.0 attempts an INSERT, which fails with `IntegrityError: UNIQUE constraint failed` because the pk already exists.
+
+## Suspect set
+- `django/db/models/base.py` lines 850-857: condition that forces INSERT when pk field has a default
+
+## Root cause
+Commit 85458e94e3 added an optimization to skip the UPDATE attempt when saving a new instance whose pk will be auto-generated from a default value. However, the condition doesn't distinguish between auto-generated and explicitly-set pk values. When a user creates a new instance with an explicit pk (e.g., `Sample(pk=existing_value)`), Django still considers it "adding" and forces INSERT instead of trying UPDATE first.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/db/models/base.py:846` — `pk_set = pk_val is not None` correctly tracks whether pk has a value
+- `django/db/models/base.py:850-857` — forces INSERT if `self._state.adding and self._meta.pk.default`, without checking `pk_set`
+- `django/db/models/base.py:859` — would normally try UPDATE when `pk_set and not force_insert`, but line 857 sets `force_insert=True`
+- Commit 85458e94e3 test case used `PrimaryKeyWithDefault().save()` (no explicit pk) but didn't test explicit pk case
+
+## Edit sites
+- `django/db/models/base.py` lines 850-857: Add `not pk_set` to the condition so it only forces INSERT when the pk was NOT explicitly set. The condition should become:
+  ```python
+  if (
+      not force_insert and
+      self._state.adding and
+      not pk_set and  # ADD THIS LINE
+      self._meta.pk.default and
+      self._meta.pk.default is not NOT_PROVIDED
+  ):
+      force_insert = True
+  ```
+
+## Rejected hypotheses
+None — the code path is deterministic and the root cause is clear from reading the condition.
+
+## Open questions
+None — the fix is straightforward.
+
+---STDERR---

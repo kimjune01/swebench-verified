@@ -1,0 +1,43 @@
+2026-05-23 14:11:52,022 - INFO - Creating container for django__django-12209...
+2026-05-23 14:12:01,529 - INFO - Container for django__django-12209 created: 6b07d10e5f8256ff49e88eaf5c04aa8865d9472e657847469ab228bfd70cc6d5
+2026-05-23 14:12:02,043 - INFO - Container for django__django-12209 started: 6b07d10e5f8256ff49e88eaf5c04aa8865d9472e657847469ab228bfd70cc6d5
+2026-05-23 14:12:02,044 - INFO - Intermediate patch for django__django-12209 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12209/patch.diff, now applying to container...
+2026-05-23 14:12:02,172 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/base.py...
+Applied patch django/db/models/base.py cleanly.
+
+2026-05-23 14:12:02,732 - INFO - Git diff before:
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index e3b14a41a0..ac7dfb0e78 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -851,6 +851,7 @@ class Model(metaclass=ModelBase):
+         if (
+             not force_insert and
+             self._state.adding and
++            not pk_set and
+             self._meta.pk.default and
+             self._meta.pk.default is not NOT_PROVIDED
+         ):
+2026-05-23 14:12:02,732 - INFO - Eval script for django__django-12209 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12209/eval.sh; copying to container...
+2026-05-23 14:12:08,301 - INFO - Test runtime: 5.54 seconds
+2026-05-23 14:12:08,302 - INFO - Test output for django__django-12209 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12209/test_output.txt
+2026-05-23 14:12:08,370 - INFO - Git diff after:
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index e3b14a41a0..ac7dfb0e78 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -851,6 +851,7 @@ class Model(metaclass=ModelBase):
+         if (
+             not force_insert and
+             self._state.adding and
++            not pk_set and
+             self._meta.pk.default and
+             self._meta.pk.default is not NOT_PROVIDED
+         ):
+2026-05-23 14:12:08,370 - INFO - Grading answer for django__django-12209...
+2026-05-23 14:12:08,371 - INFO - report: {'django__django-12209': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['partial(func, *args, **keywords) - new function with partial application'], 'failure': []}, 'PASS_TO_PASS': {'success': [], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-12209: resolved: True
+2026-05-23 14:12:08,371 - INFO - Attempting to stop container sweb.eval.django__django-12209.batch...
+2026-05-23 14:12:23,868 - INFO - Attempting to remove container sweb.eval.django__django-12209.batch...
+2026-05-23 14:12:23,884 - INFO - Container sweb.eval.django__django-12209.batch removed.

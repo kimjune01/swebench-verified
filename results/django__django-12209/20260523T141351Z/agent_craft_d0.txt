@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes all FAIL_TO_PASS tests pass by adding `not pk_set and` to the force_insert condition at `django/db/models/base.py:854`. This prevents Django from forcing INSERT when saving instances with explicit primary key values, allowing the standard UPDATE-then-INSERT fallback to work correctly for deserialized objects.
+
+The fix disables the commit 85458e94e3 optimization (skip UPDATE for new instances with auto-generated default PKs), trading a minor performance optimization for correctness when handling instances with explicit PKs in an "adding" state.
+
+---STDERR---
