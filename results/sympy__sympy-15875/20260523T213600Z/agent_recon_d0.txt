@@ -1,0 +1,43 @@
+# Recon: sympy__sympy-15875
+
+## Failure summary
+
+The test `test_Add_is_zero` checks that `e.is_zero` returns `None` for the expression `e = -2*I + (1 + I)**2`. The test fails with `AssertionError` because `e.is_zero` currently returns `False` instead of `None`. The expression is actually zero (verified: `simplify(e).is_zero == True`), so returning `False` is incorrect. The `is_zero` property should return `None` when it cannot determine the result without simplification, and should never give a wrong answer.
+
+## Suspect set
+
+- `sympy/core/add.py` lines 532-567: The `Add._eval_is_zero` method that determines if an Add expression evaluates to zero
+
+## Root cause
+
+The `Add._eval_is_zero` method at line 564 incorrectly returns `False` when an expression contains only pure imaginary terms whose real parts sum to zero. The flawed logic assumes imaginary parts cannot cancel to zero, but this is incorrect—expressions like `-2*I + 2*I` or `-2*I + (1 + I)**2` can equal zero.
+
+**Code path for `e = -2*I + (1 + I)**2`:**
+1. Both args `(1 + I)**2` and `-2*I` are imaginary, so `im = True`
+2. Neither arg is real, so `nz = []` (no non-zero real parts)
+3. `b = Add() = 0`, therefore `b.is_zero = True`
+4. Condition `im and not im_or_z` is `True`, triggering line 564: `return False`
+
+This violates the principle that `is_zero` should return `None` when uncertain, not a definitively wrong answer.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `sympy/core/add.py:564` — `if im and not im_or_z: return False`
+- Verified with `Add(-2*I, 2*I, evaluate=False).is_zero` also returns `False` when it should return `None` (the simplified result is `0`)
+
+## Edit sites
+
+- `sympy/core/add.py` line 564: Change `return False` to `return None`
+
+The fix makes the method conservative: when dealing with pure imaginary parts that haven't been simplified, return `None` (cannot determine) instead of `False` (incorrect definitive answer).
+
+## Rejected hypotheses
+
+None—the root cause is clear from tracing the code path and the symptom matches exactly.
+
+## Open questions
+
+None—the fix is straightforward and localized to a single line.
+
+---STDERR---

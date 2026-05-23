@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `sympy/core/add.py` line 564 from `return False` to `return None` in the `Add._eval_is_zero` method. The gate passed on the first iteration - all FAIL_TO_PASS tests now pass (82 passed, 3 expected failures, 0 actual failures).
+
+---STDERR---

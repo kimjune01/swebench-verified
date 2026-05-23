@@ -1,0 +1,28 @@
+# Audit: sympy__sympy-15875
+
+## FAIL_TO_PASS
+- test_Add_is_zero: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all PASS_TO_PASS tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_evenness_in_ternary_integer_product_with_odd (expected to fail)
+- test_oddness_in_ternary_integer_product_with_odd (expected to fail)
+- test_issue_3531 (expected to fail)
+
+These were marked as expected failures ('f') in both the baseline and current run.
+
+## Final gate result
+- 82 passed
+- 3 expected to fail  
+- 0 failures
+- 0 regressions
+
+All FAIL_TO_PASS tests pass ✓
+Zero PASS_TO_PASS regressions ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
