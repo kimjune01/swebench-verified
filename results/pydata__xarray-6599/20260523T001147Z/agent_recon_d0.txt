@@ -1,0 +1,32 @@
+# Recon: pydata__xarray-6599
+
+## Failure summary
+The test `test_polyval[timedelta-False]` checks that `xr.polyval` correctly evaluates polynomials with timedelta64 coordinates. The test expects `polyval(coord=[1000, 2000, 3000]ns, coeffs=[0, 1])` to return `[1000.0, 2000.0, 3000.0]`. However, it fails with `numpy.core._exceptions._UFuncBinaryResolutionError: ufunc 'subtract' cannot use operands with types dtype('<m8[ns]') and dtype('<M8[D]')` at `/testbed/xarray/core/duck_array_ops.py:434` in the `datetime_to_numeric` function when trying to compute `array - offset`.
+
+## Suspect set
+- `xarray/core/computation.py` lines 1935-1944: The `to_floatable` function inside `_ensure_numeric` incorrectly treats timedelta64 and datetime64 arrays identically
+
+## Root cause
+The `_ensure_numeric` function's nested `to_floatable` helper (introduced in commit 6fbeb131) unifies datetime64 and timedelta64 handling by checking `if x.dtype.kind in "mM"` and calling `datetime_to_numeric` with a datetime offset `np.datetime64("1970-01-01")` for both types. For datetime64 arrays, subtracting a datetime offset correctly produces a timedelta. For timedelta64 arrays, attempting to subtract a datetime64 from a timedelta64 is a type error because timedeltas are already relative time values that don't need an offset.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `xarray/core/computation.py:1936` — `if x.dtype.kind in "mM":` treats both datetime (M) and timedelta (m) identically
+- `xarray/core/computation.py:1940` — `offset=np.datetime64("1970-01-01")` passes a datetime offset for both types
+- `/testbed/xarray/core/duck_array_ops.py:434` — `array - offset` attempts `timedelta64[ns] - datetime64[D]` which numpy rejects
+- Historical: Old `polyval` used `get_clean_interp_index` which converted timedelta64 via `.astype(np.float64)` directly (line 288 of missing.py)
+- Verified: `np.array([1000, 2000, 3000], dtype="timedelta64[ns]").astype(float)` → `[1000., 2000., 3000.]` (correct expected output)
+
+## Edit sites
+- `xarray/core/computation.py` lines 1935-1944: Split the `to_floatable` function to handle datetime64 and timedelta64 separately:
+  - For datetime64 (kind "M"): keep current behavior using `datetime_to_numeric` with datetime offset
+  - For timedelta64 (kind "m"): convert directly to float64 via `.astype()` or use `datetime_to_numeric` with `offset=None` and appropriate handling, but direct conversion is simpler and matches old behavior
+
+## Rejected hypotheses
+None — the root cause is clear from deduction and confirmed by verification.
+
+## Open questions
+None — the fix is straightforward and the test expectations are clear.
+
+---STDERR---

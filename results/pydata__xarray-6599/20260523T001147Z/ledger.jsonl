@@ -1,0 +1,3 @@
+{"instance": "pydata__xarray-6599", "stage": "start"}
+{"instance": "pydata__xarray-6599", "stage": "recon", "depth": 0, "wall_s": 172, "fixed_point": false}
+{"instance": "pydata__xarray-6599", "stage": "ERROR", "msg": "TimeoutExpired: Command '['claude', '--print', '--model', 'claude-sonnet-4-5', '--dangerously-skip-permissions', '--disallowedTools', 'WebSearch,WebFetch,Task']' timed out after 3600 seconds"}
