@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes all tests including the FAIL_TO_PASS test. The solution correctly detects nested Prefetch objects with custom querysets and skips the cache population, allowing the nested prefetch to handle it with the correct field selection, while preserving existing behavior for plain string lookups and to_attr edge cases.
+
+---STDERR---

@@ -1,0 +1,9 @@
+The recon phase is complete. I've diagnosed the issue:
+
+**Root Cause**: When Django prefetches a reverse relation (like `House.rooms`), it eagerly sets the forward relation cache on each child object (`Room.house = house_instance`) to maintain bi-directional consistency. However, when the child queryset has its own nested prefetch for that forward relation with different field selection (like `only('address')` instead of `only('name')`), Django sees the relation is already cached and skips the nested prefetch. This causes incorrect deferred fields on the cached instance.
+
+**Primary Fix Location**: `django/db/models/fields/related_descriptors.py` line 648, where the reverse prefetch sets `setattr(rel_obj, self.field.name, instance)`. This should check if the queryset has a nested prefetch for that field before populating the cache.
+
+The hypothesis graph has been appended to `/tmp/swebench-abduction/r4_hgraph_django__django-15280.md` and the handoff is printed above for `/craft`.
+
+---STDERR---

@@ -1,0 +1,30 @@
+diff --git a/django/db/models/fields/related_descriptors.py b/django/db/models/fields/related_descriptors.py
+index d5aa968400..ca637c262f 100644
+--- a/django/db/models/fields/related_descriptors.py
++++ b/django/db/models/fields/related_descriptors.py
+@@ -644,10 +644,23 @@ def create_reverse_many_to_one_manager(superclass, rel):
+             queryset = queryset.filter(**query)
+ 
+             # Since we just bypassed this class' get_queryset(), we must manage
+-            # the reverse relation manually.
++            # the reverse relation manually. However, if the queryset has a
++            # nested Prefetch for this field with a custom queryset, skip
++            # setting the cache to let the nested prefetch handle it.
++            has_nested_prefetch = False
++            if hasattr(queryset, '_prefetch_related_lookups'):
++                for lookup in queryset._prefetch_related_lookups:
++                    if hasattr(lookup, 'prefetch_through') and lookup.queryset is not None:
++                        first_through = lookup.prefetch_through.split('__', 1)[0]
++                        first_to_attr, first_as_attr = lookup.get_current_to_attr(0)
++                        if first_through == self.field.name and not first_as_attr:
++                            has_nested_prefetch = True
++                            break
++            
+             for rel_obj in queryset:
+                 instance = instances_dict[rel_obj_attr(rel_obj)]
+-                setattr(rel_obj, self.field.name, instance)
++                if not has_nested_prefetch:
++                    setattr(rel_obj, self.field.name, instance)
+             cache_name = self.field.remote_field.get_cache_name()
+             return queryset, rel_obj_attr, instance_attr, False, cache_name, False
+ 

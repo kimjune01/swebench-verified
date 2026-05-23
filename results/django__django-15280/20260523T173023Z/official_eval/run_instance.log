@@ -1,0 +1,80 @@
+2026-05-23 17:27:25,942 - INFO - Creating container for django__django-15280...
+2026-05-23 17:27:27,644 - INFO - Container for django__django-15280 created: c5118f7b8e8dc7d3d236283baa9cc31df2a2739d29582879388ead71538fdf9e
+2026-05-23 17:27:28,041 - INFO - Container for django__django-15280 started: c5118f7b8e8dc7d3d236283baa9cc31df2a2739d29582879388ead71538fdf9e
+2026-05-23 17:27:28,041 - INFO - Intermediate patch for django__django-15280 written to logs/run_evaluation/batch/recon-craft-audit/django__django-15280/patch.diff, now applying to container...
+2026-05-23 17:27:28,156 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:22: trailing whitespace.
+            
+Checking patch django/db/models/fields/related_descriptors.py...
+Applied patch django/db/models/fields/related_descriptors.py cleanly.
+warning: 1 line adds whitespace errors.
+
+2026-05-23 17:27:28,695 - INFO - Git diff before:
+diff --git a/django/db/models/fields/related_descriptors.py b/django/db/models/fields/related_descriptors.py
+index d5aa968400..ca637c262f 100644
+--- a/django/db/models/fields/related_descriptors.py
++++ b/django/db/models/fields/related_descriptors.py
+@@ -644,10 +644,23 @@ def create_reverse_many_to_one_manager(superclass, rel):
+             queryset = queryset.filter(**query)
+ 
+             # Since we just bypassed this class' get_queryset(), we must manage
+-            # the reverse relation manually.
++            # the reverse relation manually. However, if the queryset has a
++            # nested Prefetch for this field with a custom queryset, skip
++            # setting the cache to let the nested prefetch handle it.
++            has_nested_prefetch = False
++            if hasattr(queryset, '_prefetch_related_lookups'):
++                for lookup in queryset._prefetch_related_lookups:
++                    if hasattr(lookup, 'prefetch_through') and lookup.queryset is not None:
++                        first_through = lookup.prefetch_through.split('__', 1)[0]
++                        first_to_attr, first_as_attr = lookup.get_current_to_attr(0)
++                        if first_through == self.field.name and not first_as_attr:
++                            has_nested_prefetch = True
++                            break
++            
+             for rel_obj in queryset:
+                 instance = instances_dict[rel_obj_attr(rel_obj)]
+-                setattr(rel_obj, self.field.name, instance)
++                if not has_nested_prefetch:
++                    setattr(rel_obj, self.field.name, instance)
+             cache_name = self.field.remote_field.get_cache_name()
+             return queryset, rel_obj_attr, instance_attr, False, cache_name, False
+2026-05-23 17:27:28,695 - INFO - Eval script for django__django-15280 written to logs/run_evaluation/batch/recon-craft-audit/django__django-15280/eval.sh; copying to container...
+2026-05-23 17:27:34,573 - INFO - Test runtime: 5.78 seconds
+2026-05-23 17:27:34,573 - INFO - Test output for django__django-15280 written to logs/run_evaluation/batch/recon-craft-audit/django__django-15280/test_output.txt
+2026-05-23 17:27:34,644 - INFO - Git diff after:
+diff --git a/django/db/models/fields/related_descriptors.py b/django/db/models/fields/related_descriptors.py
+index d5aa968400..ca637c262f 100644
+--- a/django/db/models/fields/related_descriptors.py
++++ b/django/db/models/fields/related_descriptors.py
+@@ -644,10 +644,23 @@ def create_reverse_many_to_one_manager(superclass, rel):
+             queryset = queryset.filter(**query)
+ 
+             # Since we just bypassed this class' get_queryset(), we must manage
+-            # the reverse relation manually.
++            # the reverse relation manually. However, if the queryset has a
++            # nested Prefetch for this field with a custom queryset, skip
++            # setting the cache to let the nested prefetch handle it.
++            has_nested_prefetch = False
++            if hasattr(queryset, '_prefetch_related_lookups'):
++                for lookup in queryset._prefetch_related_lookups:
++                    if hasattr(lookup, 'prefetch_through') and lookup.queryset is not None:
++                        first_through = lookup.prefetch_through.split('__', 1)[0]
++                        first_to_attr, first_as_attr = lookup.get_current_to_attr(0)
++                        if first_through == self.field.name and not first_as_attr:
++                            has_nested_prefetch = True
++                            break
++            
+             for rel_obj in queryset:
+                 instance = instances_dict[rel_obj_attr(rel_obj)]
+-                setattr(rel_obj, self.field.name, instance)
++                if not has_nested_prefetch:
++                    setattr(rel_obj, self.field.name, instance)
+             cache_name = self.field.remote_field.get_cache_name()
+             return queryset, rel_obj_attr, instance_attr, False, cache_name, False
+2026-05-23 17:27:34,645 - INFO - Grading answer for django__django-15280...
+2026-05-23 17:27:34,646 - INFO - report: {'django__django-15280': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['The prefetched relationship is used rather than populating the reverse'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_bug (prefetch_related.tests.Ticket21410Tests)', 'test_bug (prefetch_related.tests.Ticket19607Tests)', 'test_m2m_then_m2m (prefetch_related.tests.DefaultManagerTests)', 'When intermediary results are prefetched without a destination', 'test_bug (prefetch_related.tests.Ticket21760Tests)', 'test_foreignkey (prefetch_related.tests.ForeignKeyToFieldTest)', 'test_m2m (prefetch_related.tests.ForeignKeyToFieldTest)', 'test_m2m_manager_reused (prefetch_related.tests.ForeignKeyToFieldTest)', 'test_basic (prefetch_related.tests.RawQuerySetTests)', 'test_clear (prefetch_related.tests.RawQuerySetTests)', 'test_prefetch_before_raw (prefetch_related.tests.RawQuerySetTests)', 'In-bulk does correctly prefetch objects by not using .iterator()', 'test_prefetch_nullable (prefetch_related.tests.NullableTest)', 'test_traverse_nullable (prefetch_related.tests.NullableTest)', 'test_order (prefetch_related.tests.LookupOrderingTest)', 'test_add_clears_prefetched_objects (prefetch_related.tests.DirectPrefetchedObjectCacheReuseTests)', "Nested prefetch_related() shouldn't trigger duplicate queries for the same", 'test_detect_is_fetched_with_to_attr (prefetch_related.tests.DirectPrefetchedObjectCacheReuseTests)', 'test_prefetch_reverse_foreign_key (prefetch_related.tests.DirectPrefetchedObjectCacheReuseTests)', 'test_remove_clears_prefetched_objects (prefetch_related.tests.DirectPrefetchedObjectCacheReuseTests)', 'test_child_link_prefetch (prefetch_related.tests.MultiTableInheritanceTest)', 'test_foreignkey (prefetch_related.tests.MultiTableInheritanceTest)', 'test_foreignkey_to_inherited (prefetch_related.tests.MultiTableInheritanceTest)', 'test_m2m_to_inheriting_model (prefetch_related.tests.MultiTableInheritanceTest)', 'test_parent_link_prefetch (prefetch_related.tests.MultiTableInheritanceTest)', 'test_using_is_honored_custom_qs (prefetch_related.tests.MultiDbTests)', 'test_using_is_honored_fkey (prefetch_related.tests.MultiDbTests)', 'test_using_is_honored_inheritance (prefetch_related.tests.MultiDbTests)', 'test_using_is_honored_m2m (prefetch_related.tests.MultiDbTests)', 'test_charfield_GFK (prefetch_related.tests.GenericRelationTests)', 'test_custom_queryset (prefetch_related.tests.GenericRelationTests)', 'test_deleted_GFK (prefetch_related.tests.GenericRelationTests)', 'test_generic_relation (prefetch_related.tests.GenericRelationTests)', 'test_nullable_GFK (prefetch_related.tests.GenericRelationTests)', 'test_prefetch_GFK (prefetch_related.tests.GenericRelationTests)', 'test_prefetch_GFK_fk_pk (prefetch_related.tests.GenericRelationTests)', 'test_prefetch_GFK_nonint_pk (prefetch_related.tests.GenericRelationTests)', 'test_prefetch_GFK_uuid_pk (prefetch_related.tests.GenericRelationTests)', "A 'content_object' can be traversed with prefetch_related() and", 'test_attribute_error (prefetch_related.tests.PrefetchRelatedTests)', 'test_bool (prefetch_related.tests.PrefetchRelatedTests)', 'test_clear (prefetch_related.tests.PrefetchRelatedTests)', 'test_count (prefetch_related.tests.PrefetchRelatedTests)', 'test_exists (prefetch_related.tests.PrefetchRelatedTests)', 'Related filtering of prefetched querysets is deferred on m2m and', 'A m2m relation can be followed after a relation like ForeignKey that', 'test_foreignkey_forward (prefetch_related.tests.PrefetchRelatedTests)', 'test_foreignkey_reverse (prefetch_related.tests.PrefetchRelatedTests)', 'test_forward_m2m_to_attr_conflict (prefetch_related.tests.PrefetchRelatedTests)', 'Objects retrieved with .get() get the prefetch behavior.', 'Regression test for #20242 - QuerySet "in" didn\'t work the first time', 'test_invalid_final_lookup (prefetch_related.tests.PrefetchRelatedTests)', 'test_len (prefetch_related.tests.PrefetchRelatedTests)', 'test_m2m_forward (prefetch_related.tests.PrefetchRelatedTests)', 'test_m2m_reverse (prefetch_related.tests.PrefetchRelatedTests)', 'A m2m can be followed through another m2m.', 'test_m2m_then_m2m_object_ids (prefetch_related.tests.PrefetchRelatedTests)', 'test_m2m_then_reverse_fk_object_ids (prefetch_related.tests.PrefetchRelatedTests)', 'test_m2m_then_reverse_one_to_one_object_ids (prefetch_related.tests.PrefetchRelatedTests)', 'test_named_values_list (prefetch_related.tests.PrefetchRelatedTests)', 'test_onetoone_reverse_no_match (prefetch_related.tests.PrefetchRelatedTests)', 'A model (Bio) with a OneToOneField primary key (author) that references', 'test_overriding_prefetch (prefetch_related.tests.PrefetchRelatedTests)', 'test_prefetch_eq (prefetch_related.tests.PrefetchRelatedTests)', 'test_reverse_m2m_to_attr_conflict (prefetch_related.tests.PrefetchRelatedTests)', 'A m2m relation can be followed after going through the select_related', 'test_survives_clone (prefetch_related.tests.PrefetchRelatedTests)', 'test_ambiguous (prefetch_related.tests.CustomPrefetchTests)', 'test_custom_qs (prefetch_related.tests.CustomPrefetchTests)', 'Related filtering of prefetched querysets is deferred until necessary.', 'test_generic_rel (prefetch_related.tests.CustomPrefetchTests)', 'test_m2m (prefetch_related.tests.CustomPrefetchTests)', 'test_m2m_through_fk (prefetch_related.tests.CustomPrefetchTests)', 'test_m2m_through_gfk (prefetch_related.tests.CustomPrefetchTests)', 'test_nested_prefetch_related_are_not_overwritten (prefetch_related.tests.CustomPrefetchTests)', 'Nested prefetches whose name clashes with descriptor names', 'test_o2m_through_m2m (prefetch_related.tests.CustomPrefetchTests)', 'test_raw_queryset (prefetch_related.tests.CustomPrefetchTests)', 'test_reverse_m2m (prefetch_related.tests.CustomPrefetchTests)', 'test_to_attr_cached_property (prefetch_related.tests.CustomPrefetchTests)', 'test_to_attr_doesnt_cache_through_attr_as_list (prefetch_related.tests.CustomPrefetchTests)', 'test_traverse_multiple_items_property (prefetch_related.tests.CustomPrefetchTests)', 'test_traverse_qs (prefetch_related.tests.CustomPrefetchTests)', 'test_traverse_single_item_property (prefetch_related.tests.CustomPrefetchTests)', 'test_values_queryset (prefetch_related.tests.CustomPrefetchTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-15280: resolved: True
+2026-05-23 17:27:34,646 - INFO - Attempting to stop container sweb.eval.django__django-15280.batch...
+2026-05-23 17:27:50,473 - INFO - Attempting to remove container sweb.eval.django__django-15280.batch...
+2026-05-23 17:27:50,485 - INFO - Container sweb.eval.django__django-15280.batch removed.
