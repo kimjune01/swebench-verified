@@ -88,5 +88,10 @@ batch_007 (seed=7, 30 disjoint: 17 django, 7 sympy, 3 xarray, 2 pytest, 1 matplo
 - **Heavy-suite craft hang is instance-specific, not category-wide.** This batch had 7 sympy + 1 matplotlib and *none* DNF'd — they finished within the 3600s budget. So the lever framing holds: the hang isn't "all sympy/matplotlib," it's specific instances whose craft loop happens to grind. Reinforces making the redo a *diagnostic* (does more time converge them, or are they stuck?) rather than blanket-tripling the timeout — most heavy instances don't need it.
 - Fresh boxes meant no stale `/tmp/logs` cross-batch contamination in grade retrieval (the batch_006 double-count); tally was clean 30/30.
 - Three standing losses unchanged: django-15987 (contamination, fixed-but-rerun-pending), sympy-19040 + matplotlib-25311 (craft DNFs from prior batches).
+
+## 2026-05-24 — batch_008: 30/30 official (2nd perfect batch); 200 runs, 193/196
+
+batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fresh boxes. RUNID 20260523T153335Z. **Official 30/30**, 0 empty, 0 DNF (7 sympy, all converged). Scoreboard **193/196**, 200 total archived runs. Two perfect batches back-to-back (007, 008). Boxes kept alive for batch_009 (last of session). Standing 3 losses unchanged.
+- Subscription billing held; tonight ~120 instances at 10-wide parallel with **no rate throttling** (Sonnet's Max ceiling is generous — informs the "full-500 on subscription" plan: dollars ~$30 EC2 / $0 model, no quota wall).
 - **Monitor (fixed zsh-safe form) worked** — counter advanced 0→29 correctly (vs the silently-zero old one); only missed the late craft timeout because it hit its own 60-min cap first.
 - **Grade-retrieval gotcha (noted, not blocking):** boxes accumulate `/tmp/logs/run_evaluation/...` across gradings, so `scp -r` of instance_logs mixed batch_005 + batch_006 dirs (58 reports for 30 instances). `archive_batch.py` filters by the batch's own IDs so archiving was correct, but ad-hoc tallies must filter too.
