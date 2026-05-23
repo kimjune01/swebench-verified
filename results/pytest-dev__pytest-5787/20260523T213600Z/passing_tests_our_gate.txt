@@ -1,0 +1,302 @@
+$ pytest -rA testing/code/test_code.py testing/code/test_excinfo.py testing/conftest.py testing/test_reports.py
+
+/testbed/src/_pytest/python.py:501: in _importtestmodule
+    mod = self.fspath.pyimport(ensuresyspath=importmode)
+/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/py/_path/local.py:704: in pyimport
+    __import__(modname)
+<frozen importlib._bootstrap>:1007: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:680: in _load_unlocked
+    ???
+/testbed/src/_pytest/assertion/rewrite.py:131: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+/testbed/src/_pytest/assertion/rewrite.py:280: in _rewrite_test
+    tree = ast.parse(source, filename=fn)
+/opt/miniconda3/envs/testbed/lib/python3.9/ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "/tmp/pytest-of-root/pytest-12/test_extended_report_deserialization0/test_extended_report_deserialization.py", line 1
+E       qwe abc
+E           ^
+E   SyntaxError: invalid syntax
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 errors during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.08s ===============================
+__________________ TestReportSerialization.test_paths_support __________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_paths_support0
+collected 1 item
+
+test_paths_support.py F                                                  [100%]
+
+=================================== FAILURES ===================================
+____________________________________ test_a ____________________________________
+
+    def test_a():
+>       assert False
+E       assert False
+
+test_paths_support.py:2: AssertionError
+============================== 1 failed in 0.01s ===============================
+_____________ TestReportSerialization.test_deserialization_failure _____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_deserialization_failure0
+collected 1 item
+
+test_deserialization_failure.py F                                        [100%]
+
+=================================== FAILURES ===================================
+____________________________________ test_a ____________________________________
+
+    def test_a():
+>       assert False
+E       assert False
+
+test_deserialization_failure.py:2: AssertionError
+============================== 1 failed in 0.01s ===============================
+_________ TestReportSerialization.test_chained_exceptions[TestReport] __________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_chained_exceptions0
+collected 1 item
+
+test_chained_exceptions.py F                                             [100%]
+
+=================================== FAILURES ===================================
+____________________________________ test_a ____________________________________
+
+    def test_a():
+        try:
+>           foo()
+
+test_chained_exceptions.py:5: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def foo():
+>       raise ValueError('value error')
+E       ValueError: value error
+
+test_chained_exceptions.py:2: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_a():
+        try:
+            foo()
+        except ValueError as e:
+>           raise RuntimeError('runtime error') from e
+E           RuntimeError: runtime error
+
+test_chained_exceptions.py:7: RuntimeError
+============================== 1 failed in 0.01s ===============================
+________ TestReportSerialization.test_chained_exceptions[CollectReport] ________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_chained_exceptions1
+collected 0 items / 1 errors
+
+==================================== ERRORS ====================================
+_________________ ERROR collecting test_chained_exceptions.py __________________
+test_chained_exceptions.py:5: in test_a
+    foo()
+test_chained_exceptions.py:2: in foo
+    raise ValueError('value error')
+E   ValueError: value error
+
+The above exception was the direct cause of the following exception:
+test_chained_exceptions.py:9: in <module>
+    test_a()
+test_chained_exceptions.py:7: in test_a
+    raise RuntimeError('runtime error') from e
+E   RuntimeError: runtime error
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 errors during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.03s ===============================
+__________________________ TestHooks.test_test_report __________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_test_report0
+collected 2 items
+
+test_test_report.py F.                                                   [100%]
+
+=================================== FAILURES ===================================
+____________________________________ test_a ____________________________________
+
+>   def test_a(): assert False
+E   assert False
+
+test_test_report.py:1: AssertionError
+========================= 1 failed, 1 passed in 0.01s ==========================
+________________________ TestHooks.test_collect_report _________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_collect_report0
+collected 2 items
+
+test_collect_report.py F.                                                [100%]
+
+=================================== FAILURES ===================================
+____________________________________ test_a ____________________________________
+
+>   def test_a(): assert False
+E   assert False
+
+test_collect_report.py:1: AssertionError
+========================= 1 failed, 1 passed in 0.01s ==========================
+________ TestHooks.test_invalid_report_types[pytest_runtest_logreport] _________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_invalid_report_types0
+collected 1 item
+
+test_invalid_report_types.py .                                           [100%]
+
+============================== 1 passed in 0.01s ===============================
+__________ TestHooks.test_invalid_report_types[pytest_collectreport] ___________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.1.2.dev12+g955e54221, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-12/test_invalid_report_types1
+collected 1 item
+
+test_invalid_report_types.py .                                           [100%]
+
+============================== 1 passed in 0.01s ===============================
+=========================== short test summary info ============================
+PASSED testing/code/test_code.py::test_ne
+PASSED testing/code/test_code.py::test_code_gives_back_name_for_not_existing_file
+PASSED testing/code/test_code.py::test_code_with_class
+PASSED testing/code/test_code.py::test_code_fullsource
+PASSED testing/code/test_code.py::test_code_source
+PASSED testing/code/test_code.py::test_frame_getsourcelineno_myself
+PASSED testing/code/test_code.py::test_getstatement_empty_fullsource
+PASSED testing/code/test_code.py::test_code_from_func
+PASSED testing/code/test_code.py::test_unicode_handling
+PASSED testing/code/test_code.py::test_code_getargs
+PASSED testing/code/test_code.py::test_frame_getargs
+PASSED testing/code/test_code.py::TestExceptionInfo::test_bad_getsource
+PASSED testing/code/test_code.py::TestExceptionInfo::test_from_current_with_missing
+PASSED testing/code/test_code.py::TestTracebackEntry::test_getsource
+PASSED testing/code/test_code.py::TestReprFuncArgs::test_not_raise_exception_with_mixed_encoding
+PASSED testing/code/test_excinfo.py::test_excinfo_simple
+PASSED testing/code/test_excinfo.py::test_excinfo_from_exc_info_simple
+PASSED testing/code/test_excinfo.py::test_excinfo_getstatement
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entries
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entry_getsource
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entry_getsource_in_construct
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_cut
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[<lambda>-True]
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[<lambda>-False]
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[tracebackhide2-True]
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[tracebackhide3-False]
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_recursion_index
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_only_specific_recursion_errors
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_no_recursion_index
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_getcrashentry
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_getcrashentry_empty
+PASSED testing/code/test_excinfo.py::test_excinfo_exconly
+PASSED testing/code/test_excinfo.py::test_excinfo_repr_str
+PASSED testing/code/test_excinfo.py::test_excinfo_for_later
+PASSED testing/code/test_excinfo.py::test_excinfo_errisinstance
+PASSED testing/code/test_excinfo.py::test_excinfo_no_sourcecode
+PASSED testing/code/test_excinfo.py::test_entrysource_Queue_example
+PASSED testing/code/test_excinfo.py::test_codepath_Queue_example
+PASSED testing/code/test_excinfo.py::test_match_succeeds
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_excinfo
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_not_existing
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_many_line_source_not_existing
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_failing_fullsource
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_with_error
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_with_exception_in_class_property
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_truncated
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines2
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines_var_kw_args
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_short
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_no
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_tbfilter
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_traceback_short_no_source
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_and_excinfo
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_with_invalid_cwd
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_excinfo_addouterr
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_excinfo_reprcrash
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_recursion
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_reprexcinfo_getrepr
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_reprexcinfo_unicode
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_missing_source
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_incomplete_source
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_filenames
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions0]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions1]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions2]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions3]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions4]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions5]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions6]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions7]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions8]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions9]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions10]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions11]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions12]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions13]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions14]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions15]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions16]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions17]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions18]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions19]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions20]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions21]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions22]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions23]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_traceback_repr_style
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_repr_chain_suppression[from_none]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_repr_chain_suppression[explicit_suppress]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_without_traceback[cause-The above exception was the direct cause of the following exception:]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_without_traceback[context-During handling of the above exception, another exception occurred:]
+PASSED testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_cycle
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[None-short]
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[None-long]
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf8-short]
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf8-long]
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf16-short]
+PASSED testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf16-long]
+PASSED testing/code/test_excinfo.py::test_exception_repr_extraction_error_on_recursion
+PASSED testing/code/test_excinfo.py::test_no_recursion_index_on_recursion_error
+PASSED testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_cut_excludepath
+PASSED testing/code/test_excinfo.py::test_match_raises_error
+PASSED testing/code/test_excinfo.py::test_cwd_deleted
+PASSED testing/test_reports.py::TestReportSerialization::test_xdist_longrepr_to_str_issue_241
+PASSED testing/test_reports.py::TestReportSerialization::test_xdist_report_longrepr_reprcrash_130
+PASSED testing/test_reports.py::TestReportSerialization::test_reprentries_serialization_170
+PASSED testing/test_reports.py::TestReportSerialization::test_reprentries_serialization_196
+PASSED testing/test_reports.py::TestReportSerialization::test_itemreport_outcomes
+PASSED testing/test_reports.py::TestReportSerialization::test_collectreport_passed
+PASSED testing/test_reports.py::TestReportSerialization::test_collectreport_fail
+PASSED testing/test_reports.py::TestReportSerialization::test_extended_report_deserialization
+PASSED testing/test_reports.py::TestReportSerialization::test_paths_support
+PASSED testing/test_reports.py::TestReportSerialization::test_deserialization_failure
+PASSED testing/test_reports.py::TestReportSerialization::test_chained_exceptions[TestReport]
+PASSED testing/test_reports.py::TestReportSerialization::test_chained_exceptions[CollectReport]
+PASSED testing/test_reports.py::TestHooks::test_test_report
+PASSED testing/test_reports.py::TestHooks::test_collect_report
+PASSED testing/test_reports.py::TestHooks::test_invalid_report_types[pytest_runtest_logreport]
+PASSED testing/test_reports.py::TestHooks::test_invalid_report_types[pytest_collectreport]
+SKIPPED [1] /testbed/testing/code/test_excinfo.py:251: could not import 'decorator': No module named 'decorator'
+SKIPPED [1] /testbed/testing/code/test_excinfo.py:348: could not import 'jinja2': No module named 'jinja2'
+======================== 125 passed, 2 skipped in 1.50s ========================

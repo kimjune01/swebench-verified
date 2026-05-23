@@ -1,0 +1,44 @@
+# Recon: pytest-dev__pytest-5787
+
+## Failure summary
+
+The test `test_chained_exceptions` creates a report containing a chained exception (raising `RuntimeError` from `ValueError`), serializes it using `_to_json()`, deserializes it using `_from_json()`, and expects the deserialized report to still have an `ExceptionChainRepr` as its `longrepr`. However, after deserialization, the `longrepr` is a `ReprExceptionInfo` instead, which lacks the chain information. The test fails with `AssertionError: assert False` where `isinstance(loaded_report.longrepr, ExceptionChainRepr)` returns False.
+
+## Suspect set
+
+- `src/_pytest/reports.py` lines 1-15: Missing import of `ExceptionChainRepr`
+- `src/_pytest/reports.py` lines 164-185: The `disassembled_report` function only handles single exceptions, not chains
+- `src/_pytest/reports.py` lines 187-196: The `_to_json` method doesn't detect `ExceptionChainRepr` before serializing
+- `src/_pytest/reports.py` lines 214-260: The `_from_json` method always creates `ReprExceptionInfo`, never `ExceptionChainRepr`
+
+## Root cause
+
+The serialization/deserialization code in `src/_pytest/reports.py` doesn't recognize `ExceptionChainRepr` as a distinct type requiring special handling. Both `ExceptionChainRepr` and `ReprExceptionInfo` have `reprtraceback` and `reprcrash` attributes, so the type check at line 189-190 passes for both. The `disassembled_report` helper serializes only those two attributes plus sections, completely ignoring the `chain` attribute that contains the full exception chain. When deserializing, the code unconditionally creates a `ReprExceptionInfo` (line 253), never checking if the serialized data represents a chain.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `src/_pytest/reports.py:189-192` — `if hasattr(self.longrepr, "reprtraceback") and hasattr(self.longrepr, "reprcrash"):` matches both classes
+- `src/_pytest/reports.py:164-185` — `disassembled_report` serializes `reprcrash`, `reprtraceback`, `sections` but not `chain`
+- `src/_pytest/reports.py:253-256` — `exception_info = ReprExceptionInfo(...)` always creates `ReprExceptionInfo`
+- `src/_pytest/_code/code.py:884-890` — `ExceptionChainRepr.__init__` sets `self.chain` which is not in `ReprExceptionInfo`
+- `src/_pytest/_code/code.py:815-854` — `repr_chain` is a list of tuples `(reprtraceback, reprcrash, descr)` where `descr` is the chain description like "The above exception was the direct cause of the following exception:"
+
+## Edit sites
+
+1. `src/_pytest/reports.py` line 6-7: Add import `ExceptionChainRepr` after the existing import of `ExceptionInfo`
+   
+2. `src/_pytest/reports.py` lines 187-196: Add check for `isinstance(self.longrepr, ExceptionChainRepr)` before the existing `reprtraceback`/`reprcrash` check. If it's an `ExceptionChainRepr`, serialize the chain by iterating over `self.longrepr.chain` and calling similar logic to `disassembled_report` for each element in the chain, preserving the structure `[(reprtraceback_dict, reprcrash_dict, descr), ...]`
+
+3. `src/_pytest/reports.py` lines 214-260: Add check for `"chain"` key in `reportdict["longrepr"]` before the existing `reprcrash`/`reprtraceback` check. If present, deserialize each chain element (reversing the serialization logic), then create an `ExceptionChainRepr` instead of `ReprExceptionInfo`
+
+## Rejected hypotheses
+
+None - first-pass diagnosis
+
+## Open questions
+
+- How are `ReprTracebackNative` entries handled in chains? The chain creation code (line 827-829 in code.py) can create these as fallback. Need to verify if the existing `ReprEntryNative` deserialization (line 246-247) handles them.
+- Are there any other places where report serialization happens that might need updating? (Checked: `_to_json` is only defined once and used by xdist)
+
+---STDERR---

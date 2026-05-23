@@ -1,0 +1,447 @@
+2026-05-23 21:33:32,360 - INFO - Creating container for pytest-dev__pytest-5787...
+2026-05-23 21:33:32,536 - INFO - Container for pytest-dev__pytest-5787 created: 30d814ad218e31f8bdd7f6fdaf65794bc5e825a162a6afd2ca8290f5fb87a228
+2026-05-23 21:33:32,994 - INFO - Container for pytest-dev__pytest-5787 started: 30d814ad218e31f8bdd7f6fdaf65794bc5e825a162a6afd2ca8290f5fb87a228
+2026-05-23 21:33:32,994 - INFO - Intermediate patch for pytest-dev__pytest-5787 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5787/patch.diff, now applying to container...
+2026-05-23 21:33:33,115 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:36: trailing whitespace.
+                    
+/tmp/patch.diff:39: trailing whitespace.
+                    
+/tmp/patch.diff:41: trailing whitespace.
+                
+/tmp/patch.diff:45: trailing whitespace.
+                
+/tmp/patch.diff:58: trailing whitespace.
+                
+Checking patch src/_pytest/reports.py...
+Applied patch src/_pytest/reports.py cleanly.
+warning: squelched 5 whitespace errors
+warning: 10 lines add whitespace errors.
+
+2026-05-23 21:33:33,193 - INFO - Git diff before:
+diff --git a/src/_pytest/reports.py b/src/_pytest/reports.py
+index 4682d5b6e..1f800c3d3 100644
+--- a/src/_pytest/reports.py
++++ b/src/_pytest/reports.py
+@@ -3,6 +3,7 @@ from typing import Optional
+ 
+ import py
+ 
++from _pytest._code.code import ExceptionChainRepr
+ from _pytest._code.code import ExceptionInfo
+ from _pytest._code.code import ReprEntry
+ from _pytest._code.code import ReprEntryNative
+@@ -162,6 +163,55 @@ class BaseReport:
+         """
+ 
+         def disassembled_report(rep):
++            # Check if this is an ExceptionChainRepr
++            from _pytest._code.code import ExceptionChainRepr as _ExceptionChainRepr
++            if isinstance(rep.longrepr, _ExceptionChainRepr):
++                # Serialize the exception chain
++                chain_data = []
++                for reprtraceback, reprcrash, descr in rep.longrepr.chain:
++                    # Serialize reprtraceback
++                    reprtraceback_dict = reprtraceback.__dict__.copy()
++                    new_entries = []
++                    for entry in reprtraceback_dict["reprentries"]:
++                        entry_data = {
++                            "type": type(entry).__name__,
++                            "data": entry.__dict__.copy(),
++                        }
++                        for key, value in entry_data["data"].items():
++                            if hasattr(value, "__dict__"):
++                                entry_data["data"][key] = value.__dict__.copy()
++                        new_entries.append(entry_data)
++                    reprtraceback_dict["reprentries"] = new_entries
++                    
++                    # Serialize reprcrash (can be None)
++                    reprcrash_dict = reprcrash.__dict__.copy() if reprcrash is not None else None
++                    
++                    chain_data.append((reprtraceback_dict, reprcrash_dict, descr))
++                
++                # Also serialize the outermost exception info for backward compat
++                reprtraceback = rep.longrepr.reprtraceback.__dict__.copy()
++                reprcrash = rep.longrepr.reprcrash.__dict__.copy() if rep.longrepr.reprcrash is not None else None
++                
++                # Handle reprentries for the outermost exception
++                new_entries = []
++                for entry in reprtraceback["reprentries"]:
++                    entry_data = {
++                        "type": type(entry).__name__,
++                        "data": entry.__dict__.copy(),
++                    }
++                    for key, value in entry_data["data"].items():
++                        if hasattr(value, "__dict__"):
++                            entry_data["data"][key] = value.__dict__.copy()
++                    new_entries.append(entry_data)
++                reprtraceback["reprentries"] = new_entries
++                
++                return {
++                    "reprcrash": reprcrash,
++                    "reprtraceback": reprtraceback,
++                    "sections": rep.longrepr.sections,
++                    "chain": chain_data,
++                }
++            
+             reprtraceback = rep.longrepr.reprtraceback.__dict__.copy()
+             reprcrash = rep.longrepr.reprcrash.__dict__.copy()
+ 
+@@ -216,48 +266,99 @@ class BaseReport:
+                 "reprcrash" in reportdict["longrepr"]
+                 and "reprtraceback" in reportdict["longrepr"]
+             ):
++                # Check if this is a serialized ExceptionChainRepr
++                if "chain" in reportdict["longrepr"] and reportdict["longrepr"]["chain"]:
++                    # Deserialize the exception chain
++                    chain = []
++                    for reprtraceback_dict, reprcrash_dict, descr in reportdict["longrepr"]["chain"]:
++                        # Deserialize reprtraceback entries
++                        unserialized_entries = []
++                        for entry_data in reprtraceback_dict["reprentries"]:
++                            data = entry_data["data"]
++                            entry_type = entry_data["type"]
++                            if entry_type == "ReprEntry":
++                                reprfuncargs = None
++                                reprfileloc = None
++                                reprlocals = None
++                                if data["reprfuncargs"]:
++                                    reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
++                                if data["reprfileloc"]:
++                                    reprfileloc = ReprFileLocation(**data["reprfileloc"])
++                                if data["reprlocals"]:
++                                    reprlocals = ReprLocals(data["reprlocals"]["lines"])
++
++                                reprentry = ReprEntry(
++                                    lines=data["lines"],
++                                    reprfuncargs=reprfuncargs,
++                                    reprlocals=reprlocals,
++                                    filelocrepr=reprfileloc,
++                                    style=data["style"],
++                                )
++                            elif entry_type == "ReprEntryNative":
++                                reprentry = ReprEntryNative(data["lines"])
++                            else:
++                                _report_unserialization_failure(entry_type, cls, reportdict)
++                            unserialized_entries.append(reprentry)
++                        reprtraceback_dict["reprentries"] = unserialized_entries
++                        
++                        # Build the chain element (reprcrash can be None)
++                        chain.append((
++                            ReprTraceback(**reprtraceback_dict),
++                            ReprFileLocation(**reprcrash_dict) if reprcrash_dict is not None else None,
++                            descr
++                        ))
++                    
++                    # Create ExceptionChainRepr
++                    exception_chain = ExceptionChainRepr(chain)
++                    
++                    # Add sections
++                    for section in reportdict["longrepr"]["sections"]:
++                        exception_chain.addsection(*section)
++                    
++                    reportdict["longrepr"] = exception_chain
++                else:
++                    # Regular ReprExceptionInfo (backward compatible)
++                    reprtraceback = reportdict["longrepr"]["reprtraceback"]
++                    reprcrash = reportdict["longrepr"]["reprcrash"]
++
++                    unserialized_entries = []
++                    reprentry = None
++                    for entry_data in reprtraceback["reprentries"]:
++                        data = entry_data["data"]
++                        entry_type = entry_data["type"]
++                        if entry_type == "ReprEntry":
++                            reprfuncargs = None
++                            reprfileloc = None
++                            reprlocals = None
++                            if data["reprfuncargs"]:
++                                reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
++                            if data["reprfileloc"]:
++                                reprfileloc = ReprFileLocation(**data["reprfileloc"])
++                            if data["reprlocals"]:
++                                reprlocals = ReprLocals(data["reprlocals"]["lines"])
++
++                            reprentry = ReprEntry(
++                                lines=data["lines"],
++                                reprfuncargs=reprfuncargs,
++                                reprlocals=reprlocals,
++                                filelocrepr=reprfileloc,
++                                style=data["style"],
++                            )
++                        elif entry_type == "ReprEntryNative":
++                            reprentry = ReprEntryNative(data["lines"])
++                        else:
++                            _report_unserialization_failure(entry_type, cls, reportdict)
++                        unserialized_entries.append(reprentry)
++                    reprtraceback["reprentries"] = unserialized_entries
++
++                    exception_info = ReprExceptionInfo(
++                        reprtraceback=ReprTraceback(**reprtraceback),
++                        reprcrash=ReprFileLocation(**reprcrash),
++                    )
+ 
+-                reprtraceback = reportdict["longrepr"]["reprtraceback"]
+-                reprcrash = reportdict["longrepr"]["reprcrash"]
+-
+-                unserialized_entries = []
+-                reprentry = None
+-                for entry_data in reprtraceback["reprentries"]:
+-                    data = entry_data["data"]
+-                    entry_type = entry_data["type"]
+-                    if entry_type == "ReprEntry":
+-                        reprfuncargs = None
+-                        reprfileloc = None
+-                        reprlocals = None
+-                        if data["reprfuncargs"]:
+-                            reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
+-                        if data["reprfileloc"]:
+-                            reprfileloc = ReprFileLocation(**data["reprfileloc"])
+-                        if data["reprlocals"]:
+-                            reprlocals = ReprLocals(data["reprlocals"]["lines"])
+-
+-                        reprentry = ReprEntry(
+-                            lines=data["lines"],
+-                            reprfuncargs=reprfuncargs,
+-                            reprlocals=reprlocals,
+-                            filelocrepr=reprfileloc,
+-                            style=data["style"],
+-                        )
+-                    elif entry_type == "ReprEntryNative":
+-                        reprentry = ReprEntryNative(data["lines"])
+-                    else:
+-                        _report_unserialization_failure(entry_type, cls, reportdict)
+-                    unserialized_entries.append(reprentry)
+-                reprtraceback["reprentries"] = unserialized_entries
+-
+-                exception_info = ReprExceptionInfo(
+-                    reprtraceback=ReprTraceback(**reprtraceback),
+-                    reprcrash=ReprFileLocation(**reprcrash),
+-                )
+-
+-                for section in reportdict["longrepr"]["sections"]:
+-                    exception_info.addsection(*section)
+-                reportdict["longrepr"] = exception_info
++                    for section in reportdict["longrepr"]["sections"]:
++                        exception_info.addsection(*section)
++                    reportdict["longrepr"] = exception_info
+ 
+         return cls(**reportdict)
+2026-05-23 21:33:33,193 - INFO - Eval script for pytest-dev__pytest-5787 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5787/eval.sh; copying to container...
+2026-05-23 21:33:37,692 - INFO - Test runtime: 4.40 seconds
+2026-05-23 21:33:37,692 - INFO - Test output for pytest-dev__pytest-5787 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5787/test_output.txt
+2026-05-23 21:33:37,778 - INFO - Git diff after:
+diff --git a/src/_pytest/reports.py b/src/_pytest/reports.py
+index 4682d5b6e..1f800c3d3 100644
+--- a/src/_pytest/reports.py
++++ b/src/_pytest/reports.py
+@@ -3,6 +3,7 @@ from typing import Optional
+ 
+ import py
+ 
++from _pytest._code.code import ExceptionChainRepr
+ from _pytest._code.code import ExceptionInfo
+ from _pytest._code.code import ReprEntry
+ from _pytest._code.code import ReprEntryNative
+@@ -162,6 +163,55 @@ class BaseReport:
+         """
+ 
+         def disassembled_report(rep):
++            # Check if this is an ExceptionChainRepr
++            from _pytest._code.code import ExceptionChainRepr as _ExceptionChainRepr
++            if isinstance(rep.longrepr, _ExceptionChainRepr):
++                # Serialize the exception chain
++                chain_data = []
++                for reprtraceback, reprcrash, descr in rep.longrepr.chain:
++                    # Serialize reprtraceback
++                    reprtraceback_dict = reprtraceback.__dict__.copy()
++                    new_entries = []
++                    for entry in reprtraceback_dict["reprentries"]:
++                        entry_data = {
++                            "type": type(entry).__name__,
++                            "data": entry.__dict__.copy(),
++                        }
++                        for key, value in entry_data["data"].items():
++                            if hasattr(value, "__dict__"):
++                                entry_data["data"][key] = value.__dict__.copy()
++                        new_entries.append(entry_data)
++                    reprtraceback_dict["reprentries"] = new_entries
++                    
++                    # Serialize reprcrash (can be None)
++                    reprcrash_dict = reprcrash.__dict__.copy() if reprcrash is not None else None
++                    
++                    chain_data.append((reprtraceback_dict, reprcrash_dict, descr))
++                
++                # Also serialize the outermost exception info for backward compat
++                reprtraceback = rep.longrepr.reprtraceback.__dict__.copy()
++                reprcrash = rep.longrepr.reprcrash.__dict__.copy() if rep.longrepr.reprcrash is not None else None
++                
++                # Handle reprentries for the outermost exception
++                new_entries = []
++                for entry in reprtraceback["reprentries"]:
++                    entry_data = {
++                        "type": type(entry).__name__,
++                        "data": entry.__dict__.copy(),
++                    }
++                    for key, value in entry_data["data"].items():
++                        if hasattr(value, "__dict__"):
++                            entry_data["data"][key] = value.__dict__.copy()
++                    new_entries.append(entry_data)
++                reprtraceback["reprentries"] = new_entries
++                
++                return {
++                    "reprcrash": reprcrash,
++                    "reprtraceback": reprtraceback,
++                    "sections": rep.longrepr.sections,
++                    "chain": chain_data,
++                }
++            
+             reprtraceback = rep.longrepr.reprtraceback.__dict__.copy()
+             reprcrash = rep.longrepr.reprcrash.__dict__.copy()
+ 
+@@ -216,48 +266,99 @@ class BaseReport:
+                 "reprcrash" in reportdict["longrepr"]
+                 and "reprtraceback" in reportdict["longrepr"]
+             ):
++                # Check if this is a serialized ExceptionChainRepr
++                if "chain" in reportdict["longrepr"] and reportdict["longrepr"]["chain"]:
++                    # Deserialize the exception chain
++                    chain = []
++                    for reprtraceback_dict, reprcrash_dict, descr in reportdict["longrepr"]["chain"]:
++                        # Deserialize reprtraceback entries
++                        unserialized_entries = []
++                        for entry_data in reprtraceback_dict["reprentries"]:
++                            data = entry_data["data"]
++                            entry_type = entry_data["type"]
++                            if entry_type == "ReprEntry":
++                                reprfuncargs = None
++                                reprfileloc = None
++                                reprlocals = None
++                                if data["reprfuncargs"]:
++                                    reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
++                                if data["reprfileloc"]:
++                                    reprfileloc = ReprFileLocation(**data["reprfileloc"])
++                                if data["reprlocals"]:
++                                    reprlocals = ReprLocals(data["reprlocals"]["lines"])
++
++                                reprentry = ReprEntry(
++                                    lines=data["lines"],
++                                    reprfuncargs=reprfuncargs,
++                                    reprlocals=reprlocals,
++                                    filelocrepr=reprfileloc,
++                                    style=data["style"],
++                                )
++                            elif entry_type == "ReprEntryNative":
++                                reprentry = ReprEntryNative(data["lines"])
++                            else:
++                                _report_unserialization_failure(entry_type, cls, reportdict)
++                            unserialized_entries.append(reprentry)
++                        reprtraceback_dict["reprentries"] = unserialized_entries
++                        
++                        # Build the chain element (reprcrash can be None)
++                        chain.append((
++                            ReprTraceback(**reprtraceback_dict),
++                            ReprFileLocation(**reprcrash_dict) if reprcrash_dict is not None else None,
++                            descr
++                        ))
++                    
++                    # Create ExceptionChainRepr
++                    exception_chain = ExceptionChainRepr(chain)
++                    
++                    # Add sections
++                    for section in reportdict["longrepr"]["sections"]:
++                        exception_chain.addsection(*section)
++                    
++                    reportdict["longrepr"] = exception_chain
++                else:
++                    # Regular ReprExceptionInfo (backward compatible)
++                    reprtraceback = reportdict["longrepr"]["reprtraceback"]
++                    reprcrash = reportdict["longrepr"]["reprcrash"]
++
++                    unserialized_entries = []
++                    reprentry = None
++                    for entry_data in reprtraceback["reprentries"]:
++                        data = entry_data["data"]
++                        entry_type = entry_data["type"]
++                        if entry_type == "ReprEntry":
++                            reprfuncargs = None
++                            reprfileloc = None
++                            reprlocals = None
++                            if data["reprfuncargs"]:
++                                reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
++                            if data["reprfileloc"]:
++                                reprfileloc = ReprFileLocation(**data["reprfileloc"])
++                            if data["reprlocals"]:
++                                reprlocals = ReprLocals(data["reprlocals"]["lines"])
++
++                            reprentry = ReprEntry(
++                                lines=data["lines"],
++                                reprfuncargs=reprfuncargs,
++                                reprlocals=reprlocals,
++                                filelocrepr=reprfileloc,
++                                style=data["style"],
++                            )
++                        elif entry_type == "ReprEntryNative":
++                            reprentry = ReprEntryNative(data["lines"])
++                        else:
++                            _report_unserialization_failure(entry_type, cls, reportdict)
++                        unserialized_entries.append(reprentry)
++                    reprtraceback["reprentries"] = unserialized_entries
++
++                    exception_info = ReprExceptionInfo(
++                        reprtraceback=ReprTraceback(**reprtraceback),
++                        reprcrash=ReprFileLocation(**reprcrash),
++                    )
+ 
+-                reprtraceback = reportdict["longrepr"]["reprtraceback"]
+-                reprcrash = reportdict["longrepr"]["reprcrash"]
+-
+-                unserialized_entries = []
+-                reprentry = None
+-                for entry_data in reprtraceback["reprentries"]:
+-                    data = entry_data["data"]
+-                    entry_type = entry_data["type"]
+-                    if entry_type == "ReprEntry":
+-                        reprfuncargs = None
+-                        reprfileloc = None
+-                        reprlocals = None
+-                        if data["reprfuncargs"]:
+-                            reprfuncargs = ReprFuncArgs(**data["reprfuncargs"])
+-                        if data["reprfileloc"]:
+-                            reprfileloc = ReprFileLocation(**data["reprfileloc"])
+-                        if data["reprlocals"]:
+-                            reprlocals = ReprLocals(data["reprlocals"]["lines"])
+-
+-                        reprentry = ReprEntry(
+-                            lines=data["lines"],
+-                            reprfuncargs=reprfuncargs,
+-                            reprlocals=reprlocals,
+-                            filelocrepr=reprfileloc,
+-                            style=data["style"],
+-                        )
+-                    elif entry_type == "ReprEntryNative":
+-                        reprentry = ReprEntryNative(data["lines"])
+-                    else:
+-                        _report_unserialization_failure(entry_type, cls, reportdict)
+-                    unserialized_entries.append(reprentry)
+-                reprtraceback["reprentries"] = unserialized_entries
+-
+-                exception_info = ReprExceptionInfo(
+-                    reprtraceback=ReprTraceback(**reprtraceback),
+-                    reprcrash=ReprFileLocation(**reprcrash),
+-                )
+-
+-                for section in reportdict["longrepr"]["sections"]:
+-                    exception_info.addsection(*section)
+-                reportdict["longrepr"] = exception_info
++                    for section in reportdict["longrepr"]["sections"]:
++                        exception_info.addsection(*section)
++                    reportdict["longrepr"] = exception_info
+ 
+         return cls(**reportdict)
+2026-05-23 21:33:37,778 - INFO - Grading answer for pytest-dev__pytest-5787...
+2026-05-23 21:33:37,780 - INFO - report: {'pytest-dev__pytest-5787': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': False, 'tests_status': {'FAIL_TO_PASS': {'success': ['testing/test_reports.py::TestReportSerialization::test_chained_exceptions[TestReport]', 'testing/test_reports.py::TestReportSerialization::test_chained_exceptions[CollectReport]'], 'failure': []}, 'PASS_TO_PASS': {'success': ['testing/code/test_code.py::test_ne', 'testing/code/test_code.py::test_code_gives_back_name_for_not_existing_file', 'testing/code/test_code.py::test_code_with_class', 'testing/code/test_code.py::test_code_fullsource', 'testing/code/test_code.py::test_code_source', 'testing/code/test_code.py::test_frame_getsourcelineno_myself', 'testing/code/test_code.py::test_getstatement_empty_fullsource', 'testing/code/test_code.py::test_code_from_func', 'testing/code/test_code.py::test_unicode_handling', 'testing/code/test_code.py::test_code_getargs', 'testing/code/test_code.py::test_frame_getargs', 'testing/code/test_code.py::TestExceptionInfo::test_bad_getsource', 'testing/code/test_code.py::TestExceptionInfo::test_from_current_with_missing', 'testing/code/test_code.py::TestTracebackEntry::test_getsource', 'testing/code/test_code.py::TestReprFuncArgs::test_not_raise_exception_with_mixed_encoding', 'testing/code/test_excinfo.py::test_excinfo_simple', 'testing/code/test_excinfo.py::test_excinfo_from_exc_info_simple', 'testing/code/test_excinfo.py::test_excinfo_getstatement', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entries', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entry_getsource', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_entry_getsource_in_construct', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_cut', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[<lambda>-True]', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[<lambda>-False]', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[tracebackhide2-True]', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_filter_selective[tracebackhide3-False]', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_recursion_index', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_only_specific_recursion_errors', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_no_recursion_index', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_getcrashentry', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_getcrashentry_empty', 'testing/code/test_excinfo.py::test_excinfo_exconly', 'testing/code/test_excinfo.py::test_excinfo_repr_str', 'testing/code/test_excinfo.py::test_excinfo_for_later', 'testing/code/test_excinfo.py::test_excinfo_errisinstance', 'testing/code/test_excinfo.py::test_excinfo_no_sourcecode', 'testing/code/test_excinfo.py::test_entrysource_Queue_example', 'testing/code/test_excinfo.py::test_codepath_Queue_example', 'testing/code/test_excinfo.py::test_match_succeeds', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_excinfo', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_not_existing', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_many_line_source_not_existing', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_source_failing_fullsource', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_with_error', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_with_exception_in_class_property', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_local_truncated', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines2', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_lines_var_kw_args', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_short', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_tracebackentry_no', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_tbfilter', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_traceback_short_no_source', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_and_excinfo', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_with_invalid_cwd', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_excinfo_addouterr', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_excinfo_reprcrash', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_repr_traceback_recursion', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_reprexcinfo_getrepr', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_reprexcinfo_unicode', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_missing_source', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_incomplete_source', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_toterminal_long_filenames', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions0]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions1]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions2]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions3]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions4]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions5]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions6]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions7]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions8]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions9]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions10]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions11]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions12]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions13]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions14]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions15]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions16]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions17]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions18]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions19]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions20]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions21]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions22]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_format_excinfo[reproptions23]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_traceback_repr_style', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_repr_chain_suppression[from_none]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_repr_chain_suppression[explicit_suppress]', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_without_traceback[cause-The', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_without_traceback[context-During', 'testing/code/test_excinfo.py::TestFormattedExcinfo::test_exc_chain_repr_cycle', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[None-short]', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[None-long]', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf8-short]', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf8-long]', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf16-short]', 'testing/code/test_excinfo.py::test_repr_traceback_with_unicode[utf16-long]', 'testing/code/test_excinfo.py::test_exception_repr_extraction_error_on_recursion', 'testing/code/test_excinfo.py::test_no_recursion_index_on_recursion_error', 'testing/code/test_excinfo.py::TestTraceback_f_g_h::test_traceback_cut_excludepath', 'testing/code/test_excinfo.py::test_match_raises_error', 'testing/code/test_excinfo.py::test_cwd_deleted', 'testing/test_reports.py::TestReportSerialization::test_xdist_longrepr_to_str_issue_241', 'testing/test_reports.py::TestReportSerialization::test_xdist_report_longrepr_reprcrash_130', 'testing/test_reports.py::TestReportSerialization::test_reprentries_serialization_170', 'testing/test_reports.py::TestReportSerialization::test_reprentries_serialization_196', 'testing/test_reports.py::TestReportSerialization::test_itemreport_outcomes', 'testing/test_reports.py::TestReportSerialization::test_collectreport_passed', 'testing/test_reports.py::TestReportSerialization::test_collectreport_fail', 'testing/test_reports.py::TestReportSerialization::test_extended_report_deserialization', 'testing/test_reports.py::TestReportSerialization::test_paths_support', 'testing/test_reports.py::TestHooks::test_test_report', 'testing/test_reports.py::TestHooks::test_collect_report', 'testing/test_reports.py::TestHooks::test_invalid_report_types[pytest_runtest_logreport]', 'testing/test_reports.py::TestHooks::test_invalid_report_types[pytest_collectreport]'], 'failure': ['testing/test_reports.py::TestReportSerialization::test_deserialization_failure']}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pytest-dev__pytest-5787: resolved: False
+2026-05-23 21:33:37,780 - INFO - Attempting to stop container sweb.eval.pytest-dev__pytest-5787.batch...
+2026-05-23 21:33:53,189 - INFO - Attempting to remove container sweb.eval.pytest-dev__pytest-5787.batch...
+2026-05-23 21:33:53,204 - INFO - Container sweb.eval.pytest-dev__pytest-5787.batch removed.

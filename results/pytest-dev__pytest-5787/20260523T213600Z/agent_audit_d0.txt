@@ -1,0 +1,19 @@
+# Audit: pytest-dev__pytest-5787
+
+## FAIL_TO_PASS
+- `testing/test_reports.py::TestReportSerialization::test_chained_exceptions[TestReport]`: PASS
+- `testing/test_reports.py::TestReportSerialization::test_chained_exceptions[CollectReport]`: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- 2 skipped tests (`testing/code/test_excinfo.py:251`, `testing/code/test_excinfo.py:348`) - missing decorator/jinja2 modules, already skipped on base
+
+## Kill report
+N/A - instance resolved successfully. Both FAIL_TO_PASS tests now pass, all PASS_TO_PASS tests remain passing, zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
