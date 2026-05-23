@@ -240,14 +240,25 @@ def audit(inst, box, gate, hgraph, failbase, depth):
 
 # ── patch capture / teardown ──────────────────────────────────────────────────
 
+def _strip_test_blocks(diff, testfiles):
+    """Drop per-file blocks for paths the official harness owns (the test files).
+    Done in Python on the full diff — shell-side `:(exclude)` pathspecs collide with
+    the bash -lc single-quote wrapping and silently empty the whole capture."""
+    if not testfiles: return diff
+    tf = set(testfiles)
+    out, keep = [], True
+    for line in diff.splitlines(keepends=True):
+        if line.startswith("diff --git "):
+            # "diff --git a/<p> b/<p>" — take the b/ path
+            parts = line.split()
+            bpath = parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else None
+            keep = bpath not in tf
+        if keep:
+            out.append(line)
+    return "".join(out)
+
 def capture_patch(inst, cid, root, tsha):
     iid = inst["instance_id"]; tag = iid.replace("/","_")
-    # Source-only prediction: exclude the test files the official harness owns (it resets
-    # them to base and re-applies the gold test patch itself). An incidental agent edit to
-    # a test file collides with that re-application and trips git's -R heuristic, reversing
-    # the real fix (django-15987 false-positive). Paths come from the test_patch headers.
-    testfiles = [l[6:] for l in inst["test_patch"].splitlines() if l.startswith("+++ b/")]
-    excl = " ".join(f"':(exclude){p}'" for p in testfiles)
     # Strip agent detritus AND generated test artifacts before diffing, so the captured
     # model_patch is the fix, not test-run output (matplotlib result_images, pyc, caches,
     # compiled libs). Without this, `git add -A` swept 100s of KB of artifacts into patches.
@@ -255,15 +266,21 @@ def capture_patch(inst, cid, root, tsha):
             f"find . -path ./.git -prune -o \\( -name \"*.bak\" -o -name \"*.bak[0-9]*\" -o -name \"*.orig\" -o -name \"*.pyc\" -o -name \"*.so\" \\) -print -delete >/dev/null 2>&1; "
             f"find . -path ./.git -prune -o -type d \\( -name __pycache__ -o -name .pytest_cache -o -name result_images -o -name \"*.egg-info\" \\) -exec rm -rf {{}} + >/dev/null 2>&1; "
             f"git add -A >/dev/null 2>&1; "
-            f"git -c core.fileMode=false diff {tsha} -- . {excl}'", timeout=120)
+            f"git -c core.fileMode=false diff {tsha}'", timeout=120)
+    # Source-only prediction: drop the test files the official harness owns (it resets
+    # them to base and re-applies the gold test patch itself). An incidental agent edit to
+    # a test file collides with that re-application and trips git's -R heuristic, reversing
+    # the real fix (django-15987 false-positive). Paths come from the test_patch headers.
+    testfiles = [l[6:] for l in inst["test_patch"].splitlines() if l.startswith("+++ b/")]
+    patch = _strip_test_blocks(r.stdout, testfiles)
     diag = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && "
                f"echo ===STATUS===; git status --short | head -40; "
                f"echo ===LOG===; git log --oneline -4; "
                f"echo ===STAT===; git diff {tsha} --stat | tail -20'", timeout=120)
     (HERE/f"r4_capture_diag_{tag}.txt").write_text(diag.stdout+diag.stderr)
-    if not r.stdout.strip():
+    if not patch.strip():
         log({"instance":iid,"stage":"capture","msg":"EMPTY patch — see capture_diag"})
-    return r.stdout
+    return patch
 
 def verify_gate(inst, cid, root):
     """Driver-side final gate run on the agent's tree, AFTER the loop. Two purposes:
