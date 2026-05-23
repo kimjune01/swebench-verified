@@ -1,0 +1,3 @@
+{"instance": "matplotlib__matplotlib-25311", "stage": "start"}
+{"instance": "matplotlib__matplotlib-25311", "stage": "recon", "depth": 0, "wall_s": 188, "fixed_point": false}
+{"instance": "matplotlib__matplotlib-25311", "stage": "ERROR", "msg": "TimeoutExpired: Command '['claude', '--print', '--model', 'claude-sonnet-4-5', '--dangerously-skip-permissions', '--disallowedTools', 'WebSearch,WebFetch,Task']' timed out after 3600 seconds"}

@@ -1,0 +1,40 @@
+# Recon: matplotlib__matplotlib-25311
+
+## Failure summary
+
+The test `test_complete[png]` creates a figure with a draggable legend (`plt.legend(draggable=True)`) and verifies that the figure can be pickled without including any reference to the canvas. The test fails with an assertion error because "FigureCanvasAgg" appears in the pickle stream when the legend is draggable. The test checks this by using `pickletools.genops()` to inspect the pickle bytecode for canvas class names.
+
+## Suspect set
+
+- `lib/matplotlib/offsetbox.py` lines 1474-1580: `DraggableBase` class — stores unpicklable canvas reference without __getstate__/__setstate__ methods
+- `lib/matplotlib/legend.py` lines 1173-1203: `Legend.set_draggable()` method — creates DraggableLegend instance that inherits the pickling problem
+- `lib/matplotlib/legend.py` lines 53-95: `DraggableLegend` class — inherits from DraggableOffsetBox, which inherits from DraggableBase
+
+## Root cause
+
+When `legend.set_draggable(True)` is called, a `DraggableLegend` object is created and stored in `legend._draggable`. This object inherits from `DraggableBase` (via `DraggableOffsetBox`), which stores a direct reference to the canvas in its `__init__` method at line 1509: `self.canvas = self.ref_artist.figure.canvas`.
+
+Unlike `Figure` (which has `__getstate__`/`__setstate__` to exclude the canvas), `DraggableBase` lacks pickle support methods. When the figure is pickled, the legend is pickled, which pickles `_draggable`, which pickles the `canvas` reference, causing "FigureCanvasAgg" to appear in the pickle stream.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `lib/matplotlib/offsetbox.py:1509` — `self.canvas = self.ref_artist.figure.canvas` (direct canvas reference)
+- `lib/matplotlib/legend.py:1196-1198` — Creates `DraggableLegend` and stores in `self._draggable`
+- `lib/matplotlib/figure.py:2938-2943` — Existing pattern: Figure.__getstate__ excludes canvas with `state.pop("canvas")`
+- `lib/matplotlib/figure.py:2945-2959` — Figure.__setstate__ restores canvas with `FigureCanvasBase(self)`
+
+## Edit sites
+
+- `lib/matplotlib/offsetbox.py` class `DraggableBase` (after line 1580, after the `finalize_offset` method): Add `__getstate__` method to exclude canvas and callback-related state (`canvas`, `cids`, `_c1`, `background`)
+- `lib/matplotlib/offsetbox.py` class `DraggableBase` (after the new `__getstate__` method): Add `__setstate__` method to restore state, then reconnect canvas from `self.ref_artist.figure.canvas` and re-register callbacks using `canvas.callbacks._connect_picklable()`
+
+## Rejected hypotheses
+
+None — diagnosis was direct code tracing from the failing assertion to the root cause.
+
+## Open questions
+
+None — the fix is straightforward following the existing Figure.__getstate__/__setstate__ pattern.
+
+---STDERR---
