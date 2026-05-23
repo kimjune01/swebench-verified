@@ -1,0 +1,22 @@
+# Audit: matplotlib__matplotlib-26291
+
+## FAIL_TO_PASS
+- `lib/mpl_toolkits/axes_grid1/tests/test_axes_grid1.py::test_inset_axes_tight` — **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None. All 49 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None.
+
+## Summary
+The craft patch successfully resolves the issue. The fix adds:
+1. `self.figure = ax.figure` to populate the figure attribute
+2. Renderer normalization when `renderer is None` to get a valid renderer from `ax.figure._get_renderer()`
+
+This prevents the AttributeError when `savefig(bbox_inches="tight")` calls the locator with `renderer=None`. All 50 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

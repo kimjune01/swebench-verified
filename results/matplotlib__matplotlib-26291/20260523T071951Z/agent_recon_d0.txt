@@ -1,0 +1,34 @@
+# Recon: matplotlib__matplotlib-26291
+
+## Failure summary
+The test `test_inset_axes_tight` creates inset axes using `inset_axes(ax, width=1.3, height=0.9)` and then attempts to save the figure with `fig.savefig(f, bbox_inches="tight")`. This raises `AttributeError: 'NoneType' object has no attribute '_get_renderer'` in `lib/matplotlib/offsetbox.py:398` within the `get_window_extent` method, where `self.figure` is None.
+
+## Suspect set
+- `lib/mpl_toolkits/axes_grid1/inset_locator.py` lines 71-77: `AnchoredLocatorBase.__call__` method - sets `self.axes` but not `self.figure`
+- `lib/matplotlib/offsetbox.py` lines 396-404: `OffsetBox.get_window_extent` method - attempts to access `self.figure._get_renderer()` when renderer is None
+
+## Root cause
+When `savefig` is called with `bbox_inches="tight"`, matplotlib's `_tight_bbox.adjust_bbox` function (line 28) calls each axes' locator with `renderer=None` to compute positions before actual rendering. For inset axes created via `inset_axes()`, the axes locator is an `AnchoredSizeLocator` object (which inherits from `AnchoredLocatorBase`).
+
+In `AnchoredLocatorBase.__call__` (line 72), the method sets `self.axes = ax` but does not set `self.figure`. When it subsequently calls `self.get_window_extent(renderer)` with `renderer=None`, the `OffsetBox.get_window_extent` method tries to obtain a renderer via `self.figure._get_renderer()`. Since `self.figure` was never set and remains None, this raises an AttributeError.
+
+Locator objects are never added to the figure as normal Artists would be, so their `figure` attribute is never automatically initialized. The locator is only used as a callback function.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `lib/mpl_toolkits/axes_grid1/inset_locator.py:72` — `self.axes = ax` without setting `self.figure`
+- `lib/matplotlib/offsetbox.py:398` — `renderer = self.figure._get_renderer()` when `self.figure` is None
+- `lib/matplotlib/_tight_bbox.py:28` — `locator(ax, None)` passes None as renderer
+- Stack trace confirms the call chain: `_tight_bbox.adjust_bbox` → `AnchoredLocatorBase.__call__` → `OffsetBox.get_window_extent`
+
+## Edit sites
+- `lib/mpl_toolkits/axes_grid1/inset_locator.py` line 72: In `AnchoredLocatorBase.__call__`, immediately after `self.axes = ax`, add `self.figure = ax.figure` to ensure the figure attribute is set before calling `get_window_extent`
+
+## Rejected hypotheses
+None — the root cause is directly traceable through the stack trace and confirmed by code inspection.
+
+## Open questions
+None — the fix is straightforward and isolated to a single location that affects both `AnchoredSizeLocator` and `AnchoredZoomLocator` (both inherit from `AnchoredLocatorBase`).
+
+---STDERR---

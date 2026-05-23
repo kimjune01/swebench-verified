@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix is complete. The FAIL_TO_PASS test `test_inset_axes_tight` now passes along with all 49 other tests.
+
+**Summary**: Added three lines to `AnchoredLocatorBase.__call__` in `lib/mpl_toolkits/axes_grid1/inset_locator.py`:
+1. Set `self.figure = ax.figure` to ensure the figure attribute is available
+2. Normalize the renderer: if `renderer is None`, get it from `ax.figure._get_renderer()`
+
+This ensures that when `savefig` is called with `bbox_inches="tight"` (which passes `renderer=None`), both `get_window_extent` and `get_offset` receive a valid renderer instead of None, preventing the AttributeError.
+
+---STDERR---
