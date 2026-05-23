@@ -1,0 +1,20 @@
+## Phase 5: Emit verdict
+
+# Audit: django__django-13516
+
+## FAIL_TO_PASS
+- test_outputwrapper_flush (user_commands.tests.CommandTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted)
+none
+
+## Summary
+All FAIL_TO_PASS tests now pass. Zero regressions. The patch successfully adds flush() calls to OutputWrapper instances in BaseCommand.execute(), ensuring that output is flushed when the command completes.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

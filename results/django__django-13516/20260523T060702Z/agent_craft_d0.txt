@@ -1,0 +1,15 @@
+**RESOLVED**
+
+The fix successfully makes `test_outputwrapper_flush` pass. The issue was that `OutputWrapper` inherits from `TextIOBase`, which already defines a no-op `flush()` method. This prevented the `__getattr__` delegation from working. 
+
+**Solution:** Added an explicit `flush()` method to `OutputWrapper` that delegates to the wrapped stream's `flush()` method, following the same defensive pattern as `isatty()`:
+
+```python
+def flush(self):
+    if hasattr(self._out, 'flush'):
+        return self._out.flush()
+```
+
+Gate result: ✅ All 44 tests passed (1 iteration)
+
+---STDERR---

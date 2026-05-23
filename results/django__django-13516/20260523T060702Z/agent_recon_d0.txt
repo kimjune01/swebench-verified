@@ -1,0 +1,33 @@
+# Recon: django__django-13516
+
+## Failure summary
+The test `test_outputwrapper_flush` verifies that calling `self.stdout.flush()` in a management command propagates the flush() call to the underlying output stream. The test creates a StringIO object, mocks its flush() method, passes it as stdout to the `outputwrapper` command, and expects the mocked flush to be called. The test fails with `AssertionError: False is not True` because the mocked flush() method is never invoked.
+
+## Suspect set
+- `django/core/management/base.py` lines 120-151: OutputWrapper class — wraps stdout/stderr but doesn't properly delegate flush() calls
+
+## Root cause
+The OutputWrapper class inherits from TextIOBase and stores the actual output stream in `self._out`. It uses `__getattr__` to delegate unknown attributes to the wrapped stream (line 142). However, `flush()` is already defined in the parent class TextIOBase, so when `self.stdout.flush()` is called, Python invokes TextIOBase.flush() instead of delegating through `__getattr__` to the underlying stream's flush() method.
+
+The class explicitly overrides `write()` (line 147) and `isatty()` (line 144) to provide custom behavior, but there is no explicit `flush()` method. TextIOBase.flush() is a no-op that doesn't propagate to `self._out.flush()`.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/core/management/base.py:120` — `class OutputWrapper(TextIOBase):`
+- `django/core/management/base.py:142` — `def __getattr__(self, name): return getattr(self._out, name)` — only catches attributes not found on the object
+- `django/core/management/base.py:144-145` — `isatty()` is explicitly overridden to delegate to wrapped stream: `return hasattr(self._out, 'isatty') and self._out.isatty()`
+- `django/core/management/base.py:147-151` — `write()` is explicitly overridden with custom logic
+- Missing: explicit `flush()` method
+- Confirmed via local experiment: TextIOBase subclass with `__getattr__` doesn't delegate flush() calls
+
+## Edit sites
+- `django/core/management/base.py` lines 147-151 (after the write() method): Add explicit `flush()` method that delegates to `self._out.flush()`. Pattern: follow the same approach as `isatty()` at line 144, which explicitly delegates to the wrapped stream. The method should call `self._out.flush()` if the underlying stream has a flush method.
+
+## Rejected hypotheses
+None — the root cause is unambiguous from code inspection and confirmed by experimental verification.
+
+## Open questions
+None — the fix is straightforward: add a `flush()` method to OutputWrapper that delegates to `self._out.flush()`.
+
+---STDERR---
