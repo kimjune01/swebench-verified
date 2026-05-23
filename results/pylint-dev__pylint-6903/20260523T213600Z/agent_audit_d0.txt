@@ -1,0 +1,26 @@
+# Audit: pylint-dev__pylint-6903
+
+## FAIL_TO_PASS
+- `tests/test_pylint_runners.py::test_pylint_run_jobs_equal_zero_dont_crash_with_cpu_fraction`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 8 PASS_TO_PASS tests passed:
+- `test_runner[run_epylint]`: PASS
+- `test_runner[run_pylint]`: PASS
+- `test_runner[run_pyreverse]`: PASS
+- `test_runner[run_symilar]`: PASS
+- `test_runner_with_arguments[run_epylint]`: PASS
+- `test_runner_with_arguments[run_pylint]`: PASS
+- `test_runner_with_arguments[run_pyreverse]`: PASS
+- `test_runner_with_arguments[run_symilar]`: PASS
+
+## Pre-existing failures (not counted)
+**None** — the only failure in the base capture was the FAIL_TO_PASS test itself.
+
+## Summary
+The patch successfully resolves the issue by adding `max(1, ...)` clamps to both return paths in `_cpu_count()` (lines 78-79), ensuring the function always returns at least 1 process. This satisfies `multiprocessing.Pool()`'s requirement and prevents the crash when `--jobs=0` is used in containers with fractional CPU allocations.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

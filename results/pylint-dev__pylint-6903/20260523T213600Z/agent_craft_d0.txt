@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Both return paths in `_cpu_count()` now clamp to a minimum of 1, preventing `multiprocessing.Pool(processes=0)` crashes when fractional CPU allocations are detected in containerized environments. The FAIL_TO_PASS test now passes.
+
+---STDERR---

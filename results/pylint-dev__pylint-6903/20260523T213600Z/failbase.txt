@@ -1,0 +1,122 @@
+$ pytest -rA tests/test_pylint_runners.py
+
+                return mock_open(read_data=b"2")(*args, **kwargs)
+            return builtin_open(*args, **kwargs)
+    
+        pathlib_path = pathlib.Path
+    
+        def _mock_path(*args, **kwargs):
+            if args[0] == "/sys/fs/cgroup/cpu/cpu.shares":
+                return MagicMock(is_file=lambda: True)
+            return pathlib_path(*args, **kwargs)
+    
+        filepath = os.path.abspath(__file__)
+        testargs = [filepath, "--jobs=0"]
+        with tmpdir.as_cwd():
+            with pytest.raises(SystemExit) as err:
+                with patch("builtins.open", _mock_open):
+                    with patch("pylint.lint.run.Path", _mock_path):
+>                       Run(testargs, reporter=Reporter())
+
+tests/test_pylint_runners.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pylint/lint/run.py:197: in __init__
+    linter.check(args)
+pylint/lint/pylinter.py:654: in check
+    check_parallel(
+pylint/lint/parallel.py:140: in check_parallel
+    with multiprocessing.Pool(
+/opt/miniconda3/envs/testbed/lib/python3.9/multiprocessing/context.py:119: in Pool
+    return Pool(processes, initializer, initargs, maxtasksperchild,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <multiprocessing.pool.Pool state=INIT pool_size=0>, processes = 0
+initializer = functools.partial(<function _worker_initialize at 0x7f9d0d9b0550>, arguments=['/testbed/tests/test_pylint_runners.py'])
+initargs = [b'\x80\x04\x95\x19\x00\x01\x00\x00\x00\x00\x00\x8c\x14pylint.lint.pylinter\x94\x8c\x08PyLinter\x94\x93\x94)\x81\x94}\...\x94j\xdb\x15\x00\x00j\xdd\x15\x00\x00\x87\x94\x8c\x06RP0003\x94j\xe0\x15\x00\x00j\xe2\x15\x00\x00\x87\x94\x87\x94ub.']
+maxtasksperchild = None
+context = <multiprocessing.context.ForkContext object at 0x7f9d0ef84d00>
+
+    def __init__(self, processes=None, initializer=None, initargs=(),
+                 maxtasksperchild=None, context=None):
+        # Attributes initialized early to make sure that they exist in
+        # __del__() if __init__() raises an exception
+        self._pool = []
+        self._state = INIT
+    
+        self._ctx = context or get_context()
+        self._setup_queues()
+        self._taskqueue = queue.SimpleQueue()
+        # The _change_notifier queue exist to wake up self._handle_workers()
+        # when the cache (self._cache) is empty or when there is a change in
+        # the _state variable of the thread that runs _handle_workers.
+        self._change_notifier = self._ctx.SimpleQueue()
+        self._cache = _PoolCache(notifier=self._change_notifier)
+        self._maxtasksperchild = maxtasksperchild
+        self._initializer = initializer
+        self._initargs = initargs
+    
+        if processes is None:
+            processes = os.cpu_count() or 1
+        if processes < 1:
+>           raise ValueError("Number of processes must be at least 1")
+E           ValueError: Number of processes must be at least 1
+
+/opt/miniconda3/envs/testbed/lib/python3.9/multiprocessing/pool.py:205: ValueError
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6
+  /opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ test_runner[run_epylint] ___________________________
+----------------------------- Captured stdout call -----------------------------
+
+ ------------------------------------
+ Your code has been rated at 10.00/10
+ 
+ 
+___________________________ test_runner[run_pylint] ____________________________
+----------------------------- Captured stdout call -----------------------------
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+__________________________ test_runner[run_pyreverse] __________________________
+----------------------------- Captured stdout call -----------------------------
+parsing /testbed/tests/test_pylint_runners.py...
+___________________________ test_runner[run_symilar] ___________________________
+----------------------------- Captured stdout call -----------------------------
+TOTAL lines=77 duplicates=0 percent=0.00
+
+___________________ test_runner_with_arguments[run_epylint] ____________________
+----------------------------- Captured stdout call -----------------------------
+
+ --------------------------------------------------------------------
+ Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+ 
+ 
+____________________ test_runner_with_arguments[run_pylint] ____________________
+----------------------------- Captured stdout call -----------------------------
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+__________________ test_runner_with_arguments[run_pyreverse] ___________________
+----------------------------- Captured stdout call -----------------------------
+parsing /testbed/tests/test_pylint_runners.py...
+___________________ test_runner_with_arguments[run_symilar] ____________________
+----------------------------- Captured stdout call -----------------------------
+TOTAL lines=77 duplicates=0 percent=0.00
+
+=========================== short test summary info ============================
+PASSED tests/test_pylint_runners.py::test_runner[run_epylint]
+PASSED tests/test_pylint_runners.py::test_runner[run_pylint]
+PASSED tests/test_pylint_runners.py::test_runner[run_pyreverse]
+PASSED tests/test_pylint_runners.py::test_runner[run_symilar]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_epylint]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_pylint]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_pyreverse]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_symilar]
+FAILED tests/test_pylint_runners.py::test_pylint_run_jobs_equal_zero_dont_crash_with_cpu_fraction
+==================== 1 failed, 8 passed, 1 warning in 6.53s ====================

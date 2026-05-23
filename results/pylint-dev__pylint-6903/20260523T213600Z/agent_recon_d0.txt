@@ -1,0 +1,42 @@
+Now I'll output the structured diagnosis:
+
+# Recon: pylint-dev__pylint-6903
+
+## Failure summary
+
+The test `test_pylint_run_jobs_equal_zero_dont_crash_with_cpu_fraction` checks that pylint doesn't crash when running with `--jobs=0` in a Kubernetes container environment where CPU allocation is fractional (less than 1 core). The test mocks the cgroup files to simulate cpu.shares=2, which represents a fractional CPU allocation. The test fails with `ValueError: Number of processes must be at least 1` when attempting to create a `multiprocessing.Pool` with 0 processes.
+
+## Suspect set
+
+- `pylint/lint/run.py` lines 34-61: `_query_cpu()` function that reads cgroup files and calculates available CPUs, can return 0 for fractional allocations
+- `pylint/lint/run.py` lines 64-79: `_cpu_count()` function that uses `_query_cpu()` and can return 0
+- `pylint/lint/run.py` line 185: Where `--jobs=0` triggers the call to `_cpu_count()`
+
+## Root cause
+
+When pylint runs with `--jobs=0` in a container with fractional CPU allocation (e.g., cpu.shares=2 in Kubernetes), the `_query_cpu()` function calculates `int(2/1024) = 0` at line 60. This 0 value is returned to `_cpu_count()` which then returns `min(0, cpu_count) = 0` at line 78. The 0 is assigned to `linter.config.jobs` and passed to `multiprocessing.Pool(processes=0)`, which raises `ValueError("Number of processes must be at least 1")`.
+
+The issue is that `_cpu_count()` doesn't enforce a minimum return value of 1, even though multiprocessing requires at least 1 process.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `pylint/lint/run.py:60` — `avail_cpu = int(cpu_shares / 1024)` produces 0 when cpu_shares < 1024
+- `pylint/lint/run.py:77-78` — `if cpu_share is not None: return min(cpu_share, cpu_count)` returns 0 when cpu_share is 0
+- `multiprocessing/pool.py:205` — Raises ValueError when processes < 1
+
+## Edit sites
+
+- `pylint/lint/run.py` lines 77-78: Change the return statement in `_cpu_count()` from `return min(cpu_share, cpu_count)` to `return max(1, min(cpu_share, cpu_count))` to ensure the return value is always at least 1.
+
+Alternative (less preferred): Could also fix in `_query_cpu()` at lines 55 and 60 by adding `or 1` to each calculation, but this would change the semantics of what `_query_cpu()` represents. The cleaner fix is in `_cpu_count()` which is the consumer function responsible for providing a valid job count.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code tracing and matches the problem description exactly.
+
+## Open questions
+
+None — the fix location and approach are clear.
+
+---STDERR---

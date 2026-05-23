@@ -1,0 +1,70 @@
+$ pytest -rA tests/test_pylint_runners.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.5.0
+benchmark: 4.0.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /testbed
+configfile: setup.cfg
+plugins: benchmark-4.0.0, cov-3.0.0, forked-1.6.0, profiling-1.7.0, timeout-2.3.1, xdist-2.5.0
+collected 9 items
+
+tests/test_pylint_runners.py .........                                   [100%]
+
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6
+  /opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ test_runner[run_epylint] ___________________________
+----------------------------- Captured stdout call -----------------------------
+
+ --------------------------------------------------------------------
+ Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+ 
+ 
+___________________________ test_runner[run_pylint] ____________________________
+----------------------------- Captured stdout call -----------------------------
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+__________________________ test_runner[run_pyreverse] __________________________
+----------------------------- Captured stdout call -----------------------------
+parsing /testbed/tests/test_pylint_runners.py...
+___________________________ test_runner[run_symilar] ___________________________
+----------------------------- Captured stdout call -----------------------------
+TOTAL lines=77 duplicates=0 percent=0.00
+
+___________________ test_runner_with_arguments[run_epylint] ____________________
+----------------------------- Captured stdout call -----------------------------
+
+ --------------------------------------------------------------------
+ Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+ 
+ 
+____________________ test_runner_with_arguments[run_pylint] ____________________
+----------------------------- Captured stdout call -----------------------------
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+__________________ test_runner_with_arguments[run_pyreverse] ___________________
+----------------------------- Captured stdout call -----------------------------
+parsing /testbed/tests/test_pylint_runners.py...
+___________________ test_runner_with_arguments[run_symilar] ____________________
+----------------------------- Captured stdout call -----------------------------
+TOTAL lines=77 duplicates=0 percent=0.00
+
+=========================== short test summary info ============================
+PASSED tests/test_pylint_runners.py::test_runner[run_epylint]
+PASSED tests/test_pylint_runners.py::test_runner[run_pylint]
+PASSED tests/test_pylint_runners.py::test_runner[run_pyreverse]
+PASSED tests/test_pylint_runners.py::test_runner[run_symilar]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_epylint]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_pylint]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_pyreverse]
+PASSED tests/test_pylint_runners.py::test_runner_with_arguments[run_symilar]
+PASSED tests/test_pylint_runners.py::test_pylint_run_jobs_equal_zero_dont_crash_with_cpu_fraction
+========================= 9 passed, 1 warning in 6.54s =========================
