@@ -1,0 +1,3 @@
+Diagnosis complete. The failing test reveals that Django admin's changelist view doesn't wrap list_editable processing in a transaction. When saving multiple edited objects, if an error occurs (like during `log_change`), previously saved changes persist instead of rolling back. The fix is to wrap the formset processing block (lines 2012-2037 in `django/contrib/admin/options.py`) with `transaction.atomic(using=router.db_for_write(self.model))`, following the same pattern already used in `changeform_view` and `delete_view`.
+
+---STDERR---

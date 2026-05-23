@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes `test_list_editable_atomicity` pass. 
+
+**Summary**: Wrapped the list_editable formset processing loop in `django/contrib/admin/options.py` with `transaction.atomic(using=router.db_for_write(self.model))` at lines 2014-2021. This ensures that when saving multiple objects via list_editable, if any error occurs (e.g., during `log_change`), all changes are rolled back atomically. The fix follows the same transaction pattern used in `changeform_view` and `delete_view`, and keeps the scope tight per codex feedback - only the save/log loop is in the transaction, not the message or redirect.
+
+Gate result: All 71 tests passed including the target `test_list_editable_atomicity`.
+
+---STDERR---
