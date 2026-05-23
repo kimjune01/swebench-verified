@@ -1,0 +1,20 @@
+# Audit: django__django-13568
+
+## FAIL_TO_PASS
+- test_username_unique_with_model_constraint: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted)
+none
+
+## Summary
+The patch successfully recognizes `UniqueConstraint` on the username field as satisfying the uniqueness requirement. The check in `django/contrib/auth/checks.py` now evaluates both `field.unique=True` and model-level `UniqueConstraint` with a single field and no condition.
+
+All 14 tests pass. The fix resolves the issue completely with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

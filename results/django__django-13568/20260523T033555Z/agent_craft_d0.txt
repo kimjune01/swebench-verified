@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully extends Django's USERNAME_FIELD uniqueness check to also accept total UniqueConstraints (single-field, non-conditional). The gate confirms all tests pass, including the target `test_username_unique_with_model_constraint`.
+
+---STDERR---

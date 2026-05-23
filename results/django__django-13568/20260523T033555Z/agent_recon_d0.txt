@@ -1,0 +1,40 @@
+# Recon: django__django-13568
+
+## Failure summary
+
+The test `test_username_unique_with_model_constraint` creates a custom user model with a `username` field marked as the `USERNAME_FIELD`. The field doesn't have `unique=True`, but instead has a total `UniqueConstraint` (no condition) defined in `Meta.constraints`. The test expects no errors, but the system check raises `auth.E003: 'CustomUserUniqueConstraint.username' must be unique because it is named as the 'USERNAME_FIELD'.`
+
+## Suspect set
+
+- `django/contrib/auth/checks.py` lines 54-77: The USERNAME_FIELD uniqueness check that raises auth.E003
+
+## Root cause
+
+The check at line 55 only examines `cls._meta.get_field(cls.USERNAME_FIELD).unique`, which returns True only when the field has `unique=True`. It doesn't consider `UniqueConstraint` instances in `cls._meta.constraints`. A total UniqueConstraint (one with `condition=None` and only the USERNAME_FIELD in its fields tuple) provides the same uniqueness guarantee as `unique=True`, so it should also pass the check.
+
+**Confidence: deduction — 95%**
+
+Supporting evidence:
+- `django/contrib/auth/checks.py:55` — `if not cls._meta.get_field(cls.USERNAME_FIELD).unique:` is the only uniqueness check
+- `django/db/models/constraints.py:120` — `self.fields = tuple(fields)` and `self.condition = condition` show the constraint structure
+- `tests/auth_tests/test_checks.py:135` — test defines `UniqueConstraint(fields=['username'], name='username_unique')` without condition
+- `tests/auth_tests/test_checks.py:99` — parallel test shows partial constraints (with condition) should still raise the error
+
+## Edit sites
+
+- `django/contrib/auth/checks.py:1` — Add import: `from django.db.models import UniqueConstraint`
+- `django/contrib/auth/checks.py:54-77` — Extend the uniqueness check to also consider total UniqueConstraints. A field should be considered unique if either:
+  1. `field.unique is True` (existing check), OR
+  2. A UniqueConstraint exists in `cls._meta.constraints` where `constraint.fields == (cls.USERNAME_FIELD,)` and `constraint.condition is None`
+
+The logic should reject partial UniqueConstraints (those with `condition != None`) since they don't guarantee total uniqueness.
+
+## Rejected hypotheses
+
+None — the code path is straightforward and the failure is deterministic.
+
+## Open questions
+
+None — the constraint structure and check logic are both clear from the code.
+
+---STDERR---
