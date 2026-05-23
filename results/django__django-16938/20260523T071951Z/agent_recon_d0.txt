@@ -1,0 +1,32 @@
+# Recon: django__django-16938
+
+## Failure summary
+Tests fail when serializing models with ManyToManyField relations where the related model has a custom manager using `select_related()`. The error is: `FieldError: Field Topic.category cannot be both deferred and traversed using select_related at the same time.` This occurs because the serializer's optimization (adding `.only("pk")` to m2m querysets) conflicts with `select_related()` from custom managers.
+
+## Suspect set
+- `django/core/serializers/python.py` lines 82: Calls `.only("pk")` on m2m queryset without clearing select_related
+- `django/core/serializers/xml_serializer.py` line 158: Same pattern for XML serializer
+- `django/db/models/query_utils.py` lines 342-350: Validation that raises the error when a field is both in select_related and deferred
+
+## Root cause
+When serializing m2m fields without natural keys, the serializer optimization (commit 19e0587ee5, Sept 2022) calls `.only("pk")` to fetch only primary keys. However, if the related model has a custom manager with `select_related()`, the m2m queryset inherits this select_related. The combination of `select_related("category")` (requesting eager load) and `.only("pk")` (deferring all fields except pk) is contradictory. The validation added in commit b3db6c8dcb (Aug 2022) detects and rejects this conflict.
+
+**Confidence: deduction — 95%**
+
+**Supporting evidence:**
+- `django/core/serializers/python.py:82` — `return getattr(obj, field.name).only("pk").iterator()`
+- `django/db/models/fields/related_descriptors.py:964` — ManyRelatedManager uses `related_model._default_manager.__class__` as superclass
+- `django/db/models/query.py:1562` — `select_related(None)` clears select_related: `obj.query.select_related = False`
+- `django/db/models/query_utils.py:342-350` — Raises FieldError when `field.name in requested` (select_related) and `field not in select_mask` (deferred by only)
+
+## Edit sites
+- `django/core/serializers/python.py` line 82: Change `return getattr(obj, field.name).only("pk").iterator()` to `return getattr(obj, field.name).select_related(None).only("pk").iterator()` — clears any select_related from custom manager before applying only("pk")
+- `django/core/serializers/xml_serializer.py` line 158: Change `return getattr(obj, field.name).only("pk").iterator()` to `return getattr(obj, field.name).select_related(None).only("pk").iterator()` — same fix for XML serializer
+
+## Rejected hypotheses
+None — the call path and root cause are clear from code inspection.
+
+## Open questions
+None — the fix is straightforward: clear select_related before applying only() to avoid the conflict. The serializer only needs pk values anyway, so select_related is unnecessary.
+
+---STDERR---

@@ -1,0 +1,35 @@
+# Audit: django__django-16938
+
+## Patch Applied
+- django/core/serializers/python.py: Added .select_related(None) before .only("pk") in M2M serialization
+- django/core/serializers/xml_serializer.py: Added .select_related(None) before .only("pk") in M2M serialization
+
+## Gate Results
+All 135 tests passed.
+
+## FAIL_TO_PASS (all must pass)
+✓ test_altering_serialized_output (JSON/XML/YAML) - "The ability to create new objects by modifying serialized content." - PASS
+✓ test_deserialize_force_insert (JSON/XML/YAML) - "Deserialized content can be saved with force_insert as a parameter." - PASS
+✓ test_deterministic_mapping_ordering (JSON/XML/YAML) - "Mapping such as fields should be deterministically ordered. (#24558)" - PASS
+✓ test_pre_1000ad_date (JSON/XML/YAML) - "Year values before 1000AD are properly formatted" - PASS
+✓ test_serialize (JSON/XML/YAML) - "Basic serialization works." - PASS
+✓ test_serialize_no_only_pk_with_natural_keys (serializers.test_json.JsonSerializerTestCase) - PASS
+✓ test_serialize_only_pk (serializers.test_json.JsonSerializerTestCase) - PASS
+✓ test_serialize_prefetch_related_m2m (serializers.test_json.JsonSerializerTestCase) - PASS
+✓ test_serialize_progressbar (serializers.test_json.JsonSerializerTestCase) - PASS
+
+All 9 FAIL_TO_PASS tests now PASS.
+
+## PASS_TO_PASS regressions
+None - all 135 tests passed.
+
+## Pre-existing failures
+None applicable - the base capture showed test_serialize_progressbar failing with FieldError, but this now PASSES with the patch.
+
+## Analysis
+The patch successfully resolves the core issue by adding `.select_related(None)` to clear any inherited select_related configuration before applying `.only("pk")` when serializing M2M fields. This prevents the "Field cannot be both deferred and traversed using select_related at the same time" error that occurred when serializing objects with prefetched M2M relationships.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

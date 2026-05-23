@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. All FAIL_TO_PASS tests now pass after adding `.select_related(None)` before `.only("pk")` in both Python and XML serializers. The change clears any manager-inherited select_related() to avoid conflicts with the defer-only optimization, resolving the `FieldError` when serializing m2m fields whose related models have custom managers using select_related().
+
+---STDERR---
