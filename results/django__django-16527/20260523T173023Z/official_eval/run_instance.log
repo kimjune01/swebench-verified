@@ -1,0 +1,43 @@
+2026-05-23 17:27:38,742 - INFO - Creating container for django__django-16527...
+2026-05-23 17:27:40,372 - INFO - Container for django__django-16527 created: e07cd3c00ee784ef1214a21393dd2864c99cd0e203695692f34bde4d12f7f6a5
+2026-05-23 17:27:40,845 - INFO - Container for django__django-16527 started: e07cd3c00ee784ef1214a21393dd2864c99cd0e203695692f34bde4d12f7f6a5
+2026-05-23 17:27:40,846 - INFO - Intermediate patch for django__django-16527 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16527/patch.diff, now applying to container...
+2026-05-23 17:27:40,944 - INFO - >>>>> Applied Patch:
+Checking patch django/contrib/admin/templatetags/admin_modify.py...
+Applied patch django/contrib/admin/templatetags/admin_modify.py cleanly.
+
+2026-05-23 17:27:41,713 - INFO - Git diff before:
+diff --git a/django/contrib/admin/templatetags/admin_modify.py b/django/contrib/admin/templatetags/admin_modify.py
+index 9df4b7aadb..38bb0dcbbd 100644
+--- a/django/contrib/admin/templatetags/admin_modify.py
++++ b/django/contrib/admin/templatetags/admin_modify.py
+@@ -101,6 +101,7 @@ def submit_row(context):
+             ),
+             "show_save_as_new": not is_popup
+             and has_change_permission
++            and has_add_permission
+             and change
+             and save_as,
+             "show_save_and_add_another": can_save_and_add_another,
+2026-05-23 17:27:41,714 - INFO - Eval script for django__django-16527 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16527/eval.sh; copying to container...
+2026-05-23 17:27:46,872 - INFO - Test runtime: 5.12 seconds
+2026-05-23 17:27:46,872 - INFO - Test output for django__django-16527 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16527/test_output.txt
+2026-05-23 17:27:47,000 - INFO - Git diff after:
+diff --git a/django/contrib/admin/templatetags/admin_modify.py b/django/contrib/admin/templatetags/admin_modify.py
+index 9df4b7aadb..38bb0dcbbd 100644
+--- a/django/contrib/admin/templatetags/admin_modify.py
++++ b/django/contrib/admin/templatetags/admin_modify.py
+@@ -101,6 +101,7 @@ def submit_row(context):
+             ),
+             "show_save_as_new": not is_popup
+             and has_change_permission
++            and has_add_permission
+             and change
+             and save_as,
+             "show_save_and_add_another": can_save_and_add_another,
+2026-05-23 17:27:47,000 - INFO - Grading answer for django__django-16527...
+2026-05-23 17:27:47,001 - INFO - report: {'django__django-16527': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_submit_row_save_as_new_add_permission_required (admin_views.test_templatetags.AdminTemplateTagsTest.test_submit_row_save_as_new_add_permission_required)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_choice_links (admin_views.test_templatetags.DateHierarchyTests.test_choice_links)', 'test_choice_links_datetime (admin_views.test_templatetags.DateHierarchyTests.test_choice_links_datetime)', 'admin_modify template tags follow the standard search pattern', 'admin_list template tags follow the standard search pattern', 'test_override_show_save_and_add_another (admin_views.test_templatetags.AdminTemplateTagsTest.test_override_show_save_and_add_another)', 'submit_row template tag should pass whole context.'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-16527: resolved: True
+2026-05-23 17:27:47,001 - INFO - Attempting to stop container sweb.eval.django__django-16527.batch...
+2026-05-23 17:28:23,771 - INFO - Attempting to remove container sweb.eval.django__django-16527.batch...
+2026-05-23 17:28:23,845 - INFO - Container sweb.eval.django__django-16527.batch removed.

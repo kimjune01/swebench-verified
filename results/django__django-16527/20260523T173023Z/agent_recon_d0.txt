@@ -1,0 +1,45 @@
+# Recon: django__django-16527
+
+## Failure summary
+
+The test `test_submit_row_save_as_new_add_permission_required` checks that the "Save as new" button in Django admin should only be visible to users who have both change AND add permissions. The test creates two scenarios: (1) a user with only change permission should see `show_save_as_new=False`, and (2) a user with both add and change permissions should see `show_save_as_new=True`. The first assertion fails with `AssertionError: True is not False` - the button is shown to users who lack add permission.
+
+## Suspect set
+
+- `django/contrib/admin/templatetags/admin_modify.py` lines 60-110 (the `submit_row` function) - specifically lines 102-105 where `show_save_as_new` is computed
+
+## Root cause
+
+The `show_save_as_new` template context variable is set without checking `has_add_permission`. The "save as new" action creates a new object (an add operation), but the template tag at lines 102-105 only checks `not is_popup and has_change_permission and change and save_as`, missing the add permission requirement.
+
+The backend at `django/contrib/admin/options.py:1756-1763` correctly enforces add permission when processing the `_saveasnew` POST action (it sets `object_id = None` which triggers the `add` code path that raises `PermissionDenied` if `has_add_permission` is False). However, the frontend template tag shows the button to users without add permission, creating poor UX - users see a button that will fail with PermissionDenied when clicked.
+
+**Confidence: deduction — 98%**
+
+Supporting evidence:
+- `django/contrib/admin/templatetags/admin_modify.py:102-105` — shows current condition: `"show_save_as_new": not is_popup and has_change_permission and change and save_as,` (no add permission check)
+- `django/contrib/admin/templatetags/admin_modify.py:71` — `has_add_permission` is already extracted from context and available for use
+- `django/contrib/admin/templatetags/admin_modify.py:80-86` — similar `can_save_and_add_another` correctly checks `has_add_permission` first, demonstrating the pattern for add operations
+- `django/contrib/admin/options.py:1756-1763` — backend enforces: `if request.method == "POST" and "_saveasnew" in request.POST: object_id = None` then `add = object_id is None` then `if add: if not self.has_add_permission(request): raise PermissionDenied`
+
+## Edit sites
+
+- `django/contrib/admin/templatetags/admin_modify.py` lines 102-105: Add `and has_add_permission` to the condition. The corrected condition should read:
+  ```
+  "show_save_as_new": not is_popup
+  and has_add_permission
+  and has_change_permission
+  and change
+  and save_as,
+  ```
+  This is the ONLY location where `show_save_as_new` is defined (verified by grep).
+
+## Rejected hypotheses
+
+None - the diagnosis was straightforward. The test failure directly pointed to the missing permission check, and code inspection confirmed it.
+
+## Open questions
+
+None - the fix is localized to a single conditional expression.
+
+---STDERR---

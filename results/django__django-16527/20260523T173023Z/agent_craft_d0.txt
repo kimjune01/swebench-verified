@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed on first gate iteration. Added `has_add_permission` check to the `show_save_as_new` condition, making the frontend permission check match the backend enforcement. The "Save as new" button now correctly requires both change AND add permissions.
+
+---STDERR---

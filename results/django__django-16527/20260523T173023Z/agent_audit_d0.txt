@@ -1,0 +1,24 @@
+# Audit: django__django-16527
+
+## FAIL_TO_PASS
+- `test_submit_row_save_as_new_add_permission_required`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all PASS_TO_PASS tests pass:
+- `test_choice_links`: PASS ✓
+- `test_choice_links_datetime`: PASS ✓
+- `test_override_change_form_template_tags`: PASS ✓
+- `test_override_change_list_template_tags`: PASS ✓
+- `test_override_show_save_and_add_another`: PASS ✓
+- `test_submit_row`: PASS ✓
+
+## Pre-existing (not counted)
+None
+
+## Summary
+The patch successfully adds `has_add_permission` to the `show_save_as_new` condition in `django/contrib/admin/templatetags/admin_modify.py` (line 104). The FAIL_TO_PASS test now passes, confirming that users without add permission no longer see the "Save as new" button. All PASS_TO_PASS tests continue to pass with no regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
