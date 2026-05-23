@@ -1,0 +1,20 @@
+# Audit: sympy__sympy-13480
+
+## FAIL_TO_PASS
+- test_coth: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Classification
+The patch successfully fixed the typo (`cotm` → `cothm`) on line 590 of `sympy/functions/elementary/hyperbolic.py`. The FAIL_TO_PASS test `test_coth` now passes, and all 44 PASS_TO_PASS tests remain passing. Zero regressions introduced. Full contract satisfied.
+
+**Gate output**: 45 tests passed in 5.04 seconds
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

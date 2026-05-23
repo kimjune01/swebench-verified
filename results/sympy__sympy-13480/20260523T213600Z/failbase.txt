@@ -1,0 +1,85 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/functions/elementary/tests/test_hyperbolic.py
+
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping, defaultdict
+/testbed/sympy/core/containers.py:271: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  class OrderedSet(collections.MutableSet):
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping, defaultdict
+/testbed/sympy/core/containers.py:271: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  class OrderedSet(collections.MutableSet):
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        44607252
+hash randomization: on (PYTHONHASHSEED=1244255950)
+
+sympy/functions/elementary/tests/test_hyperbolic.py[45] 
+test_sinh ok
+test_sinh_series ok
+test_cosh ok
+test_cosh_series ok
+test_tanh ok
+test_tanh_series ok
+test_coth E
+test_coth_series ok
+test_csch ok
+test_csch_series ok
+test_sech ok
+test_sech_series ok
+test_asinh ok
+test_asinh_rewrite ok
+test_asinh_series ok
+test_acosh ok
+test_acosh_rewrite ok
+test_acosh_series ok
+test_asech ok
+test_asech_series ok
+test_asech_rewrite ok
+test_acsch ok
+test_acsch_infinities ok
+test_acsch_rewrite ok
+test_atanh ok
+test_atanh_rewrite ok
+test_atanh_series ok
+test_acoth ok
+test_acoth_rewrite ok
+test_acoth_series ok
+test_inverses ok
+test_leading_term ok
+test_complex ok
+test_complex_2899 ok
+test_simplifications ok
+test_issue_4136 ok
+test_sinh_rewrite ok
+test_cosh_rewrite ok
+test_tanh_rewrite ok
+test_coth_rewrite ok
+test_csch_rewrite ok
+test_sech_rewrite ok
+test_derivs ok
+test_sinh_expansion ok
+test_cosh_expansion ok                                                    [FAIL]
+
+
+________________________________________________________________________________
+________ sympy/functions/elementary/tests/test_hyperbolic.py:test_coth _________
+  File "/testbed/sympy/functions/elementary/tests/test_hyperbolic.py", line 275, in test_coth
+    assert coth(log(tan(2))) == coth(log(-tan(2)))
+  File "/testbed/sympy/core/function.py", line 439, in __new__
+    result = super(Function, cls).__new__(cls, *args, **options)
+  File "/testbed/sympy/core/function.py", line 250, in __new__
+    evaluated = cls.eval(*args)
+  File "/testbed/sympy/functions/elementary/hyperbolic.py", line 590, in eval
+    if cotm is S.ComplexInfinity:
+NameError: name 'cotm' is not defined
+
+=========== tests finished: 44 passed, 1 exceptions, in 5.12 seconds ===========
+DO *NOT* COMMIT!

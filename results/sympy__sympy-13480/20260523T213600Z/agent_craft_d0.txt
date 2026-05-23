@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The typo fix is complete. Changed `cotm` to `cothm` on line 590 of `sympy/functions/elementary/hyperbolic.py`. All 45 tests pass, including the previously failing `test_coth`.
+
+---STDERR---

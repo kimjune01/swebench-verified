@@ -1,0 +1,39 @@
+# Recon: sympy__sympy-13480
+
+## Failure summary
+
+The test `test_coth` checks that `coth(log(tan(2))) == coth(log(-tan(2)))` and `coth(1 + I*pi/2) == tanh(1)`. Both assertions trigger evaluation of the `coth.eval()` classmethod with arguments that contain an additive component. When the argument is an `Add` expression, the code calls `_peeloff_ipi(arg)` to split it into a "rest" part and a multiple of `I*pi/2`. The test fails with `NameError: name 'cotm' is not defined` at line 590 in `sympy/functions/elementary/hyperbolic.py`.
+
+## Suspect set
+
+- `sympy/functions/elementary/hyperbolic.py` lines 586-593: The `coth.eval()` method's handling of `Add` arguments using `_peeloff_ipi`
+
+## Root cause
+
+Variable name typo at line 590. The variable `cothm` is defined on line 589 via `cothm = coth(m)`, but line 590 references it as `cotm` (missing the 'h'). Python raises a `NameError` because `cotm` was never defined.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `hyperbolic.py:589` — `cothm = coth(m)` defines the variable
+- `hyperbolic.py:590` — `if cotm is S.ComplexInfinity:` references undefined variable
+- `hyperbolic.py:592` — comment `# cothm == 0` confirms the intended variable name
+- `hyperbolic.py:448-452` — the analogous code in `tanh.eval()` correctly uses `tanhm` consistently
+- Only one occurrence of the string `cotm` in the entire file (verified via grep)
+- Git history shows this code was added in commit `55d510a7d Add _peeloff_ipi in hyperbolic functions`, and the typo was present from introduction
+
+## Edit sites
+
+- `sympy/functions/elementary/hyperbolic.py` line 590: Change `if cotm is S.ComplexInfinity:` to `if cothm is S.ComplexInfinity:`
+
+This is the only location that needs modification. The variable name is used correctly everywhere else (line 589 defines it, line 592's comment references it).
+
+## Rejected hypotheses
+
+None. This is a straightforward typo with no competing explanations.
+
+## Open questions
+
+None. The fix is unambiguous.
+
+---STDERR---
