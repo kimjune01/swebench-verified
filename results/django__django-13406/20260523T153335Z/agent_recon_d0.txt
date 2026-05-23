@@ -1,0 +1,78 @@
+Now let me print the complete diagnosis:
+
+# Recon: django__django-13406
+
+## Failure summary
+
+Three tests verify that querysets with `values()` or `values_list()` can be pickled and unpickled correctly. The tests create a queryset with `values('name').annotate()` or `values_list('name')`, pickle the query object, then assign it to a fresh queryset and evaluate it. The expected result is a dictionary like `{'name': 'test', ...}`, but instead the queryset returns a model instance (`<Happening object>`), causing assertion failures:
+
+```
+AssertionError: <queryset_pickle.models.Happening object> != {'name': 'test', 'latest_time': ...}
+```
+
+## Suspect set
+
+- `django/db/models/query.py` lines 211-213: The `query.setter` property that handles `queryset.query = value` assignments
+- `django/db/models/query.py` line 198: QuerySet initialization where `_iterable_class` defaults to `ModelIterable`
+- `django/db/models/sql/query.py` line 2224: The `set_values()` method that sets `query.values_select`
+
+## Root cause
+
+When a Query object with `values_select` set is unpickled and assigned to a QuerySet's `.query` attribute, the QuerySet doesn't detect this and restore the appropriate `_iterable_class`. 
+
+During normal operation, calling `values()` on a queryset creates a clone and sets TWO things:
+1. `query.set_values(fields)` → sets `query.values_select` to the field tuple
+2. `clone._iterable_class = ValuesIterable` → determines the return type
+
+When unpickling:
+1. User pickles `qs.query` (only the Query object, not QuerySet state like `_iterable_class`)
+2. User creates fresh QuerySet: `Model.objects.all()` → defaults to `_iterable_class = ModelIterable`
+3. User assigns unpickled query: `queryset.query = pickle.loads(pickled)`
+4. The query setter (`django/db/models/query.py:211-213`) simply assigns `self._query = value` without checking `value.values_select`
+5. Result: The Query knows it should return dictionaries (`values_select` is set), but the QuerySet uses `ModelIterable` which returns model instances
+
+The Query object preserves enough information to reconstruct the correct behavior (`values_select` is pickled), but the QuerySet's query setter doesn't use it.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/db/models/query.py:831` — `values()` sets `clone._iterable_class = ValuesIterable`
+- `django/db/models/query.py:858-861` — `values_list()` sets `_iterable_class` to `ValuesListIterable`/`FlatValuesListIterable`/`NamedValuesListIterable`
+- `django/db/models/sql/query.py:207` — Query.__init__ sets `self.values_select = ()`
+- `django/db/models/sql/query.py:2224` — `set_values()` sets `self.values_select = tuple(field_names)`
+- `django/db/models/query.py:211-213` — query setter only does `self._query = value`, no logic to restore `_iterable_class`
+
+## Edit sites
+
+**Primary fix:**
+- `django/db/models/query.py` lines 211-213: Modify the `query.setter` to check if the assigned query has `values_select` set, and if so, update `self._iterable_class = ValuesIterable`
+
+The current implementation:
+```python
+@query.setter
+def query(self, value):
+    self._query = value
+```
+
+Should become:
+```python
+@query.setter
+def query(self, value):
+    self._query = value
+    if value.values_select:
+        self._iterable_class = ValuesIterable
+```
+
+**Note on values_list() degradation:**
+The test comment states "values_list() is reloaded to values() when using a pickled query." This is expected because the Query object stores `values_select` (the field list) but not the `flat` or `named` arguments that distinguish between ValuesListIterable, FlatValuesListIterable, and NamedValuesListIterable. Setting `_iterable_class = ValuesIterable` makes both `values()` and `values_list()` queries return dictionaries after unpickling, which matches the test expectation.
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward from tracing the code path.
+
+## Open questions
+
+- Could there be other QuerySet state (besides `_iterable_class`) that should be restored from a Query? Initial inspection shows `_fields` might also be relevant, but the failing tests don't exercise that path.
+- Should we also handle the case in `__init__` where a query is passed in? Current proposal only fixes the setter, not the constructor. However, the setter is the documented pattern for unpickling (per Django docs and test cases).
+
+---STDERR---

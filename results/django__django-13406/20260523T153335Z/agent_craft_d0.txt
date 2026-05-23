@@ -1,0 +1,10 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass:
+- ✅ test_annotation_values
+- ✅ test_annotation_values_list  
+- ✅ test_annotation_with_callable_default
+
+The fix detects "values mode" by checking whether the Query has `values_select`, `annotation_select_mask`, or `extra_select_mask` set, then restores `_iterable_class = ValuesIterable` accordingly. This handles field-only, annotation-only, and mixed values queries. Gate shows 35/35 tests passing.
+
+---STDERR---
