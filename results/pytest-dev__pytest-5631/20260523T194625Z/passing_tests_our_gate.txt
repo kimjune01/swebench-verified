@@ -1,0 +1,149 @@
+$ pytest -rA testing/python/integration.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, inifile: tox.ini
+collected 20 items
+
+testing/python/integration.py ........s.sss.......                       [100%]
+
+==================================== PASSES ====================================
+______________ TestOEJSKITSpecials.test_funcarg_non_pycollectobj _______________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_funcarg_non_pycollectobj0
+collected 0 items
+
+========================= no tests ran in 0.00 seconds =========================
+___________________ TestOEJSKITSpecials.test_autouse_fixture ___________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_autouse_fixture0
+collected 0 items
+
+========================= no tests ran in 0.00 seconds =========================
+____________________ TestMockDecoration.test_unittest_mock _____________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_unittest_mock0
+collected 1 item
+
+test_unittest_mock.py .                                                  [100%]
+
+=========================== 1 passed in 0.01 seconds ===========================
+______________ TestMockDecoration.test_unittest_mock_and_fixture _______________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_unittest_mock_and_fixture0
+collected 1 item
+
+test_unittest_mock_and_fixture.py .                                      [100%]
+
+=========================== 1 passed in 0.01 seconds ===========================
+________ TestMockDecoration.test_mock_sentinel_check_against_numpy_like ________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_mock_sentinel_check_against_numpy_like0
+collected 1 item
+
+test_mock_sentinel_check_against_numpy_like.py .                         [100%]
+
+=========================== 1 passed in 0.01 seconds ===========================
+__________________________ TestReRunTests.test_rerun ___________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_rerun0
+collected 1 item
+fix count 0
+fix count 1
+
+test_rerun.py .fix count 2
+.
+
+=========================== 2 passed in 0.01 seconds ===========================
+____________ TestNoselikeTestAttribute.test_module_with_global_test ____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_module_with_global_test0
+collected 0 items
+
+========================= no tests ran in 0.00 seconds =========================
+_______________ TestNoselikeTestAttribute.test_class_and_method ________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_class_and_method0
+collected 0 items
+
+========================= no tests ran in 0.01 seconds =========================
+________________ TestNoselikeTestAttribute.test_unittest_class _________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_unittest_class0
+collected 1 item
+
+test_unittest_class.py .                                                 [100%]
+
+=========================== 1 passed in 0.01 seconds ===========================
+___________ TestNoselikeTestAttribute.test_class_with_nasty_getattr ____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_class_with_nasty_getattr0
+collected 0 items
+
+========================= no tests ran in 0.01 seconds =========================
+______________________ TestParameterize.test_idfn_marker _______________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_idfn_marker0
+collected 2 items
+<Module test_idfn_marker.py>
+  <Function test_params[spam-2]>
+  <Function test_params[ham-2]>
+
+========================= no tests ran in 0.01 seconds =========================
+______________________ TestParameterize.test_idfn_fixture ______________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.0.2.dev58+gcb828ebe7, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-5/test_idfn_fixture0
+collected 4 items
+<Module test_idfn_fixture.py>
+  <Function test_params[spam-ham]>
+  <Function test_params[spam-2]>
+  <Function test_params[ham-ham]>
+  <Function test_params[ham-2]>
+
+========================= no tests ran in 0.01 seconds =========================
+=========================== short test summary info ============================
+PASSED testing/python/integration.py::test_wrapped_getfslineno
+PASSED testing/python/integration.py::TestMockDecoration::test_wrapped_getfuncargnames
+PASSED testing/python/integration.py::TestMockDecoration::test_getfuncargnames_patching
+PASSED testing/python/integration.py::test_pytestconfig_is_session_scoped
+PASSED testing/python/integration.py::TestOEJSKITSpecials::test_funcarg_non_pycollectobj
+PASSED testing/python/integration.py::TestOEJSKITSpecials::test_autouse_fixture
+PASSED testing/python/integration.py::TestMockDecoration::test_unittest_mock
+PASSED testing/python/integration.py::TestMockDecoration::test_unittest_mock_and_fixture
+PASSED testing/python/integration.py::TestMockDecoration::test_mock_sentinel_check_against_numpy_like
+PASSED testing/python/integration.py::TestReRunTests::test_rerun
+PASSED testing/python/integration.py::TestNoselikeTestAttribute::test_module_with_global_test
+PASSED testing/python/integration.py::TestNoselikeTestAttribute::test_class_and_method
+PASSED testing/python/integration.py::TestNoselikeTestAttribute::test_unittest_class
+PASSED testing/python/integration.py::TestNoselikeTestAttribute::test_class_with_nasty_getattr
+PASSED testing/python/integration.py::TestParameterize::test_idfn_marker
+PASSED testing/python/integration.py::TestParameterize::test_idfn_fixture
+SKIPPED [1] /testbed/testing/python/integration.py:160: could not import 'mock': No module named 'mock'
+SKIPPED [1] /testbed/testing/python/integration.py:211: could not import 'mock': No module named 'mock'
+SKIPPED [1] /testbed/testing/python/integration.py:244: could not import 'mock': No module named 'mock'
+SKIPPED [1] /testbed/testing/python/integration.py:268: could not import 'mock': No module named 'mock'
+===================== 16 passed, 4 skipped in 0.27 seconds =====================

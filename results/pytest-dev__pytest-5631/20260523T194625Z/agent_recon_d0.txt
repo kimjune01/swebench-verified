@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is a regression introduced in commit b6166dccb where identity comparison (`is`) was replaced with membership testing (`in`). The `in` operator triggers `__eq__` on numpy-like objects, which either raises an exception or returns non-boolean values. The fix is to use `any(p.new is s for s in sentinels)` for identity-based comparison.
+
+---STDERR---
