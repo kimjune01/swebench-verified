@@ -1,0 +1,39 @@
+Now let me output the recon diagnosis:
+
+# Recon: pytest-dev__pytest-10081
+
+## Failure summary
+The test `test_pdb_teardown_skipped_for_classes[@unittest.skip]` verifies that when running pytest with `--pdb`, setUp and tearDown should not be called for unittest.TestCase tests that are skipped via a decorator on the class level. The test fails because tearDown IS being called when a class is decorated with `@unittest.skip`, resulting in the tracked list containing `['tearDown:test_pdb_teardown_skipped_for_classes.MyTestCase.test_1']` instead of the expected empty list `[]`.
+
+## Suspect set
+- `src/_pytest/unittest.py` lines 300-329: `TestCaseFunction.runtest()` method, specifically line 319 where the skip check happens before postponing tearDown
+
+## Root cause
+When pytest runs with `--pdb`, it postpones calling tearDown() to preserve instance state for debugging. Line 319 checks `_is_skipped(self.obj)` to avoid postponing tearDown for skipped tests. However, `self.obj` refers to the test method, not the test class. 
+
+When `@unittest.skip` decorates a class, Python's unittest sets `__unittest_skip__ = True` on the class but NOT on individual methods. This means `_is_skipped(self.obj)` returns False even though the class is skipped, causing tearDown to be postponed and then called.
+
+For method-level `@unittest.skip`, the attribute IS set on the method, so the check works. For `@pytest.mark.skip` on classes, pytest's own skip handling works differently and avoids this issue.
+
+**Confidence:** deduction — 98%
+
+**Supporting evidence:**
+- `src/_pytest/unittest.py:319` — `if self.config.getoption("usepdb") and not _is_skipped(self.obj):`
+- `src/_pytest/unittest.py:412-414` — `def _is_skipped(obj) -> bool: return bool(getattr(obj, "__unittest_skip__", False))`
+- Experiment confirmed: class decorated with `@unittest.skip` has `__unittest_skip__ = True`, but `MyClass.test_method` has `__unittest_skip__ = None`
+- Test output shows tearDown was called: `tracked == ['tearDown:test_pdb_teardown_skipped_for_classes.MyTestCase.test_1']`
+
+## Edit sites
+- `src/_pytest/unittest.py` line 319: Change the condition from checking only the test method to also checking the parent class. The check should be:
+  ```python
+  if self.config.getoption("usepdb") and not _is_skipped(self.obj) and not _is_skipped(self.parent.obj):
+  ```
+  This ensures tearDown is not postponed when either the method OR the class is marked as skipped with `@unittest.skip`.
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and experimental verification.
+
+## Open questions
+None — the fix is straightforward and localized to a single condition check.
+
+---STDERR---

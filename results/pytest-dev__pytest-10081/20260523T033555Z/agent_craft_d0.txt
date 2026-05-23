@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. The change adds a check for `self._testcase` to detect class-level `@unittest.skip` decorators, preventing tearDown from being called on skipped test classes when running with `--pdb`. All 64 tests pass with no regressions.
+
+---STDERR---

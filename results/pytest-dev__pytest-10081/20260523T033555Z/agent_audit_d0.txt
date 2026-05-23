@@ -1,0 +1,24 @@
+# Audit: pytest-dev__pytest-10081
+
+## FAIL_TO_PASS
+- `testing/test_unittest.py::test_pdb_teardown_skipped_for_classes[@unittest.skip]`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None. All 64 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_traceback_pruning`: Was failing on base, now PASSED (bonus fix from patch)
+- `test_raising_unittest_skiptest_during_collection`: Was failing on base, now PASSED (bonus fix from patch)
+
+## Gate Summary
+- 64 passed, 9 skipped in 1.83s
+- All FAIL_TO_PASS requirements met
+- Zero regressions introduced
+- Two pre-existing failures inadvertently fixed by the patch
+
+The craft patch successfully resolves the issue by checking both `self.obj` and `self._testcase` for skip markers when deciding whether to postpone tearDown in `--pdb` mode. This catches class-level `@unittest.skip` decorators that don't propagate to individual test methods.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
