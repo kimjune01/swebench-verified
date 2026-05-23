@@ -1,0 +1,23 @@
+# Audit: django__django-15104
+
+## FAIL_TO_PASS
+- `test_add_custom_fk_with_hardcoded_to` (migrations.test_autodetector.AutodetectorTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 139 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the gate shows OK with no failures.
+
+## Verification summary
+The craft patch successfully resolves the issue. The change from `del deconstruction[2]['to']` to `deconstruction[2].pop('to', None)` in `django/db/migrations/autodetector.py:99` allows the autodetector to safely handle custom ForeignKey subclasses that remove the 'to' key in their own `deconstruct()` method.
+
+Full gate output: 139 tests ran in 0.056s, all passed.
+Specific FAIL_TO_PASS test verified individually: passed in 0.001s.
+
+No regressions introduced. The patch is minimal, defensive, and preserves existing behavior for standard fields while fixing the KeyError for custom fields.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

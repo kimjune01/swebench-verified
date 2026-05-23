@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix was successful in one iteration. Changed `django/db/migrations/autodetector.py` line 99 from `del deconstruction[2]['to']` to `deconstruction[2].pop('to', None)` to defensively handle custom ForeignKey fields that remove the 'to' key from their deconstructed kwargs. All 139 tests pass.
+
+---STDERR---

@@ -1,0 +1,35 @@
+# Recon: django__django-15104
+
+## Failure summary
+
+The test `test_add_custom_fk_with_hardcoded_to` verifies that the migration autodetector can handle a custom ForeignKey field that hardcodes its `to` argument and removes it from the deconstructed kwargs. The test fails with `KeyError: 'to'` at line 99 in `django/db/migrations/autodetector.py` when the autodetector tries to delete a 'to' key that doesn't exist in the field's deconstructed kwargs.
+
+## Suspect set
+
+- `django/db/migrations/autodetector.py` lines 89-101: The `only_relation_agnostic_fields` method unconditionally tries to delete the 'to' key from relation field kwargs without checking if it exists first.
+
+## Root cause
+
+The `only_relation_agnostic_fields` method in the migration autodetector assumes that any field with a `remote_field.model` will always have a 'to' key in its deconstructed kwargs (index [2] of the deconstruction tuple). This is true for standard Django ForeignKey/ForeignObject fields, which set `kwargs['to']` in their `deconstruct()` methods (see `django/db/models/fields/related.py:614-620`). However, custom ForeignKey subclasses may remove the 'to' key in their own `deconstruct()` implementation, as shown in the failing test where the custom field hardcodes the `to` value and removes it from kwargs to avoid storing it in migrations.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/db/migrations/autodetector.py:99` — `del deconstruction[2]['to']` raises KeyError when key is absent
+- `django/db/models/fields/related.py:614-620` — standard `ForeignObject.deconstruct()` sets `kwargs['to']`
+- Test's custom field explicitly does `del kwargs['to']` after calling `super().deconstruct()`
+- Git blame shows this line (99) has been unchanged since 2014, written with assumption that 'to' always exists
+
+## Edit sites
+
+- `django/db/migrations/autodetector.py` line 99: Change from `del deconstruction[2]['to']` to `deconstruction[2].pop('to', None)` to safely remove the 'to' key only if it exists. This makes the deletion defensive and handles custom fields that may have already removed the key.
+
+## Rejected hypotheses
+
+None — the root cause is clear from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---
