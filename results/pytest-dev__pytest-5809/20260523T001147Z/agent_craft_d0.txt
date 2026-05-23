@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. Changed `src/_pytest/pastebin.py:82` from using a Python-version-conditional lexer (`"python3"` or `"python"`) to the constant `"text"`, since pytest output is plain console text, not Python source code. Gate shows all 4 pastebin tests passing, including the required FAIL_TO_PASS test `testing/test_pastebin.py::TestPaste::test_create_new_paste`.
+
+---STDERR---

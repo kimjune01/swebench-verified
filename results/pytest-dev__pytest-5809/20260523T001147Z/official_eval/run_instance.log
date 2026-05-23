@@ -1,0 +1,45 @@
+2026-05-23 00:10:05,691 - INFO - Creating container for pytest-dev__pytest-5809...
+2026-05-23 00:10:53,833 - INFO - Container for pytest-dev__pytest-5809 created: 4bb1eacd2ce44a6a51d2ca35e075d45a5a3319c8ff77168b973f7490a5c488fe
+2026-05-23 00:10:54,247 - INFO - Container for pytest-dev__pytest-5809 started: 4bb1eacd2ce44a6a51d2ca35e075d45a5a3319c8ff77168b973f7490a5c488fe
+2026-05-23 00:10:54,247 - INFO - Intermediate patch for pytest-dev__pytest-5809 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5809/patch.diff, now applying to container...
+2026-05-23 00:10:54,351 - INFO - >>>>> Applied Patch:
+Checking patch src/_pytest/pastebin.py...
+Applied patch src/_pytest/pastebin.py cleanly.
+
+2026-05-23 00:10:54,433 - INFO - Git diff before:
+diff --git a/src/_pytest/pastebin.py b/src/_pytest/pastebin.py
+index 41576a615..79b0d9d40 100644
+--- a/src/_pytest/pastebin.py
++++ b/src/_pytest/pastebin.py
+@@ -79,7 +79,7 @@ def create_new_paste(contents):
+ 
+     params = {
+         "code": contents,
+-        "lexer": "python3" if sys.version_info[0] >= 3 else "python",
++        "lexer": "text",
+         "expiry": "1week",
+     }
+     url = "https://bpaste.net"
+2026-05-23 00:10:54,433 - INFO - Eval script for pytest-dev__pytest-5809 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5809/eval.sh; copying to container...
+2026-05-23 00:11:00,100 - INFO - Test runtime: 5.57 seconds
+2026-05-23 00:11:00,100 - INFO - Test output for pytest-dev__pytest-5809 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-5809/test_output.txt
+2026-05-23 00:11:00,185 - INFO - Git diff after:
+diff --git a/src/_pytest/pastebin.py b/src/_pytest/pastebin.py
+index 41576a615..79b0d9d40 100644
+--- a/src/_pytest/pastebin.py
++++ b/src/_pytest/pastebin.py
+@@ -79,7 +79,7 @@ def create_new_paste(contents):
+ 
+     params = {
+         "code": contents,
+-        "lexer": "python3" if sys.version_info[0] >= 3 else "python",
++        "lexer": "text",
+         "expiry": "1week",
+     }
+     url = "https://bpaste.net"
+2026-05-23 00:11:00,186 - INFO - Grading answer for pytest-dev__pytest-5809...
+2026-05-23 00:11:00,186 - INFO - report: {'pytest-dev__pytest-5809': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['testing/test_pastebin.py::TestPaste::test_create_new_paste'], 'failure': []}, 'PASS_TO_PASS': {'success': ['testing/test_pastebin.py::TestPasteCapture::test_failed', 'testing/test_pastebin.py::TestPasteCapture::test_all', 'testing/test_pastebin.py::TestPasteCapture::test_non_ascii_paste_text'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pytest-dev__pytest-5809: resolved: True
+2026-05-23 00:11:00,186 - INFO - Attempting to stop container sweb.eval.pytest-dev__pytest-5809.batch...
+2026-05-23 00:11:15,660 - INFO - Attempting to remove container sweb.eval.pytest-dev__pytest-5809.batch...
+2026-05-23 00:11:15,667 - INFO - Container sweb.eval.pytest-dev__pytest-5809.batch removed.

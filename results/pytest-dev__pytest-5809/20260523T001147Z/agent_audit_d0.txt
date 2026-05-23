@@ -1,0 +1,3 @@
+Audit complete. The patch resolves the issue cleanly—the FAIL_TO_PASS test now passes and all PASS_TO_PASS tests remain green with zero regressions.
+
+---STDERR---

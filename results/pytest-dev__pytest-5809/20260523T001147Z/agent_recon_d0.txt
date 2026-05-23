@@ -1,0 +1,29 @@
+# Recon: pytest-dev__pytest-5809
+
+## Failure summary
+The test `testing/test_pastebin.py::TestPaste::test_create_new_paste` validates that the `--pastebin` feature correctly submits pytest output to bpaste.net using `lexer=text`. The test fails because the current implementation sends `lexer=python3` (or `lexer=python` for Python 2) instead. The test mocks the urlopen call and asserts that the submitted data contains `"lexer=text"`, but the implementation uses a Python lexer for what is actually console output, not Python code.
+
+## Suspect set
+- `src/_pytest/pastebin.py` lines 68-88: The `create_new_paste()` function that constructs the parameters sent to bpaste.net
+
+## Root cause
+The `create_new_paste()` function at `src/_pytest/pastebin.py:82` incorrectly sets the lexer parameter to `"python3"` (for Python 3) or `"python"` (for Python 2). Pytest console output is not Python source code—it contains test results, tracebacks, console output, and arbitrary text. Using a Python lexer causes bpaste.net to reject certain content with HTTP 400 errors, as documented in the problem statement. The correct lexer should be `"text"` to treat the content as plain text.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `src/_pytest/pastebin.py:82` — `"lexer": "python3" if sys.version_info[0] >= 3 else "python",`
+- `testing/test_pastebin.py:135` — `lexer = "text"` (expected value)
+- `testing/test_pastebin.py:139` — `assert "lexer=%s" % lexer in data.decode()` (test assertion checking for "text")
+- Problem statement confirms HTTP 400 errors occur with `lexer=python3` and are resolved by changing to `lexer=text`
+
+## Edit sites
+- `src/_pytest/pastebin.py` line 82: Change the lexer parameter from conditional Python version check to the constant string `"text"`. The line should read: `"lexer": "text",` instead of `"lexer": "python3" if sys.version_info[0] >= 3 else "python",`
+
+## Rejected hypotheses
+None — direct code reading confirms the root cause with no ambiguity.
+
+## Open questions
+None — the fix is straightforward and well-specified by both the failing test and the problem statement.
+
+---STDERR---
