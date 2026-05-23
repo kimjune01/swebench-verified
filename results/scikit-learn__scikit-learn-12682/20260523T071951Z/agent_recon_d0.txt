@@ -1,0 +1,53 @@
+# Recon: scikit-learn__scikit-learn-12682
+
+## Failure summary
+
+The test `test_max_iter` checks that `SparseCoder` can control the maximum iterations of the underlying `Lasso` estimator through a `transform_max_iter` parameter. With `transform_max_iter=1`, the Lasso solver should fail to converge and emit a `ConvergenceWarning`. With `transform_max_iter=2000`, it should converge without warnings. The test fails with `TypeError: __init__() got an unexpected keyword argument 'transform_max_iter'` at line 97 because `SparseCoder.__init__` doesn't accept this parameter.
+
+## Suspect set
+
+- `sklearn/decomposition/dict_learning.py` lines 864-876: `_set_sparse_coding_params` method in `SparseCodingMixin` — doesn't accept or store `max_iter` parameter
+- `sklearn/decomposition/dict_learning.py` lines 878-914: `transform` method in `SparseCodingMixin` — doesn't pass `max_iter` to `sparse_encode` call (line 895)
+- `sklearn/decomposition/dict_learning.py` lines 993-1000: `SparseCoder.__init__` method — doesn't accept `transform_max_iter` parameter
+
+## Root cause
+
+`SparseCoder` cannot control the `max_iter` parameter of the underlying `Lasso` estimator because the parameter chain is broken at three points: (1) `SparseCoder.__init__` doesn't accept `transform_max_iter`, (2) the shared `_set_sparse_coding_params` method doesn't handle `max_iter`, and (3) the shared `transform` method doesn't pass `max_iter` to `sparse_encode`. The infrastructure already exists — `sparse_encode` (line 187) accepts `max_iter=1000` and passes it to `_sparse_encode` (line 321, 334), which creates `Lasso(max_iter=max_iter)` when `algorithm='lasso_cd'` (line 151). Only the API surface is missing.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `dict_learning.py:995`: `SparseCoder.__init__` signature has no `transform_max_iter`
+- `dict_learning.py:864`: `_set_sparse_coding_params` signature has no `max_iter` parameter
+- `dict_learning.py:895`: `sparse_encode` call doesn't pass `max_iter` argument
+- `dict_learning.py:187`: `sparse_encode` function signature includes `max_iter=1000`
+- `dict_learning.py:151`: `Lasso` object created with `max_iter=max_iter` when `algorithm='lasso_cd'`
+
+## Edit sites
+
+All edits in `sklearn/decomposition/dict_learning.py`:
+
+1. **Line 864-876**: Add `max_iter=1000` parameter to `_set_sparse_coding_params` signature. Store it as `self.transform_max_iter = max_iter`. This is the shared mixin method used by all three sparse coding classes.
+
+2. **Line 895**: In the `transform` method's `sparse_encode` call, add `max_iter=self.transform_max_iter` to pass the stored value through.
+
+3. **Line 993-1000**: Add `transform_max_iter=1000` parameter to `SparseCoder.__init__` signature (after `positive_code`, before closing paren). Pass it as the new argument to the `_set_sparse_coding_params` call at line 995.
+
+4. **Line 1147-1159** (optional, consistency): Add `transform_max_iter=1000` parameter to `DictionaryLearning.__init__` signature and pass to `_set_sparse_coding_params`. Not required for the test but maintains API consistency.
+
+5. **Line 1336-1348** (optional, consistency): Add `transform_max_iter=1000` parameter to `MiniBatchDictionaryLearning.__init__` signature and pass to `_set_sparse_coding_params`. Not required for the test but maintains API consistency.
+
+## Competing hypotheses
+
+None. The code path is deterministic, the infrastructure exists, and the missing parameter is explicit in the error message.
+
+## Rejected hypotheses
+
+None.
+
+## Open questions
+
+- Should the docstrings for `SparseCoder`, `DictionaryLearning`, and `MiniBatchDictionaryLearning` be updated to document the new `transform_max_iter` parameter? (Answer: yes, for completeness, but not required for the test to pass.)
+- Should all three classes get `transform_max_iter`, or only `SparseCoder`? (Answer: all three for consistency, since they share `SparseCodingMixin`, but the test only requires `SparseCoder`.)
+
+---STDERR---

@@ -1,0 +1,22 @@
+# Audit: scikit-learn__scikit-learn-12682
+
+## FAIL_TO_PASS
+- `test_max_iter`: **PASSED** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Kill report
+N/A — patch resolved the issue without regressions
+
+---
+
+**Summary:** The patch successfully adds the `transform_max_iter` parameter to `SparseCoder.__init__` and propagates it through the parameter chain (`_set_sparse_coding_params` → `transform()` → `sparse_encode()`). The test that was failing with `TypeError: __init__() got an unexpected keyword argument 'transform_max_iter'` now passes, and all 67 tests in the suite pass with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
