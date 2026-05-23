@@ -8,7 +8,7 @@ Wins = official `swebench.harness.run_evaluation` attestations only. Generated b
 - Not won (no passing attestation): 4
 - Total archived runs: 46
 
-**Re-run policy.** Instances are re-run at most once, and only with a stated reason (an infra fix, e.g. heavy-repo isolation). We do not re-roll until green. Prior losing runs stay in the commit history. Of the re-run wins, check each instance's run dirs to see whether the earlier failure was infra (fixable, attributable) or a plain no-solve (a retry win, discountable).
+**This is dev telemetry, not the deliverable.** The deliverable is a single frozen artifact version run from scratch on the whole target. The loop is methodeutics: fail -> improve the GENERAL (instance-blind) method -> restart from square 1. Retries are unlimited; FORBIDDEN are instance-specific changes and re-rolling the same version for variance. Prior losing runs stay in history. The anti-cherry-picking guarantee is the final from-scratch single-version run plus the readable per-version diffs — not a low retry count. Re-run wins below are expected and reflect method iteration.
 
 ## Wins — first attempt
 - ✓ astropy__astropy-13033

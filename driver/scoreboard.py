@@ -7,11 +7,14 @@ official_resolved is true. Writes SCOREBOARD.md.
 Rule: no official attestation, no win. Empty patches, timeouts, and our-gate
 "RESOLVED" without an official report do NOT count.
 
-For the skeptic's cherry-picking objection ("did you re-roll until green?"), wins
-are split by whether the instance won on its FIRST (earliest by run-id timestamp)
-attempt or only on a later re-run. The split is derived from the timestamped run
-dirs, so it needs no trust in any label. Re-run wins are the ones a skeptic can
-discount; first-attempt wins cannot have been selected for.
+This cross-version scoreboard is DEV TELEMETRY, not the deliverable. The deliverable
+is a single frozen artifact version run from scratch on the whole target (see
+methodeutics doctrine). Wins are split by first-attempt vs later-re-run only to make
+method iteration legible — re-run wins are expected, because the loop is: fail ->
+improve the GENERAL method -> restart. Retries are unlimited; what is forbidden is an
+instance-specific change or re-rolling the SAME version for variance. The
+anti-cherry-picking guarantee is the final from-scratch single-version run plus the
+readable per-version diffs, not a low retry count.
 """
 import json, glob, os, collections
 
@@ -49,11 +52,13 @@ L.append(f"  - won only on a re-run: {len(won_rerun)}  *(a skeptic may discount 
 L.append(f"- Not won (no passing attestation): {len(lost)}")
 L.append(f"- Total archived runs: {total_runs}")
 L.append("")
-L.append("**Re-run policy.** Instances are re-run at most once, and only with a stated reason "
-         "(an infra fix, e.g. heavy-repo isolation). We do not re-roll until green. Prior losing "
-         "runs stay in the commit history. Of the re-run wins, check each instance's run dirs to "
-         "see whether the earlier failure was infra (fixable, attributable) or a plain no-solve "
-         "(a retry win, discountable).")
+L.append("**This is dev telemetry, not the deliverable.** The deliverable is a single frozen "
+         "artifact version run from scratch on the whole target. The loop is methodeutics: fail "
+         "-> improve the GENERAL (instance-blind) method -> restart from square 1. Retries are "
+         "unlimited; FORBIDDEN are instance-specific changes and re-rolling the same version for "
+         "variance. Prior losing runs stay in history. The anti-cherry-picking guarantee is the "
+         "final from-scratch single-version run plus the readable per-version diffs — not a low "
+         "retry count. Re-run wins below are expected and reflect method iteration.")
 L.append("")
 L.append("## Wins — first attempt")
 for i in sorted(won_first): L.append(f"- ✓ {i}")
