@@ -1,0 +1,45 @@
+# Recon: django__django-14631
+
+## Failure summary
+
+Two tests fail when a Django form has a disabled DateTimeField with a callable initial value. The test creates a `FakeTime` callable that increments seconds on each invocation. Test `test_datetime_clean_disabled_callable_initial_bound_field` expects `form.cleaned_data['dt']` to equal `form['dt'].initial`, but they differ by 1 second (46 vs 47). Test `test_datetime_clean_disabled_callable_initial_microseconds` expects microseconds to be stripped from cleaned_data, but they aren't (gets `123456` microseconds instead of `0`).
+
+## Suspect set
+
+- `django/forms/forms.py` lines 389-407: `BaseForm._clean_fields()` method - handles disabled fields and FileField cleaning
+- `django/forms/boundfield.py` lines 212-220: `BoundField.initial` cached property - applies microsecond stripping
+
+## Root cause
+
+`BaseForm._clean_fields()` accesses initial values by calling `self.get_initial_for_field(field, name)` directly (lines 392, 397) instead of using `self[name].initial` which accesses the value through the BoundField. This causes two bugs:
+
+1. **Callable invoked multiple times:** When initial is a callable, `get_initial_for_field()` invokes it fresh each time. The test's `FakeTime().now` increments on each call, so `_clean_fields()` gets seconds=46 while `BoundField.initial` later gets seconds=47. BoundField.initial is a `@cached_property`, so it should only invoke the callable once.
+
+2. **Microseconds not stripped:** `BoundField.initial` strips microseconds when `widget.supports_microseconds` is False (boundfield.py:216-219). The DateTimeInput widget has `supports_microseconds = False`. But `get_initial_for_field()` doesn't perform this stripping, so cleaned_data retains microseconds while bf.initial doesn't.
+
+The `changed_data()` method already uses the correct pattern (`self[name].initial` at line 444), demonstrating the intended approach.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `forms.py:392` — `value = self.get_initial_for_field(field, name)` for disabled fields
+- `forms.py:397` — `initial = self.get_initial_for_field(field, name)` for FileField
+- `forms.py:444` — `initial_value = self[name].initial` (correct pattern in changed_data)
+- `boundfield.py:212` — `@cached_property` on initial method
+- `boundfield.py:216-219` — Microsecond stripping when `not self.field.widget.supports_microseconds`
+- `widgets.py:482` — `DateTimeBaseInput.supports_microseconds = False`
+
+## Edit sites
+
+- `django/forms/forms.py` line 392: Replace `value = self.get_initial_for_field(field, name)` with `value = self[name].initial` — use BoundField's cached initial instead of calling get_initial_for_field directly
+- `django/forms/forms.py` line 397: Replace `initial = self.get_initial_for_field(field, name)` with `initial = self[name].initial` — use BoundField's cached initial for FileField cleaning
+
+## Rejected hypotheses
+
+None (first diagnosis)
+
+## Open questions
+
+None
+
+---STDERR---

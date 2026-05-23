@@ -1,0 +1,26 @@
+# Audit: django__django-14631
+
+## FAIL_TO_PASS
+- test_datetime_clean_disabled_callable_initial_bound_field: **PASS** ✓
+- test_datetime_clean_disabled_callable_initial_microseconds: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 120 tests passed.
+
+## Pre-existing failures (not counted)
+None
+
+## Full gate result
+```
+Ran 120 tests in 0.129s
+OK
+```
+
+Both FAIL_TO_PASS tests now pass. Zero regressions detected. The craft patch correctly resolves both issues by using `self[name].initial` (BoundField's cached property) instead of calling `self.get_initial_for_field()` directly. This ensures:
+1. Callable initial values are invoked once and cached
+2. Microseconds are stripped when the widget doesn't support them
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

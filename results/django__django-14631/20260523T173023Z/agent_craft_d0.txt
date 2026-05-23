@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix uses `self[name].initial` (which accesses BoundField's cached initial property) instead of calling `get_initial_for_field` directly. This ensures:
+1. Callable initial values are invoked once and cached
+2. Microseconds are stripped when the widget doesn't support them
+
+Gate: ✅ 120/120 tests passed, no regressions.
+
+---STDERR---
