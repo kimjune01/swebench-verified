@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_issue_24288` pass. I added a `comparisons` mapping and `visit_Compare` method to the `EvaluateFalseTransformer` class, transforming AST comparison nodes into SymPy relational class calls with `evaluate=False`. The codex review caught critical issues (generic_visit fallback for child transforms, ast.copy_location for proper AST handling), which were incorporated. Gate confirms all 29 tests pass.
+
+---STDERR---

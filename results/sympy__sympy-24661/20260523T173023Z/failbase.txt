@@ -1,0 +1,52 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/parsing/tests/test_sympy_parser.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        24165007
+hash randomization: on (PYTHONHASHSEED=1550982036)
+
+sympy/parsing/tests/test_sympy_parser.py[29] 
+test_sympy_parser ok
+test_rationalize ok
+test_factorial_fail ok
+test_repeated_fail ok
+test_repeated_dot_only ok
+test_local_dict ok
+test_local_dict_split_implmult ok
+test_local_dict_symbol_to_fcn ok
+test_global_dict ok
+test_no_globals ok
+test_issue_2515 ok
+test_issue_7663 ok
+test_recursive_evaluate_false_10560 ok
+test_function_evaluate_false ok
+test_issue_10773 ok
+test_split_symbols ok
+test_split_symbols_function ok
+test_functional_exponent ok
+test_match_parentheses_implicit_multiplication ok
+test_convert_equals_signs ok
+test_parse_function_issue_3539 ok
+test_issue_24288 F
+test_split_symbols_numeric ok
+test_unicode_names ok
+test_python3_features ok
+test_issue_19501 ok
+test_parsing_definitions ok
+test_builtins ok
+test_issue_22822 ok                                                       [FAIL]
+
+
+________________________________________________________________________________
+__________ sympy/parsing/tests/test_sympy_parser.py:test_issue_24288 ___________
+Traceback (most recent call last):
+  File "/testbed/sympy/parsing/tests/test_sympy_parser.py", line 292, in test_issue_24288
+    assert parse_expr(text, evaluate=False) == result
+AssertionError
+
+============= tests finished: 28 passed, 1 failed, in 0.35 seconds =============
+DO *NOT* COMMIT!

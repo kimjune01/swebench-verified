@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-24661
+
+## FAIL_TO_PASS
+- test_issue_24288: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves the issue. All 29 tests passed:
+- The failing test (test_issue_24288) now passes
+- All 28 previously passing tests remain passing
+- Zero regressions introduced
+
+The fix adds a `visit_Compare` method to `EvaluateFalseTransformer` that handles comparison operators (==, <, >, <=, >=, !=) by converting them to SymPy relational classes (Eq, Lt, Gt, Le, Ge, Ne) with `evaluate=False`, matching the behavior already implemented for binary operations.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

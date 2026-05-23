@@ -1,0 +1,106 @@
+2026-05-23 17:28:19,369 - INFO - Creating container for sympy__sympy-24661...
+2026-05-23 17:28:19,701 - INFO - Container for sympy__sympy-24661 created: 8a2e4cd1924c4020e6623072725756982c3828c1f54e361f475d405dae8a7e52
+2026-05-23 17:28:19,965 - INFO - Container for sympy__sympy-24661 started: 8a2e4cd1924c4020e6623072725756982c3828c1f54e361f475d405dae8a7e52
+2026-05-23 17:28:19,966 - INFO - Intermediate patch for sympy__sympy-24661 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24661/patch.diff, now applying to container...
+2026-05-23 17:28:20,083 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:29: trailing whitespace.
+            
+Checking patch sympy/parsing/sympy_parser.py...
+Applied patch sympy/parsing/sympy_parser.py cleanly.
+warning: 1 line adds whitespace errors.
+
+2026-05-23 17:28:20,344 - INFO - Git diff before:
+diff --git a/sympy/parsing/sympy_parser.py b/sympy/parsing/sympy_parser.py
+index 52711d1324..9211ab7416 100644
+--- a/sympy/parsing/sympy_parser.py
++++ b/sympy/parsing/sympy_parser.py
+@@ -1110,6 +1110,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
+         ast.BitAnd: 'And',
+         ast.BitXor: 'Not',
+     }
++    comparisons = {
++        ast.Lt: 'Lt',
++        ast.LtE: 'Le',
++        ast.Gt: 'Gt',
++        ast.GtE: 'Ge',
++        ast.NotEq: 'Ne',
++        ast.Eq: 'Eq',
++    }
+     functions = (
+         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
+         'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
+@@ -1186,6 +1194,22 @@ def visit_BinOp(self, node):
+             return new_node
+         return node
+ 
++    def visit_Compare(self, node):
++        if len(node.ops) == 1 and node.ops[0].__class__ in self.comparisons:
++            sympy_class = self.comparisons[node.ops[0].__class__]
++            left = self.visit(node.left)
++            right = self.visit(node.comparators[0])
++            
++            new_node = ast.Call(
++                func=ast.Name(id=sympy_class, ctx=ast.Load()),
++                args=[left, right],
++                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
++                starargs=None,
++                kwargs=None
++            )
++            return ast.copy_location(new_node, node)
++        return self.generic_visit(node)
++
+     def visit_Call(self, node):
+         new_node = self.generic_visit(node)
+         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+2026-05-23 17:28:20,344 - INFO - Eval script for sympy__sympy-24661 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24661/eval.sh; copying to container...
+2026-05-23 17:28:22,924 - INFO - Test runtime: 2.48 seconds
+2026-05-23 17:28:22,924 - INFO - Test output for sympy__sympy-24661 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24661/test_output.txt
+2026-05-23 17:28:23,029 - INFO - Git diff after:
+diff --git a/sympy/parsing/sympy_parser.py b/sympy/parsing/sympy_parser.py
+index 52711d1324..9211ab7416 100644
+--- a/sympy/parsing/sympy_parser.py
++++ b/sympy/parsing/sympy_parser.py
+@@ -1110,6 +1110,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
+         ast.BitAnd: 'And',
+         ast.BitXor: 'Not',
+     }
++    comparisons = {
++        ast.Lt: 'Lt',
++        ast.LtE: 'Le',
++        ast.Gt: 'Gt',
++        ast.GtE: 'Ge',
++        ast.NotEq: 'Ne',
++        ast.Eq: 'Eq',
++    }
+     functions = (
+         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
+         'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
+@@ -1186,6 +1194,22 @@ def visit_BinOp(self, node):
+             return new_node
+         return node
+ 
++    def visit_Compare(self, node):
++        if len(node.ops) == 1 and node.ops[0].__class__ in self.comparisons:
++            sympy_class = self.comparisons[node.ops[0].__class__]
++            left = self.visit(node.left)
++            right = self.visit(node.comparators[0])
++            
++            new_node = ast.Call(
++                func=ast.Name(id=sympy_class, ctx=ast.Load()),
++                args=[left, right],
++                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
++                starargs=None,
++                kwargs=None
++            )
++            return ast.copy_location(new_node, node)
++        return self.generic_visit(node)
++
+     def visit_Call(self, node):
+         new_node = self.generic_visit(node)
+         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+2026-05-23 17:28:23,029 - INFO - Grading answer for sympy__sympy-24661...
+2026-05-23 17:28:23,029 - INFO - report: {'sympy__sympy-24661': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_issue_24288'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_sympy_parser', 'test_rationalize', 'test_factorial_fail', 'test_repeated_fail', 'test_repeated_dot_only', 'test_local_dict', 'test_local_dict_split_implmult', 'test_local_dict_symbol_to_fcn', 'test_global_dict', 'test_no_globals', 'test_issue_2515', 'test_issue_7663', 'test_recursive_evaluate_false_10560', 'test_function_evaluate_false', 'test_issue_10773', 'test_split_symbols', 'test_split_symbols_function', 'test_functional_exponent', 'test_match_parentheses_implicit_multiplication', 'test_convert_equals_signs', 'test_parse_function_issue_3539', 'test_split_symbols_numeric', 'test_unicode_names', 'test_python3_features', 'test_issue_19501', 'test_parsing_definitions', 'test_builtins'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-24661: resolved: True
+2026-05-23 17:28:23,029 - INFO - Attempting to stop container sweb.eval.sympy__sympy-24661.batch...
+2026-05-23 17:28:38,440 - INFO - Attempting to remove container sweb.eval.sympy__sympy-24661.batch...
+2026-05-23 17:28:38,449 - INFO - Container sweb.eval.sympy__sympy-24661.batch removed.
