@@ -114,6 +114,8 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Done + committed this session:** batch_010 (27/30), batch_011 (28/30). Scoreboard 276/286 as of batch_011.
 
+**Campaign-end re-run queue:** `tasks/rerun_002.json` = the 2 batch_010 infra-DNFs (django-15563, django-14404). These lost to the b_4 box OOM-death, not to reasoning — they never got a fair attempt, so they're queued for a clean re-run at campaign end (run on a fresh box with the frozen skill version; this is a re-attempt of an aborted run, NOT instance-specific tuning). Genuine reasoning losses (django-16263, pytest-5787, django-11734, sympy-20438) are NOT enqueued — they got a fair shot and lost honestly.
+
 **batch_012 IN FLIGHT** (seed=12, 30 disjoint: 14 django, 5 matplotlib, 4 sklearn, 4 sympy, 2 astropy, 1 xarray). Launched 9-wide (b_4 dead/unreplaced — vCPU limit). Launch bg proc `bqis3k3pk`, log `/tmp/launch_b12.log`, shard `/tmp/b.shard` (b_4 slot remapped to b_10). At last check **24/30 done**, 0 empty / 0 err / 0 box-death. The launch is a detached host process — it survives a Claude-session outage; only the monitor dies.
 
 **Boxes ALIVE:** b_1,b_2,b_3,b_5,b_6,b_7,b_8,b_9,b_10 (9× m7i.xlarge), watchdog reset +240 at ~14:36 → terminate ~18:36. Envs in `/tmp/b_*.env`. NOTE `/tmp/b_4.env` points at b_3's box (regrade hack) — do NOT grade/teardown b_4 as a separate box; it's an alias.
