@@ -1,0 +1,34 @@
+# Recon: sympy__sympy-19954
+
+## Failure summary
+The test `test_sylow_subgroup` checks that `sylow_subgroup(p)` returns a p-Sylow subgroup with the correct order. For `DihedralGroup(18).sylow_subgroup(p=2)` and `DihedralGroup(50).sylow_subgroup(p=2)`, the test expects a subgroup of order 4. However, the call fails with:
+```
+IndexError: list assignment index out of range
+```
+at line 2201 in `minimal_blocks()`: `del num_blocks[i], blocks[i]`
+
+## Suspect set
+- `sympy/combinatorics/perm_groups.py` lines 2193-2213: The `minimal_blocks` function's loop that removes non-minimal block systems has an index misalignment bug.
+
+## Root cause
+The `minimal_blocks` function maintains three parallel lists (`blocks`, `num_blocks`, `rep_blocks`) representing discovered block systems. When filtering out non-minimal systems, the code correctly defers removal from `rep_blocks` by collecting items in `to_remove` and filtering after the loop (line 2208). However, it immediately deletes from `blocks[i]` and `num_blocks[i]` inside the loop (line 2201). This creates index misalignment: as `blocks` and `num_blocks` shrink with each deletion, the loop index `i` continues incrementing based on the original `rep_blocks` enumeration. When multiple items need removal, `i` eventually exceeds the current length of `blocks` and `num_blocks`, causing `IndexError`.
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `perm_groups.py:2198` — `for i, r in enumerate(rep_blocks):` enumerates based on `rep_blocks`
+- `perm_groups.py:2201` — `del num_blocks[i], blocks[i]` immediately modifies `blocks` and `num_blocks` using index `i` from `rep_blocks`
+- `perm_groups.py:2208` — `rep_blocks = [r for r in rep_blocks if r not in to_remove]` shows the correct deferred-removal pattern that should be applied to all three lists
+- `perm_groups.py:2197` — `to_remove = []` initializes the collection for deferred removal, but only used for `rep_blocks`
+- Git blame (commit 19285f5a077, August 2017) — Bug has existed since the function was first introduced
+
+## Edit sites
+- `sympy/combinatorics/perm_groups.py` lines 2197-2208: Replace immediate deletion from `blocks` and `num_blocks` with deferred removal. Instead of `del num_blocks[i], blocks[i]` at line 2201, collect the index `i` in a removal list. After the loop (line 2208), filter all three parallel lists (`blocks`, `num_blocks`, `rep_blocks`) consistently by removing elements at the collected indices. The existing pattern at line 2208 for `rep_blocks` demonstrates the correct approach.
+
+## Rejected hypotheses
+None — the root cause is directly observable in the code structure and confirmed by reproducing the error.
+
+## Open questions
+None — the fix is straightforward: apply the same deferred-removal pattern to all three parallel lists.
+
+---STDERR---

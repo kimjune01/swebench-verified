@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The `minimal_blocks` IndexError is fixed. The root cause was immediate deletion from parallel lists during iteration - changed to deferred removal by collecting indices and filtering all three lists (`blocks`, `num_blocks`, `rep_blocks`) consistently after the loop. Gate green on first iteration.
+
+---STDERR---
