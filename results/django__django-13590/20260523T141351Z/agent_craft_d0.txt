@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully handles namedtuples in range lookups. Modified `django/db/models/sql/query.py` to detect namedtuples via the `_fields` attribute and unpack them with `*` when reconstructing the value, while preserving the original behavior for regular tuples and lists.
+
+---STDERR---

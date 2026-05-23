@@ -1,0 +1,37 @@
+# Recon: django__django-13590
+
+## Failure summary
+The test `test_range_lookup_namedtuple` creates a namedtuple `EmployeeRange(minimum=51, maximum=100)` and uses it as the value for a `num_employees__range` filter. The test expects to retrieve Company objects with employee counts in that range. However, it fails with `TypeError: __new__() missing 1 required positional argument: 'maximum'` at line 1082 in `django/db/models/sql/query.py` inside the `resolve_lookup_value` method.
+
+## Suspect set
+- `django/db/models/sql/query.py` lines 1077-1083: The `resolve_lookup_value` method incorrectly reconstructs namedtuples by passing a generator expression where positional arguments are expected.
+
+## Root cause
+The `resolve_lookup_value` method in `django/db/models/sql/query.py` handles tuples and lists by recursively resolving their elements and then reconstructing the container with `type(value)(generator)`. This works correctly for regular `tuple()` and `list()` constructors which accept a single iterable argument. However, namedtuples are also tuples (they pass `isinstance(value, tuple)`), but their constructors require individual positional arguments for each field, not an iterable. When the code calls `EmployeeRange(generator)`, it's equivalent to passing a single generator object where two integers are expected, causing the TypeError.
+
+This issue was introduced in commit 8be79984 (Nov 2019) which changed from building a list and then calling `tuple(resolved_values)` to using `type(value)(generator)` to preserve the distinction between lists and tuples (fixing #30971). The fix didn't account for namedtuples.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `django/db/models/sql/query.py:1080-1082` — `return type(value)(self.resolve_lookup_value(sub_value, can_reuse, allow_joins) for sub_value in value)`
+- Namedtuples have a `_fields` attribute that distinguishes them from regular tuples
+- Verified experimentally that `tuple(generator)` works but `NamedTuple(generator)` fails; `NamedTuple(*generator)` works
+
+## Edit sites
+- `django/db/models/sql/query.py` lines 1077-1083: Replace the single-line return statement with logic that detects namedtuples (via `_fields` attribute) and unpacks the resolved generator with `*` for namedtuples, while preserving the current behavior (passing generator as single argument) for regular tuples and lists.
+
+Specifically:
+1. Store the generator expression in a variable
+2. Get the type of the value
+3. Check if the type has `_fields` attribute (namedtuple marker)
+4. If yes, unpack with `*`: `value_type(*resolved)`
+5. If no, pass as single arg: `value_type(resolved)`
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and error trace.
+
+## Open questions
+None — the fix is straightforward and localized.
+
+---STDERR---

@@ -1,0 +1,20 @@
+# Audit: django__django-13590
+
+## FAIL_TO_PASS
+- test_range_lookup_namedtuple (expressions.tests.IterableLookupInnerExpressionsTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 149 tests passed, including all 16 PASS_TO_PASS tests explicitly tracked.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — gate shows clean pass (OK with 2 expected skips).
+
+## Summary
+The craft patch successfully resolved the namedtuple range lookup issue. The fix detects namedtuples via `isinstance(value, tuple) and hasattr(value, '_fields')` and unpacks the resolved generator with `*value_type(resolved)`, while preserving the existing behavior for regular tuples and lists by passing the generator as a single argument.
+
+Gate execution: 149 tests in 0.184s, all passing. The target FAIL_TO_PASS test now passes, and no PASS_TO_PASS tests regressed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
