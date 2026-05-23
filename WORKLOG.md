@@ -110,6 +110,17 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-23 — batch_011 archived: 28/30 (2 reasoning losses, 0 DNF, 9-wide)
+
+batch_011 (seed=11, 30 disjoint: 11 django, 9 sympy, 4 matplotlib, 3 sklearn, 1 each astropy/pylint/pytest; pool=182, excluded=284). RUNID 20260523T213600Z. **Official 28/30.** Scoreboard now **276/286**, 290 runs.
+
+- **Ran 9-wide, not 10.** Couldn't replace the dead b_4 — AWS `VcpuLimitExceeded` (region vCPU limit 32; 9× m7i.xlarge = 36 already at/over it). Sharded over the 9 live boxes by generating a 9-box plan and remapping the `b_4` slot to `b_10` (the real live name), since `/tmp/b_4.env` was repurposed to point at b_3 for the batch_010 regrade. All 4 matplotlib got solo boxes; 26 light packed 5-6 per box.
+- **0 DNF, 0 box-death, 0 empty.** Notably all 9 sympy + all 4 matplotlib resolved — no craft-hang this batch (reinforces batch_007/008: heavy-suite hangs are instance-specific, not category-wide).
+- **2 reasoning losses** (applied cleanly, graded UNRESOLVED — the honest class): `pytest-dev__pytest-5787` (oversized ~10KB patch) and `django__django-11734` (went `wants_rediagnose` at craft d0, ran the outer loop, never converged to a correct fix). Both fit the pattern that an oversized/thrashing patch correlates with a wrong fix (cf. django-16263 last batch).
+- **Monitoring lesson (for `/retro`):** the active per-box SSH liveness probe I added to catch a repeat of batch_010's OOM-death **false-positived** — it reported all 9 boxes unreachable while the launch driver's own SSH worked fine. Cause: the probe's 9 concurrent `ssh true` calls lose to the launch's setup/recon SSH burst (sshd connection throttling), even with a 2-consecutive-failure debounce. Reverted to the plain ledger+log monitor. **Better box-death signal is progress-plateau + file-mtime check** (how b_4 was actually caught), not an active probe that competes with the workload. If a probe is wanted, it should piggyback on the driver's existing SSH session, not open new ones.
+
+8 → 10 standing losses (added pytest-5787, django-11734). Boxes kept alive for batch_012.
+
 ## 2026-05-23 — batch_010 archived: 27/30 (1 reasoning loss + 2 infra-DNF from a box OOM-death)
 
 batch_010 (seed=10, 30 disjoint: 18 django, 5 sympy, 2 matplotlib, 2 xarray, 1 each astropy/pytest/sklearn; pool=212, excluded=254). Fresh 10 boxes, subscription billing (verified the driver pops `ANTHROPIC_API_KEY` at rung4_driver.py:55-56). RUNID 20260523T194625Z. **Official 27/30.** Scoreboard now **248/256**, 260 runs.
