@@ -1,0 +1,31 @@
+# Audit: django__django-12262
+
+## FAIL_TO_PASS
+- test_inclusion_tag_errors (template_tests.test_custom.InclusionTagTests): PASS ✅
+- test_inclusion_tags (template_tests.test_custom.InclusionTagTests): PASS ✅
+- test_simple_tag_errors (template_tests.test_custom.SimpleTagTests): PASS ✅
+- test_simple_tags (template_tests.test_custom.SimpleTagTests): PASS ✅
+
+## PASS_TO_PASS regressions
+None — all 18 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — all failures from the base capture are now resolved.
+
+## Verdict analysis
+
+**Patch applied:** 1 file changed (django/template/library.py:264)
+- Changed validation check from `param not in unhandled_kwargs` to `param not in kwonly`
+
+**Gate results:** All 22 tests pass
+- ✅ All 4 FAIL_TO_PASS tests now pass
+- ✅ All 18 PASS_TO_PASS tests remain passing
+- ✅ Zero regressions introduced
+
+**Baseline comparison:**
+The fail-on-base capture showed 4 tests failing (2 ERRORs + 2 FAILs) due to `TemplateSyntaxError` when keyword-only parameters with defaults were supplied. All 4 are now resolved by the fix.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

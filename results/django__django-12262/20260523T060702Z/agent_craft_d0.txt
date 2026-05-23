@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed all tests on the first gate run. Changed line 264 in `django/template/library.py` from checking `param not in unhandled_kwargs` to `param not in kwonly`, correctly validating keyword-only parameters with defaults.
+
+---STDERR---

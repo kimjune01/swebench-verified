@@ -1,0 +1,109 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 template_tests.templatetags.inclusion template_tests.test_custom
+
+test_decorated_filter (template_tests.test_custom.CustomFilterTests) ... ok
+test_filter (template_tests.test_custom.CustomFilterTests) ... ok
+test_15070_use_l10n (template_tests.test_custom.InclusionTagTests) ... ok
+test_include_tag_missing_context (template_tests.test_custom.InclusionTagTests) ... ok
+test_inclusion_tag_errors (template_tests.test_custom.InclusionTagTests) ... FAIL
+test_inclusion_tag_registration (template_tests.test_custom.InclusionTagTests) ... ok
+test_inclusion_tags (template_tests.test_custom.InclusionTagTests) ... ERROR
+test_inclusion_tags_from_template (template_tests.test_custom.InclusionTagTests) ... ok
+test_no_render_side_effect (template_tests.test_custom.InclusionTagTests) ... ok
+test_render_context_is_cleared (template_tests.test_custom.InclusionTagTests) ... ok
+test_simple_tag_errors (template_tests.test_custom.SimpleTagTests) ... FAIL
+test_simple_tag_escaping_autoescape_off (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tag_explicit_escaping (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tag_format_html_escaping (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tag_missing_context (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tag_naive_escaping (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tag_registration (template_tests.test_custom.SimpleTagTests) ... ok
+test_simple_tags (template_tests.test_custom.SimpleTagTests) ... ERROR
+test_load_annotated_function (template_tests.test_custom.TemplateTagLoadingTests) ... ok
+test_load_error (template_tests.test_custom.TemplateTagLoadingTests) ... ok
+test_load_error_egg (template_tests.test_custom.TemplateTagLoadingTests) ... ok
+test_load_working_egg (template_tests.test_custom.TemplateTagLoadingTests) ... ok
+
+======================================================================
+ERROR: test_inclusion_tags (template_tests.test_custom.InclusionTagTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/template_tests/test_custom.py", line 216, in test_inclusion_tags
+    t = self.engine.from_string(entry[0])
+  File "/testbed/django/template/engine.py", line 136, in from_string
+    return Template(template_code, engine=self)
+  File "/testbed/django/template/base.py", line 155, in __init__
+    self.nodelist = self.compile_nodelist()
+  File "/testbed/django/template/base.py", line 193, in compile_nodelist
+    return parser.parse()
+  File "/testbed/django/template/base.py", line 478, in parse
+    raise self.error(token, e)
+  File "/testbed/django/template/base.py", line 476, in parse
+    compiled_result = compile_func(self, token)
+  File "/testbed/django/template/library.py", line 154, in compile_func
+    kwonly, kwonly_defaults, takes_context, function_name,
+  File "/testbed/django/template/library.py", line 268, in parse_bits
+    (name, param))
+django.template.exceptions.TemplateSyntaxError: 'inclusion_keyword_only_default' received unexpected keyword argument 'kwarg'
+
+======================================================================
+ERROR: test_simple_tags (template_tests.test_custom.SimpleTagTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/template_tests/test_custom.py", line 87, in test_simple_tags
+    t = self.engine.from_string(entry[0])
+  File "/testbed/django/template/engine.py", line 136, in from_string
+    return Template(template_code, engine=self)
+  File "/testbed/django/template/base.py", line 155, in __init__
+    self.nodelist = self.compile_nodelist()
+  File "/testbed/django/template/base.py", line 193, in compile_nodelist
+    return parser.parse()
+  File "/testbed/django/template/base.py", line 478, in parse
+    raise self.error(token, e)
+  File "/testbed/django/template/base.py", line 476, in parse
+    compiled_result = compile_func(self, token)
+  File "/testbed/django/template/library.py", line 121, in compile_func
+    kwonly, kwonly_defaults, takes_context, function_name,
+  File "/testbed/django/template/library.py", line 268, in parse_bits
+    (name, param))
+django.template.exceptions.TemplateSyntaxError: 'simple_keyword_only_default' received unexpected keyword argument 'kwarg'
+
+======================================================================
+FAIL: test_inclusion_tag_errors (template_tests.test_custom.InclusionTagTests)
+----------------------------------------------------------------------
+django.template.exceptions.TemplateSyntaxError: 'inclusion_keyword_only_default' received unexpected keyword argument 'kwarg'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/testbed/tests/template_tests/test_custom.py", line 248, in test_inclusion_tag_errors
+    self.engine.from_string(entry[1])
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/contextlib.py", line 99, in __exit__
+    self.gen.throw(type, value, traceback)
+  File "/testbed/django/test/testcases.py", line 683, in _assert_raises_or_warns_cm
+    self.assertIn(expected_message, str(getattr(cm, cm_attr)))
+AssertionError: "'inclusion_keyword_only_default' received multiple values for keyword argument 'kwarg'" not found in "'inclusion_keyword_only_default' received unexpected keyword argument 'kwarg'"
+
+======================================================================
+FAIL: test_simple_tag_errors (template_tests.test_custom.SimpleTagTests)
+----------------------------------------------------------------------
+django.template.exceptions.TemplateSyntaxError: 'simple_keyword_only_param' received unexpected keyword argument 'kwarg'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/testbed/tests/template_tests/test_custom.py", line 124, in test_simple_tag_errors
+    self.engine.from_string(entry[1])
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/contextlib.py", line 99, in __exit__
+    self.gen.throw(type, value, traceback)
+  File "/testbed/django/test/testcases.py", line 683, in _assert_raises_or_warns_cm
+    self.assertIn(expected_message, str(getattr(cm, cm_attr)))
+AssertionError: "'simple_keyword_only_param' received multiple values for keyword argument 'kwarg'" not found in "'simple_keyword_only_param' received unexpected keyword argument 'kwarg'"
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.009s
+
+FAILED (failures=2, errors=2)
+Testing against Django installed in '/testbed/django'
+Importing application template_tests
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).
