@@ -1,0 +1,40 @@
+# Recon: django__django-12125
+
+## Failure summary
+The tests `test_serialize_nested_class` (with subtests for NestedEnum and NestedChoices) check that Django's migration serializer correctly handles nested classes. When serializing a nested class like `WriterTests.NestedEnum`, the serializer should produce the full qualified path `migrations.test_writer.WriterTests.NestedEnum`. However, it currently produces `migrations.test_writer.NestedEnum`, omitting the parent class name `WriterTests`.
+
+The test output shows:
+```
+AssertionError: ('migrations.test_writer.NestedEnum', ...) != ('migrations.test_writer.WriterTests.NestedEnum', ...)
+```
+
+## Suspect set
+- `django/db/migrations/serializer.py` lines 258-272: `TypeSerializer.serialize()` method — this handles serialization of class/type objects
+
+## Root cause
+The `TypeSerializer.serialize()` method uses Python's `__name__` attribute instead of `__qualname__` to get the class name. For nested classes, `__name__` returns only the simple name (e.g., "NestedEnum"), while `__qualname__` returns the qualified name including parent classes (e.g., "WriterTests.NestedEnum").
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/migrations/serializer.py:270` — `return self.value.__name__, set()` (for builtin types)
+- `django/db/migrations/serializer.py:272` — `return "%s.%s" % (module, self.value.__name__), {"import %s" % module}` (for non-builtin types)
+- Test verification: `NestedEnum.__name__ == "NestedEnum"` but `NestedEnum.__qualname__ == "WriterTests.NestedEnum"`
+- Similar serializers already use `__qualname__`: `EnumSerializer` at line 125 uses `enum_class.__qualname__` and `FunctionTypeSerializer` at line 156 uses `self.value.__qualname__`
+
+## Edit sites
+- `django/db/migrations/serializer.py` line 270: Change `self.value.__name__` to `self.value.__qualname__` in the builtin types branch
+- `django/db/migrations/serializer.py` line 272: Change `self.value.__name__` to `self.value.__qualname__` in the non-builtin types branch
+
+Both occurrences are in the `TypeSerializer.serialize()` method. The change is safe because:
+1. For non-nested classes, `__qualname__` equals `__name__`
+2. For builtin types, both are identical (verified: `list.__qualname__ == list.__name__ == "list"`)
+3. Other serializers in the same file already use `__qualname__` successfully
+
+## Rejected hypotheses
+None — the root cause is clear from tracing the execution path through the serialization system.
+
+## Open questions
+- `FunctionTypeSerializer` at line 146 also uses `klass.__name__` for unbound methods, which could have the same issue for methods of nested classes. However, there's no failing test for this case, so it's not addressed in this diagnosis.
+
+---STDERR---

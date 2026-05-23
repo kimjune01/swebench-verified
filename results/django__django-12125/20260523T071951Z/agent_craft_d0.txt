@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully addresses the root cause identified by recon. Changed `TypeSerializer.serialize()` to use `__qualname__` instead of `__name__`, which correctly handles nested classes by including the parent class name in the serialized output. All FAIL_TO_PASS tests now pass in a single gate iteration.
+
+---STDERR---

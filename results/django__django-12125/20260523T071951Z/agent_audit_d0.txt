@@ -1,0 +1,19 @@
+# Audit: django__django-12125
+
+## FAIL_TO_PASS
+- test_serialize_nested_class (migrations.test_writer.WriterTests): ✅ PASS
+- test_serialize_numbers (migrations.test_writer.WriterTests): ✅ PASS
+
+## PASS_TO_PASS regressions
+None — all 45 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Gate result
+All 47 tests passed (Ran 47 tests in 0.019s - OK). The patch successfully fixes both FAIL_TO_PASS tests without introducing any regressions. The change from `__name__` to `__qualname__` in TypeSerializer correctly handles nested class serialization while maintaining backward compatibility with all existing tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
