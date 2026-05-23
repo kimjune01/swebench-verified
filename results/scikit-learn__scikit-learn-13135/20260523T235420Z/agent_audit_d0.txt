@@ -1,0 +1,22 @@
+# Audit: scikit-learn__scikit-learn-13135
+
+## FAIL_TO_PASS
+- `test_nonuniform_strategies[kmeans-expected_2bins1-expected_3bins1-expected_5bins1]`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 34 tests in the suite passed without regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the fail-on-base capture showed the ValueError on the FAIL_TO_PASS test, confirming it was a genuine pre-patch failure. All other tests passed on base and continue to pass.
+
+## Gate Summary
+The patch added `np.sort()` to line 174 of `sklearn/preprocessing/_discretization.py`, ensuring KMeans cluster centers are sorted before computing bin edges. This fixes the root cause: KMeans returns centers ordered by cluster index, not value, which caused non-monotonic bin edges that violated `np.digitize`'s precondition.
+
+**Full gate results**: 34/34 tests PASSED (100%)
+- FAIL_TO_PASS contract: ✓ satisfied (1/1 tests now pass)
+- PASS_TO_PASS contract: ✓ satisfied (33/33 tests still pass, 0 regressions)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

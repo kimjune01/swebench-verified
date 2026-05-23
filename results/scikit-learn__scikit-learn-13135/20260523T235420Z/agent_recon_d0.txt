@@ -1,0 +1,44 @@
+# Recon: scikit-learn__scikit-learn-13135
+
+## Failure summary
+The test `test_nonuniform_strategies` with kmeans strategy and 5 bins fails when calling `fit_transform` on the input array `[0, 0.5, 2, 3, 9, 10]`. The error is `ValueError: bins must be monotonically increasing or decreasing`, raised by `np.digitize` in the transform method at `_discretization.py:255`. The test expects the binned result `[0, 0, 1, 2, 3, 4]` but crashes before producing output because the bin_edges array is not monotonically sorted.
+
+## Suspect set
+- `sklearn/preprocessing/_discretization.py` lines 165-176: The kmeans strategy block in the `fit` method where bin edges are computed from KMeans cluster centers
+
+## Root cause
+KMeans.cluster_centers_ returns centers ordered by cluster index (0, 1, 2, ...), not by value. At line 174, the code extracts centers without sorting them. At line 175, it computes bin edges as midpoints between consecutive centers, assuming they are sorted. When centers are unsorted, the resulting bin_edges are non-monotonic, causing np.digitize to raise ValueError at line 255 during transform.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `_discretization.py:174` — `centers = km.fit(column[:, None]).cluster_centers_[:, 0]` extracts unsorted centers
+- `_discretization.py:175` — `bin_edges[jj] = (centers[1:] + centers[:-1]) * 0.5` computes midpoints assuming sorted order
+- `_discretization.py:255` — `np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])` requires monotonic bins
+
+Empirical verification with n_bins=5:
+- Fitted centers: `[0.25, 3.0, 10.0, 2.0, 9.0]` (not sorted)
+- Computed bin_edges: `[0.0, 1.625, 6.5, 6.0, 5.5, 10.0]` (non-monotonic: 6.5 > 6.0 > 5.5)
+- With sorted centers `[0.25, 2.0, 3.0, 9.0, 10.0]`: bin_edges become `[0.0, 1.125, 2.5, 6.0, 9.5, 10.0]` (monotonic)
+
+## Edit sites
+- `sklearn/preprocessing/_discretization.py` line 174: Sort the cluster centers after extraction. Change from:
+  ```python
+  centers = km.fit(column[:, None]).cluster_centers_[:, 0]
+  ```
+  to:
+  ```python
+  centers = np.sort(km.fit(column[:, None]).cluster_centers_[:, 0])
+  ```
+
+This is the only location where cluster_centers_ is used in the file. No other callers or related locations require changes.
+
+## Rejected hypotheses
+- H₁: The error is in np.digitize implementation — killed because np.digitize correctly enforces its documented precondition (monotonic bins)
+- H₂: The initialization of KMeans is wrong — killed because initialization only affects convergence, not the ordering of cluster_centers_ in the output array
+- H₃: The bin edge calculation formula is wrong — killed because `(centers[i+1] + centers[i]) / 2` is correct for sorted centers; the formula itself is sound
+
+## Open questions
+None. The fix is straightforward: add `np.sort()` at line 174.
+
+---STDERR---

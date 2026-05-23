@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete in 1 gate iteration. Sorting KMeans cluster centers before computing bin edges ensures monotonicity, making the FAIL_TO_PASS test pass without breaking any existing tests.
+
+---STDERR---
