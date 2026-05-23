@@ -47,7 +47,17 @@ A second run: 15 Verified instances (filtered against `KNOWN_BAD.md`, pytest-bas
 - **Official: 14/15 RESOLVED.** The one miss (`pydata__xarray-6599`) is a craft **timeout** (3600s, no patch captured) — an honest no-solve, not a wrong answer. Recorded as unresolved.
 - Two driver false-negatives the official grader overturned: `astropy-14369` (driver `verify_gate` reported `f2p=False`) and `pytest-5809` (audit emitted no parseable verdict) both graded RESOLVED. The pytest-specific `verify_gate` parser undercounts; the official harness is the truth. Two oversized patches (astropy-14598 ~104KB, -14369 ~23KB) also resolved.
 
-**Running total: 30/31 officially RESOLVED** (flask + batch_001 + batch_002), the lone miss a timeout. But read `LIMITATIONS.md` first — these are easy-biased, non-random, pytest-only batches. The number is plumbing/capability evidence, not a solve rate. The next batch (random, difficulty-stratified, Django-heavy) is the one whose rate would mean something.
+### batch_003 — the meaningful one (random, difficulty-stratified, Django-heavy)
+
+First batch drawn as a **random difficulty-stratified sample** (seed=3) across all repos minus KNOWN_BAD/done/sphinx-tox. It came back representative of Verified's true distribution: 11 Django, 2 sympy, 2 matplotlib (13/15 non-pytest, validated beforehand via a smoke run).
+
+- **Official: 12/15 RESOLVED**, 0 graded-failures, 3 empty no-patches.
+- **2 of the 3 misses are infra, not capability.** `django-11206` and `sympy-16766` produced empty patches — but both *resolved in isolation* during the pre-batch smoke run. Here they shared box1 with matplotlib-23299 (multi-GB image, slow suite), which starved them (timeout/contention). Lesson: don't co-locate a heavy repo with others. Only `django-16256` is an unexplained genuine no-solve.
+- The three oversized patches (matplotlib-26113 341KB, django-15380 208KB, django-13315 60KB) all resolved despite a `capture_patch` bug that swept generated test artifacts into the diff (open fix).
+
+So on the hard, representative slice: 12/15 official, ~2 of the misses fixable infra. This is the first number that estimates anything, and it is appropriately lower and messier than the easy batches.
+
+**Totals (kept separate on purpose):** easy-biased batches 30/31; random hard slice 12/15. Do not collapse these into one rate — they are different samples (see `LIMITATIONS.md`). None of it is the clean-room ablation that would isolate the *method*.
 
 ## Run it yourself
 
