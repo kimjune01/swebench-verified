@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 invalid_models_tests.test_models invalid_models_tests.test_relative_fields migrations.test_state
+
+test_related_field_has_valid_related_name (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_relationship_model_missing_foreign_key (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_relationship_model_with_foreign_key_to_wrong_model (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_to_fields_exist (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_to_fields_not_checked_if_related_model_doesnt_exist (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_too_many_foreign_keys_in_self_referential_model (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_unique_m2m (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_valid_foreign_key_without_accessor (invalid_models_tests.test_relative_fields.RelativeFieldTests) ... ok
+test_fk_to_fk (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_fk_to_integer (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_fk_to_m2m (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_m2m_to_fk (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_m2m_to_integer (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_m2m_to_m2m (invalid_models_tests.test_relative_fields.ReverseQueryNameClashTests) ... ok
+test_accessor_clash (invalid_models_tests.test_relative_fields.SelfReferentialFKClashTests) ... ok
+test_clash_under_explicit_related_name (invalid_models_tests.test_relative_fields.SelfReferentialFKClashTests) ... ok
+test_reverse_query_name_clash (invalid_models_tests.test_relative_fields.SelfReferentialFKClashTests) ... ok
+test_accessor_clash (invalid_models_tests.test_relative_fields.SelfReferentialM2MClashTests) ... ok
+test_clash_between_accessors (invalid_models_tests.test_relative_fields.SelfReferentialM2MClashTests) ... ok
+test_clash_under_explicit_related_name (invalid_models_tests.test_relative_fields.SelfReferentialM2MClashTests) ... ok
+test_reverse_query_name_clash (invalid_models_tests.test_relative_fields.SelfReferentialM2MClashTests) ... ok
+test_valid_model (invalid_models_tests.test_relative_fields.SelfReferentialM2MClashTests) ... ok
+test_abstract_model_children_inherit_indexes (migrations.test_state.ModelStateTests) ... ok
+test_bound_field_sanity_check (migrations.test_state.ModelStateTests) ... ok
+test_create_swappable (migrations.test_state.ModelStateTests) ... ok
+test_create_swappable_from_abstract (migrations.test_state.ModelStateTests) ... ok
+test_custom_manager_swappable (migrations.test_state.ModelStateTests) ... ok
+test_custom_model_base (migrations.test_state.ModelStateTests) ... ok
+test_explicit_index_name (migrations.test_state.ModelStateTests) ... ok
+test_fields_immutability (migrations.test_state.ModelStateTests) ... ok
+test_from_model_constraints (migrations.test_state.ModelStateTests) ... ok
+test_order_with_respect_to_private_field (migrations.test_state.ModelStateTests) ... ok
+test_repr (migrations.test_state.ModelStateTests) ... ok
+test_sanity_check_through (migrations.test_state.ModelStateTests) ... ok
+test_sanity_check_to (migrations.test_state.ModelStateTests) ... ok
+test_sanity_index_name (migrations.test_state.ModelStateTests) ... ok
+test_abstract_base (migrations.test_state.RelatedModelsTests) ... ok
+test_base (migrations.test_state.RelatedModelsTests) ... ok
+test_base_to_base_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_base_to_subclass_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_circle (migrations.test_state.RelatedModelsTests) ... ok
+test_direct_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_direct_hidden_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_direct_m2m (migrations.test_state.RelatedModelsTests) ... ok
+test_direct_m2m_self (migrations.test_state.RelatedModelsTests) ... ok
+test_fk_through_proxy (migrations.test_state.RelatedModelsTests) ... ok
+test_generic_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_intermediate_m2m (migrations.test_state.RelatedModelsTests) ... ok
+test_intermediate_m2m_base (migrations.test_state.RelatedModelsTests) ... ok
+test_intermediate_m2m_extern_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_intermediate_m2m_self (migrations.test_state.RelatedModelsTests) ... ok
+test_multiple_bases (migrations.test_state.RelatedModelsTests) ... ok
+test_multiple_mixed_bases (migrations.test_state.RelatedModelsTests) ... ok
+test_multiple_nested_bases (migrations.test_state.RelatedModelsTests) ... ok
+test_nested_abstract_base (migrations.test_state.RelatedModelsTests) ... ok
+test_nested_base (migrations.test_state.RelatedModelsTests) ... ok
+test_nested_fk (migrations.test_state.RelatedModelsTests) ... ok
+test_nested_proxy_base (migrations.test_state.RelatedModelsTests) ... ok
+test_proxy_base (migrations.test_state.RelatedModelsTests) ... ok
+test_two_sided (migrations.test_state.RelatedModelsTests) ... ok
+test_unrelated (migrations.test_state.RelatedModelsTests) ... ok
+test_add_relations (migrations.test_state.StateTests) ... ok
+test_apps_bulk_update (migrations.test_state.StateTests) ... ok
+test_choices_iterator (migrations.test_state.StateTests) ... ok
+test_create (migrations.test_state.StateTests) ... ok
+test_custom_base_manager (migrations.test_state.StateTests) ... ok
+test_custom_default_manager (migrations.test_state.StateTests) ... ok
+test_custom_default_manager_added_to_the_model_state (migrations.test_state.StateTests) ... ok
+test_custom_default_manager_named_objects_with_false_migration_flag (migrations.test_state.StateTests) ... ok
+test_dangling_references_throw_error (migrations.test_state.StateTests) ... ok
+test_equality (migrations.test_state.StateTests) ... ok
+test_ignore_order_wrt (migrations.test_state.StateTests) ... ok
+test_manager_refer_correct_model_version (migrations.test_state.StateTests) ... ok
+test_no_duplicate_managers (migrations.test_state.StateTests) ... ok
+test_real_apps (migrations.test_state.StateTests) ... ok
+test_remove_relations (migrations.test_state.StateTests) ... ok
+test_render (migrations.test_state.StateTests) ... ok
+test_render_model_inheritance (migrations.test_state.StateTests) ... ok
+test_render_model_with_multiple_inheritance (migrations.test_state.StateTests) ... ok
+test_render_project_dependencies (migrations.test_state.StateTests) ... ok
+test_render_unique_app_labels (migrations.test_state.StateTests) ... ok
+test_self_relation (migrations.test_state.StateTests) ... ok
+
+======================================================================
+ERROR: test_onetoone_with_parent_model (invalid_models_tests.test_models.OtherModelTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/invalid_models_tests/test_models.py", line 1012, in test_onetoone_with_parent_model
+    class ParkingLot(Place):
+  File "/testbed/django/db/models/base.py", line 320, in __new__
+    new_class._prepare()
+  File "/testbed/django/db/models/base.py", line 333, in _prepare
+    opts._prepare(cls)
+  File "/testbed/django/db/models/options.py", line 256, in _prepare
+    'Add parent_link=True to %s.' % field,
+django.core.exceptions.ImproperlyConfigured: Add parent_link=True to invalid_models_tests.ParkingLot.other_place.
+
+======================================================================
+ERROR: test_clash_parent_link (invalid_models_tests.test_relative_fields.ComplexClashTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/invalid_models_tests/test_relative_fields.py", line 1298, in test_clash_parent_link
+    class Child(Parent):
+  File "/testbed/django/db/models/base.py", line 320, in __new__
+    new_class._prepare()
+  File "/testbed/django/db/models/base.py", line 333, in _prepare
+    opts._prepare(cls)
+  File "/testbed/django/db/models/options.py", line 256, in _prepare
+    'Add parent_link=True to %s.' % field,
+django.core.exceptions.ImproperlyConfigured: Add parent_link=True to invalid_models_tests.Child.other_parent.
+
+----------------------------------------------------------------------
+Ran 205 tests in 0.221s
+
+FAILED (errors=2, skipped=2)
+Testing against Django installed in '/testbed/django'
+Importing application invalid_models_tests
+Importing application migrations
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

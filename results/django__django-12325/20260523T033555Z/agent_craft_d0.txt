@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix is complete. Both FAIL_TO_PASS tests pass on the first gate iteration:
+- ✅ `test_onetoone_with_parent_model` 
+- ✅ `test_clash_parent_link`
+
+The recon diagnosis was correct: filtering `parent_links` collection to only include OneToOneFields with `parent_link=True` prevents user-defined OneToOneFields from being misidentified as MTI parent links, allowing Django to properly auto-generate `parent_ptr` fields when needed.
+
+---STDERR---

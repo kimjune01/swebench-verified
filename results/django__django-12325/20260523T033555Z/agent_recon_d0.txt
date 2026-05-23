@@ -1,0 +1,49 @@
+# Recon: django__django-12325
+
+## Failure summary
+
+Two tests fail with `ImproperlyConfigured: Add parent_link=True to <field>` when defining a child model with Multi-Table Inheritance (MTI) that has a OneToOneField to the parent model without `parent_link=True`. Django incorrectly identifies the user-defined OneToOneField as the parent link instead of auto-generating a proper `parent_ptr` field. The tests expect: (1) `test_onetoone_with_parent_model` should pass with auto-generated parent_ptr, (2) `test_clash_parent_link` should report reverse accessor/query name clashes between auto-generated parent_ptr and user-defined other_parent field.
+
+Error occurs at `django/db/models/options.py:256` during `_prepare()` method.
+
+## Suspect set
+
+- `django/db/models/base.py` lines 204-207: Collects OneToOneFields into `parent_links` dict during ModelBase.__new__() without filtering by `parent_link=True`
+- `django/db/models/options.py` lines 242-258: Uses collected parent links to set up primary key field and validates parent_link attribute
+
+## Root cause
+
+The `parent_links` collection logic in `ModelBase.__new__()` adds ALL OneToOneFields to the `parent_links` dict, regardless of whether they have `parent_link=True`. When a child model has a OneToOneField to its parent model (for purposes other than inheritance), this field gets incorrectly registered as the parent link. Later, when `options._prepare()` tries to use this field as the primary key for MTI, it checks `field.remote_field.parent_link` and raises ImproperlyConfigured because the field wasn't intended to be a parent link.
+
+Additionally, when multiple OneToOneFields point to the same parent model, the last one defined overwrites previous entries in the dict (explaining the "order matters" behavior described in the issue).
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `base.py:205`: `if isinstance(field, OneToOneField):` — collects without checking parent_link attribute
+- `base.py:207`: `parent_links[make_model_tuple(related)] = field` — dict overwrites with last field
+- `options.py:245`: `field = next(iter(self.parents.values()))` — uses whatever field was collected
+- `options.py:255-257`: `if not field.remote_field.parent_link: raise ImproperlyConfigured` — validation that catches the bug
+- Stack trace confirms error at line 256 of options.py
+
+## Edit sites
+
+- `django/db/models/base.py` line 205: Change condition from `if isinstance(field, OneToOneField):` to `if isinstance(field, OneToOneField) and field.remote_field.parent_link:` to only collect OneToOneFields that are explicitly marked as parent links
+
+This single-line change ensures that:
+1. User-defined OneToOneFields to parent models (without parent_link=True) are NOT collected into parent_links
+2. Only explicitly marked parent_link fields or auto-generated parent_ptr fields are used for MTI
+3. Auto-generation of parent_ptr proceeds normally when no explicit parent_link exists
+4. Multiple OneToOneFields to parent model can coexist (though they may trigger clash errors, which is the expected behavior tested by test_clash_parent_link)
+
+## Rejected hypotheses
+
+- H₀ (abduction): Tests fail because options._prepare() incorrectly validates the parent link — killed because validation logic is correct; the bug is in what field gets passed to it
+- Could modify options.py to search for a field with parent_link=True instead of using first from iterator — rejected because it doesn't fix the root cause of collecting wrong fields into parent_links in the first place
+- Could auto-set parent_link=True on collected fields — rejected because it violates user's explicit field definition and intent
+
+## Open questions
+
+None. The root cause is definitively identified in the parent_links collection logic, with clear code evidence and a straightforward fix.
+
+---STDERR---
