@@ -1,0 +1,47 @@
+# Recon: django__django-12143
+
+## Failure summary
+
+The test `test_get_list_editable_queryset_with_regex_chars_in_prefix` creates a formset with prefix `form$` (containing the regex special character `$`) and submits POST data for one edited object. It expects `_get_list_editable_queryset()` to return a queryset containing 1 object, but the method returns 0 objects. The assertion `self.assertEqual(queryset.count(), 1)` fails with `AssertionError: 0 != 1`.
+
+## Suspect set
+
+- `django/contrib/admin/options.py` lines 1632-1635: Method `_get_edited_object_pks()` builds a regex pattern without escaping the `prefix` parameter, causing regex special characters in the prefix to be interpreted as metacharacters rather than literals.
+
+## Root cause
+
+In `django/contrib/admin/options.py:1634`, the regex pattern is constructed using `.format()` without escaping user-controlled input:
+
+```python
+pk_pattern = re.compile(r'{}-\d+-{}$'.format(prefix, self.model._meta.pk.name))
+```
+
+When `prefix='form$'`, this creates the pattern `r'form$-\d+-uuid$'`. The `$` character in `form$` is interpreted as the regex "end of string" anchor. The pattern then tries to match: "form" + end-of-string + "-\d+-uuid$", which is impossible because nothing can follow the end-of-string marker. As a result, the pattern fails to match POST keys like `form$-0-uuid`, returns an empty list, and the queryset filter `pk__in=[]` produces zero results.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/contrib/admin/options.py:1634` — `pk_pattern = re.compile(r'{}-\d+-{}$'.format(prefix, self.model._meta.pk.name))`
+- `django/contrib/admin/options.py:1635` — `return [value for key, value in request.POST.items() if pk_pattern.match(key)]`
+- The test POST data contains `'form$-0-uuid': str(a.pk)` which should match but doesn't
+
+## Edit sites
+
+- `django/contrib/admin/options.py` line 1634: Wrap the `prefix` parameter with `re.escape()` to escape regex metacharacters. Change from:
+  ```python
+  pk_pattern = re.compile(r'{}-\d+-{}$'.format(prefix, self.model._meta.pk.name))
+  ```
+  to:
+  ```python
+  pk_pattern = re.compile(r'{}-\d+-{}$'.format(re.escape(prefix), self.model._meta.pk.name))
+  ```
+
+## Rejected hypotheses
+
+None — the failure mode and root cause are directly observable from code inspection.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

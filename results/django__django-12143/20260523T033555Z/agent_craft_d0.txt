@@ -1,0 +1,3 @@
+**RESOLVED** — The fix passed the gate on the first iteration. The FAIL_TO_PASS test now passes by escaping regex metacharacters in both the `prefix` and `pk.name` parameters when constructing the pattern in `_get_edited_object_pks()`.
+
+---STDERR---

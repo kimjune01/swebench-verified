@@ -1,0 +1,23 @@
+# Audit: django__django-12143
+
+## FAIL_TO_PASS
+- test_get_list_editable_queryset_with_regex_chars_in_prefix: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Classification
+The patch successfully resolves the issue:
+- **FAIL_TO_PASS contract:** The target test `test_get_list_editable_queryset_with_regex_chars_in_prefix` now passes (was failing on base)
+- **PASS_TO_PASS contract:** All 53 other tests that passed on base still pass (zero regressions)
+- **Gate result:** 54 tests ran in 0.440s — OK (skipped=1)
+
+The fix applied `re.escape()` to both `prefix` and `self.model._meta.pk.name` in `django/contrib/admin/options.py:1634`, preventing regex metacharacters from being interpreted as special characters in the pattern matching logic.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
