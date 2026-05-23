@@ -1,0 +1,18 @@
+# Audit: django__django-12754
+
+## FAIL_TO_PASS
+- `test_add_model_with_field_removed_from_base_model (migrations.test_autodetector.AutodetectorTests)`: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully resolves the issue. The fix adds dependency logic in `generate_created_models()` to detect when a field moves from a base model to a subclass (present in old base, absent in new base, present in new subclass). It then adds an explicit dependency on the `RemoveField` operation, ensuring the base model's field is removed before the subclass is created. All 116 tests in the suite passed, including the previously failing FAIL_TO_PASS test.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

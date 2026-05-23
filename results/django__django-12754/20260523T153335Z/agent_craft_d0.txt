@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. The autodetector now correctly generates RemoveField operations before CreateModel operations when a field moves from a base model to a new subclass, preventing field name clashes at migration time.
+
+---STDERR---
