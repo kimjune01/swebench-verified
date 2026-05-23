@@ -7,11 +7,23 @@ BATCH=sys.argv[1]; GBASE=sys.argv[2]
 RUNID=datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
 ids=[b["instance_id"] for b in json.load(open(BATCH))]
 
-official={}
-for rep in glob.glob(f"{GBASE}*/report.json"):
-    r=json.load(open(rep))
-    for i in r.get("resolved_ids",[]): official[i]=True
-    for i in r.get("unresolved_ids",[]): official.setdefault(i,False)
+def official_resolved(iid):
+    """Authoritative per-instance verdict. Prefer the per-instance report
+    (instance_logs/<id>/report.json, format {iid:{resolved:bool}}) — it survives
+    a dropped box-level scp. Fall back to the box-level report's resolved_ids."""
+    for d in glob.glob(f"{GBASE}*/instance_logs/{iid}/report.json"):
+        try:
+            r=json.load(open(d)); k=iid if iid in r else (list(r)[0] if r else None)
+            if k and isinstance(r.get(k),dict) and "resolved" in r[k]: return bool(r[k]["resolved"])
+        except Exception: pass
+    for rep in glob.glob(f"{GBASE}*/report.json"):
+        try:
+            r=json.load(open(rep))
+            if iid in r.get("resolved_ids",[]): return True
+            if iid in r.get("unresolved_ids",[]): return False
+        except Exception: pass
+    return None  # no attestation (e.g. empty patch / not graded)
+official={i: official_resolved(i) for i in ids}
 
 def box_logdir(iid):
     for d in glob.glob(f"{GBASE}*/instance_logs/{iid}"):
