@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully adds `-X` option support to Django's autoreloader. The `get_child_arguments()` function now preserves Python's `-X` implementation-specific options when spawning child processes, converting `sys._xoptions` entries to command-line flags with the correct format (`-Xkey` for True values, `-Xkey=value` otherwise).
+
+---STDERR---

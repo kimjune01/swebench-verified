@@ -1,0 +1,44 @@
+# Recon: django__django-14771
+
+## Failure summary
+The test `test_xoptions` in `utils_tests.test_autoreload.TestChildArguments` checks that the autoreload child process receives `-X` options from the parent Python process via `sys._xoptions`. When `sys._xoptions = {'utf8': True, 'a': 'b'}`, the test expects `get_child_arguments()` to return `[sys.executable, '-Xutf8', '-Xa=b', __file__, 'runserver']`. Instead, it returns `[sys.executable, __file__, 'runserver']`, missing the two `-X` flags entirely.
+
+**Error message**: 
+```
+AssertionError: Lists differ: ['/opt/miniconda3/envs/testbed/bin/python', '/testbed/tests/utils_tests/test_autoreload.py', 'runserver'] != ['/opt/miniconda3/envs/testbed/bin/python', '-Xutf8', '-Xa=b', '/testbed/tests/utils_tests/test_autoreload.py', 'runserver']
+```
+
+## Suspect set
+- `django/utils/autoreload.py` line 222 — constructs the child process arguments list but omits `sys._xoptions`
+
+## Root cause
+The `get_child_arguments()` function builds the command-line arguments for spawning a subprocess when the autoreloader restarts Django. Line 222 handles `sys.warnoptions` (converting to `-W` flags) but has no logic for `sys._xoptions` (which should be converted to `-X` flags).
+
+**Current code** (`django/utils/autoreload.py:222`):
+```python
+args = [sys.executable] + ['-W%s' % o for o in sys.warnoptions]
+```
+
+The `-X` options are used by CPython for implementation-specific options (e.g., `-Xutf8` for UTF-8 mode on Windows). When Django's autoreloader spawns a child process, it should preserve these options so the child runs with the same Python configuration as the parent.
+
+Confidence: **deduction** — 95%
+
+**Supporting evidence**:
+- `django/utils/autoreload.py:222` — only processes `sys.warnoptions`, not `sys._xoptions`
+- `tests/utils_tests/test_autoreload.py:212-216` — test shows expected format: `True` values → `-X{key}`, other values → `-X{key}={value}`
+- All other tests in the file mock `sys._xoptions` as `{}`, confirming the empty case should produce no flags
+
+## Edit sites
+- **django/utils/autoreload.py line 222**: Modify the argument construction to also convert `sys._xoptions` dictionary entries into `-X` command-line flags. The conversion logic should be:
+  - For each `(key, value)` in `sys._xoptions.items()`:
+    - If `value is True`: append `-X{key}`
+    - Otherwise: append `-X{key}={value}`
+  - Insert these `-X` flags after `-W` warning flags and before the rest of the arguments
+
+## Rejected hypotheses
+None — this is the initial diagnosis.
+
+## Open questions
+- The test shows `{'utf8': True, 'a': 'b'}` producing `['-Xutf8', '-Xa=b']` (utf8 before a). Python 3.7+ dicts maintain insertion order, but the test doesn't specify which order is canonical. The current test may rely on alphabetical dict ordering or specific insertion order. The fix should preserve whatever order `sys._xoptions.items()` provides.
+
+---STDERR---

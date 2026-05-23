@@ -1,0 +1,18 @@
+# Audit: django__django-14771
+
+## FAIL_TO_PASS
+- `test_xoptions (utils_tests.test_autoreload.TestChildArguments)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The patch successfully resolves the issue. The `test_xoptions` test now passes — the fix correctly converts `sys._xoptions` dictionary entries to `-X` command-line flags. All 61 non-skipped tests pass, with no regressions introduced. The 20 skipped Watchman tests are environmental (Watchman service unavailable), matching the baseline.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
