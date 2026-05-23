@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix has been successfully applied. The `trim_docstring()` function now correctly calculates indentation by skipping the first line per PEP 257, allowing docstrings with text on the first line to be parsed without errors.
+
+---STDERR---

@@ -1,0 +1,45 @@
+# Recon: django__django-12155
+
+## Failure summary
+The test `test_parse_rst_with_docstring_no_leading_line_feed` checks that docstrings starting with text on the first line (e.g., `"firstline\n\n    second line"`) can be parsed correctly by `parse_docstring()` and `parse_rst()` without producing docutils errors. The test fails because `parse_rst(body, '')` returns a system-message error div instead of the expected `<p>second line</p>\n`, and stderr contains docutils error output instead of being empty.
+
+## Suspect set
+- `django/contrib/admindocs/utils.py` lines 27-39: `trim_docstring()` function - incorrectly calculates indentation by including the first line
+
+## Root cause
+The `trim_docstring()` function at line 37 calculates the minimum indentation across **all** non-empty lines, including the first line. For docstrings where the first line contains text (standard Python convention), this results in `indent=0` because the first line has no leading whitespace. Consequently, indented content in subsequent lines is not de-indented, causing `parse_docstring("firstline\n\n    second line")` to return `body="    second line"` instead of `body="second line"`. When this indented text is passed to `parse_rst()` and wrapped in reStructuredText directives, the leading spaces cause docutils to misinterpret the content and generate parsing errors.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/contrib/admindocs/utils.py:37` — `indent = min(len(line) - len(line.lstrip()) for line in lines if line.lstrip())`
+- For input `"firstline\n\n    second line"`: `lines = ['firstline', '', '    second line']`
+- Indentation calculation: `min(0, 4) = 0` (includes first line's zero indentation)
+- Result: `trim_docstring()` returns `'firstline\n\n    second line'` (body still has 4 leading spaces)
+- Expected per PEP 257: First line should be excluded from indentation calculation
+
+## Edit sites
+- `django/contrib/admindocs/utils.py` line 37: Change indentation calculation to skip the first line and handle edge cases
+
+  **Current:**
+  ```python
+  indent = min(len(line) - len(line.lstrip()) for line in lines if line.lstrip())
+  ```
+
+  **Required change:**
+  ```python
+  indent = min((len(line) - len(line.lstrip()) for line in lines[1:] if line.lstrip()), default=0)
+  ```
+
+  - `lines[1:]` skips the first line per PEP 257 specification
+  - `default=0` handles edge cases: single-line docstrings or no non-empty lines after the first line
+  - Parentheses required around generator expression when using the `default` parameter
+
+## Rejected hypotheses
+- H₁: Error in `parse_rst()` function — ruled out because the error only occurs with specific docstring formats; `parse_rst()` itself works correctly when given properly trimmed input
+- H₂: docutils version incompatibility — ruled out because the issue is in the input preparation (trimming), not in docutils behavior
+
+## Open questions
+None — the fix is deterministic and matches the problem statement's proposed solution.
+
+---STDERR---

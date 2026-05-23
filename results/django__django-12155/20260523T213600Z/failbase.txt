@@ -1,0 +1,26 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 admin_docs.test_utils
+
+test_description_output (admin_docs.test_utils.TestUtils) ... ok
+test_initial_header_level (admin_docs.test_utils.TestUtils) ... ok
+test_parse_docstring (admin_docs.test_utils.TestUtils) ... ok
+test_parse_rst (admin_docs.test_utils.TestUtils) ... ok
+test_parse_rst_with_docstring_no_leading_line_feed (admin_docs.test_utils.TestUtils) ... FAIL
+test_publish_parts (admin_docs.test_utils.TestUtils) ... ok
+test_title_output (admin_docs.test_utils.TestUtils) ... ok
+
+======================================================================
+FAIL: test_parse_rst_with_docstring_no_leading_line_feed (admin_docs.test_utils.TestUtils)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/admin_docs/test_utils.py", line 101, in test_parse_rst_with_docstring_no_leading_line_feed
+    self.assertEqual(parse_rst(body, ''), '<p>second line</p>\n')
+AssertionError: '<div class="system-message">\n<p class="sy[270 chars]v>\n' != '<p>second line</p>\n'
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.055s
+
+FAILED (failures=1)
+Testing against Django installed in '/testbed/django'
+Importing application admin_docs
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).
