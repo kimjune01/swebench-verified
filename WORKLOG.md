@@ -93,5 +93,21 @@ batch_007 (seed=7, 30 disjoint: 17 django, 7 sympy, 3 xarray, 2 pytest, 1 matplo
 
 batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fresh boxes. RUNID 20260523T153335Z. **Official 30/30**, 0 empty, 0 DNF (7 sympy, all converged). Scoreboard **193/196**, 200 total archived runs. Two perfect batches back-to-back (007, 008). Boxes kept alive for batch_009 (last of session). Standing 3 losses unchanged.
 - Subscription billing held; tonight ~120 instances at 10-wide parallel with **no rate throttling** (Sonnet's Max ceiling is generous — informs the "full-500 on subscription" plan: dollars ~$30 EC2 / $0 model, no quota wall).
+
+## 2026-05-24 — RESUME STATE (session paused, tokens out) — batch_009 ungraded
+
+**Boxes ALIVE:** 10 boxes (b_1..b_10), watchdog extended to **+720min ≈ alive until ~21:35 2026-05-24**. IPs/keys in `/tmp/b_*.env`. Local bg procs (launch `bjnknqlxy`, monitor) may have died with the session — the EC2 boxes did not.
+
+**batch_009 status:** 29/30 captured locally (patches in `/tmp/swebench-abduction/rung4_patches_b_*.jsonl` + `r4_patch_*.diff`), **NOT yet graded or archived**. Holdout `django__django-15957` (b_7) was in outer-loop attempt 2 (audit caught a regression, re-diagnosing) when paused — may have finished or not.
+
+**To resume (from repo root):**
+1. Check holdout: `cat /tmp/swebench-abduction/rung4_results_b_7.jsonl | grep 15957` — see if it reached `done`.
+2. Sweep: `wc -c /tmp/swebench-abduction/r4_patch_*.diff` for batch_009 ids (expect 29-30 non-empty).
+3. Grade: `bash driver/grade_batch.sh b_1 b_2 b_3 b_4 b_5 b_6 b_7 b_8 b_9 b_10` (fresh boxes had no stale logs at launch, but they've now graded nothing yet — tally filtered by batch_009 ids regardless).
+4. Archive: `python3 driver/archive_batch.py tasks/batch_009.json /tmp/grade_b_` → per-run commits.
+5. `python3 driver/scoreboard.py` then commit SCOREBOARD.md + WORKLOG.md.
+6. **Tear down** (last batch of session): `for n in $(seq 1 10); do ( . /tmp/b_$n.env; aws ec2 terminate-instances --instance-ids "$IID" --region "$REGION"; ) & done; wait` — then leak-sweep.
+
+**Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 - **Monitor (fixed zsh-safe form) worked** — counter advanced 0→29 correctly (vs the silently-zero old one); only missed the late craft timeout because it hit its own 60-min cap first.
 - **Grade-retrieval gotcha (noted, not blocking):** boxes accumulate `/tmp/logs/run_evaluation/...` across gradings, so `scp -r` of instance_logs mixed batch_005 + batch_006 dirs (58 reports for 30 instances). `archive_batch.py` filters by the batch's own IDs so archiving was correct, but ad-hoc tallies must filter too.
