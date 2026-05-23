@@ -83,6 +83,8 @@ python driver/shard_batch.py tasks/batch_NNN.json 5 b   # writes /tmp/b.shard
 
 # 3. run all shards in parallel (each waits for its box's docker)
 bash driver/launch_generic.sh tasks/batch_NNN.json /tmp/b.shard
+#    while it runs, arm a streaming monitor (see driver/MONITORING.md) so a
+#    silent failure surfaces mid-flight instead of after the whole run
 
 # 4. official-grade each box's shard, on the box, in parallel
 bash driver/grade_batch.sh b_1 b_2 b_3 b_4 b_5
