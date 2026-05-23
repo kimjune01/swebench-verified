@@ -1,0 +1,62 @@
+# Recon: sympy__sympy-19346
+
+## Failure summary
+
+The failing tests `test_dict` and `test_set` in `sympy/printing/tests/test_repr.py` verify that `srepr` (string representation) properly converts dict and set elements to their repr form. The tests fail because `srepr({x: y})` returns `'{x: y}'` instead of the expected `"{Symbol('x'): Symbol('y')}"`, and `srepr({x, y})` returns `'{x, y}'` instead of `"{Symbol('x'), Symbol('y')}"`. The issue is that `srepr` uses Python's default `str()` representation for dicts and sets rather than recursively applying `srepr` to their elements.
+
+## Suspect set
+
+- `sympy/printing/repr.py` lines 19-252: The `ReprPrinter` class, specifically the absence of `_print_dict` and `_print_set` methods
+- `sympy/printing/repr.py` lines 33-49: The `emptyPrinter` fallback method that handles types without specific printer methods
+
+## Root cause
+
+The `ReprPrinter` class in `sympy/printing/repr.py` is missing `_print_dict` and `_print_set` methods. When `srepr` encounters a dict or set, it follows this path:
+
+1. Looks for a method named `_print_dict` or `_print_set` - doesn't find one
+2. Falls back to `emptyPrinter` (line 33)
+3. `emptyPrinter` checks if the object has `__srepr__` attribute (line 39) - dict/set don't
+4. Checks if object has `args` attribute (line 41) - dict/set don't
+5. Falls through to `return str(expr)` (line 49)
+6. Returns Python's default string representation without recursively applying `srepr` to elements
+
+The `ReprPrinter` class has analogous methods for other container types (`_print_list` at line 144, `_print_tuple` at line 247) that properly use `self.reprify()` or `self._print()` to recursively handle elements. The dict and set methods were simply never implemented.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `sympy/printing/repr.py:144` — `_print_list` uses `self.reprify(expr, ", ")` to recursively print list elements
+- `sympy/printing/repr.py:247` — `_print_tuple` uses `self.reprify(expr, ", ")` to recursively print tuple elements
+- `sympy/printing/repr.py:33-49` — `emptyPrinter` fallback returns `str(expr)` for types without custom handlers
+- `sympy/printing/str.py:119` — Other printers DO implement `_print_dict`
+- `sympy/printing/str.py:753` — Other printers DO implement `_print_set`
+
+## Edit sites
+
+**File: `sympy/printing/repr.py`**
+
+Add two methods to the `ReprPrinter` class (best location: after line 145, right after `_print_list`):
+
+1. **Add `_print_dict` method** (insert after line 145):
+   - Handle empty dict: return `"{}"`
+   - For non-empty dict: iterate through `items()`, format each pair as `self._print(key): self._print(value)`
+   - Join pairs with `", "` and wrap in braces: `"{...}"`
+   - Recursively applies `srepr` to both keys and values
+
+2. **Add `_print_set` method** (insert after `_print_dict`):
+   - Handle empty set: return `"set()"`
+   - For non-empty set: iterate through items, apply `self._print(item)` to each
+   - Join items with `", "` and wrap in braces: `"{...}"`
+   - Recursively applies `srepr` to each element
+
+Reference the implementation pattern from `sympy/printing/str.py` lines 119-127 (dict) and 753-759 (set), but adapted for the repr printer (no sorting needed - preserve iteration order, handle nested structures).
+
+## Rejected hypotheses
+
+None. The root cause is unambiguous - the methods simply don't exist.
+
+## Open questions
+
+None. The fix is straightforward: add the two missing printer methods following the established pattern from `_print_list` and `_print_tuple`.
+
+---STDERR---
