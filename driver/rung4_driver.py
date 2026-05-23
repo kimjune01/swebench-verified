@@ -82,9 +82,13 @@ def setup(inst):
     if not cid or len(cid) < 12:
         log({"instance":iid,"stage":"setup","msg":f"run failed: {cid[:80]}"}); return None
     root = inst.get("repo_dir") or ssh(f"sudo docker exec {cid} pwd").stdout.strip() or "/"
-    ssh(f"cat > /tmp/tp.patch && sudo docker cp /tmp/tp.patch {cid}:{root}/tp.patch",
+    # Stage the test patch OUTSIDE the repo (/tmp, not {root}) so `git add -A` can't
+    # sweep the scaffolding file into the tree. A committed tp.patch leaks a `delete
+    # tp.patch` hunk into the captured prediction, which fails to apply on the official
+    # harness's clean base and trips git's -R heuristic (django-15987 false-positive).
+    ssh(f"cat > /tmp/tp.patch && sudo docker cp /tmp/tp.patch {cid}:/tmp/tp.patch",
         inp=inst["test_patch"])
-    ap = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && git apply tp.patch && "
+    ap = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && git apply /tmp/tp.patch && "
              f"git -c user.email=r4@x -c user.name=r4 add -A && "
              f"git -c user.email=r4@x -c user.name=r4 commit -q -m testpatch && "
              f"echo APPLIED $(git rev-parse HEAD)'")
@@ -238,6 +242,12 @@ def audit(inst, box, gate, hgraph, failbase, depth):
 
 def capture_patch(inst, cid, root, tsha):
     iid = inst["instance_id"]; tag = iid.replace("/","_")
+    # Source-only prediction: exclude the test files the official harness owns (it resets
+    # them to base and re-applies the gold test patch itself). An incidental agent edit to
+    # a test file collides with that re-application and trips git's -R heuristic, reversing
+    # the real fix (django-15987 false-positive). Paths come from the test_patch headers.
+    testfiles = [l[6:] for l in inst["test_patch"].splitlines() if l.startswith("+++ b/")]
+    excl = " ".join(f"':(exclude){p}'" for p in testfiles)
     # Strip agent detritus AND generated test artifacts before diffing, so the captured
     # model_patch is the fix, not test-run output (matplotlib result_images, pyc, caches,
     # compiled libs). Without this, `git add -A` swept 100s of KB of artifacts into patches.
@@ -245,7 +255,7 @@ def capture_patch(inst, cid, root, tsha):
             f"find . -path ./.git -prune -o \\( -name \"*.bak\" -o -name \"*.bak[0-9]*\" -o -name \"*.orig\" -o -name \"*.pyc\" -o -name \"*.so\" \\) -print -delete >/dev/null 2>&1; "
             f"find . -path ./.git -prune -o -type d \\( -name __pycache__ -o -name .pytest_cache -o -name result_images -o -name \"*.egg-info\" \\) -exec rm -rf {{}} + >/dev/null 2>&1; "
             f"git add -A >/dev/null 2>&1; "
-            f"git -c core.fileMode=false diff {tsha}'", timeout=120)
+            f"git -c core.fileMode=false diff {tsha} -- . {excl}'", timeout=120)
     diag = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && "
                f"echo ===STATUS===; git status --short | head -40; "
                f"echo ===LOG===; git log --oneline -4; "

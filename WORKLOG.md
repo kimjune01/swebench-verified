@@ -36,3 +36,16 @@ Official grading of flask-5014: `run_evaluation` reports resolved (committed und
 - **batch_003 staged:** random, difficulty-stratified (seed=3), drawn across all repos minus KNOWN_BAD/done/sphinx(tox). Came back representative of Verified's true distribution: 11 Django, 2 sympy, 2 matplotlib (13/15 non-pytest). This is the first batch whose rate would actually estimate something — expect it below the easy batches.
 
 **Not yet done** (see `LIMITATIONS.md`): the clean-room ablation that would isolate the method; a larger random sample beyond 15; sphinx/tox repos (excluded for offline-infra reasons).
+
+## 2026-05-23 — django-15987 root-caused: our-gate false-POSITIVE was patch-serialization contamination
+
+`batch_004` logged `django__django-15987` as an our-gate false-positive (our gate RESOLVED, official UNRESOLVED) and kept it as a loss. Forensics show it was **not a real fix failure** — the fix was genuinely present and passing in-container. The divergence was entirely in how we serialized the submitted prediction.
+
+- **Attestation, both halves present:** our gate `passing_tests_our_gate.txt` = `Ran 58 tests ... OK (skipped=1)` (F2P passes in-container); official `report.json` = `resolved: False`, F2P `settings.FIXTURE_DIRS cannot contain a default fixtures directory` fails. `patch_successfully_applied: True` is the trap — git apply "succeeded" by reversing.
+- **Mechanism (from `official_eval/run_instance.log`):** the captured prediction carried two contaminants — (1) a `delete tp.patch` hunk (our scaffolding file `tp.patch` was committed into `tsha` by `git add -A` because it lived inside `{root}`), and (2) an incidental whitespace edit to the test file. Applying that mixed patch on the official's clean base tripped git's `-R` heuristic (`Reversed (or previously applied) patch detected! Assuming -R.`), which **reversed the real `loaddata.py` fix**. No fix → F2P fails.
+- **Driver fix (official harness untouched):**
+  - `setup`: stage the test patch at `/tmp/tp.patch`, not `{root}/tp.patch`, so `git add -A` can't sweep scaffolding into the tree.
+  - `capture_patch`: emit a **source-only** prediction — `git diff {tsha} -- . ':(exclude)<testfile>'` for each `+++ b/` path in the test_patch. The official harness owns the tests; the prediction must not touch them. Matches SWE-bench's model_patch convention.
+  - Either fix alone prevents this instance; together they close the false-positive class.
+- **General lesson:** an our-gate-green / official-red split is not always a real loss — check `official_eval/applied_model_patch.diff` and `run_instance.log` for a `-R` reversal before recording it. Our gate runs the agent's live tree; the official grader round-trips the *serialized* patch, so contamination only surfaces there.
+- **Not yet done:** re-run django-15987 through the patched driver to produce a clean re-grade attestation (expected RESOLVED). batch_004 scoreboard still records the original loss until that re-run lands.
