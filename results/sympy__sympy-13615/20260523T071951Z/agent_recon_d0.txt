@@ -1,0 +1,47 @@
+Now let me print the handoff:
+
+```markdown
+# Recon: sympy__sympy-13615
+
+## Failure summary
+
+The test `test_Complement` verifies that `Complement(FiniteSet(x, y, 2), Interval(-10, 10))` equals `Complement(FiniteSet(x, y), Interval(-10, 10))`. The expected behavior is that numeric elements within the interval (like 2) are removed, while symbolic elements (x, y) remain in an unevaluated Complement since we cannot determine if they're in the interval. The test fails because the actual result is `{x, y}` (a plain FiniteSet) instead of `{x, y} \ Interval(-10, 10)` (a Complement expression).
+
+## Suspect set
+
+- `sympy/sets/sets.py` lines 1002-1006: Interval._complement method - handles FiniteSet case but only checks if nums is empty
+- `sympy/sets/sets.py` line 220: Set._complement method - uses flawed condition `self.contains(el) != True` that conflates "definitely not in" with "uncertain"
+
+## Root cause
+
+When computing `Complement(FiniteSet(x, y, 2), Interval(-10, 10))`, the code path is:
+1. Complement.reduce calls `Interval(-10, 10)._complement(FiniteSet(x, y, 2))`
+2. Interval._complement detects numeric elements [2] and falls through to Set._complement
+3. Set._complement filters using `self.contains(el) != True`, which keeps elements where contains() returns False OR a symbolic expression
+4. For x and y, `Interval.contains()` returns symbolic conditions like `(x >= -10) & (x <= 10)`, not True
+5. These get kept in the result as plain FiniteSet elements, losing the Complement wrapper
+
+The bug is that the code treats "can't prove element is in the set" the same as "can prove element is not in the set". Symbolic elements should remain in a Complement expression, not become plain FiniteSet members.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sympy/sets/sets.py:1002-1006` — Interval._complement only returns None when `nums == []`, otherwise falls through
+- `sympy/sets/sets.py:220` — Set._complement uses `self.contains(el) != True` which matches both False and symbolic results
+- Tested behavior: `Interval(-10,10).contains(2)` → True, `contains(15)` → False, `contains(x)` → `(x >= -10) & (x <= 10)`
+
+## Edit sites
+
+- `sympy/sets/sets.py` lines 1002-1006 (Interval._complement): Replace the FiniteSet handling to partition elements into three categories:
+  - Elements where `self.contains(el) == True`: definitely in interval (exclude from result)
+  - Elements where `self.contains(el) == False`: definitely not in interval (include in result FiniteSet)
+  - Elements where contains returns symbolic: uncertain (wrap in Complement)
+  
+  Return Union of the definitely-not-in FiniteSet and Complement(uncertain FiniteSet, self), handling empty sets appropriately.
+
+## Open questions
+
+None — the diagnosis is complete and the fix location is clear.
+```
+
+---STDERR---

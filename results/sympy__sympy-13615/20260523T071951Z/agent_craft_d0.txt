@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix is complete and all tests pass. The implementation correctly partitions FiniteSet elements when computing complement with an Interval:
+
+- **Definitely in interval** (`contains() is S.true`): excluded from result  
+- **Definitely not in interval** (`contains() is S.false`): included as plain FiniteSet elements
+- **Uncertain/symbolic** (contains() returns symbolic expression): preserved in unevaluated Complement
+
+The critical fix was using SymPy's boolean singletons (`S.true`/`S.false`) instead of Python's `True`/`False`, since `Interval.contains()` returns `BooleanTrue`/`BooleanFalse` instances.
+
+---STDERR---
