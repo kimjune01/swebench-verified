@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test (`test_squashmigrations_initial_attribute`) passes. Fixed the bug where `apps.get_models(app_label)` was incorrectly called—it doesn't accept an app_label parameter, causing all models to be iterated with every app_label, creating invalid (app_label, model_name) pairs. Changed to `apps.get_app_config(app_label).get_models()` and used `model._meta.app_label` in the allow_migrate call.
+
+---STDERR---

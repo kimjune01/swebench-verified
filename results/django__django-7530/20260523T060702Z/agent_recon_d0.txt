@@ -1,0 +1,43 @@
+# Recon: django__django-7530
+
+## Failure summary
+
+The test `test_makemigrations_consistency_checks_respect_routers` validates that `makemigrations` calls `allow_migrate()` with correct `(app_label, model_name)` pairs. The test has two apps: `migrations` (with models including `ModelWithCustomBase`) and `migrations2` (with no models). The test fails with `LookupError: App 'migrations2' doesn't have a 'ModelWithCustomBase' model` because `allow_migrate()` is being called with `app_name='migrations2'` and `model_name='ModelWithCustomBase'`, but `ModelWithCustomBase` belongs to the `migrations` app, not `migrations2`.
+
+## Suspect set
+
+- `django/core/management/commands/makemigrations.py` lines 102-108: The consistency check code that calls `router.allow_migrate()` with incorrect app_label/model combinations
+
+## Root cause
+
+The bug is in `django/core/management/commands/makemigrations.py` lines 106-108. The code attempts to call `apps.get_models(app_label)` but the `apps.get_models()` method does NOT accept an `app_label` parameter. Its actual signature is:
+
+```python
+def get_models(self, include_auto_created=False, include_swapped=False):
+```
+
+When called as `apps.get_models(app_label)`, the string `app_label` (e.g., 'migrations' or 'migrations2') is passed as the `include_auto_created` boolean parameter. Since any non-empty string is truthy, this returns ALL models from ALL apps, not just models from the specific app.
+
+This causes the nested loops to iterate over every app_label with every model in the entire project, calling `allow_migrate()` with invalid combinations like `('migrations2', 'ModelWithCustomBase')` where the model doesn't belong to that app.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/apps/registry.py:160` — `def get_models(self, include_auto_created=False, include_swapped=False):` (no app_label parameter)
+- `django/apps/config.py:174` — App configs have their own `get_models()` that returns only models for that app
+- `tests/migrations2/models.py` — Empty file (no models in migrations2 app)
+- `tests/migrations/models.py:14` — `class ModelWithCustomBase` exists only in migrations app
+
+## Edit sites
+
+- `django/core/management/commands/makemigrations.py` lines 106-108: Change `apps.get_models(app_label)` to `apps.get_app_config(app_label).get_models()`. This will correctly iterate over only the models belonging to each specific app, ensuring `allow_migrate()` is called with valid (app_label, model_name) pairs.
+
+## Rejected hypotheses
+
+None — the root cause was directly confirmed by reading the method signatures and understanding the comprehension logic.
+
+## Open questions
+
+None — the fix is straightforward and unambiguous.
+
+---STDERR---
