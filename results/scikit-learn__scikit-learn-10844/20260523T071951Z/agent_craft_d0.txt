@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Fixed integer overflow in both `mutual_info_score` and `fowlkes_mallows_score`. The gate confirms all FAIL_TO_PASS tests now pass.
+
+---STDERR---

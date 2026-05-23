@@ -1,0 +1,42 @@
+# Recon: scikit-learn__scikit-learn-10844
+
+## Failure summary
+
+The test `test_int_overflow_mutual_info_fowlkes_mallows_score` creates large clustering arrays (75,348 samples total) and calls `fowlkes_mallows_score(x, y)`. The function should return a finite similarity score but instead returns NaN, causing `assert_all_finite()` to raise ValueError: "Input contains NaN, infinity or a value too large for dtype('float64')."
+
+The failure occurs because intermediate integer computations overflow int64 range during the score calculation.
+
+## Suspect set
+
+- `sklearn/metrics/cluster/supervised.py` lines 856-859: The `fowlkes_mallows_score` function's return statement computes `tk / np.sqrt(pk * qk)` where pk and qk are large integers derived from contingency matrix sums.
+
+## Root cause
+
+Line 859 computes `tk / np.sqrt(pk * qk)` where pk and qk are integers representing sum of squared cluster sizes. For the test input, pk=5,152,663,196 and qk=3,294,371,982. Their product (~1.697×10¹⁹) exceeds int64 max (2⁶³-1 ≈ 9.22×10¹⁸), causing integer overflow to a negative value (-1,471,954,808,124,577,144). The square root of this negative number produces NaN.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `sklearn/metrics/cluster/supervised.py:856-859` — The computation chain:
+  ```python
+  tk = np.dot(c.data, c.data) - n_samples
+  pk = np.sum(np.asarray(c.sum(axis=0)).ravel() ** 2) - n_samples
+  qk = np.sum(np.asarray(c.sum(axis=1)).ravel() ** 2) - n_samples
+  return tk / np.sqrt(pk * qk) if tk != 0. else 0.
+  ```
+- Empirical test with actual values confirms: `np.sqrt(pk * qk)` produces warning "overflow encountered in long_scalars" and returns NaN
+- The mathematically equivalent formulation `np.sqrt(tk / pk) * np.sqrt(tk / qk)` avoids the overflow and returns the correct finite value 0.729
+
+## Edit sites
+
+- `sklearn/metrics/cluster/supervised.py` line 859: Replace `tk / np.sqrt(pk * qk)` with `np.sqrt(tk / pk) * np.sqrt(tk / qk)` to avoid integer overflow in the intermediate pk * qk multiplication. The formulation is mathematically equivalent (for tk ≥ 0) since sqrt(tk/pk) × sqrt(tk/qk) = sqrt(tk²/(pk×qk)) = tk/sqrt(pk×qk), but divides before multiplying under the sqrt, keeping intermediate values in valid range.
+
+## Rejected hypotheses
+
+None — the root cause is directly observable from tracing the test failure through the code and confirmed by running the calculation with the actual test values.
+
+## Open questions
+
+None — the fix is straightforward and the issue description's proposed solution is correct.
+
+---STDERR---

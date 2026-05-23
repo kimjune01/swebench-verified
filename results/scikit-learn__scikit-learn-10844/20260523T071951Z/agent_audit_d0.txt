@@ -1,0 +1,24 @@
+# Audit: scikit-learn__scikit-learn-10844
+
+## FAIL_TO_PASS
+- test_int_overflow_mutual_info_fowlkes_mallows_score: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 16 PASS_TO_PASS tests passed.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None - the baseline capture showed only the FAIL_TO_PASS test failing, as expected.
+
+## Summary
+The craft patch successfully resolved the integer overflow issues in both `mutual_info_score` and `fowlkes_mallows_score`:
+
+1. **mutual_info_score** (line 604-605): Changed from computing `outer = pi * pj` (int64 multiplication that overflows) then taking `-log(outer)`, to computing `-log(pi) - log(pj)` directly in log space.
+
+2. **fowlkes_mallows_score** (line 859): Changed from `tk / sqrt(pk * qk)` (where `pk * qk` overflows int64) to `sqrt(tk / float(pk)) * sqrt(tk / float(qk))`, which is mathematically equivalent but avoids the overflow.
+
+All 17 tests passed, including the previously failing `test_int_overflow_mutual_info_fowlkes_mallows_score`. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

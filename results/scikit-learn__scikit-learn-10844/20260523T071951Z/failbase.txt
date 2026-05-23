@@ -1,0 +1,71 @@
+$ pytest -rA sklearn/metrics/cluster/tests/test_supervised.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, configfile: setup.cfg
+collected 17 items
+
+sklearn/metrics/cluster/tests/test_supervised.py .........F.......       [100%]
+
+=================================== FAILURES ===================================
+_____________ test_int_overflow_mutual_info_fowlkes_mallows_score ______________
+
+    def test_int_overflow_mutual_info_fowlkes_mallows_score():
+        # Test overflow in mutual_info_classif and fowlkes_mallows_score
+        x = np.array([1] * (52632 + 2529) + [2] * (14660 + 793) + [3] * (3271 +
+                     204) + [4] * (814 + 39) + [5] * (316 + 20))
+        y = np.array([0] * 52632 + [1] * 2529 + [0] * 14660 + [1] * 793 +
+                     [0] * 3271 + [1] * 204 + [0] * 814 + [1] * 39 + [0] * 316 +
+                     [1] * 20)
+    
+        assert_all_finite(mutual_info_score(x, y))
+>       assert_all_finite(fowlkes_mallows_score(x, y))
+
+sklearn/metrics/cluster/tests/test_supervised.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sklearn/utils/validation.py:62: in assert_all_finite
+    _assert_all_finite(X.data if sp.issparse(X) else X, allow_nan)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+X = array(nan), allow_nan = False
+
+    def _assert_all_finite(X, allow_nan=False):
+        """Like assert_all_finite, but only for ndarray."""
+        if _get_config()['assume_finite']:
+            return
+        X = np.asanyarray(X)
+        # First try an O(n) time, O(1) space solution for the common case that
+        # everything is finite; fall back to O(n) space np.isfinite to prevent
+        # false positives from overflow in sum method.
+        is_float = X.dtype.kind in 'fc'
+        if is_float and np.isfinite(X.sum()):
+            pass
+        elif is_float:
+            msg_err = "Input contains {} or a value too large for {!r}."
+            if (allow_nan and np.isinf(X).any() or
+                    not allow_nan and not np.isfinite(X).all()):
+                type_err = 'infinity' if allow_nan else 'NaN, infinity'
+>               raise ValueError(msg_err.format(type_err, X.dtype))
+E               ValueError: Input contains NaN, infinity or a value too large for dtype('float64').
+
+sklearn/utils/validation.py:50: ValueError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_error_messages_on_wrong_input
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_perfect_matches
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_homogeneous_but_not_complete_labeling
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_complete_but_not_homogeneous_labeling
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_not_complete_and_not_homogeneous_labeling
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_non_consicutive_labels
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_adjustment_for_chance
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_adjusted_mutual_info_score
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_expected_mutual_info_overflow
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_entropy
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix_sparse
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_exactly_zero_info_score
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_v_measure_and_mutual_information
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score
+PASSED sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties
+FAILED sklearn/metrics/cluster/tests/test_supervised.py::test_int_overflow_mutual_info_fowlkes_mallows_score
+=================== 1 failed, 16 passed, 6 warnings in 0.43s ===================

@@ -1,0 +1,67 @@
+2026-05-23 07:17:19,585 - INFO - Creating container for scikit-learn__scikit-learn-10844...
+2026-05-23 07:17:20,555 - INFO - Container for scikit-learn__scikit-learn-10844 created: f73158fe29b1e23bcdbc269b2f4c38072631f6d940e89027cf07d8c54708a50c
+2026-05-23 07:17:21,152 - INFO - Container for scikit-learn__scikit-learn-10844 started: f73158fe29b1e23bcdbc269b2f4c38072631f6d940e89027cf07d8c54708a50c
+2026-05-23 07:17:21,152 - INFO - Intermediate patch for scikit-learn__scikit-learn-10844 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-10844/patch.diff, now applying to container...
+2026-05-23 07:17:21,263 - INFO - >>>>> Applied Patch:
+Checking patch sklearn/metrics/cluster/supervised.py...
+Applied patch sklearn/metrics/cluster/supervised.py cleanly.
+
+2026-05-23 07:17:21,528 - INFO - Git diff before:
+diff --git a/sklearn/metrics/cluster/supervised.py b/sklearn/metrics/cluster/supervised.py
+index a987778ae..d1e415c59 100644
+--- a/sklearn/metrics/cluster/supervised.py
++++ b/sklearn/metrics/cluster/supervised.py
+@@ -601,8 +601,8 @@ def mutual_info_score(labels_true, labels_pred, contingency=None):
+     log_contingency_nm = np.log(nz_val)
+     contingency_nm = nz_val / contingency_sum
+     # Don't need to calculate the full outer product, just for non-zeroes
+-    outer = pi.take(nzx).astype(np.int64) * pj.take(nzy).astype(np.int64)
+-    log_outer = -np.log(outer) + log(pi.sum()) + log(pj.sum())
++    log_outer = (-np.log(pi.take(nzx)) - np.log(pj.take(nzy)) +
++                 log(pi.sum()) + log(pj.sum()))
+     mi = (contingency_nm * (log_contingency_nm - log(contingency_sum)) +
+           contingency_nm * log_outer)
+     return mi.sum()
+@@ -856,7 +856,7 @@ def fowlkes_mallows_score(labels_true, labels_pred, sparse=False):
+     tk = np.dot(c.data, c.data) - n_samples
+     pk = np.sum(np.asarray(c.sum(axis=0)).ravel() ** 2) - n_samples
+     qk = np.sum(np.asarray(c.sum(axis=1)).ravel() ** 2) - n_samples
+-    return tk / np.sqrt(pk * qk) if tk != 0. else 0.
++    return np.sqrt(tk / float(pk)) * np.sqrt(tk / float(qk)) if tk != 0. else 0.
+ 
+ 
+ def entropy(labels):
+2026-05-23 07:17:21,528 - INFO - Eval script for scikit-learn__scikit-learn-10844 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-10844/eval.sh; copying to container...
+2026-05-23 07:17:24,630 - INFO - Test runtime: 2.98 seconds
+2026-05-23 07:17:24,630 - INFO - Test output for scikit-learn__scikit-learn-10844 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-10844/test_output.txt
+2026-05-23 07:17:24,703 - INFO - Git diff after:
+diff --git a/sklearn/metrics/cluster/supervised.py b/sklearn/metrics/cluster/supervised.py
+index a987778ae..d1e415c59 100644
+--- a/sklearn/metrics/cluster/supervised.py
++++ b/sklearn/metrics/cluster/supervised.py
+@@ -601,8 +601,8 @@ def mutual_info_score(labels_true, labels_pred, contingency=None):
+     log_contingency_nm = np.log(nz_val)
+     contingency_nm = nz_val / contingency_sum
+     # Don't need to calculate the full outer product, just for non-zeroes
+-    outer = pi.take(nzx).astype(np.int64) * pj.take(nzy).astype(np.int64)
+-    log_outer = -np.log(outer) + log(pi.sum()) + log(pj.sum())
++    log_outer = (-np.log(pi.take(nzx)) - np.log(pj.take(nzy)) +
++                 log(pi.sum()) + log(pj.sum()))
+     mi = (contingency_nm * (log_contingency_nm - log(contingency_sum)) +
+           contingency_nm * log_outer)
+     return mi.sum()
+@@ -856,7 +856,7 @@ def fowlkes_mallows_score(labels_true, labels_pred, sparse=False):
+     tk = np.dot(c.data, c.data) - n_samples
+     pk = np.sum(np.asarray(c.sum(axis=0)).ravel() ** 2) - n_samples
+     qk = np.sum(np.asarray(c.sum(axis=1)).ravel() ** 2) - n_samples
+-    return tk / np.sqrt(pk * qk) if tk != 0. else 0.
++    return np.sqrt(tk / float(pk)) * np.sqrt(tk / float(qk)) if tk != 0. else 0.
+ 
+ 
+ def entropy(labels):
+2026-05-23 07:17:24,703 - INFO - Grading answer for scikit-learn__scikit-learn-10844...
+2026-05-23 07:17:24,704 - INFO - report: {'scikit-learn__scikit-learn-10844': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['sklearn/metrics/cluster/tests/test_supervised.py::test_int_overflow_mutual_info_fowlkes_mallows_score'], 'failure': []}, 'PASS_TO_PASS': {'success': ['sklearn/metrics/cluster/tests/test_supervised.py::test_error_messages_on_wrong_input', 'sklearn/metrics/cluster/tests/test_supervised.py::test_perfect_matches', 'sklearn/metrics/cluster/tests/test_supervised.py::test_homogeneous_but_not_complete_labeling', 'sklearn/metrics/cluster/tests/test_supervised.py::test_complete_but_not_homogeneous_labeling', 'sklearn/metrics/cluster/tests/test_supervised.py::test_not_complete_and_not_homogeneous_labeling', 'sklearn/metrics/cluster/tests/test_supervised.py::test_non_consicutive_labels', 'sklearn/metrics/cluster/tests/test_supervised.py::test_adjustment_for_chance', 'sklearn/metrics/cluster/tests/test_supervised.py::test_adjusted_mutual_info_score', 'sklearn/metrics/cluster/tests/test_supervised.py::test_expected_mutual_info_overflow', 'sklearn/metrics/cluster/tests/test_supervised.py::test_entropy', 'sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix', 'sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix_sparse', 'sklearn/metrics/cluster/tests/test_supervised.py::test_exactly_zero_info_score', 'sklearn/metrics/cluster/tests/test_supervised.py::test_v_measure_and_mutual_information', 'sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score', 'sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for scikit-learn__scikit-learn-10844: resolved: True
+2026-05-23 07:17:24,704 - INFO - Attempting to stop container sweb.eval.scikit-learn__scikit-learn-10844.batch...
+2026-05-23 07:17:40,229 - INFO - Attempting to remove container sweb.eval.scikit-learn__scikit-learn-10844.batch...
+2026-05-23 07:17:40,241 - INFO - Container sweb.eval.scikit-learn__scikit-learn-10844.batch removed.
