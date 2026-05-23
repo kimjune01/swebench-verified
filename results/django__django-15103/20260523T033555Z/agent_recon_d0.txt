@@ -1,0 +1,3 @@
+Recon complete. The diagnosis shows that `json_script` currently requires `element_id` as a mandatory positional argument in both its core implementation (`django/utils/html.py`) and template filter wrapper (`django/template/defaultfilters.py`). The fix requires making element_id optional (default to None) in both function signatures and conditionally omitting the id attribute from the HTML output when element_id is None.
+
+---STDERR---

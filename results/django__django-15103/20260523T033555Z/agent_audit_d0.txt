@@ -1,0 +1,19 @@
+# Audit: django__django-15103
+
+## FAIL_TO_PASS
+- `test_without_id (template_tests.filter_tests.test_json_script.JsonScriptTests)`: **PASS** ✅
+- `test_json_script_without_id (utils_tests.test_html.TestUtilsHtml)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None. All 17 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully resolves the issue. Both FAIL_TO_PASS tests that were failing with errors on the base (TemplateSyntaxError and TypeError due to required `element_id` parameter) now pass. The fix made `element_id` optional with a default value of `None` in both `django/utils/html.py` and `django/template/defaultfilters.py`, and added conditional logic to omit the `id` attribute from the HTML output when `element_id` is `None`. No PASS_TO_PASS tests regressed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
