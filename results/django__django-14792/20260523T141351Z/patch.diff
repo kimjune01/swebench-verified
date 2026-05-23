@@ -1,0 +1,14 @@
+diff --git a/django/utils/timezone.py b/django/utils/timezone.py
+index bb2b6b9594..b5a9d7a537 100644
+--- a/django/utils/timezone.py
++++ b/django/utils/timezone.py
+@@ -73,7 +73,8 @@ def get_current_timezone_name():
+ 
+ def _get_timezone_name(timezone):
+     """Return the name of ``timezone``."""
+-    return str(timezone)
++    timezone_name = timezone.tzname(None)
++    return timezone_name if timezone_name is not None else str(timezone)
+ 
+ # Timezone selection functions.
+ 

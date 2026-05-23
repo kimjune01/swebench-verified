@@ -1,0 +1,22 @@
+# Audit: django__django-14792
+
+## FAIL_TO_PASS
+- test_get_timezone_name (The _get_timezone_name() helper must return the offset for fixed offset): **PASS** ✓
+- test_is_aware (utils_tests.test_timezone.TimezoneTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 23 PASS_TO_PASS tests remain passing. No regressions introduced.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The baseline showed 2 failures in test_get_timezone_name on Etc/GMT-10 cases, which are now fixed.
+
+## Summary
+
+The patch successfully resolves the issue. The fix in `django/utils/timezone.py` changes `_get_timezone_name()` to prefer `tzname(None)` (returns '+10' for fixed offset zones) with a fallback to `str(timezone)` for named zones where `tzname(None)` returns None.
+
+All 25 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

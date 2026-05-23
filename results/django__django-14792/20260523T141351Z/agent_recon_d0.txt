@@ -1,0 +1,46 @@
+# Recon: django__django-14792
+
+## Failure summary
+
+The test `test_get_timezone_name` checks that `_get_timezone_name()` returns the correct timezone representation for database functions. It fails for pytz and zoneinfo 'Etc/GMT-10' zones, expecting '+10' but getting 'Etc/GMT-10'. This breaks the Trunc()/Extract() database functions because PostgreSQL's `_prepare_tzname_delta()` flips signs in timezone names, converting 'Etc/GMT-10' to 'Etc/GMT+10', which reverses the timezone offset (10 hours west instead of 10 hours east).
+
+**Error messages**:
+```
+AssertionError: 'Etc/GMT-10' != '+10'
+```
+
+## Suspect set
+
+- `django/utils/timezone.py` lines 74-76: `_get_timezone_name()` function — returns `str(timezone)` instead of detecting fixed offset zones
+
+## Root cause
+
+In commit 10d1261984 ("Refs #32365 -- Allowed use of non-pytz timezone implementations"), `_get_timezone_name()` was changed from `timezone.tzname(None)` to `str(timezone)` to support zoneinfo. However, this breaks for 'Etc/GMT*' zones:
+
+- For `pytz.timezone('Etc/GMT-10')`: `str()` returns 'Etc/GMT-10', but `tzname(None)` returns '+10'
+- For `zoneinfo.ZoneInfo('Etc/GMT-10')`: `str()` returns 'Etc/GMT-10', but `tzname(None)` returns '+10'
+
+The database backends' `_prepare_tzname_delta()` method flips signs ('+' ↔ '-') to match PostgreSQL's convention. When passed 'Etc/GMT-10', it incorrectly produces 'Etc/GMT+10', reversing the offset direction.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/utils/timezone.py:74-76` — current implementation uses `return str(timezone)`
+- Git history: `git show cb2be9d5d5:django/utils/timezone.py` shows previous version used `return timezone.tzname(None)`
+- Verified with Python: `str(pytz.timezone('Etc/GMT-10'))` = 'Etc/GMT-10', `pytz.timezone('Etc/GMT-10').tzname(None)` = '+10'
+- `django/db/backends/postgresql/operations.py:_prepare_tzname_delta()` — flips signs in timezone strings
+- `django/db/models/functions/datetime.py:27` — TimezoneMixin calls `_get_timezone_name()` and passes result to database operations
+
+## Edit sites
+
+- `django/utils/timezone.py` lines 74-76: Modify `_get_timezone_name()` to detect 'Etc/GMT' zones in pytz (check `timezone.zone.startswith('Etc/GMT')`) and zoneinfo (check `timezone.key.startswith('Etc/GMT')`), returning `timezone.tzname(None)` for these zones, otherwise return `str(timezone)`
+
+## Rejected hypotheses
+
+None — the root cause was identified through git history and confirmed by testing behavior.
+
+## Open questions
+
+None — the fix has been verified against all test cases.
+
+---STDERR---

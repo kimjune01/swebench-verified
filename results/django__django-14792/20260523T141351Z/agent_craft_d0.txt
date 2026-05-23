@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix is complete. The gate shows all 25 tests passing, including both FAIL_TO_PASS tests. 
+
+The solution was simpler than the initial approach: instead of checking specifically for 'Etc/GMT' zones, the fix uses `tzname(None)` when it returns a non-None value, falling back to `str(timezone)` otherwise. This elegantly handles:
+- Fixed-offset zones like `pytz.timezone('Etc/GMT-10')` → returns `'+10'` from `tzname(None)`
+- Named zoneinfo zones like `zoneinfo.ZoneInfo('Europe/Madrid')` → `tzname(None)` is None, so falls back to `str()` returning `'Europe/Madrid'`
+- All other timezone types correctly
+
+---STDERR---
