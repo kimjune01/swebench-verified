@@ -1,0 +1,29 @@
+# Audit: sympy__sympy-11618
+
+## FAIL_TO_PASS
+- test_issue_11617: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**none**
+
+## Pre-existing (not counted, confirmed against base capture)
+- One test with RecursionError in `_eval_is_prime` at sympy/core/mul.py:1296 (identical traceback to baseline)
+
+## Summary
+
+The craft patch successfully resolves the issue:
+
+**Patch**: Changed `zip()` to `zip_longest(fillvalue=0)` in `Point.distance()` to handle points of different dimensions correctly.
+
+**Results**:
+- ✅ FAIL_TO_PASS: test_issue_11617 now passes (was failing on base)
+- ✅ PASS_TO_PASS: All 4 tests pass (test_point3D, test_Point2D, test_issue_9214, test_transform)
+- ✅ No regressions introduced
+- Gate: 6 passed, 1 exception (pre-existing RecursionError unrelated to this fix)
+
+**Contract satisfied**: All FAIL_TO_PASS tests pass AND zero PASS_TO_PASS regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

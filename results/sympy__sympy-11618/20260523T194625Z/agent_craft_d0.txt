@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_issue_11617` now passes. Fixed by importing `zip_longest` and using it with `fillvalue=0` in the `Point.distance()` method, ensuring coordinates from higher-dimensional points aren't silently dropped when comparing with lower-dimensional points.
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/geometry/tests/test_point.py
+
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1296, in _eval_is_prime
+    return r.is_prime
+  File "/testbed/sympy/core/assumptions.py", line 247, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 290, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1295, in _eval_is_prime
+    r *= arg
+  File "/testbed/sympy/core/decorators.py", line 77, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/decorators.py", line 118, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/core/expr.py", line 141, in __mul__
+    return Mul(self, other)
+  File "/testbed/sympy/core/operations.py", line 41, in __new__
+    c_part, nc_part, order_symbols = cls.flatten(args)
+  File "/testbed/sympy/core/mul.py", line 287, in flatten
+    neg1e += S.Half
+  File "/testbed/sympy/core/numbers.py", line 1806, in __add__
+    return Rational(self.p*other.q + other.p, other.q, 1)
+  File "/testbed/sympy/core/numbers.py", line 1283, in __new__
+    p = Rational(p)
+  File "/testbed/sympy/core/numbers.py", line 1270, in __new__
+    if isinstance(p, fractions.Fraction):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/abc.py", line 119, in __instancecheck__
+    return _abc_instancecheck(cls, instance)
+RecursionError: maximum recursion depth exceeded in comparison
+
+________________________________________________________________________________
+_____________ sympy/geometry/tests/test_point.py:test_issue_11617 ______________
+  File "/testbed/sympy/geometry/tests/test_point.py", line 250, in test_issue_11617
+    assert p1.distance(p2) == sqrt(5)
+AssertionError
+
+====== tests finished: 5 passed, 1 failed, 1 exceptions, in 0.33 seconds =======
+DO *NOT* COMMIT!

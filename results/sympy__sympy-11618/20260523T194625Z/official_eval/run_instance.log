@@ -1,0 +1,67 @@
+2026-05-23 19:42:53,898 - INFO - Creating container for sympy__sympy-11618...
+2026-05-23 19:43:01,821 - INFO - Container for sympy__sympy-11618 created: 1ee4b763d17ed17a437b688d918b6c634e80ca77c179ad745efc771504ef5aa6
+2026-05-23 19:43:02,145 - INFO - Container for sympy__sympy-11618 started: 1ee4b763d17ed17a437b688d918b6c634e80ca77c179ad745efc771504ef5aa6
+2026-05-23 19:43:02,146 - INFO - Intermediate patch for sympy__sympy-11618 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-11618/patch.diff, now applying to container...
+2026-05-23 19:43:02,262 - INFO - >>>>> Applied Patch:
+Checking patch sympy/geometry/point.py...
+Applied patch sympy/geometry/point.py cleanly.
+
+2026-05-23 19:43:02,445 - INFO - Git diff before:
+diff --git a/sympy/geometry/point.py b/sympy/geometry/point.py
+index 593048464..63ba21204 100644
+--- a/sympy/geometry/point.py
++++ b/sympy/geometry/point.py
+@@ -11,7 +11,7 @@
+ from __future__ import division, print_function
+ 
+ from sympy.core import S, sympify
+-from sympy.core.compatibility import iterable
++from sympy.core.compatibility import iterable, zip_longest
+ from sympy.core.containers import Tuple
+ from sympy.simplify import nsimplify, simplify
+ from sympy.geometry.exceptions import GeometryError
+@@ -266,8 +266,8 @@ def distance(self, p):
+         sqrt(x**2 + y**2)
+ 
+         """
+-        return sqrt(sum([(a - b)**2 for a, b in zip(
+-            self.args, p.args if isinstance(p, Point) else p)]))
++        return sqrt(sum([(a - b)**2 for a, b in zip_longest(
++            self.args, p.args if isinstance(p, Point) else p, fillvalue=0)]))
+ 
+     def taxicab_distance(self, p):
+         """The Taxicab Distance from self to point p.
+2026-05-23 19:43:02,445 - INFO - Eval script for sympy__sympy-11618 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-11618/eval.sh; copying to container...
+2026-05-23 19:43:04,815 - INFO - Test runtime: 2.28 seconds
+2026-05-23 19:43:04,815 - INFO - Test output for sympy__sympy-11618 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-11618/test_output.txt
+2026-05-23 19:43:04,947 - INFO - Git diff after:
+diff --git a/sympy/geometry/point.py b/sympy/geometry/point.py
+index 593048464..63ba21204 100644
+--- a/sympy/geometry/point.py
++++ b/sympy/geometry/point.py
+@@ -11,7 +11,7 @@
+ from __future__ import division, print_function
+ 
+ from sympy.core import S, sympify
+-from sympy.core.compatibility import iterable
++from sympy.core.compatibility import iterable, zip_longest
+ from sympy.core.containers import Tuple
+ from sympy.simplify import nsimplify, simplify
+ from sympy.geometry.exceptions import GeometryError
+@@ -266,8 +266,8 @@ def distance(self, p):
+         sqrt(x**2 + y**2)
+ 
+         """
+-        return sqrt(sum([(a - b)**2 for a, b in zip(
+-            self.args, p.args if isinstance(p, Point) else p)]))
++        return sqrt(sum([(a - b)**2 for a, b in zip_longest(
++            self.args, p.args if isinstance(p, Point) else p, fillvalue=0)]))
+ 
+     def taxicab_distance(self, p):
+         """The Taxicab Distance from self to point p.
+2026-05-23 19:43:04,947 - INFO - Grading answer for sympy__sympy-11618...
+2026-05-23 19:43:04,951 - INFO - report: {'sympy__sympy-11618': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_issue_11617'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_point3D', 'test_Point2D', 'test_issue_9214', 'test_transform'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-11618: resolved: True
+2026-05-23 19:43:04,951 - INFO - Attempting to stop container sweb.eval.sympy__sympy-11618.batch...
+2026-05-23 19:43:20,375 - INFO - Attempting to remove container sweb.eval.sympy__sympy-11618.batch...
+2026-05-23 19:43:20,390 - INFO - Container sweb.eval.sympy__sympy-11618.batch removed.

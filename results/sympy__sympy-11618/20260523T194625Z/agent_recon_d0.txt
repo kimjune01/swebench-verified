@@ -1,0 +1,45 @@
+Now I'll emit the structured handoff:
+
+# Recon: sympy__sympy-11618
+
+## Failure summary
+
+The test `test_issue_11617` checks that `Point3D(1,0,2).distance(Point2D(2,0))` returns `sqrt(5)`, but it fails with an AssertionError because the method returns `1` instead. The issue is that when calculating distance between points of different dimensions (3D vs 2D), the third coordinate is silently ignored, computing `sqrt((1-2)^2 + (0-0)^2) = 1` instead of the correct `sqrt((1-2)^2 + (0-0)^2 + (2-0)^2) = sqrt(5)`.
+
+## Suspect set
+
+- `sympy/geometry/point.py` lines 269-270: The `distance` method uses Python's `zip()` function which stops at the shortest sequence, dropping coordinates from the higher-dimensional point.
+
+## Root cause
+
+The `Point.distance()` method at line 269-270 uses `zip(self.args, p.args)` to pair up coordinates from two points. Python's `zip()` terminates when the shortest iterable is exhausted, so when comparing Point3D(1,0,2) with Point2D(2,0), it only produces pairs [(1,2), (0,0)] and completely ignores the third coordinate (2,0). This causes incorrect distance calculation.
+
+The mathematically correct behavior is to treat missing coordinates as zero when computing distance between points of different dimensions - i.e., embed the lower-dimensional point in the higher-dimensional space.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sympy/geometry/point.py:269-270` — Uses `zip(self.args, p.args if isinstance(p, Point) else p)`
+- Verified: `list(zip((1,0,2), (2,0))) == [(1, 2), (0, 0)]` - third coordinate dropped
+- Test output confirms: `p1.distance(p2)` returns `1` instead of `sqrt(5)`
+
+## Edit sites
+
+1. **sympy/geometry/point.py line 3**: Add `zip_longest` to the import statement `from sympy.core.compatibility import iterable` → `from sympy.core.compatibility import iterable, zip_longest`
+
+2. **sympy/geometry/point.py lines 269-270**: Replace `zip(self.args, p.args if isinstance(p, Point) else p)` with `zip_longest(self.args, p.args if isinstance(p, Point) else p, fillvalue=0)` to pad the shorter coordinate sequence with zeros.
+
+## Related findings
+
+The same structural issue exists in:
+- `taxicab_distance` (line 303) 
+- `midpoint` (line 332)
+- `dot` (line 409)
+
+However, these are NOT covered by the failing test `test_issue_11617`, so they are out of scope for this fix. The methods `equals` (line 416) and `__add__` (line 446) are safe because they explicitly check length equality before using `zip`.
+
+## Open questions
+
+None - the root cause is clear and the fix is straightforward.
+
+---STDERR---
