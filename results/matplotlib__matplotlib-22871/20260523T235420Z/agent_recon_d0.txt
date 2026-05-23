@@ -1,0 +1,41 @@
+# Recon: matplotlib__matplotlib-22871
+
+## Failure summary
+The test `test_offset_changes` validates that `ConciseDateFormatter` shows appropriate offset text for different date ranges. It fails when the x-axis limits span weeks 7-30 of 1997 (mid-February to late July), expecting the offset to show '1997' but getting an empty string instead. The assertion `assert formatter.get_offset() == '1997'` fails with `AssertionError: assert '' == '1997'`.
+
+## Suspect set
+- `lib/matplotlib/dates.py` lines 795-843: The `format_ticks` method of `ConciseDateFormatter`, specifically the level determination logic (lines 798-807) and offset suppression condition (lines 800-801)
+
+## Root cause
+When `ConciseDateFormatter` formats dates, it determines a "level" (0=years, 1=months, 2=days, etc.) based on which date component varies across the ticks. At line 800-801, the code unconditionally suppresses the offset when `level < 2`, based on the assumption that "a year is already present in the axis" (comment from git commit 8996e1d7b2).
+
+This assumption is incorrect when `level=1` (months varying) and January is NOT in the plot range:
+- Tick labels use `formats[1]='%b'` showing only month names ('Feb', 'Mar', 'Apr'...)
+- January would use `zero_formats[1]='%Y'` to show the year, but it's absent from the range
+- The offset with `offset_formats[1]='%Y'` should show '1997', but it's suppressed
+- Result: the year appears nowhere on the axis
+
+The code correctly handles the case when January IS present (suppressing redundant year display), but fails when January is absent.
+
+**Confidence**: deduction — 98%
+
+**Supporting evidence**:
+- `lib/matplotlib/dates.py:800-801` — Unconditional suppression: `if level < 2: show_offset = False`
+- `lib/matplotlib/dates.py:751` — `offset_formats = ['', '%Y', '%Y-%b', ...]` shows level 1 intended for '%Y'
+- `lib/matplotlib/dates.py:748` — `zero_formats[1] = '%Y'` (from `formats[0]`) used when month == 1 (January)
+- `lib/matplotlib/dates.py:809` — `zerovals = [0, 1, 1, 0, 0, 0, 0]` where `zerovals[1]=1` means January
+- `lib/matplotlib/dates.py:813-817` — Logic showing tick uses `zero_formats[level]` when `tickdate[nn][level] == zerovals[level]`
+
+## Edit sites
+- `lib/matplotlib/dates.py` lines 800-801: Replace `if level < 2: show_offset = False` with conditional check that:
+  - For level 0 (years varying): always suppress offset (years in tick labels)
+  - For level 1 (months varying): only suppress offset if January (month==1) is present in `tickdate[:, 1]`, otherwise show it
+  - Suggested fix: `if level == 0 or (level == 1 and np.any(tickdate[:, 1] == 1)): show_offset = False`
+
+## Rejected hypotheses
+None — the root cause was directly observable from the code path and git history.
+
+## Open questions
+None — the fix is straightforward and localized.
+
+---STDERR---

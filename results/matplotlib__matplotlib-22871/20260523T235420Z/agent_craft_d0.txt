@@ -1,0 +1,17 @@
+**RESOLVED**
+
+The fix is complete. Changed `lib/matplotlib/dates.py:800` from:
+```python
+if level < 2:
+    show_offset = False
+```
+
+to:
+```python
+if level == 0 or (level == 1 and np.any(tickdate[:, 1] == 1)):
+    show_offset = False
+```
+
+This ensures that when months vary (level=1) and January is absent from the date range, the year offset is displayed. All 89 tests pass, including the previously failing `test_offset_changes`.
+
+---STDERR---

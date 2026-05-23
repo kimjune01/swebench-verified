@@ -1,0 +1,17 @@
+# Audit: matplotlib__matplotlib-22871
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_dates.py::test_offset_changes: PASS ✅
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+All 89 tests in test_dates.py passed. The FAIL_TO_PASS test now passes correctly, and all PASS_TO_PASS tests remain passing with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
