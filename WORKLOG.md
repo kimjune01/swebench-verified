@@ -59,3 +59,11 @@ The first `capture_patch` fix used a shell-side `git diff {tsha} -- . ':(exclude
 - **Re-run** on the same live boxes (watchdogs reset to +180) with the fixed driver.
 - **Lesson:** any shell-side pathspec/arg built from data and embedded in a `bash -lc '...'` wrapper is a quoting hazard — prefer post-processing in Python. And always sweep `wc -c` on captured patches before trusting a batch.
 - **Cost:** ~$2 EC2 (10 boxes × ~1 box-hr); model compute $0 on the Max plan. Don't sweat it — commit the mistake, remediate, keep chugging.
+
+## 2026-05-23 — batch_005 re-run clean (29/30 captured); craft hang on sympy-19040 (REVISIT)
+
+Re-run with the Python-side filter: **29/30 non-empty patches**, our-gate 29/30 RESOLVED, **0 empty captures** (vs 30/30 before — fix validated). Official grading in progress.
+
+- **`sympy__sympy-19040` DNF — craft hang.** recon finished normally (435s, good handoff); the **craft** `claude` call then ran the full 3600s wall-clock timeout without returning and was killed (`TimeoutExpired`). No patch captured → grades unresolved. Not the capture bug, not an infinite loop — the timeout did its job; it's an honest did-not-finish.
+- **Suspected cause:** craft's "max 8 gate iterations" is *instructed to the agent, not driver-enforced*, so on a heavy suite (sympy) the agent can grind gate runs until the hour cap instead of stopping at 8. Also burned ~1h of API tokens (this was still on the API key, pre-zshrc fix).
+- **Levers to revisit (NOT yet done):** (a) drop craft's 3600s timeout — median craft is far shorter, p90 total solve is 762s; (b) hard-count gate iterations in the driver and kill craft at 8. One instance in 106, so low urgency — flagged for `/retro`.
