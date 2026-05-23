@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is a missing `current_app` parameter in the `get_admin_url()` method that generates links for readonly ForeignKey fields. The fix is a one-line change following the established pattern used throughout Django's admin.
+
+---STDERR---

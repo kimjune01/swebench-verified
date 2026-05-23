@@ -1,0 +1,5 @@
+**RESOLVED** 
+
+The fix is complete. The missing `current_app` parameter has been added to the `get_admin_url()` method, allowing readonly ForeignKey fields to generate correct URLs for custom admin sites. The gate confirms all 345 tests pass, including the previously failing `test_readonly_foreignkey_links_custom_admin_site`.
+
+---STDERR---

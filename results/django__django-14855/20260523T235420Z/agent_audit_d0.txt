@@ -1,0 +1,20 @@
+# Audit: django__django-14855
+
+## FAIL_TO_PASS
+- `test_readonly_foreignkey_links_custom_admin_site (admin_views.tests.ReadonlyTest)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - All 345 tests passed with no regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - Clean gate run.
+
+## Classification summary
+The patch correctly adds `current_app=self.model_admin.admin_site.name if self.model_admin else None` to the `reverse()` call in `AdminReadonlyField.get_admin_url()` (django/contrib/admin/helpers.py:212). This allows the URL resolver to respect the custom admin site's namespace when generating readonly ForeignKey links.
+
+**Full gate result**: 345 tests ran in 19.557s - OK (skipped=15)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
