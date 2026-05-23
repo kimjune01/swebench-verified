@@ -1,0 +1,37 @@
+# Audit: django__django-12858
+
+## Patch Status
+✅ Patch is live: `django/db/models/base.py` (1 insertion, 1 deletion)
+
+## Gate Results
+Full gate executed: 76 tests run in 0.084s
+Status: **OK** (skipped=2)
+
+## FAIL_TO_PASS
+- `test_ordering_pointing_to_lookup_not_transform`: **PASS** ✅
+  - Was FAILING on base (confirmed in fail-on-base capture)
+  - Now PASSING after patch
+
+## PASS_TO_PASS Regressions
+**None** - all PASS_TO_PASS tests continue to pass
+
+Confirmed passing (sample):
+- test_check_constraints: ok
+- test_ordering_allows_registered_lookups: ok
+- test_ordering_pointing_to_foreignkey_field: ok
+- test_ordering_pointing_to_missing_field: ok
+- test_ordering_pointing_multiple_times_to_model_fields: ok
+- All 76 tests in gate: ok
+
+## Pre-existing Failures (not counted)
+**None** - no failures in gate output
+
+## Contract Verification
+✅ All FAIL_TO_PASS tests pass (1/1)
+✅ Zero PASS_TO_PASS regressions (0)
+✅ Patch successfully fixes the validation logic without side effects
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

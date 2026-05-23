@@ -1,0 +1,49 @@
+Now let me output the recon handoff to stdout:
+
+```markdown
+# Recon: django__django-12858
+
+## Failure summary
+
+The test `test_ordering_pointing_to_lookup_not_transform` creates a model with `ordering = ('test__isnull',)` and expects `Model.check()` to return an empty list (no errors). However, it fails because Django's system check raises models.E015 with the message: "'ordering' refers to the nonexistent field, related field, or lookup 'test__isnull'." This is incorrect because `isnull` is a valid lookup that works at runtime (as confirmed in the problem description where `order_by('supply__product__parent__isnull')` works fine).
+
+## Suspect set
+
+- `django/db/models/base.py` lines 1735-1760: The `_check_ordering()` method that validates Meta.ordering fields and raises models.E015
+
+## Root cause
+
+The validation code at line 1750 only checks if a part is a valid **transform** using `fld.get_transform(part)`, but does not check if it's a valid **lookup** using `fld.get_lookup(part)`. Since `isnull` is a Lookup (specifically `IsNull` inheriting from `BuiltinLookup`) but NOT a Transform, the validation incorrectly rejects it.
+
+When processing `test__isnull`:
+1. Part `test` is found as a CharField field, `fld` is set, `_cls` becomes None (not a relation)
+2. Part `isnull` causes AttributeError because `_cls` is None
+3. Exception handler checks: `if fld is None or fld.get_transform(part) is None`
+4. `fld.get_transform('isnull')` returns None → error raised
+5. But `fld.get_lookup('isnull')` would return the `IsNull` class, proving it's valid
+
+Experimental verification:
+- `CharField().get_transform('isnull')` → `None`
+- `CharField().get_lookup('isnull')` → `<class 'django.db.models.lookups.IsNull'>`
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/db/models/base.py:1750` — `if fld is None or fld.get_transform(part) is None:`
+- `django/db/models/lookups.py:488` — `class IsNull(BuiltinLookup):` (Lookup, not Transform)
+- `django/db/models/lookups.py:145` — `class Transform(RegisterLookupMixin, Func):` (separate hierarchy)
+
+## Edit sites
+
+- `django/db/models/base.py` line 1750: Change the validation condition from checking only transforms to checking both transforms AND lookups. Specifically, change `if fld is None or fld.get_transform(part) is None:` to `if fld is None or (fld.get_transform(part) is None and fld.get_lookup(part) is None):` This ensures that ordering terms are accepted if they are either valid transforms OR valid lookups.
+
+## Rejected hypotheses
+
+None - the root cause was directly confirmed through code tracing and experimental verification.
+
+## Open questions
+
+None - the fix is straightforward and the behavior is well-defined by the existing lookup/transform system.
+```
+
+---STDERR---
