@@ -49,3 +49,13 @@ Official grading of flask-5014: `run_evaluation` reports resolved (committed und
   - Either fix alone prevents this instance; together they close the false-positive class.
 - **General lesson:** an our-gate-green / official-red split is not always a real loss — check `official_eval/applied_model_patch.diff` and `run_instance.log` for a `-R` reversal before recording it. Our gate runs the agent's live tree; the official grader round-trips the *serialized* patch, so contamination only surfaces there.
 - **Not yet done:** re-run django-15987 through the patched driver to produce a clean re-grade attestation (expected RESOLVED). batch_004 scoreboard still records the original loss until that re-run lands.
+
+## 2026-05-23 — batch_005 first run lost to a capture regression (self-inflicted, ~$2)
+
+The first `capture_patch` fix used a shell-side `git diff {tsha} -- . ':(exclude)<testfile>'`. The `:(exclude)` pathspecs were single-quoted **inside** the `bash -lc '...'` single-quoted command, so the inner quotes terminated the command early and emptied the capture. batch_005's first run produced **30/30 zero-byte patches**; the agents had genuinely fixed the instances (capture_diag `--stat` showed real source edits) but serialization dropped everything, and teardown removed the containers — fixes unrecoverable.
+
+- **Caught at the `wc -c` sweep**, before grading/committing — so no empty-patch "losses" were ever recorded. The our-gate `r4_passgate` attestations survived (they're written pre-capture) but are useless without a patch or official verdict.
+- **Remediation (committed `e5c1995`):** do the test-file exclusion in Python over the full diff (`_strip_test_blocks`), not via a shell pathspec. Quoting-safe, unit-tested (source kept, test block dropped). The `git diff {tsha}` capture command is back to the known-good form.
+- **Re-run** on the same live boxes (watchdogs reset to +180) with the fixed driver.
+- **Lesson:** any shell-side pathspec/arg built from data and embedded in a `bash -lc '...'` wrapper is a quoting hazard — prefer post-processing in Python. And always sweep `wc -c` on captured patches before trusting a batch.
+- **Cost:** ~$2 EC2 (10 boxes × ~1 box-hr); model compute $0 on the Max plan. Don't sweat it — commit the mistake, remediate, keep chugging.
