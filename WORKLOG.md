@@ -110,6 +110,22 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-23 — RESUME STATE (batch_012 in flight, possible session outage)
+
+**Done + committed this session:** batch_010 (27/30), batch_011 (28/30). Scoreboard 276/286 as of batch_011.
+
+**batch_012 IN FLIGHT** (seed=12, 30 disjoint: 14 django, 5 matplotlib, 4 sklearn, 4 sympy, 2 astropy, 1 xarray). Launched 9-wide (b_4 dead/unreplaced — vCPU limit). Launch bg proc `bqis3k3pk`, log `/tmp/launch_b12.log`, shard `/tmp/b.shard` (b_4 slot remapped to b_10). At last check **24/30 done**, 0 empty / 0 err / 0 box-death. The launch is a detached host process — it survives a Claude-session outage; only the monitor dies.
+
+**Boxes ALIVE:** b_1,b_2,b_3,b_5,b_6,b_7,b_8,b_9,b_10 (9× m7i.xlarge), watchdog reset +240 at ~14:36 → terminate ~18:36. Envs in `/tmp/b_*.env`. NOTE `/tmp/b_4.env` points at b_3's box (regrade hack) — do NOT grade/teardown b_4 as a separate box; it's an alias.
+
+**To resume after outage (from repo root):**
+1. `grep -c "ALL SHARDS DONE" /tmp/launch_b12.log` and `cat /tmp/swebench-abduction/rung4_results_b_*.jsonl | grep -c '"stage": "done"'` → confirm 30/30. If <30 and a box stalled, check file mtimes + ssh-reachability (box OOM-death = unreachable, like batch_010's b_4); record stuck ones as DNF.
+2. Sweep: `for t in $(python3 -c "import json;[print(x['instance_id'].replace('/','_')) for x in json.load(open('tasks/batch_012.json'))]"); do printf "%8s  %s\n" "$(wc -c </tmp/swebench-abduction/r4_patch_$t.diff 2>/dev/null||echo NA)" "$t"; done | sort -n`
+3. Grade: `bash driver/grade_batch.sh b_1 b_2 b_3 b_5 b_6 b_7 b_8 b_9 b_10` (NOT in a subshell with a trailing `&` + echo — that orphans it; let run_in_background hold it). Verify each `/tmp/grade_b_N/report.json`.
+4. `python3 driver/archive_batch.py tasks/batch_012.json /tmp/grade_b_` (ensure only the 9 fresh `/tmp/grade_b_*` dirs are in the glob — stash batch_011's into `/tmp/old_grades/`).
+5. `python3 driver/scoreboard.py`, commit SCOREBOARD.md + this WORKLOG (replace this RESUME block with the batch_012 result entry).
+6. **Teardown (last batch):** terminate the 9 live boxes by IID from `/tmp/b_*.env` (skip the b_4 alias — dedupe by IID), then leak-sweep: `aws ec2 describe-instances --region us-west-2 --filters Name=instance-state-name,Values=running Name=instance-type,Values=m7i.xlarge`. Leave the unrelated `vectorspace-server` + `pageleft` boxes alone.
+
 ## 2026-05-23 — batch_011 archived: 28/30 (2 reasoning losses, 0 DNF, 9-wide)
 
 batch_011 (seed=11, 30 disjoint: 11 django, 9 sympy, 4 matplotlib, 3 sklearn, 1 each astropy/pylint/pytest; pool=182, excluded=284). RUNID 20260523T213600Z. **Official 28/30.** Scoreboard now **276/286**, 290 runs.
