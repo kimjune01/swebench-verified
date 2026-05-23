@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully handles zero support vectors in sparse SVM fitting. When `n_SV == 0`, the code now constructs an empty CSR matrix directly with `sp.csr_matrix((n_class, 0), dtype=dual_coef_data.dtype)`, avoiding the ZeroDivisionError that occurred when computing `dual_coef_indptr` with a zero step size. Gate green on first iteration: all 86 tests pass including the FAIL_TO_PASS test `test_sparse_fit_support_vectors_empty`.
+
+---STDERR---

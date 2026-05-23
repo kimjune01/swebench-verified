@@ -1,0 +1,37 @@
+# Recon: scikit-learn__scikit-learn-14894
+
+## Failure summary
+
+The test `test_sparse_fit_support_vectors_empty` creates an SVR model with sparse CSR input that produces zero support vectors after fitting. The `_sparse_fit` method attempts to construct a CSR matrix for `dual_coef_` but raises `ZeroDivisionError` at line 291 when computing `dual_coef_indptr` because the step parameter to `np.arange` becomes zero.
+
+## Suspect set
+
+- `sklearn/svm/base.py` lines 289-293: CSR matrix construction for `dual_coef_` that doesn't handle empty support vectors case
+
+## Root cause
+
+When `libsvm_sparse_train` returns zero support vectors (`n_SV = 0`), the code constructs `dual_coef_indices` as an empty array via `np.tile(np.arange(0), n_class)`. The subsequent line computes `dual_coef_indptr = np.arange(0, 1, 0 / n_class)`, which becomes `np.arange(0, 1, 0.0)`. NumPy raises `ZeroDivisionError` when the step parameter is zero because it would create an infinite sequence.
+
+The dense fit path (`_dense_fit`) doesn't have this issue because `dual_coef_` is returned directly from `libsvm.fit()` without manual CSR construction.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `sklearn/svm/base.py:289` — `dual_coef_indices = np.tile(np.arange(n_SV), n_class)` creates empty array when `n_SV=0`
+- `sklearn/svm/base.py:290-291` — `dual_coef_indptr = np.arange(0, dual_coef_indices.size + 1, dual_coef_indices.size / n_class)` divides 0 by `n_class` producing step of 0
+- Verified in container: `np.arange(0, 1, 0)` raises `ZeroDivisionError: division by zero`
+- Test assertion expects empty sparse matrix: `assert not model.dual_coef_.data.size`
+
+## Edit sites
+
+- `sklearn/svm/base.py` lines 289-293: Add conditional branch to handle `n_SV == 0` case. When zero support vectors exist, construct an empty CSR matrix with shape `(n_class, 0)` directly using `sp.csr_matrix((n_class, 0))`, bypassing the index/indptr computation that causes division by zero. The normal construction logic should only execute when `n_SV > 0`.
+
+## Rejected hypotheses
+
+None — this is the first diagnosis.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---

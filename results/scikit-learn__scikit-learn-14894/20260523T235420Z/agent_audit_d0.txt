@@ -1,0 +1,24 @@
+# Audit: scikit-learn__scikit-learn-14894
+
+## FAIL_TO_PASS
+- `sklearn/svm/tests/test_svm.py::test_sparse_fit_support_vectors_empty`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 86 tests passed, including all PASS_TO_PASS tests.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — baseline showed ZeroDivisionError in one test, all other tests passing. Current run shows all tests passing.
+
+## Summary
+The patch successfully resolves the issue. The fix guards against `n_SV == 0` by constructing an empty CSR matrix directly at `sklearn/svm/base.py:289`, preventing the ZeroDivisionError that occurred when computing `dual_coef_indptr` with a zero step size (`dual_coef_indices.size / n_class` where `dual_coef_indices.size == 0`).
+
+**Results:**
+- FAIL_TO_PASS: 1/1 passing (100%)
+- PASS_TO_PASS: 85/85 passing (100%)
+- Regressions: 0
+- Gate: 86/86 tests passed
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
