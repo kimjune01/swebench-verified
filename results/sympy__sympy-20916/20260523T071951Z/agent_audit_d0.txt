@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-20916
+
+## FAIL_TO_PASS
+- test_super_sub: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolved the issue by replacing the ASCII-only regex pattern with Unicode-aware string methods:
+- Changed from `re.compile(r'^([a-zA-Z]+)([0-9]+)$')` to using `.isalpha()` and `.isdecimal()`
+- test_super_sub now passes (was failing on base)
+- test_requires_partial continues to pass (no regression)
+- All contract requirements satisfied
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

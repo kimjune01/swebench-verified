@@ -1,0 +1,87 @@
+2026-05-23 07:17:43,975 - INFO - Creating container for sympy__sympy-20916...
+2026-05-23 07:17:44,090 - INFO - Container for sympy__sympy-20916 created: 0a5245bdac610f969be4a192d568f1e542c4b0336e3ea9a635cbd1c9f063d2b4
+2026-05-23 07:17:44,367 - INFO - Container for sympy__sympy-20916 started: 0a5245bdac610f969be4a192d568f1e542c4b0336e3ea9a635cbd1c9f063d2b4
+2026-05-23 07:17:44,368 - INFO - Intermediate patch for sympy__sympy-20916 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-20916/patch.diff, now applying to container...
+2026-05-23 07:17:44,456 - INFO - >>>>> Applied Patch:
+Checking patch sympy/printing/conventions.py...
+Applied patch sympy/printing/conventions.py cleanly.
+
+2026-05-23 07:17:44,746 - INFO - Git diff before:
+diff --git a/sympy/printing/conventions.py b/sympy/printing/conventions.py
+index 9a3be6bbe9..b4e62bc338 100644
+--- a/sympy/printing/conventions.py
++++ b/sympy/printing/conventions.py
+@@ -2,13 +2,9 @@
+ A few practical conventions common to all printers.
+ """
+ 
+-import re
+-
+ from collections.abc import Iterable
+ from sympy import Derivative
+ 
+-_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+-
+ 
+ def split_super_sub(text):
+     """Split a symbol name into a name, superscripts and subscripts
+@@ -62,10 +58,12 @@ def split_super_sub(text):
+ 
+     # make a little exception when a name ends with digits, i.e. treat them
+     # as a subscript too.
+-    m = _name_with_digits_p.match(name)
+-    if m:
+-        name, sub = m.groups()
+-        subs.insert(0, sub)
++    i = len(name)
++    while i > 0 and name[i - 1].isdecimal():
++        i -= 1
++    if 0 < i < len(name) and all(c.isalpha() for c in name[:i]):
++        subs.insert(0, name[i:])
++        name = name[:i]
+ 
+     return name, supers, subs
+2026-05-23 07:17:44,746 - INFO - Eval script for sympy__sympy-20916 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-20916/eval.sh; copying to container...
+2026-05-23 07:17:47,184 - INFO - Test runtime: 2.32 seconds
+2026-05-23 07:17:47,184 - INFO - Test output for sympy__sympy-20916 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-20916/test_output.txt
+2026-05-23 07:17:47,272 - INFO - Git diff after:
+diff --git a/sympy/printing/conventions.py b/sympy/printing/conventions.py
+index 9a3be6bbe9..b4e62bc338 100644
+--- a/sympy/printing/conventions.py
++++ b/sympy/printing/conventions.py
+@@ -2,13 +2,9 @@
+ A few practical conventions common to all printers.
+ """
+ 
+-import re
+-
+ from collections.abc import Iterable
+ from sympy import Derivative
+ 
+-_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+-
+ 
+ def split_super_sub(text):
+     """Split a symbol name into a name, superscripts and subscripts
+@@ -62,10 +58,12 @@ def split_super_sub(text):
+ 
+     # make a little exception when a name ends with digits, i.e. treat them
+     # as a subscript too.
+-    m = _name_with_digits_p.match(name)
+-    if m:
+-        name, sub = m.groups()
+-        subs.insert(0, sub)
++    i = len(name)
++    while i > 0 and name[i - 1].isdecimal():
++        i -= 1
++    if 0 < i < len(name) and all(c.isalpha() for c in name[:i]):
++        subs.insert(0, name[i:])
++        name = name[:i]
+ 
+     return name, supers, subs
+2026-05-23 07:17:47,272 - INFO - Grading answer for sympy__sympy-20916...
+2026-05-23 07:17:47,272 - INFO - report: {'sympy__sympy-20916': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_super_sub'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_requires_partial'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-20916: resolved: True
+2026-05-23 07:17:47,272 - INFO - Attempting to stop container sweb.eval.sympy__sympy-20916.batch...
+2026-05-23 07:18:02,710 - INFO - Attempting to remove container sweb.eval.sympy__sympy-20916.batch...
+2026-05-23 07:18:02,724 - INFO - Container sweb.eval.sympy__sympy-20916.batch removed.

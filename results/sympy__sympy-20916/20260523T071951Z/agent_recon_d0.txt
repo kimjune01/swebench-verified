@@ -1,0 +1,53 @@
+Perfect! The diagnosis is complete. Here's the final handoff:
+
+# Recon: sympy__sympy-20916
+
+## Failure summary
+The test `test_super_sub` in `sympy/printing/tests/test_conventions.py` checks that the `split_super_sub` function correctly splits symbol names into a base name, superscripts, and subscripts. The function should treat trailing digits as subscripts even when not explicitly marked with `_`. The test fails on assertions involving Greek letters (e.g., `"ω1"` should return `("ω", [], ["1"])`) and Unicode digits (e.g., `"w𝟙"` should return `("w", [], ["𝟙"])`). Current behavior returns `("ω1", [], [])` and `("w𝟙", [], [])` respectively, failing to extract the trailing digits as subscripts.
+
+Error: `AssertionError` on line 35: `assert split_super_sub("w𝟙") == ("w", [], ["𝟙"])`
+
+## Suspect set
+- `sympy/printing/conventions.py` line 10: regex pattern `_name_with_digits_p` only matches ASCII letters and digits
+- `sympy/printing/conventions.py` lines 65-68: regex matching logic that applies the pattern
+
+## Root cause
+The regex pattern `_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')` on line 10 only matches ASCII letters `[a-zA-Z]` and ASCII digits `[0-9]`. When the `split_super_sub` function parses a symbol name like `"ω1"`, the main parsing loop (lines 36-57) doesn't find any `_` or `^` delimiters, so it assigns the entire string `"ω1"` to `name`. Then, lines 65-68 attempt to match this name against the regex to extract trailing digits as subscripts. However, the regex fails to match because `ω` (Greek omega, U+03C9) is not in the ASCII range `[a-zA-Z]`. Similarly, for `"w𝟙"`, the regex fails because `𝟙` (mathematical bold digit one, U+1D7D9) is not in `[0-9]`.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `sympy/printing/conventions.py:10` — `_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')` — restricts match to ASCII only
+- `sympy/printing/conventions.py:65-68` — applies the regex without Unicode awareness
+- Verified with test: `split_super_sub("ω1")` returns `('ω1', [], [])` instead of `('ω', [], ['1'])`
+- Verified with test: `split_super_sub("w𝟙")` returns `('w𝟙', [], [])` instead of `('w', [], ['𝟙'])`
+- Python's `str.isalpha()` correctly identifies `'ω'.isalpha() == True`
+- Python's `str.isdigit()` correctly identifies `'𝟙'.isdigit() == True` and `'1'.isdigit() == True`
+
+## Edit sites
+- `sympy/printing/conventions.py` lines 10 and 65-68: Replace the regex-based approach with a Unicode-aware string parsing method that uses `str.isalpha()` and `str.isdigit()`. The new logic should:
+  1. Remove or comment out the regex pattern definition on line 10 (since it won't be used)
+  2. Replace the regex match on lines 65-68 with a manual parse that finds the split point between trailing alphabetic characters and trailing digits
+  3. Ensure all characters before the split point are alphabetic (using `str.isalpha()`)
+  4. Ensure all characters after the split point are digits (implicitly checked by the scanning loop using `str.isdigit()`)
+
+Specific approach for lines 65-68 replacement:
+```
+# Find where alphabetic characters end and trailing digits begin
+i = len(name)
+while i > 0 and name[i-1].isdigit():
+    i -= 1
+if 0 < i < len(name) and all(c.isalpha() for c in name[:i]):
+    base_name = name[:i]
+    sub = name[i:]
+    name = base_name
+    subs.insert(0, sub)
+```
+
+## Rejected hypotheses
+None — this is the first diagnosis. The root cause is clear from code inspection and confirmed by testing.
+
+## Open questions
+None — the fix is straightforward and localized to a single function.
+
+---STDERR---

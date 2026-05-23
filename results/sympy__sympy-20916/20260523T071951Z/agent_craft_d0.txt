@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The Unicode-aware fix has been successfully applied. The regex-based ASCII-only approach was replaced with `str.isdecimal()` and `str.isalpha()` methods that correctly handle Unicode letters (like ω) and Unicode digits (like 𝟙). The `test_super_sub` test now passes with all Unicode test cases working correctly.
+
+---STDERR---

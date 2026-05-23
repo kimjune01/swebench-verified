@@ -1,0 +1,35 @@
+diff --git a/sympy/printing/conventions.py b/sympy/printing/conventions.py
+index 9a3be6bbe9..b4e62bc338 100644
+--- a/sympy/printing/conventions.py
++++ b/sympy/printing/conventions.py
+@@ -2,13 +2,9 @@
+ A few practical conventions common to all printers.
+ """
+ 
+-import re
+-
+ from collections.abc import Iterable
+ from sympy import Derivative
+ 
+-_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+-
+ 
+ def split_super_sub(text):
+     """Split a symbol name into a name, superscripts and subscripts
+@@ -62,10 +58,12 @@ def split_super_sub(text):
+ 
+     # make a little exception when a name ends with digits, i.e. treat them
+     # as a subscript too.
+-    m = _name_with_digits_p.match(name)
+-    if m:
+-        name, sub = m.groups()
+-        subs.insert(0, sub)
++    i = len(name)
++    while i > 0 and name[i - 1].isdecimal():
++        i -= 1
++    if 0 < i < len(name) and all(c.isalpha() for c in name[:i]):
++        subs.insert(0, name[i:])
++        name = name[:i]
+ 
+     return name, supers, subs
+ 

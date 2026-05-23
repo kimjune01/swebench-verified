@@ -1,0 +1,18 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/printing/tests/test_conventions.py sympy/testing/quality_unicode.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        25447659
+hash randomization: on (PYTHONHASHSEED=3610092841)
+
+sympy/printing/tests/test_conventions.py[3] 
+test_super_sub ok
+test_requires_partial ok
+test_requires_partial_unspecified_variables f                               [OK]
+
+
+======== tests finished: 2 passed, 1 expected to fail, in 0.03 seconds =========
