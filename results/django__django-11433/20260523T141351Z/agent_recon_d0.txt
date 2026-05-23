@@ -1,0 +1,86 @@
+# Recon: django__django-11433
+
+## Failure summary
+
+The test `test_default_not_populated_on_non_empty_value_in_cleaned_data` creates a ModelForm where the `clean()` method sets `cleaned_data['mode'] = 'de'`. When `save(commit=False)` is called, it expects the model instance's `mode` field to be `'de'` (from cleaned_data), but it's actually `'di'` (the model field's default value). The test verifies that non-empty values in `cleaned_data` should override model defaults, even when the field wasn't present in the original POST data.
+
+Error message:
+```
+AssertionError: 'di' != 'de'
+- di
++ de
+```
+
+## Suspect set
+
+- `django/forms/models.py` lines 31-65: `construct_instance()` function
+- Specifically lines 50-52: The condition that decides whether to skip setting a value from cleaned_data
+
+## Root cause
+
+The `construct_instance()` function skips setting values from `cleaned_data` when a field (1) has a default value and (2) was omitted from POST data, **without checking** whether the value in `cleaned_data` is empty or non-empty.
+
+**Code path:**
+1. Test calls `pub_form.save(commit=False)` with empty POST data `{}`
+2. `clean()` method sets `cleaned_data['mode'] = 'de'`
+3. `save()` → `_post_clean()` (line 395) → `construct_instance()`
+4. In `construct_instance()`, for field 'mode':
+   - Line 42-43: Field IS in cleaned_data, so continues processing
+   - Lines 50-52: Checks if `f.has_default()` (True) AND `value_omitted_from_data()` (True)
+   - Because both are True, executes `continue` and skips line 59
+   - Line 59 (`f.save_form_data(instance, cleaned_data[f.name])`) never executes
+5. Model instance retains default value 'di' instead of cleaned_data value 'de'
+
+**The bug:** The condition should also check if `cleaned_data[f.name]` is an empty value. It should only leave the default when the cleaned_data value is empty (None, '', etc.).
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/forms/models.py:50-52` — the condition that causes the skip:
+  ```python
+  if (f.has_default() and
+          form[f.name].field.widget.value_omitted_from_data(form.data, form.files, form.add_prefix(f.name))):
+      continue
+  ```
+- `tests/model_forms/models.py:99` — mode field definition:
+  ```python
+  mode = models.CharField(max_length=2, choices=MODE_CHOICES, default=default_mode)
+  ```
+- `tests/model_forms/models.py:85-86` — default_mode returns 'di':
+  ```python
+  def default_mode():
+      return 'di'
+  ```
+- `django/forms/fields.py:55` — all form fields have `empty_values` attribute:
+  ```python
+  empty_values = list(validators.EMPTY_VALUES)
+  ```
+- `django/core/validators.py:13` — definition of empty values:
+  ```python
+  EMPTY_VALUES = (None, '', [], (), {})
+  ```
+
+## Edit sites
+
+- `django/forms/models.py` lines 50-52: Add a check for whether `cleaned_data[f.name]` is in the field's `empty_values` before deciding to skip. The condition should become:
+  ```
+  if (f.has_default() and
+      form[f.name].field.widget.value_omitted_from_data(...) and
+      cleaned_data[f.name] in form[f.name].field.empty_values):
+      continue
+  ```
+  This ensures defaults are only used when the cleaned_data value is empty, allowing non-empty cleaned_data values to override defaults even when the field wasn't in POST data.
+
+## Competing hypotheses
+
+None — the code path is deterministic and directly observable.
+
+## Rejected hypotheses
+
+None — first diagnosis from clear test failure and direct code trace.
+
+## Open questions
+
+None — the fix is localized to a single condition in `construct_instance()`.
+
+---STDERR---

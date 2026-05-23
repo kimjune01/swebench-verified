@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 model_forms.tests
+
+test_unique_together (model_forms.tests.UniqueTest)
+ModelForm test of unique_together constraint ... ok
+test_unique_together_exclusion (model_forms.tests.UniqueTest) ... ok
+test_modelform_factory_metaclass (model_forms.tests.CustomMetaclassTestCase) ... ok
+test_bad_callback (model_forms.tests.FormFieldCallbackTests) ... ok
+test_baseform_with_widgets_in_meta (model_forms.tests.FormFieldCallbackTests)
+Regression for #13095: Using base forms with widgets defined in Meta should not raise errors. ... ok
+test_custom_callback (model_forms.tests.FormFieldCallbackTests)
+A custom formfield_callback is used if provided ... ok
+test_factory_with_widget_argument (model_forms.tests.FormFieldCallbackTests)
+Regression for #15315: modelform_factory should accept widgets ... ok
+test_inherit_after_custom_callback (model_forms.tests.FormFieldCallbackTests) ... ok
+test_modelform_factory_with_all_fields (model_forms.tests.FormFieldCallbackTests)
+Regression for #19733 ... ok
+test_modelform_factory_without_fields (model_forms.tests.FormFieldCallbackTests)
+Regression for #19733 ... ok
+test_custom_error_messages (model_forms.tests.ModelFormCustomErrorTests) ... ok
+test_model_clean_error_messages (model_forms.tests.ModelFormCustomErrorTests) ... ok
+test_field_removal (model_forms.tests.ModelFormInheritanceTests) ... ok
+test_field_removal_name_clashes (model_forms.tests.ModelFormInheritanceTests) ... ok
+test_form_subclass_inheritance (model_forms.tests.ModelFormInheritanceTests) ... ok
+test_big_integer_field (model_forms.tests.ModelOtherFieldTests) ... ok
+test_http_prefixing (model_forms.tests.ModelOtherFieldTests) ... ok
+test_modelform_non_editable_field (model_forms.tests.ModelOtherFieldTests) ... ok
+test_url_on_modelform (model_forms.tests.ModelOtherFieldTests)
+Check basic URL field validation on model forms ... ok
+test_setattr_raises_validation_error_field_specific (model_forms.tests.StrictAssignmentTests) ... ok
+test_setattr_raises_validation_error_non_field (model_forms.tests.StrictAssignmentTests) ... ok
+test_error_messages_overrides (model_forms.tests.TestFieldOverridesByFormMeta) ... ok
+test_field_type_overrides (model_forms.tests.TestFieldOverridesByFormMeta) ... ok
+test_help_text_overrides (model_forms.tests.TestFieldOverridesByFormMeta) ... ok
+test_label_overrides (model_forms.tests.TestFieldOverridesByFormMeta) ... ok
+test_widget_overrides (model_forms.tests.TestFieldOverridesByFormMeta) ... ok
+test_notrequired_overrides_notblank (model_forms.tests.ValidationTest) ... ok
+test_validates_with_replaced_field_excluded (model_forms.tests.ValidationTest) ... ok
+test_validates_with_replaced_field_not_specified (model_forms.tests.ValidationTest) ... ok
+
+======================================================================
+FAIL: test_default_not_populated_on_non_empty_value_in_cleaned_data (model_forms.tests.ModelFormBaseTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_forms/tests.py", line 604, in test_default_not_populated_on_non_empty_value_in_cleaned_data
+    self.assertEqual(pub.mode, 'de')
+AssertionError: 'di' != 'de'
+- di
++ de
+
+
+----------------------------------------------------------------------
+Ran 144 tests in 0.250s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application model_forms
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, model_forms, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table model_forms_person
+    Creating table model_forms_category
+    Creating table model_forms_writer
+    Creating table model_forms_article
+    Creating table model_forms_improvedarticle
+    Creating table model_forms_improvedarticlewithparentlink
+    Creating table model_forms_betterwriter
+    Creating table model_forms_publication
+    Creating table model_forms_publicationdefaults
+    Creating table model_forms_author
+    Creating table model_forms_author1
+    Creating table model_forms_writerprofile
+    Creating table model_forms_document
+    Creating table model_forms_textfile
+    Creating table model_forms_customff
+    Creating table model_forms_filepathmodel
+    Creating table model_forms_imagefile
+    Creating table model_forms_optionalimagefile
+    Creating table model_forms_noextensionimagefile
+    Creating table model_forms_homepage
+    Creating table model_forms_product
+    Creating table model_forms_price
+    Creating table model_forms_triple
+    Creating table model_forms_articlestatus
+    Creating table model_forms_inventory
+    Creating table model_forms_book
+    Creating table model_forms_derivedbook
+    Creating table model_forms_explicitpk
+    Creating table model_forms_post
+    Creating table model_forms_datetimepost
+    Creating table model_forms_derivedpost
+    Creating table model_forms_bigint
+    Creating table model_forms_customfieldforexclusionmodel
+    Creating table model_forms_flexibledatepost
+    Creating table model_forms_colour
+    Creating table model_forms_colourfulitem
+    Creating table model_forms_customerrormessage
+    Creating table model_forms_character
+    Creating table model_forms_stumpjoke
+    Creating table model_forms_student
+    Creating table model_forms_photo
+    Creating table model_forms_uuidpk
+    Creating table model_forms_strictassignmentfieldspecific
+    Creating table model_forms_strictassignmentall
+    Creating table model_forms_award
+    Creating table model_forms_nullableuniquecharfieldmodel
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

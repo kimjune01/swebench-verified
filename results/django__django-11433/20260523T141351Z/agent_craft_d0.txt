@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully passes all tests, including the FAIL_TO_PASS test `test_default_not_populated_on_non_empty_value_in_cleaned_data`. 
+
+The issue was in `django/forms/models.py` at the `construct_instance()` function. The original code skipped setting values from `cleaned_data` when a field had a default value and was omitted from POST data, without checking whether the `cleaned_data` value itself was empty or non-empty. 
+
+The fix adds a third condition: it now only skips setting the value (and leaves the default) when the `cleaned_data` value is actually in the field's `empty_values`. This allows non-empty values set by custom `clean()` methods to override defaults, fixing the regression.
+
+---STDERR---

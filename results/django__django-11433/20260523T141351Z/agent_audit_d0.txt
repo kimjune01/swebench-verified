@@ -1,0 +1,20 @@
+# Audit: django__django-11433
+
+## FAIL_TO_PASS
+- `test_default_not_populated_on_non_empty_value_in_cleaned_data (model_forms.tests.ModelFormBaseTest)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 144 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Analysis
+The patch successfully fixes the issue. The failing test was failing on base with `AssertionError: 'di' != 'de'` (model default 'di' instead of cleaned_data value 'de'). After applying the craft patch to `django/forms/models.py`, all 144 tests pass including the target test.
+
+The fix correctly adds a check to ensure `cleaned_data[f.name] in form_field.empty_values` before skipping field assignment, ensuring that non-empty values from `cleaned_data` are always applied even when the field has a default and was omitted from POST data.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
