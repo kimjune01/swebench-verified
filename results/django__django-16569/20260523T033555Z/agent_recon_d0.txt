@@ -1,0 +1,50 @@
+# Recon: django__django-16569
+
+## Failure summary
+
+The tests `test_disable_delete_extra_formset_forms` check that when a formset has `can_delete=True` and `can_delete_extra=False`, the DELETE field should not appear in extra forms (including `empty_form`). The tests fail with `TypeError: '<' not supported between instances of 'NoneType' and 'int'` when accessing `formset.empty_form.fields`. The error occurs because the `add_fields()` method at line 493 of `django/forms/formsets.py` attempts to compare `None < initial_form_count` without first checking if `index is not None`.
+
+## Suspect set
+
+- `django/forms/formsets.py` lines 475-497: The `add_fields()` method, specifically line 493 where the deletion field logic lacks a None check before comparing `index` to `initial_form_count`.
+- `django/forms/formsets.py` line 267: The `empty_form` property that calls `add_fields(form, None)`, triggering the bug.
+
+## Root cause
+
+In `django/forms/formsets.py:493`, the deletion field logic evaluates:
+```python
+if self.can_delete and (self.can_delete_extra or index < initial_form_count):
+```
+
+When `empty_form` property calls `add_fields(form, None)` with `index=None`, and the formset has `can_delete=True` and `can_delete_extra=False`, Python attempts to evaluate `None < initial_form_count`, which raises `TypeError`.
+
+The ordering field logic at line 480 correctly handles this case with:
+```python
+if index is not None and index < initial_form_count:
+```
+
+The bug was introduced in commit 162765d6c3 (June 2020) when the `can_delete_extra` feature was added. The change modified the condition from `if self.can_delete:` to include the extra check, but failed to guard the `index < initial_form_count` comparison with a None check.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/forms/formsets.py:267` — `self.add_fields(form, None)` explicitly passes None as index
+- `django/forms/formsets.py:480` — ordering field correctly uses `if index is not None and index < initial_form_count:`
+- `django/forms/formsets.py:493` — deletion field missing the None check: `if self.can_delete and (self.can_delete_extra or index < initial_form_count):`
+- Stack trace confirms the TypeError originates from line 493 when evaluating `None < initial_form_count`
+
+## Edit sites
+
+- `django/forms/formsets.py` line 493: Add `index is not None and` before the comparison to initial_form_count. The condition should become: `if self.can_delete and (self.can_delete_extra or (index is not None and index < initial_form_count)):`
+
+This mirrors the pattern used for the ordering field on line 480 and prevents the TypeError when `index` is `None`.
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from the stack trace and code reading.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

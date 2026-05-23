@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix has been successfully applied and verified. The gate passed with all 157 tests including both FAIL_TO_PASS tests. 
+
+**Summary:**
+- **Root cause**: Line 493 in `django/forms/formsets.py` was missing a None check before comparing `index < initial_form_count`
+- **Fix applied**: Added `index is not None and` guard to the deletion field condition (lines 493-495)
+- **Result**: Gate green - no regressions, FAIL_TO_PASS tests now pass
+
+The working tree contains the fix and is ready for the driver to capture via `git diff`.
+
+---STDERR---

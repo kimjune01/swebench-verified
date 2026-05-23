@@ -1,0 +1,32 @@
+# Audit: django__django-16569
+
+## Patch confirmed live
+```
+ django/forms/formsets.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+```
+
+## FAIL_TO_PASS
+- test_disable_delete_extra_formset_forms (forms_tests.tests.test_formsets.FormsFormsetTestCase.test_disable_delete_extra_formset_forms): **PASS** ✓
+- test_disable_delete_extra_formset_forms (forms_tests.tests.test_formsets.Jinja2FormsFormsetTestCase.test_disable_delete_extra_formset_forms): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 157 tests in the suite passed.
+
+## Pre-existing failures (not counted)
+None. The fail-on-base capture showed all tests passing.
+
+## Analysis
+The patch adds a `index is not None` guard before the `index < initial_form_count` comparison on line 493 of `django/forms/formsets.py`. This prevents a TypeError when `add_fields()` is called with `index=None` (via the `empty_form` property) and `can_delete=True` with `can_delete_extra=False`.
+
+The fix mirrors the pattern already present at line 480 for the ordering field. The change is minimal (3 insertions, 1 deletion) and surgical—it only affects the deletion field logic path and correctly preserves the intended behavior:
+- Initial forms still get the DELETE field when `can_delete=True`
+- Extra forms don't get the DELETE field when `can_delete_extra=False`
+- The `empty_form` with `index=None` no longer crashes and correctly omits the DELETE field
+
+All 157 formset tests pass cleanly with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
