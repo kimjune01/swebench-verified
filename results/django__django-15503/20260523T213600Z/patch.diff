@@ -1,0 +1,37 @@
+diff --git a/django/db/models/fields/json.py b/django/db/models/fields/json.py
+index fdca700c9d..63257b3e1c 100644
+--- a/django/db/models/fields/json.py
++++ b/django/db/models/fields/json.py
+@@ -193,11 +193,13 @@ class HasKeyLookup(PostgresOperatorLookup):
+                 *_, rhs_key_transforms = key.preprocess_lhs(compiler, connection)
+             else:
+                 rhs_key_transforms = [key]
++            # Always treat the final key as an object key, even if numeric
+             rhs_params.append(
+-                "%s%s"
++                "%s%s.%s"
+                 % (
+                     lhs_json_path,
+-                    compile_json_path(rhs_key_transforms, include_root=False),
++                    compile_json_path(rhs_key_transforms[:-1], include_root=False),
++                    json.dumps(rhs_key_transforms[-1]),
+                 )
+             )
+         # Add condition for each key.
+@@ -401,11 +403,11 @@ class KeyTransformIsNull(lookups.IsNull):
+         template = "JSON_TYPE(%s, %%s) IS NULL"
+         if not self.rhs:
+             template = "JSON_TYPE(%s, %%s) IS NOT NULL"
+-        return HasKey(self.lhs.lhs, self.lhs.key_name).as_sql(
+-            compiler,
+-            connection,
+-            template=template,
+-        )
++        # Build the JSON path directly to allow array indices
++        lhs, lhs_params, lhs_key_transforms = self.lhs.preprocess_lhs(compiler, connection)
++        json_path = compile_json_path(lhs_key_transforms)
++        sql = template % lhs
++        return sql, tuple(lhs_params) + (json_path,)
+ 
+ 
+ class KeyTransformIn(lookups.In):

@@ -1,0 +1,89 @@
+# Recon: django__django-15503
+
+## Failure summary
+
+The failing tests check if JSONField `has_key`, `has_keys`, and `has_any_keys` lookups can find object keys that are numeric strings like "123", "456", "789", "000", "999", "777". On SQLite (and presumably MySQL and Oracle per the problem description), these lookups fail because they generate incorrect JSON path expressions that treat numeric string keys as array indices (`$[123]`) instead of object keys (`$."123"`). The tests expect to find objects with these keys but get empty querysets instead.
+
+Example error:
+```
+FAIL: test_has_key_number (condition=<Q: (AND: ('value__has_key', '123'))>)
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+```
+
+## Suspect set
+
+- `django/db/models/fields/json.py` lines 129-143: `compile_json_path` function that builds JSON path expressions
+- `django/db/models/fields/json.py` lines 170-230: `HasKeyLookup` class and its `as_sql` method
+
+## Root cause
+
+The `compile_json_path` function tries to convert each key to an integer using `int(key_transform)`. If successful, it treats the key as an array index and generates `[123]` notation. If it fails, it treats the key as an object property and generates `."key"` notation.
+
+The problem: In JSON, object keys are **always strings**, even if they look like numbers. So `{"123": "value"}` has a string key `"123"`, not an integer. But `compile_json_path("123")` succeeds at `int("123")` and generates the array index path `[123]`, which doesn't match an object key.
+
+When `HasKeyLookup.as_sql` (line 200) calls `compile_json_path(rhs_key_transforms, include_root=False)` to build paths for the keys being checked in has_key lookups, numeric string keys are incorrectly converted to array index notation.
+
+Trace for `value__has_key="123"`:
+1. `rhs_key_transforms = ["123"]` (the key being checked)
+2. `compile_json_path(["123"], include_root=False)` is called
+3. `int("123")` succeeds → generates `"[123]"`
+4. Combined with `lhs_json_path = "$"` → final path is `$[123]`
+5. SQLite executes `JSON_TYPE(data, '$[123]')` → returns `NULL` (no array index 123)
+6. Should have executed `JSON_TYPE(data, '$."123"')` → would return `text` (object key exists)
+
+PostgreSQL doesn't have this bug because `HasKeyLookup.as_postgresql` doesn't use `compile_json_path` - it uses the native `?` operator with the key as a string parameter.
+
+**Confidence**: deduction — 97%
+
+**Supporting evidence**:
+- `django/db/models/fields/json.py:129-143` — `compile_json_path` does `int(key_transform)` and generates `[%s] % num` for numeric strings
+- `django/db/models/fields/json.py:200` — `HasKeyLookup.as_sql` uses `compile_json_path(rhs_key_transforms, include_root=False)` for RHS keys
+- SQLite verification: `JSON_TYPE('{"123":"value"}', '$[123]')` → `NULL`, but `JSON_TYPE('{"123":"value"}', '$."123"')` → `'text'`
+
+## Edit sites
+
+**Primary fix**: `django/db/models/fields/json.py` lines 195-202 in `HasKeyLookup.as_sql`
+
+Replace the RHS path building logic to always treat keys as object properties, never as array indices. The has_key lookup specifically checks if an object has a key, so all RHS keys should use object notation (`."key"`), regardless of whether they're numeric strings.
+
+Current code (line 195-202):
+```python
+for key in rhs:
+    if isinstance(key, KeyTransform):
+        *_, rhs_key_transforms = key.preprocess_lhs(compiler, connection)
+    else:
+        rhs_key_transforms = [key]
+    rhs_params.append(
+        "%s%s" % (
+            lhs_json_path,
+            compile_json_path(rhs_key_transforms, include_root=False),
+        )
+    )
+```
+
+Should become:
+```python
+for key in rhs:
+    if isinstance(key, KeyTransform):
+        *_, rhs_key_transforms = key.preprocess_lhs(compiler, connection)
+    else:
+        rhs_key_transforms = [key]
+    # Build key path - always treat as object keys, never array indices
+    key_path_parts = []
+    for key_transform in rhs_key_transforms:
+        key_path_parts.append(".")
+        key_path_parts.append(json.dumps(key_transform))
+    rhs_params.append(lhs_json_path + "".join(key_path_parts))
+```
+
+This ensures numeric string keys like "123" generate `$."123"` instead of `$[123]`.
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and SQLite testing.
+
+## Open questions
+
+None - the fix is straightforward and localized.
+
+---STDERR---

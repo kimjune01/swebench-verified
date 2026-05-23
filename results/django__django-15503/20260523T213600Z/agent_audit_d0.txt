@@ -1,0 +1,21 @@
+# Audit: django__django-15503
+
+## FAIL_TO_PASS
+- ✅ test_has_key_number (model_fields.test_jsonfield.TestQuerying): **PASS**
+- ✅ test_has_keys (model_fields.test_jsonfield.TestQuerying): **PASS**
+
+## PASS_TO_PASS regressions
+**None**. All 86 other tests passed (8 skipped).
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**. The baseline showed only the 2 FAIL_TO_PASS tests failing.
+
+## Kill report
+Not applicable — the patch fully resolves the issue.
+
+The craft edits successfully fixed the JSONField has_key/has_keys lookups for numeric string keys on SQLite. Both FAIL_TO_PASS tests now pass, and zero regressions were introduced. The full gate ran 88 tests with 8 skipped and 0 failures.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

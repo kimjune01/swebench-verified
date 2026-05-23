@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 model_fields.test_jsonfield
+
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__array__0__has_key', '789'))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__has_keys', ['nested', '123', 'array', '000']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__nested__has_keys', ['lorem', '999', '456']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__array__0__has_keys', ['789', 'ipsum', '777']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__has_any_keys', ['000', 'nonexistent']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet [<NullableJSONModel: NullableJSONModel object (6)>]> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+First differing element 0:
+<NullableJSONModel: NullableJSONModel object (6)>
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet [<NullableJSONModel: NullableJSONModel object (6)>]>
+? ----------                                               ^   -
+
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+?                                                ^^
+
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__nested__has_any_keys', ['999', 'nonexistent']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+======================================================================
+FAIL: test_has_key_number (model_fields.test_jsonfield.TestQuerying) (condition=<Q: (AND: ('value__array__0__has_any_keys', ['777', 'nonexistent']))>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 601, in test_has_key_number
+    self.assertSequenceEqual(
+AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: NullableJSONModel object (14)>]
+
+Second sequence contains 1 additional elements.
+First extra element 0:
+<NullableJSONModel: NullableJSONModel object (14)>
+
+- <QuerySet []>
++ [<NullableJSONModel: NullableJSONModel object (14)>]
+
+----------------------------------------------------------------------
+Ran 88 tests in 0.094s
+
+FAILED (failures=9, skipped=8)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

@@ -1,0 +1,21 @@
+**RESOLVED**
+
+Fixed django__django-15503 in 2 gate iterations with codex guidance.
+
+## Changes made:
+
+1. **`HasKeyLookup.as_sql`** (lines 193-204): Modified to always treat the final RHS key as an object key, never an array index. Instead of `compile_json_path(rhs_key_transforms, include_root=False)`, now uses `compile_json_path(rhs_key_transforms[:-1], include_root=False)` for the path and appends `.json.dumps(rhs_key_transforms[-1])` for the final key. This ensures `has_key="123"` generates `$."123"` instead of `$[123]`.
+
+2. **`KeyTransformIsNull.as_sqlite`** (lines 401-410): Modified to build JSON paths directly using `compile_json_path` instead of delegating to `HasKey`. This preserves correct array index handling for lookups like `value__d__0__isnull=False` where `0` is genuinely an array index.
+
+## Gate result: ✅ ALL PASS (88 tests, 8 skipped)
+
+**FAIL_TO_PASS tests**:
+- test_has_key_number ✓  
+- test_has_keys ✓
+
+No regressions introduced. The fix correctly distinguishes between:
+- `value__has_key="0"` → checks for object key "0" using `$."0"`
+- `value__d__0__isnull=False` → checks array index 0 using `$.d[0]`
+
+---STDERR---
