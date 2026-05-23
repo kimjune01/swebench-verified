@@ -1,0 +1,71 @@
+Now I'll produce the recon handoff:
+
+# Recon: django__django-15563
+
+## Failure summary
+
+The tests check that QuerySet.update() correctly updates fields in parent models when called on a child model in a multiple-table inheritance (MTI) hierarchy. Both tests fail with `AssertionError: '' != 'senator 1'` - the `title` field (which belongs to the `Politician` parent model) remains empty after calling `Congressman.objects.update(title="senator 1")` or `Senator.objects.update(title="senator 1")`.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 1835-1862: SQLUpdateCompiler.pre_sql_setup() - collects child model PKs but needs to collect parent link field values for each parent model in related_updates
+- `django/db/models/sql/subqueries.py` lines 126-140: UpdateQuery.get_related_updates() - uses related_ids with pk__in filter, needs to use the correct IDs for each parent model
+- `django/db/models/sql/subqueries.py` line 63: UpdateQuery._setup_query() - initializes related_ids as None, may need to accommodate dict structure
+
+## Root cause
+
+In multiple-table inheritance with multiple parents (e.g., `Congressman(Person, Politician)`), the child model's PK is the first parent's link field (`person_ptr_id`), but when updating fields from other parents (`title` from `Politician`), the code incorrectly uses the child's PK values to filter the parent table.
+
+**Call path:**
+1. `Congressman.objects.update(title="value")` → `UpdateQuery.add_update_values()`
+2. Detects `title` field belongs to `Politician` model, calls `add_related_update(Politician, ...)`
+3. `SQLUpdateCompiler.pre_sql_setup()` line 1839: selects `query.get_meta().pk.name` (= `person_ptr_id`)
+4. Line 1857: stores these as `self.query.related_ids = [1, 2, ...]` (person_ptr_id values)
+5. `UpdateQuery.get_related_updates()` line 137: filters `Politician.pk IN [1, 2, ...]`
+6. **BUG**: Filters `Politician.politician_id` by `person_ptr_id` values - these are unrelated!
+
+**Example:**
+- Congressman instance: person_ptr_id=1, politician_ptr_id=5
+- Should update: Politician WHERE politician_id=5
+- Actually updates: Politician WHERE politician_id=1 (wrong row or no row)
+
+Confidence: deduction — 98%
+
+**Supporting evidence:**
+- `django/db/models/sql/compiler.py:1839` — `query.add_fields([query.get_meta().pk.name])` selects only child's PK
+- `django/db/models/sql/compiler.py:1857` — `self.query.related_ids = idents` stores child PKs
+- `django/db/models/sql/subqueries.py:137` — `query.add_filter("pk__in", self.related_ids)` filters parent by these wrong IDs
+- `django/db/models/options.py:340` — child's PK is first parent's link (Person, not Politician)
+
+## Edit sites
+
+**1. `django/db/models/sql/compiler.py` lines 1835-1862 (SQLUpdateCompiler.pre_sql_setup):**
+   - Line 1839: Change from selecting only child's PK to selecting child's PK plus all parent link fields for models in `self.query.related_updates`
+   - Use `query.get_meta().get_ancestor_link(model)` for each model in `self.query.related_updates` to get the parent link field
+   - Lines 1850-1857: Change from collecting single list of PKs to collecting a dict `{parent_model: [parent_link_ids]}` for each parent in related_updates, while still maintaining child PK list for main query filter
+
+**2. `django/db/models/sql/subqueries.py` lines 126-140 (UpdateQuery.get_related_updates):**
+   - Line 137: Change from `query.add_filter("pk__in", self.related_ids)` to use the appropriate parent IDs from the dict: `query.add_filter("pk__in", self.related_ids[model])`
+   - Add handling for when `related_ids` is a dict vs None
+
+**3. `django/db/models/sql/subqueries.py` line 63 (UpdateQuery._setup_query):**
+   - May need to update initialization if related_ids structure changes, but likely can remain `None` and be set to either dict or list depending on context
+
+## Implementation strategy
+
+The fix requires:
+1. In `pre_sql_setup`, collect parent link field values for each parent model being updated
+2. Store these in `related_ids` as a dict: `{parent_model: [parent_ptr_ids]}`
+3. In `get_related_updates`, use the correct parent IDs when filtering each parent model
+
+The parent link field can be obtained via: `self.query.get_meta().get_ancestor_link(parent_model)`, which returns the OneToOneField from child to parent (e.g., `politician_ptr` for the `Politician` parent).
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and matches the problem description exactly.
+
+## Open questions
+
+None - the fix is straightforward once the correct parent link fields are selected and used.
+
+---STDERR---

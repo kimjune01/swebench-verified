@@ -1,0 +1,14 @@
+NOT-RESOLVED — re-diagnose
+
+After 4+ gate iterations with convergent-stuck trajectory, the implementation is blocked despite correct diagnosis. The root cause identified by recon is accurate (need parent-specific link IDs for MTI updates), but:
+
+**Implementation blocker**: For grandparent updates (Senator→Politician), the required field (politician_ptr_id) exists on an intermediate parent table (Congressman), not on the child table (Senator). Django's `query.add_fields()` only accepts simple field names from the base model and cannot select from joined tables using relationship lookups.
+
+**Technical gap needed**: How to SELECT a column from a JOINed parent table in Django's preselect query when that parent is not a direct parent of the base model. Attempted approaches failed:
+1. Field lookup paths ("congressman_ptr__politician_ptr_id") - unsupported by add_fields()
+2. Selecting parent PK via model._meta.pk - requires join setup not yet implemented
+3. Follow-up query approach - container tooling issues prevented proper application
+
+The diagnosis is correct but requires deeper Django query compiler expertise to implement the join-based solution properly.
+
+---STDERR---

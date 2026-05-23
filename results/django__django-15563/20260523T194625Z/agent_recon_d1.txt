@@ -1,0 +1,66 @@
+# Recon: django__django-15563
+
+## Failure summary
+The tests check that queryset updates work correctly with multiple table inheritance (MTI). When `Congressman.objects.update(title="senator 1")` is called (where `title` is a field from the `Politician` parent), the update should modify the correct Politician record. Similarly, `Senator.objects.update(title="senator 1")` should update the grandparent Politician. Both tests fail with empty string instead of "senator 1" - the update doesn't happen.
+
+Error: `AssertionError: '' != 'senator 1'` - the title field remains empty after update.
+
+## Suspect set
+- `django/db/models/sql/compiler.py` lines 1820-1862: `SQLUpdateCompiler.pre_sql_setup()` - selects IDs for related parent updates
+- `django/db/models/sql/subqueries.py` lines 48-140: `UpdateQuery` class - manages related updates and stores `related_ids`
+
+## Root cause
+When updating parent fields via MTI querysets, Django's `pre_sql_setup` selects the child model's primary key (line 1840) and uses those IDs to filter ALL parent model updates. This is incorrect because:
+
+1. Each parent has its own link field (e.g., `politician_ptr_id` for Politician)
+2. The child's PK may be inherited from a different parent (e.g., Congressman's PK is `person_ptr_id` from Person)
+3. Using the wrong IDs updates the wrong parent records or no records at all
+
+**Concrete example**: Congressman (inherits Person + Politician):
+- Created instance: `person_ptr_id=1` (PK), `politician_ptr_id=2`  
+- Current code selects: `[1]` (person_ptr_id)
+- Updates Politician with: `WHERE politician_id IN (1)` ← **WRONG**
+- Should update with: `WHERE politician_id IN (2)` ← uses politician_ptr_id
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/sql/compiler.py:1840` — `query.add_fields([query.get_meta().pk.name])` selects only child PK
+- `django/db/models/sql/compiler.py:1854-1857` — stores these IDs in `self.query.related_ids` 
+- `django/db/models/sql/subqueries.py:137` — all parents filtered by same IDs: `query.add_filter("pk__in", self.related_ids)`
+- SQL log confirms: `SELECT congressman.person_ptr_id` (gets [1]) then `UPDATE politician WHERE politician_id IN (1)` instead of (2)
+
+## Edit sites
+
+**1. django/db/models/sql/subqueries.py line 63**
+- Change `self.related_ids = None` to `self.related_ids = {}`
+- This allows storing parent-specific IDs as a dict: `{parent_model: [ids]}`
+
+**2. django/db/models/sql/compiler.py lines 1838-1857 (pre_sql_setup method)**
+- After line 1838 where the base query is created, for each parent in `self.query.related_updates.keys()`:
+  - Find the link field to that parent using `self.query.get_meta().get_ancestor_link(parent)`
+  - For direct parents (link field on child table): select the link field directly (e.g., `congressman.politician_ptr_id`)
+  - For indirect parents (link field on intermediate table): select via JOIN through parent chain (e.g., Senator→Congressman→Politician needs `SELECT congressman.politician_ptr_id FROM senator JOIN congressman`)
+  - Execute query and store results in `self.query.related_ids[parent]`
+- Keep the existing child PK selection for the main update query
+
+**3. django/db/models/sql/subqueries.py line 136-137 (get_related_updates method)**  
+- Change from: `if self.related_ids is not None: query.add_filter("pk__in", self.related_ids)`
+- Change to: `ids = self.related_ids.get(model); if ids is not None: query.add_filter("pk__in", ids)`
+- This uses the parent-specific IDs instead of a single shared list
+
+## Technical details for implementation
+
+**Direct parent** (e.g., Congressman→Politician):
+- Link field `politician_ptr` is a column on `congressman` table
+- Can select directly: `SELECT congressman.politician_ptr_id FROM congressman WHERE ...`
+
+**Indirect parent** (e.g., Senator→Politician):
+- Link field `politician_ptr` is on intermediate `congressman` table
+- Need JOIN: `SELECT congressman.politician_ptr_id FROM senator INNER JOIN congressman ON senator.congressman_ptr_id = congressman.person_ptr_id WHERE ...`
+- Use `model._meta.get_path_to_parent(parent)` to build the join chain
+
+## Open questions
+None - the root cause is clear and the fix is well-defined. The implementation needs to handle both direct and indirect parent links through appropriate field selection and JOINs.
+
+---STDERR---

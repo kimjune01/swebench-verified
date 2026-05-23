@@ -1,0 +1,4 @@
+{"instance": "django__django-15563", "stage": "start"}
+{"instance": "django__django-15563", "stage": "recon", "depth": 0, "wall_s": 311, "fixed_point": false}
+{"instance": "django__django-15563", "stage": "craft", "depth": 0, "wall_s": 757, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-15563", "stage": "recon", "depth": 1, "wall_s": 335, "fixed_point": false}
