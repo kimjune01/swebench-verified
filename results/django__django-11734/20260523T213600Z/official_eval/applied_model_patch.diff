@@ -1,0 +1,41 @@
+diff --git a/django/db/models/expressions.py b/django/db/models/expressions.py
+index 2b59dd301a..5a3fd8af2c 100644
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -558,6 +558,12 @@ class ResolvedOuterRef(F):
+             'only be used in a subquery.'
+         )
+ 
++
++    def resolve_expression(self, query=None, allow_joins=True, reuse=None,
++                           summarize=False, for_save=False, simple_col=False):
++        # Return self to stay unresolved until reaching correct outer context
++        return self
++
+     def relabeled_clone(self, relabels):
+         return self
+ 
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 35f3c5e1ea..40cae971f5 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -23,7 +23,7 @@ from django.db import DEFAULT_DB_ALIAS, NotSupportedError, connections
+ from django.db.models.aggregates import Count
+ from django.db.models.constants import LOOKUP_SEP
+ from django.db.models.expressions import (
+-    BaseExpression, Col, F, OuterRef, Ref, SimpleCol,
++    BaseExpression, Col, F, OuterRef, Ref, ResolvedOuterRef, SimpleCol,
+ )
+ from django.db.models.fields import Field
+ from django.db.models.fields.related_lookups import MultiColSource
+@@ -1702,7 +1702,9 @@ class Query(BaseExpression):
+         handle.
+         """
+         filter_lhs, filter_rhs = filter_expr
+-        if isinstance(filter_rhs, F):
++        if isinstance(filter_rhs, OuterRef):
++            filter_expr = (filter_lhs, OuterRef(filter_rhs))
++        elif isinstance(filter_rhs, F):
+             filter_expr = (filter_lhs, OuterRef(filter_rhs.name))
+         # Generate the inner query.
+         query = Query(self.model)

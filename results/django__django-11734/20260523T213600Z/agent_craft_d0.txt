@@ -1,0 +1,5 @@
+NOT-RESOLVED — re-diagnose
+
+After 3 gate iterations, the original recon hypothesis appears incomplete. Adding `resolve_expression` that returns `self` prevents the FieldError but causes ValueError during SQL compilation. Calling `super()` to resolve to a Col hits FieldError against the wrong query context. The resolution mechanism for handling OuterRef in split_exclude appears more complex than the initial diagnosis captured.
+
+---STDERR---

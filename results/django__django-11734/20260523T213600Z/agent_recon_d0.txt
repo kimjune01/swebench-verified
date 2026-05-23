@@ -1,0 +1,70 @@
+# Recon: django__django-11734
+
+## Failure summary
+
+The test `test_subquery_exclude_outerref` creates a query using `Exists(Responsibility.objects.exclude(jobs=OuterRef('job')))` within a filter on JobResponsibilities. The test expects this to work like the filter() case, but it fails with:
+
+```
+django.core.exceptions.FieldError: Cannot resolve keyword 'job' into field. Choices are: description, id, jobresponsibilities, jobs
+```
+
+The error occurs because Django tries to resolve `OuterRef('job')` against the Responsibility model (which has no 'job' field) instead of leaving it unresolved for the outer JobResponsibilities query.
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 546-563: ResolvedOuterRef class - missing resolve_expression override
+- `django/db/models/expressions.py` lines 528-531: F.resolve_expression - calls query.resolve_ref  
+- `django/db/models/sql/query.py` lines 1695-1750: split_exclude method - creates inner query and triggers resolution
+- `django/db/models/sql/query.py` line 1025: Query.resolve_expression - resolves WHERE clause expressions
+
+## Root cause
+
+**ResolvedOuterRef does not override resolve_expression**, causing it to inherit F.resolve_expression which calls query.resolve_ref on the wrong query context.
+
+Confidence: **deduction — 95%**
+
+### Call path to failure:
+1. `Responsibility.objects.exclude(jobs=OuterRef('job'))` → `_filter_or_exclude(True, ...)`
+2. → `add_q(~Q(jobs=OuterRef('job')))` → `build_filter(('jobs', OuterRef('job')), ...)`
+3. build_filter tries to setup joins for 'jobs' M2M field → hits MultiJoin exception
+4. → `split_exclude(('jobs', OuterRef('job')), ...)` at query.py:1283
+5. split_exclude creates: `query = Query(self.model); query.add_filter(filter_expr)`
+6. add_filter resolves OuterRef → ResolvedOuterRef('job') (stored in query's WHERE clause)
+7. split_exclude calls `build_filter(('%s__in', query), ...)` at query.py:1742
+8. → `resolve_lookup_value(query, ...)` → `query.resolve_expression(self, ...)`
+9. Query.resolve_expression at line 1025: `clone.where.resolve_expression(query, ...)`
+10. WHERE clause processing reaches ResolvedOuterRef('job').resolve_expression(query, ...)
+11. **Bug**: ResolvedOuterRef has no resolve_expression override, uses inherited F.resolve_expression
+12. F.resolve_expression calls `query.resolve_ref('job', ...)` at expressions.py:531
+13. query is the Responsibility model query (wrong context - should be JobResponsibilities)
+14. Responsibility has no 'job' field → FieldError
+
+Supporting evidence:
+- `django/db/models/expressions.py:546-563` — ResolvedOuterRef class definition has no resolve_expression method
+- `django/db/models/expressions.py:528-531` — F.resolve_expression: `return query.resolve_ref(self.name, ...)`
+- Ref class (line ~610) shows the correct pattern: resolve_expression returns self without re-resolving
+
+### Why filter() works but exclude() fails:
+- filter() with OuterRef doesn't hit MultiJoin, avoids split_exclude path
+- exclude() with M2M fields triggers split_exclude, which creates nested subquery and calls Query.resolve_expression
+- Query.resolve_expression processes WHERE clause, exposing the ResolvedOuterRef resolution bug
+
+## Edit sites
+
+- **django/db/models/expressions.py lines 546-563**: ResolvedOuterRef class
+  - Override `resolve_expression` to return self (like Ref does) instead of inheriting F's implementation
+  - Method signature: `def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False, simple_col=False):`
+  - Implementation should return `self` without calling `query.resolve_ref`
+  - This prevents ResolvedOuterRef from trying to resolve against intermediate query contexts
+
+## Rejected hypotheses
+
+- H₀ (considered): split_exclude should skip resolving OuterRef during add_filter
+  - Killed because add_filter must resolve OuterRef → ResolvedOuterRef (this is correct behavior)
+  - The bug is later when ResolvedOuterRef itself gets re-resolved
+
+## Open questions
+
+None - the fix is straightforward: add resolve_expression override to ResolvedOuterRef.
+
+---STDERR---

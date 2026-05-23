@@ -1,0 +1,29 @@
+# Recon: django__django-11734
+
+## Failure summary
+The test `test_subquery_exclude_outerref` checks that `JobResponsibilities.objects.filter(Exists(Responsibility.objects.exclude(jobs=OuterRef('job'))))` correctly filters results. The query has three levels: (1) outer JobResponsibilities query, (2) Exists subquery on Responsibility with exclude(), (3) nested subquery created by split_exclude for the M2M exclude. The test fails with `ValueError: This queryset contains a reference to an outer query and may only be used in a subquery` raised from `ResolvedOuterRef.as_sql()` at django/db/models/expressions.py:557 during SQL compilation of the deeply-nested subquery.
+
+## Suspect set
+- `django/db/models/sql/query.py` lines 1685-1755 (split_exclude method)
+- `django/db/models/expressions.py` lines 545-572 (ResolvedOuterRef and OuterRef classes)
+- `django/db/models/sql/query.py` lines 1014-1038 (Query.resolve_expression method)
+
+## Root cause
+When `Responsibility.objects.exclude(jobs=OuterRef('job'))` is processed in the context of an Exists subquery, the OuterRef('job') is first resolved to ResolvedOuterRef('job') against the outer JobResponsibilities query. Then `exclude()` triggers `split_exclude` to handle the M2M relationship, creating a nested subquery.
+
+At line 1689 of split_exclude, the code checks `if isinstance(filter_rhs, F)` to wrap plain F objects in OuterRef (to preserve references to the calling query's fields). However, ResolvedOuterRef inherits from F, so this condition incorrectly wraps `ResolvedOuterRef('job')` in `OuterRef('job')`, losing the information that it was already an outer reference. The nested subquery then contains ResolvedOuterRef('job') that should reference JobResponsibilities (level 1) but is being resolved in the Responsibility query context (level 2), causing it to remain unresolved until SQL compilation where it raises ValueError.
+
+**Confidence:** 75% (abduction) — The check at line 1689 should exclude both OuterRef and ResolvedOuterRef from re-wrapping, since they already represent outer query references and should not be wrapped again.
+
+**Supporting evidence:**
+- `django/db/models/sql/query.py:1689` — `if isinstance(filter_rhs, F): filter_expr = (filter_lhs, OuterRef(filter_rhs.name))` wraps all F subclasses including ResolvedOuterRef
+- `django/db/models/expressions.py:545` — ResolvedOuterRef inherits from F, not OuterRef
+- Class hierarchy check confirms: `issubclass(ResolvedOuterRef, F) == True` and `issubclass(ResolvedOuterRef, OuterRef) == False`
+
+## Edit sites
+- `django/db/models/sql/query.py` line 1689: Change the condition from `if isinstance(filter_rhs, F):` to `if isinstance(filter_rhs, F) and not isinstance(filter_rhs, (OuterRef, ResolvedOuterRef)):` to prevent re-wrapping of existing outer references.
+
+## Open questions
+- After preventing the re-wrap, ResolvedOuterRef will remain in the nested subquery's WHERE clause. When Query.resolve_expression is called on this nested subquery (from build_filter → resolve_lookup_value), will ResolvedOuterRef.resolve_expression (which returns self) allow it to survive through to correct SQL compilation? Or will it still raise ValueError at ResolvedOuterRef.as_sql()? The fix assumes ResolvedOuterRef is designed to persist through intermediate resolution contexts.
+
+---STDERR---

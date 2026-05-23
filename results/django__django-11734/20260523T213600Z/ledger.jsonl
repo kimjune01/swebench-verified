@@ -1,0 +1,11 @@
+{"instance": "django__django-11734", "stage": "start"}
+{"instance": "django__django-11734", "stage": "recon", "depth": 0, "wall_s": 354, "fixed_point": false}
+{"instance": "django__django-11734", "stage": "craft", "depth": 0, "wall_s": 803, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-11734", "stage": "recon", "depth": 1, "wall_s": 496, "fixed_point": false}
+{"instance": "django__django-11734", "stage": "craft", "depth": 1, "wall_s": 571, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-11734", "stage": "recon", "depth": 2, "wall_s": 401, "fixed_point": false}
+{"instance": "django__django-11734", "stage": "craft", "depth": 2, "wall_s": 1082, "claim": false, "wants_rediagnose": true}
+{"instance": "django__django-11734", "stage": "audit", "depth": 2, "wall_s": 219, "verdict": "NOT_RESOLVED", "route": "recon"}
+{"instance": "django__django-11734", "stage": "halt", "msg": "depth budget exhausted at NOT_RESOLVED"}
+{"instance": "django__django-11734", "stage": "verify_gate", "agent_verdict": "NOT_RESOLVED", "driver_f2p_pass": null, "passgate_file": "/tmp/swebench-abduction/r4_passgate_django__django-11734.txt"}
+{"instance": "django__django-11734", "stage": "done", "final_verdict": "NOT_RESOLVED", "driver_f2p_pass": null, "patch_bytes": 1730, "patch_file": "/tmp/swebench-abduction/r4_patch_django__django-11734.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_django__django-11734.md"}

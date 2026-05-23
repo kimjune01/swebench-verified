@@ -1,0 +1,302 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 queries.tests
+
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/lookups.py", line 368, in as_sql
+    return super().as_sql(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 359, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 233, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/query.py", line 1043, in as_sql
+    sql, params = self.get_compiler(connection=connection).as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 493, in as_sql
+    where, w_params = self.compile(self.where) if self.where is not None else ("", [])
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 273, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/expressions.py", line 557, in as_sql
+    'This queryset contains a reference to an outer query and may '
+ValueError: This queryset contains a reference to an outer query and may only be used in a subquery.
+
+======================================================================
+ERROR: test_excluded_intermediary_m2m_table_joined (queries.tests.Queries1Tests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/tests.py", line 1181, in test_excluded_intermediary_m2m_table_joined
+    [self.n1, self.n2, self.n3],
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/case.py", line 940, in assertSequenceEqual
+    len1 = len(seq1)
+  File "/testbed/django/db/models/query.py", line 258, in __len__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1250, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 57, in __iter__
+    results = compiler.execute_sql(chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size)
+  File "/testbed/django/db/models/sql/compiler.py", line 1085, in execute_sql
+    sql, params = self.as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 493, in as_sql
+    where, w_params = self.compile(self.where) if self.where is not None else ("", [])
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/lookups.py", line 368, in as_sql
+    return super().as_sql(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 359, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 233, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/query.py", line 1043, in as_sql
+    sql, params = self.get_compiler(connection=connection).as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 493, in as_sql
+    where, w_params = self.compile(self.where) if self.where is not None else ("", [])
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 273, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/expressions.py", line 557, in as_sql
+    'This queryset contains a reference to an outer query and may '
+ValueError: This queryset contains a reference to an outer query and may only be used in a subquery.
+
+======================================================================
+ERROR: test_ticket_22429 (queries.tests.Ticket22429Tests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/tests.py", line 3816, in test_ticket_22429
+    self.assertSequenceEqual(queryset, [st2])
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/case.py", line 940, in assertSequenceEqual
+    len1 = len(seq1)
+  File "/testbed/django/db/models/query.py", line 258, in __len__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1250, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 57, in __iter__
+    results = compiler.execute_sql(chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size)
+  File "/testbed/django/db/models/sql/compiler.py", line 1085, in execute_sql
+    sql, params = self.as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 493, in as_sql
+    where, w_params = self.compile(self.where) if self.where is not None else ("", [])
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/lookups.py", line 368, in as_sql
+    return super().as_sql(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 359, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 233, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/query.py", line 1043, in as_sql
+    sql, params = self.get_compiler(connection=connection).as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 493, in as_sql
+    where, w_params = self.compile(self.where) if self.where is not None else ("", [])
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/sql/where.py", line 81, in as_sql
+    sql, params = compiler.compile(child)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/fields/related_lookups.py", line 130, in as_sql
+    return super().as_sql(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 177, in as_sql
+    rhs_sql, rhs_params = self.process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 273, in process_rhs
+    return super().process_rhs(compiler, connection)
+  File "/testbed/django/db/models/lookups.py", line 94, in process_rhs
+    return compiler.compile(value)
+  File "/testbed/django/db/models/sql/compiler.py", line 410, in compile
+    sql, params = node.as_sql(self, self.connection)
+  File "/testbed/django/db/models/expressions.py", line 557, in as_sql
+    'This queryset contains a reference to an outer query and may '
+ValueError: This queryset contains a reference to an outer query and may only be used in a subquery.
+
+======================================================================
+FAIL: test_subquery_exclude_outerref (queries.tests.ExcludeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/tests.py", line 2819, in test_subquery_exclude_outerref
+    self.assertFalse(qs.exists())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 282 tests in 0.570s
+
+FAILED (failures=1, errors=4, skipped=3, expected failures=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application queries
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, queries, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table queries_dumbcategory
+    Creating table queries_namedcategory
+    Creating table queries_tag
+    Creating table queries_note
+    Creating table queries_annotation
+    Creating table queries_datetimepk
+    Creating table queries_extrainfo
+    Creating table queries_author
+    Creating table queries_item
+    Creating table queries_report
+    Creating table queries_reportcomment
+    Creating table queries_ranking
+    Creating table queries_cover
+    Creating table queries_number
+    Creating table queries_valid
+    Creating table queries_x
+    Creating table queries_y
+    Creating table queries_loopx
+    Creating table queries_loopy
+    Creating table queries_loopz
+    Creating table queries_managedmodel
+    Creating table queries_detail
+    Creating table queries_member
+    Creating table queries_child
+    Creating table queries_custompk
+    Creating table queries_related
+    Creating table queries_custompktag
+    Creating table queries_celebrity
+    Creating table queries_tvchef
+    Creating table queries_fan
+    Creating table queries_leafa
+    Creating table queries_leafb
+    Creating table queries_join
+    Creating table queries_reservedname
+    Creating table queries_sharedconnection
+    Creating table queries_pointera
+    Creating table queries_pointerb
+    Creating table queries_singleobject
+    Creating table queries_relatedobject
+    Creating table queries_plaything
+    Creating table queries_article
+    Creating table queries_food
+    Creating table queries_eaten
+    Creating table queries_node
+    Creating table queries_objecta
+    Creating table queries_childobjecta
+    Creating table queries_objectb
+    Creating table queries_objectc
+    Creating table queries_simplecategory
+    Creating table queries_specialcategory
+    Creating table queries_categoryitem
+    Creating table queries_mixedcasefieldcategoryitem
+    Creating table queries_mixedcasedbcolumncategoryitem
+    Creating table queries_onetoonecategory
+    Creating table queries_categoryrelationship
+    Creating table queries_commonmixedcaseforeignkeys
+    Creating table queries_nullablename
+    Creating table queries_modeld
+    Creating table queries_modelc
+    Creating table queries_modelb
+    Creating table queries_modela
+    Creating table queries_job
+    Creating table queries_jobresponsibilities
+    Creating table queries_responsibility
+    Creating table queries_fk1
+    Creating table queries_fk2
+    Creating table queries_fk3
+    Creating table queries_basea
+    Creating table queries_identifier
+    Creating table queries_program
+    Creating table queries_channel
+    Creating table queries_book
+    Creating table queries_chapter
+    Creating table queries_paragraph
+    Creating table queries_page
+    Creating table queries_myobject
+    Creating table queries_order
+    Creating table queries_orderitem
+    Creating table queries_baseuser
+    Creating table queries_task
+    Creating table queries_staff
+    Creating table queries_staffuser
+    Creating table queries_ticket21203parent
+    Creating table queries_ticket21203child
+    Creating table queries_person
+    Creating table queries_company
+    Creating table queries_employment
+    Creating table queries_school
+    Creating table queries_student
+    Creating table queries_classroom
+    Creating table queries_teacher
+    Creating table queries_ticket23605aparent
+    Creating table queries_ticket23605a
+    Creating table queries_ticket23605b
+    Creating table queries_ticket23605c
+    Creating table Individual
+    Creating table RelatedIndividual
+    Creating table queries_customdbcolumn
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (1 silenced).

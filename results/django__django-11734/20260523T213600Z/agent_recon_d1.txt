@@ -1,0 +1,50 @@
+# Recon: django__django-11734
+
+## Failure summary
+The test `test_subquery_exclude_outerref` creates a filter using `Exists(Responsibility.objects.exclude(jobs=OuterRef('job')))`. When executed, it fails with `ValueError: This queryset contains a reference to an outer query and may only be used in a subquery.` The error occurs during SQL compilation when `ResolvedOuterRef.as_sql()` is called (django/db/models/expressions.py:558), which should never happen — ResolvedOuterRef should be resolved to a Col object before SQL generation.
+
+## Suspect set  
+- `django/db/models/sql/query.py` lines 1685-1760: `split_exclude()` method that creates subqueries for N-to-many excludes
+- `django/db/models/sql/query.py` lines 1199-1330: `build_filter()` and value resolution
+- `django/db/models/sql/query.py` lines 1048-1073: `resolve_lookup_value()` that resolves expressions
+- `django/db/models/sql/query.py` lines 1015-1040: `Query.resolve_expression()` that resolves subquery WHERE clauses
+- `django/db/models/expressions.py` lines 547-576: `ResolvedOuterRef` and `OuterRef` classes
+
+## Root cause
+When `exclude()` is used with a multi-table relation and an `OuterRef`, the `split_exclude()` method creates a subquery (django/db/models/sql/query.py:1709). This subquery is then passed to `build_filter()` (line 1730) which calls `resolve_lookup_value()` (line 1252). This triggers `Query.resolve_expression(self, ...)` where `self` is the inner model's query (Responsibility), causing the subquery's WHERE clause — including any `ResolvedOuterRef` — to be resolved against the *wrong* query context (the inner query instead of the outermost query). 
+
+Since `ResolvedOuterRef.resolve_expression()` just returns `self` (expressions.py:563), it remains unresolved. Later during SQL compilation, `ResolvedOuterRef.as_sql()` is called, which raises the ValueError.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `query.py:1709`: `query = Query(self.model)` creates subquery with same model as current query
+- `query.py:1711`: `query.add_filter(filter_expr)` adds OuterRef which gets resolved to ResolvedOuterRef
+- `query.py:1730`: `self.build_filter(('%s__in' % trimmed_prefix, query), ...)` uses subquery as filter value
+- `query.py:1252`: `value = self.resolve_lookup_value(value, ...)` resolves the Query object
+- `expressions.py:229-248`: `BaseExpression.resolve_expression()` calls `expr.resolve_expression(query, ...)` on source expressions
+- `query.py:1044`: `Subquery.get_source_expressions()` returns `[self.query]`
+- `query.py:1025`: `clone.where.resolve_expression(query, ...)` resolves WHERE against passed query
+- `expressions.py:563`: `ResolvedOuterRef.resolve_expression()` returns `self` instead of resolving
+
+## Edit sites
+
+**Primary fix** (most targeted):
+- `django/db/models/sql/query.py` lines 1048-1073: In `resolve_lookup_value()`, skip calling `resolve_expression()` on Query objects that may contain OuterRef/ResolvedOuterRef. These should be resolved later when the full query tree is assembled.
+
+**Alternative fix 1**:
+- `django/db/models/expressions.py` lines 563-565: Change `ResolvedOuterRef.resolve_expression()` to conditionally resolve against the passed query only when the query actually contains the referenced field, otherwise return self to defer resolution to a higher level.
+
+**Alternative fix 2**:
+- `django/db/models/sql/query.py` lines 1015-1040: In `Query.resolve_expression()`, before resolving the WHERE clause (line 1025), check if we're resolving a split_exclude subquery and skip resolving ResolvedOuterRef instances.
+
+## Rejected hypotheses
+- H1: OuterRef should not be wrapped again in split_exclude — REJECTED: the code already handles this correctly; `isinstance(filter_rhs, F)` includes OuterRef, and `OuterRef(outerref.name)` recreates the same OuterRef
+- H2: ResolvedOuterRef.as_sql should be implemented — REJECTED: ResolvedOuterRef is designed to raise this error; it should be resolved to a Col before SQL generation
+
+## Open questions
+- Should Query objects be resolved eagerly when used as filter values, or should resolution be deferred until final compilation?
+- Is there a flag or mechanism to mark expressions as "resolve later" that should be used for OuterRef?
+- Why doesn't the existing external_aliases mechanism handle this case?
+
+---STDERR---

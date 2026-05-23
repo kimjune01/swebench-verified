@@ -1,0 +1,7 @@
+NOT-RESOLVED — re-diagnose
+
+The codex-suggested fix (matching upstream Django #30739) eliminates the ValueError by properly double-wrapping `OuterRef(OuterRef('job'))`, but the query produces incorrect results. The test passes initially but fails after deletion, suggesting the OuterRef correlation is resolving to the wrong query level despite the structural fix.
+
+After 4 gate iterations, the wrapping logic in `split_exclude` appears correct, but there's likely additional resolution logic needed in `Query.resolve_expression` or `ResolvedOuterRef` handling to properly unwrap through multiple subquery levels.
+
+---STDERR---

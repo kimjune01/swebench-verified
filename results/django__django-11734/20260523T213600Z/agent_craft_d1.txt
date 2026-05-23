@@ -1,0 +1,22 @@
+NOT-RESOLVED — re-diagnose
+
+After analyzing the code flow, the issue is more complex than the recon diagnosis suggests. The problem is:
+
+1. When `split_exclude()` creates a subquery with `ResolvedOuterRef('job')`, that subquery is passed to `build_filter` 
+2. `build_filter` → `resolve_lookup_value` → calls `Query.resolve_expression()`on the subquery, passing the middle Responsibility query as context
+3. This resolves the subquery's WHERE clause (containing `ResolvedOuterRef`) against the wrong query context
+4. `ResolvedOuterRef` cannot resolve 'job' against Responsibility model (FieldError) OR stays as ResolvedOuterRef (ValueError at SQL compilation)
+
+The recon suggested three approaches:
+- Skip resolve_expression on Query objects in resolve_lookup_value  
+- Make ResolvedOuterRef conditionally resolve based on field existence
+- Skip resolving ResolvedOuterRef in Query.resolve_expression
+
+After testing, wrapping in OuterRef creates a cycle. Returning self defers but never resolves before SQL compilation. The resolution mechanism needs the subquery to have access to the outermost query's context, not the middle query's context, when its WHERE clause is resolved.
+
+The diagnosis needs to identify:
+1. How split_exclude subqueries with OuterRef should preserve the outer reference through multiple query levels
+2. When/where ResolvedOuterRef should be converted to a Col referencing the correct outer table alias
+3. Whether the fix is in resolve_lookup_value (skip Query resolution), Query.resolve_expression (skip ResolvedOuterRef), or ResolvedOuterRef itself (smarter resolution logic)
+
+---STDERR---

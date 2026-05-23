@@ -1,0 +1,45 @@
+# Audit: django__django-11734
+
+## FAIL_TO_PASS
+- `test_subquery_exclude_outerref (queries.tests.ExcludeTests)` - **FAIL**
+  - Error: `AssertionError: True is not false`
+  - Fix ineffective: ValueError eliminated but query logic incorrect
+
+## PASS_TO_PASS regressions
+Uncertain - 4 ERROR tests observed, but 2 documented as pre-existing in hypothesis graph:
+- `test_excluded_intermediary_m2m_table_joined (queries.tests.Queries1Tests)` - ValueError from expressions.py:557 (possible regression)
+- `test_ticket_22429 (queries.tests.Ticket22429Tests)` - ValueError from expressions.py:557 (possible regression)
+
+## Pre-existing (not counted, per hypothesis graph regression check iteration 3)
+- `test_exclude_reverse_fk_field_ref (queries.tests.ExcludeTests)` - ValueError from expressions.py:557
+- `test_exclude_with_circular_fk_relation (queries.tests.ExcludeTests)` - ValueError from expressions.py:557
+
+Note: Fail-on-base capture was truncated before test results. Classification of ERROR tests relies on hypothesis graph documentation that 2 were verified as pre-existing during craft iteration 3.
+
+## Kill report
+
+**Primary failure mode: FAIL_TO_PASS test ineffective**
+
+The target test `test_subquery_exclude_outerref` still fails with `AssertionError: True is not false`. The fix successfully eliminated the ValueError, but the query produces incorrect results:
+- First assertion passes: `self.assertTrue(qs.exists())` ✓
+- Second assertion fails after deletion: `self.assertFalse(qs.exists())` ✗
+
+**Code path implicated:**
+After `r1.delete()`, the query `JobResponsibilities.objects.filter(id__in=qs)` where `qs = Responsibility.objects.exclude(jobs=OuterRef('job'))` still returns True (finds results) when it should return False (empty). The OuterRef('job') correlation appears incorrect through the double-nested subquery structure.
+
+**Current patch:**
+1. `split_exclude` wrapping: Checks `OuterRef` before `F` (correct per upstream #30739)
+2. `ResolvedOuterRef.resolve_expression`: Returns `self` to prevent re-resolution
+
+**Diagnosis gap:**
+The fix prevents FieldError (wrong query context) and ValueError (premature resolution), but doesn't address how ResolvedOuterRef should correlate through multiple subquery levels in nested exclude() contexts. The reference resolves structurally but correlates semantically at the wrong query level.
+
+**Re-diagnosis needed:**
+- How should ResolvedOuterRef resolve when wrapped in OuterRef and nested multiple levels?
+- Does Query.resolve_expression need to pass different context for nested OuterRefs?
+- Is there compilation logic in as_sql() or the SQL compiler that needs adjustment?
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: recon
+
+---STDERR---
