@@ -1,0 +1,42 @@
+# Recon: django__django-13195
+
+## Failure summary
+
+Five tests fail because `HttpResponse.delete_cookie()` doesn't preserve the `samesite` cookie attribute when deleting cookies. Two tests fail with TypeError because the method doesn't accept a `samesite` parameter. Three tests fail with AssertionError because deleted cookies are missing the expected `SameSite` attribute in their Set-Cookie header. This causes browser warnings when cookies with `SameSite=None` are deleted without the `Secure` flag, and prevents proper cookie deletion when samesite attributes don't match between set and delete operations.
+
+## Suspect set
+
+- `django/http/response.py` lines 213-221: The `delete_cookie()` method - missing `samesite` parameter
+- `django/contrib/sessions/middleware.py` line 41: Session middleware `delete_cookie()` call - not passing samesite
+- `django/contrib/messages/storage/cookie.py` line 95: Messages storage `delete_cookie()` call - not passing samesite
+
+## Root cause
+
+The `delete_cookie()` method signature at `django/http/response.py:213` does not include a `samesite` parameter, and the implementation does not pass this attribute through to the underlying `set_cookie()` call. When deleting cookies, browsers need the same `samesite` attribute that was used when the cookie was originally set. Additionally, when `samesite='none'` is specified, the method should automatically set `secure=True` because modern browsers require the Secure flag for SameSite=None cookies.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/http/response.py:213` — Current signature: `def delete_cookie(self, key, path='/', domain=None):` (no samesite parameter)
+- `django/http/response.py:218-221` — Call to `self.set_cookie()` omits samesite: `self.set_cookie(key, max_age=0, path=path, domain=domain, secure=secure, expires='Thu, 01 Jan 1970 00:00:00 GMT')`
+- `django/http/response.py:158-159` — `set_cookie()` already accepts `samesite=None` parameter
+- `tests/responses/test_cookie.py:131` — Test calls `response.delete_cookie('c', samesite='lax')` expecting it to work
+- `tests/responses/test_cookie.py:126-128` — Test expects `samesite='none'` to auto-enable secure flag
+
+## Edit sites
+
+- `django/http/response.py` lines 213-221: Add `samesite=None` parameter to method signature. Pass `samesite` to the `set_cookie()` call. Add logic to set `secure=True` when `samesite` is 'none' (case-insensitive), in addition to the existing logic for `__Secure-` and `__Host-` prefixed cookies.
+
+- `django/contrib/sessions/middleware.py` line 41-44: Add `samesite=settings.SESSION_COOKIE_SAMESITE` parameter to the `delete_cookie()` call to preserve the session cookie's samesite attribute when deleting.
+
+- `django/contrib/messages/storage/cookie.py` line 95: Add `samesite=settings.SESSION_COOKIE_SAMESITE` parameter to the `delete_cookie()` call to preserve the messages cookie's samesite attribute when deleting.
+
+## Rejected hypotheses
+
+None. The failure mode is unambiguous: the method lacks the parameter the tests require, and the implementation doesn't pass it through to `set_cookie()`.
+
+## Open questions
+
+None. The fix is straightforward: add the parameter, handle the samesite='none' → secure=True case, pass it through, and update the two callers in Django's codebase.
+
+---STDERR---

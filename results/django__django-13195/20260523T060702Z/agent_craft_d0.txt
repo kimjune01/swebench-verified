@@ -1,0 +1,5 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix added `samesite` parameter support to `delete_cookie()`, automatically enables `secure=True` for `samesite='none'`, and updated the two Django callers to preserve the session cookie's samesite attribute when deleting.
+
+---STDERR---

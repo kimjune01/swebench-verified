@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 messages_tests.test_cookie responses.test_cookie sessions_tests.tests
+
+test_custom_expiry_timedelta (sessions_tests.tests.FileSessionTests) ... ok
+test_cycle (sessions_tests.tests.FileSessionTests) ... ok
+test_cycle_with_no_session_cache (sessions_tests.tests.FileSessionTests) ... ok
+test_decode (sessions_tests.tests.FileSessionTests) ... ok
+test_decode_failure_logged_to_security (sessions_tests.tests.FileSessionTests) ... ok
+test_decode_legacy (sessions_tests.tests.FileSessionTests) ... ok
+test_default_expiry (sessions_tests.tests.FileSessionTests) ... ok
+test_delete (sessions_tests.tests.FileSessionTests) ... ok
+test_flush (sessions_tests.tests.FileSessionTests) ... ok
+test_get_empty (sessions_tests.tests.FileSessionTests) ... ok
+test_get_expire_at_browser_close (sessions_tests.tests.FileSessionTests) ... ok
+test_has_key (sessions_tests.tests.FileSessionTests) ... ok
+test_invalid_key (sessions_tests.tests.FileSessionTests) ... ok
+test_invalid_key_backslash (sessions_tests.tests.FileSessionTests) ... ok
+test_invalid_key_forwardslash (sessions_tests.tests.FileSessionTests) ... ok
+test_items (sessions_tests.tests.FileSessionTests) ... ok
+test_keys (sessions_tests.tests.FileSessionTests) ... ok
+test_new_session (sessions_tests.tests.FileSessionTests) ... ok
+test_pop (sessions_tests.tests.FileSessionTests) ... ok
+test_pop_default (sessions_tests.tests.FileSessionTests) ... ok
+test_pop_default_named_argument (sessions_tests.tests.FileSessionTests) ... ok
+test_pop_no_default_keyerror_raised (sessions_tests.tests.FileSessionTests) ... ok
+test_save (sessions_tests.tests.FileSessionTests) ... ok
+test_save_doesnt_clear_data (sessions_tests.tests.FileSessionTests) ... ok
+test_session_key_empty_string_invalid (sessions_tests.tests.FileSessionTests)
+Falsey values (Such as an empty string) are rejected. ... ok
+test_session_key_is_read_only (sessions_tests.tests.FileSessionTests) ... ok
+test_session_key_too_short_invalid (sessions_tests.tests.FileSessionTests)
+Strings shorter than 8 characters are rejected. ... ok
+test_session_key_valid_string_saved (sessions_tests.tests.FileSessionTests)
+Strings of length 8 and up are accepted and stored. ... ok
+test_session_load_does_not_create_record (sessions_tests.tests.FileSessionTests) ... ok
+test_session_save_does_not_resurrect_session_logged_out_in_other_context (sessions_tests.tests.FileSessionTests) ... ok
+test_setdefault (sessions_tests.tests.FileSessionTests) ... ok
+test_store (sessions_tests.tests.FileSessionTests) ... ok
+test_update (sessions_tests.tests.FileSessionTests) ... ok
+test_values (sessions_tests.tests.FileSessionTests) ... ok
+
+======================================================================
+ERROR: test_delete_cookie_samesite (responses.test_cookie.DeleteCookieTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/responses/test_cookie.py", line 131, in test_delete_cookie_samesite
+    response.delete_cookie('c', samesite='lax')
+TypeError: delete_cookie() got an unexpected keyword argument 'samesite'
+
+======================================================================
+ERROR: test_delete_cookie_secure_samesite_none (responses.test_cookie.DeleteCookieTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/responses/test_cookie.py", line 126, in test_delete_cookie_secure_samesite_none
+    response.delete_cookie('c', samesite='none')
+TypeError: delete_cookie() got an unexpected keyword argument 'samesite'
+
+======================================================================
+FAIL: test_session_delete_on_end (sessions_tests.tests.SessionMiddlewareTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/sessions_tests/tests.py", line 765, in test_session_delete_on_end
+    str(response.cookies[settings.SESSION_COOKIE_NAME])
+AssertionError: 'Set-[30 chars]Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/; SameSite=Lax' != 'Set-[30 chars]Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/'
+- Set-Cookie: sessionid=""; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/; SameSite=Lax
+?                                                                                   --------------
++ Set-Cookie: sessionid=""; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/
+
+
+======================================================================
+FAIL: test_session_delete_on_end_with_custom_domain_and_path (sessions_tests.tests.SessionMiddlewareTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/sessions_tests/tests.py", line 797, in test_session_delete_on_end_with_custom_domain_and_path
+    str(response.cookies[settings.SESSION_COOKIE_NAME])
+AssertionError: 'Set-[61 chars]Jan 1970 00:00:00 GMT; Max-Age=0; Path=/example/; SameSite=Lax' != 'Set-[61 chars]Jan 1970 00:00:00 GMT; Max-Age=0; Path=/example/'
+- Set-Cookie: sessionid=""; Domain=.example.local; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/example/; SameSite=Lax
+?                                                                                                                  --------------
++ Set-Cookie: sessionid=""; Domain=.example.local; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/example/
+
+
+======================================================================
+FAIL: test_cookie_setings (messages_tests.test_cookie.CookieTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 381, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/messages_tests/test_cookie.py", line 91, in test_cookie_setings
+    settings.SESSION_COOKIE_SAMESITE,
+AssertionError: '' != 'Strict'
++ Strict
+
+----------------------------------------------------------------------
+Ran 416 tests in 0.295s
+
+FAILED (failures=3, errors=2, skipped=2, expected failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application messages_tests
+Importing application responses
+Importing application sessions_tests
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, messages_tests, responses, sessions, sessions_tests, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table sessions_tests_customsession
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

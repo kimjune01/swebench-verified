@@ -1,0 +1,27 @@
+# Audit: django__django-13195
+
+## FAIL_TO_PASS
+- test_delete_cookie_samesite (responses.test_cookie.DeleteCookieTests): **PASS**
+- test_delete_cookie_secure_samesite_none (responses.test_cookie.DeleteCookieTests): **PASS**
+- test_session_delete_on_end (sessions_tests.tests.SessionMiddlewareTests): **PASS**
+- test_session_delete_on_end_with_custom_domain_and_path (sessions_tests.tests.SessionMiddlewareTests): **PASS**
+- test_cookie_setings (messages_tests.test_cookie.CookieTests): **PASS**
+
+## PASS_TO_PASS regressions
+None. Full gate ran 416 tests with OK status (skipped=2, expected failures=1).
+
+## Pre-existing (not counted, confirmed against base capture)
+None. Gate was clean.
+
+## Kill report
+N/A — patch resolved all failures with no regressions. The fix correctly:
+1. Added `samesite` parameter to `delete_cookie()` method signature
+2. Implemented `samesite='none'` → `secure=True` logic per browser requirements
+3. Updated all callers (sessions middleware, messages storage) to pass `samesite` parameter
+4. All 5 FAIL_TO_PASS tests now pass
+5. Zero regressions across 416 tests
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
