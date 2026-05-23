@@ -1,0 +1,60 @@
+Now I'll output the complete recon handoff:
+
+# Recon: django__django-10999
+
+## Failure summary
+
+The `parse_duration()` function fails to correctly parse negative duration strings where the negative sign appears on the first component. Five test cases fail:
+1. `-15:30` - parsed as -870 seconds instead of -930 seconds
+2. `-1:15:30` - parsed as -2670 seconds instead of -4530 seconds  
+3. `-00:01:01` - parsed as 61 seconds instead of -61 seconds
+4. `-01:01` - parsed as -59 seconds instead of -61 seconds
+5. `-01:-01` - should return None but returns -61 seconds
+
+The error manifests as incorrect `timedelta` values where only the first component is treated as negative while subsequent unsigned components are treated as positive.
+
+## Suspect set
+
+- `django/utils/dateparse.py` lines 29-37: `standard_duration_re` regex definition - specifically line 32 with the hours lookahead pattern
+- `django/utils/dateparse.py` lines 137-146: `parse_duration()` function - lacks logic to propagate negative signs from leading components to subsequent unsigned components and to reject mixed sign patterns
+
+## Root cause
+
+The regex lookahead `(?=\d+:\d+)` on line 32 only matches positive digit sequences, preventing the regex from distinguishing between formats like `-1:15:30` (where all components should be negative) and `-1:-15:-30` (explicit negative signs on all components).
+
+When `-1:15:30` is parsed, the regex captures `hours="-1"`, `minutes="15"`, `seconds="30"`. After `float()` conversion and `timedelta` construction, this produces `timedelta(hours=-1, minutes=15, seconds=30)` = -3600 + 900 + 30 = -2670 seconds, not the expected -4530 seconds (all components negative).
+
+Additionally, the parsing logic has no mechanism to:
+1. Propagate the negative sign from any component to all subsequent unsigned components
+2. Reject invalid mixed-sign formats like `-01:-01`
+
+Note that line 143-144 already implements similar sign propagation for microseconds when seconds is negative, establishing precedent for this pattern.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/utils/dateparse.py:32` — `r'((?:(?P<hours>-?\d+):)(?=\d+:\d+))?'` - lookahead requires positive-only pattern
+- `django/utils/dateparse.py:145` — `kw = {k: float(v) for k, v in kw.items() if v is not None}` - no sign propagation logic
+- `django/utils/dateparse.py:143-144` — existing pattern for microseconds: `if kw.get('seconds') and kw.get('microseconds') and kw['seconds'].startswith('-'): kw['microseconds'] = '-' + kw['microseconds']`
+- Test output confirms: `-1:15:30` → `timedelta(-1, 83730)` (hours=-1, min=+15, sec=+30) instead of `timedelta(-1, 81870)` (all negative)
+
+## Edit sites
+
+1. **`django/utils/dateparse.py` line 32**: Change the hours lookahead pattern from `(?=\d+:\d+)` to `(?=-?\d+:-?\d+)` to allow matching components with optional negative signs in the lookahead.
+
+2. **`django/utils/dateparse.py` lines 143-146** (after the microseconds sign propagation): Add logic to:
+   - Detect if any component (hours, minutes, or seconds) has a negative sign
+   - Check if there are mixed explicit signs (e.g., `-01:-01`) and return None if so
+   - Propagate the negative sign to all unsigned components that follow a negative component (similar to the existing microseconds logic)
+
+## Rejected hypotheses
+
+None - initial diagnosis.
+
+## Open questions
+
+1. Should `-1:-15:-30` (all components with explicit negatives) be accepted as valid or rejected? The tests don't cover this case. Based on the `-01:-01` → None expectation, mixed explicit signs appear invalid, but it's unclear if "all explicit" is different from "some explicit".
+
+2. The exact validation logic for mixed signs: the test shows `-01:-01` should return None, suggesting that when a leading component is negative, subsequent components must NOT have explicit negative signs. This needs to be enforced in parsing.
+
+---STDERR---

@@ -1,0 +1,78 @@
+2026-05-23 19:44:59,558 - INFO - Creating container for django__django-10999...
+2026-05-23 19:45:32,990 - INFO - Container for django__django-10999 created: 894c3b055db52ade09ac25b60730d0cb2e0b95cd2573cb92ca2e7c8579d8c0ed
+2026-05-23 19:45:33,302 - INFO - Container for django__django-10999 started: 894c3b055db52ade09ac25b60730d0cb2e0b95cd2573cb92ca2e7c8579d8c0ed
+2026-05-23 19:45:33,302 - INFO - Intermediate patch for django__django-10999 written to logs/run_evaluation/batch/recon-craft-audit/django__django-10999/patch.diff, now applying to container...
+2026-05-23 19:45:33,423 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:9: trailing whitespace.
+        
+/tmp/patch.diff:13: trailing whitespace.
+        
+/tmp/patch.diff:17: trailing whitespace.
+            
+/tmp/patch.diff:20: trailing whitespace.
+            
+Checking patch django/utils/dateparse.py...
+Applied patch django/utils/dateparse.py cleanly.
+warning: 4 lines add whitespace errors.
+
+2026-05-23 19:45:34,018 - INFO - Git diff before:
+diff --git a/django/utils/dateparse.py b/django/utils/dateparse.py
+index 8d08b7d1d3..440e330624 100644
+--- a/django/utils/dateparse.py
++++ b/django/utils/dateparse.py
+@@ -142,5 +142,20 @@ def parse_duration(value):
+             kw['microseconds'] = kw['microseconds'].ljust(6, '0')
+         if kw.get('seconds') and kw.get('microseconds') and kw['seconds'].startswith('-'):
+             kw['microseconds'] = '-' + kw['microseconds']
++        
++        # Validate and propagate negative sign for standard duration format
++        components = ['hours', 'minutes', 'seconds']
++        present = [c for c in components if kw.get(c) is not None]
++        
++        if present:
++            first = present[0]
++            first_negative = kw[first].startswith('-')
++            
++            if any(kw[c].startswith('-') for c in present[1:]):
++                return None
++            
++            if first_negative:
++                for c in present[1:]:
++                    kw[c] = '-' + kw[c]
+         kw = {k: float(v) for k, v in kw.items() if v is not None}
+         return days + sign * datetime.timedelta(**kw)
+2026-05-23 19:45:34,018 - INFO - Eval script for django__django-10999 written to logs/run_evaluation/batch/recon-craft-audit/django__django-10999/eval.sh; copying to container...
+2026-05-23 19:45:37,841 - INFO - Test runtime: 3.75 seconds
+2026-05-23 19:45:37,842 - INFO - Test output for django__django-10999 written to logs/run_evaluation/batch/recon-craft-audit/django__django-10999/test_output.txt
+2026-05-23 19:45:37,953 - INFO - Git diff after:
+diff --git a/django/utils/dateparse.py b/django/utils/dateparse.py
+index 8d08b7d1d3..440e330624 100644
+--- a/django/utils/dateparse.py
++++ b/django/utils/dateparse.py
+@@ -142,5 +142,20 @@ def parse_duration(value):
+             kw['microseconds'] = kw['microseconds'].ljust(6, '0')
+         if kw.get('seconds') and kw.get('microseconds') and kw['seconds'].startswith('-'):
+             kw['microseconds'] = '-' + kw['microseconds']
++        
++        # Validate and propagate negative sign for standard duration format
++        components = ['hours', 'minutes', 'seconds']
++        present = [c for c in components if kw.get(c) is not None]
++        
++        if present:
++            first = present[0]
++            first_negative = kw[first].startswith('-')
++            
++            if any(kw[c].startswith('-') for c in present[1:]):
++                return None
++            
++            if first_negative:
++                for c in present[1:]:
++                    kw[c] = '-' + kw[c]
+         kw = {k: float(v) for k, v in kw.items() if v is not None}
+         return days + sign * datetime.timedelta(**kw)
+2026-05-23 19:45:37,953 - INFO - Grading answer for django__django-10999...
+2026-05-23 19:45:37,954 - INFO - report: {'django__django-10999': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_negative (utils_tests.test_dateparse.DurationParseTests)', 'test_parse_postgresql_format (utils_tests.test_dateparse.DurationParseTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_parse_date (utils_tests.test_dateparse.DateParseTests)', 'test_parse_datetime (utils_tests.test_dateparse.DateParseTests)', 'test_parse_time (utils_tests.test_dateparse.DateParseTests)', 'test_days (utils_tests.test_dateparse.DurationParseTests)', 'test_fractions_of_seconds (utils_tests.test_dateparse.DurationParseTests)', 'test_hours_minutes_seconds (utils_tests.test_dateparse.DurationParseTests)', 'test_iso_8601 (utils_tests.test_dateparse.DurationParseTests)', 'test_minutes_seconds (utils_tests.test_dateparse.DurationParseTests)', 'test_parse_python_format (utils_tests.test_dateparse.DurationParseTests)', 'test_seconds (utils_tests.test_dateparse.DurationParseTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-10999: resolved: True
+2026-05-23 19:45:37,954 - INFO - Attempting to stop container sweb.eval.django__django-10999.batch...
+2026-05-23 19:45:53,432 - INFO - Attempting to remove container sweb.eval.django__django-10999.batch...
+2026-05-23 19:45:53,443 - INFO - Container sweb.eval.django__django-10999.batch removed.

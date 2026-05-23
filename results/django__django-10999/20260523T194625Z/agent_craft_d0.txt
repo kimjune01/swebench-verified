@@ -1,0 +1,3 @@
+**RESOLVED** — All FAIL_TO_PASS tests now pass. The fix adds sign propagation logic to handle negative durations correctly, rejecting invalid mixed-sign formats and propagating the leading negative sign to all subsequent unsigned components.
+
+---STDERR---

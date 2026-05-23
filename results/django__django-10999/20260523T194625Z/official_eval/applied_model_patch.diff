@@ -1,0 +1,25 @@
+diff --git a/django/utils/dateparse.py b/django/utils/dateparse.py
+index 8d08b7d1d3..440e330624 100644
+--- a/django/utils/dateparse.py
++++ b/django/utils/dateparse.py
+@@ -142,5 +142,20 @@ def parse_duration(value):
+             kw['microseconds'] = kw['microseconds'].ljust(6, '0')
+         if kw.get('seconds') and kw.get('microseconds') and kw['seconds'].startswith('-'):
+             kw['microseconds'] = '-' + kw['microseconds']
++        
++        # Validate and propagate negative sign for standard duration format
++        components = ['hours', 'minutes', 'seconds']
++        present = [c for c in components if kw.get(c) is not None]
++        
++        if present:
++            first = present[0]
++            first_negative = kw[first].startswith('-')
++            
++            if any(kw[c].startswith('-') for c in present[1:]):
++                return None
++            
++            if first_negative:
++                for c in present[1:]:
++                    kw[c] = '-' + kw[c]
+         kw = {k: float(v) for k, v in kw.items() if v is not None}
+         return days + sign * datetime.timedelta(**kw)

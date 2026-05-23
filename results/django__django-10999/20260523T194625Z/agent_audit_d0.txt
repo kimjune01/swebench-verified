@@ -1,0 +1,33 @@
+# Audit: django__django-10999
+
+## FAIL_TO_PASS
+- `test_negative`: ✅ PASS (was FAIL on base with 5 sub-test failures)
+- `test_parse_postgresql_format`: ✅ PASS
+
+## PASS_TO_PASS regressions
+None - all 10 PASS_TO_PASS tests still pass:
+- test_parse_date: ✅ PASS
+- test_parse_datetime: ✅ PASS
+- test_parse_time: ✅ PASS
+- test_days: ✅ PASS
+- test_fractions_of_seconds: ✅ PASS
+- test_hours_minutes_seconds: ✅ PASS
+- test_iso_8601: ✅ PASS
+- test_minutes_seconds: ✅ PASS
+- test_parse_python_format: ✅ PASS
+- test_seconds: ✅ PASS
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Patch summary
+The fix adds 15 lines to `django/utils/dateparse.py` that:
+1. Validate duration components to reject invalid mixed-sign formats (e.g., `01:-01` returns None)
+2. Propagate the first component's negative sign to all subsequent unsigned components
+
+This correctly handles cases like `-1:15:30` by treating it as hours=-1, minutes=-15, seconds=-30, rather than the incorrect hours=-1, minutes=15, seconds=30.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
