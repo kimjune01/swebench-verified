@@ -1,0 +1,53 @@
+Now I'll output the final diagnosis:
+
+```markdown
+# Recon: pydata__xarray-6461
+
+## Failure summary
+
+The test `test_where_attrs` checks that `xr.where()` correctly handles the `keep_attrs=True` parameter. The first part of the test passes - when all three arguments (cond, x, y) are DataArrays, it correctly keeps the attrs from x. However, the second part fails: when x and y are scalar values (1 and 0), calling `xr.where(cond, 1, 0, keep_attrs=True)` raises an `IndexError: list index out of range` at line 1832 of `xarray/core/computation.py`. The error occurs because the lambda function tries to access `attrs[1]`, but the attrs list only has one element (from cond), since scalars don't have attributes.
+
+## Suspect set
+
+- `xarray/core/computation.py` lines 1829-1832: The keep_attrs handling in the where() function
+- `xarray/core/computation.py` lines 1835-1843: The apply_ufunc call that passes keep_attrs
+
+## Root cause
+
+The `xr.where()` function assumes that when `keep_attrs=True`, the second argument (x) will always be a Variable/DataArray and will appear at index 1 in the attrs list passed to the lambda. This assumption is encoded in line 1832:
+
+```python
+keep_attrs = lambda attrs, context: attrs[1]
+```
+
+However, when `apply_ufunc` processes the arguments, it only collects Variables into the attrs list (via `_all_of_type(args, Variable)` in apply_variable_ufunc). When x and y are scalars, they are not Variables and don't appear in the attrs list. The attrs list then only contains `[cond.attrs]`, and accessing `attrs[1]` raises an IndexError.
+
+**Confidence: deduction — 95%**
+
+**Supporting evidence:**
+- `xarray/core/computation.py:1832` — `keep_attrs = lambda attrs, context: attrs[1]` assumes attrs has at least 2 elements
+- `xarray/core/computation.py:~763` (in apply_variable_ufunc) — `objs = _all_of_type(args, Variable)` filters args to only Variables before extracting attrs
+- Test expectation: `assert actual.attrs == {}` expects empty attrs when x and y are scalars
+- Reproduced: calling `xr.where(cond_dataarray, 1, 0, keep_attrs=True)` raises the same IndexError
+
+**Secondary issue:** The current implementation also has a bug when x is a scalar but y is a DataArray. In that case, attrs would be `[cond.attrs, y.attrs]`, and `attrs[1]` would incorrectly return y's attrs instead of x's attrs (which should be empty since x is a scalar).
+
+## Edit sites
+
+- `xarray/core/computation.py` lines 1829-1832: Replace the keep_attrs handling to extract x's attrs directly before creating the lambda, using `getattr(x, "attrs", {})`. This ensures we get x's attrs if x has them, or an empty dict if x is a scalar, regardless of what other arguments have attrs.
+
+The fix should be:
+```python
+if keep_attrs is True:
+    # keep the attributes of x, the second parameter, by default to
+    # be consistent with the `where` method of `DataArray` and `Dataset`
+    x_attrs = getattr(x, "attrs", {})
+    keep_attrs = lambda attrs, context: x_attrs
+```
+
+## Open questions
+
+None - the root cause is clear and the fix is straightforward.
+```
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully resolves the issue. The `test_where_attrs` test now passes by extracting x's attrs directly using `getattr(x, "attrs", {})` and returning a copy to avoid aliasing, rather than trying to access `attrs[1]` which fails when x is a scalar.
+
+---STDERR---

@@ -1,0 +1,23 @@
+# Audit: pydata__xarray-6461
+
+## FAIL_TO_PASS
+- test_where_attrs: **PASSED**
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- 1 skipped test: `xarray/tests/test_computation.py:1305` (dask/dask#7669) - present in baseline
+
+## Summary
+
+The craft patch successfully resolved the issue:
+- Changed `xarray/core/computation.py` lines 1832-1833 to capture `x.attrs` before the lambda, avoiding the IndexError when scalars are passed
+- The fix returns `dict(x_attrs)` to prevent aliasing issues
+- All 248 tests passed, 1 skipped (matching baseline)
+- Zero regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
