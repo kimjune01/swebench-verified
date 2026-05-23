@@ -1,0 +1,122 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/matrices/tests/test_matrices.py
+
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+__ sympy/matrices/tests/test_matrices.py:test_normalize_sort_diogonalization ___
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 2520, in test_normalize_sort_diogonalization
+    P, Q = A.diagonalize(normalize=True)
+  File "/testbed/sympy/matrices/matrices.py", line 1089, in diagonalize
+    eigenvecs = self.eigenvects(simplify=True)
+  File "/testbed/sympy/matrices/matrices.py", line 1191, in eigenvects
+    ret = [(val, mult, eigenspace(val)) for val, mult in
+  File "/testbed/sympy/matrices/matrices.py", line 1191, in <listcomp>
+    ret = [(val, mult, eigenspace(val)) for val, mult in
+  File "/testbed/sympy/matrices/matrices.py", line 1176, in eigenspace
+    m = mat - self.eye(mat.rows) * eigenval
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2026, in __mul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_matrices.py:test_issue_5320 _____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 2532, in test_issue_5320
+    assert Matrix.hstack(eye(2), 2*eye(2)) == Matrix([
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2098, in __rmul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_matrices.py:test_pinv_solve _____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 2693, in test_pinv_solve
+    assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2116, in __truediv__
+    return self.__div__(other)
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 1972, in __div__
+    return self * (S.One / other)
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2026, in __mul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_matrices.py:test_issue_9422 _____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 2927, in test_issue_9422
+    assert y*x*M != x*y*M
+  File "/testbed/sympy/core/decorators.py", line 91, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/decorators.py", line 131, in binary_op_wrapper
+    return f(self)
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2098, in __rmul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+___________ sympy/matrices/tests/test_matrices.py:test_as_real_imag ____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 3025, in test_as_real_imag
+    m2 = m1*S.ImaginaryUnit
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2026, in __mul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_matrices.py:test_deprecated _____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 3040, in test_deprecated
+    P, Jcells = m.jordan_cells()
+  File "/testbed/sympy/matrices/matrices.py", line 1823, in jordan_cells
+    P, J = self.jordan_form()
+  File "/testbed/sympy/matrices/matrices.py", line 1435, in jordan_form
+    chain = nullity_chain(eig)
+  File "/testbed/sympy/matrices/matrices.py", line 1378, in nullity_chain
+    nullity = cols - eig_mat(val, 1).rank()
+  File "/testbed/sympy/matrices/matrices.py", line 1367, in eig_mat
+    mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
+  File "/testbed/sympy/core/numbers.py", line 2091, in __mul__
+    return Rational.__mul__(self, other)
+  File "/testbed/sympy/core/decorators.py", line 91, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/numbers.py", line 1619, in __mul__
+    return Number.__mul__(self, other)
+  File "/testbed/sympy/core/decorators.py", line 91, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/numbers.py", line 676, in __mul__
+    return AtomicExpr.__mul__(self, other)
+  File "/testbed/sympy/core/decorators.py", line 91, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/decorators.py", line 131, in binary_op_wrapper
+    return f(self)
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/matrices/common.py", line 2098, in __rmul__
+    if not isinstance(other, collections.Iterable):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_matrices.py:test_determinant ____________
+  File "/testbed/sympy/matrices/tests/test_matrices.py", line 409, in test_determinant
+    assert M(5).det() == 0
+AssertionError
+
+ tests finished: 110 passed, 1 failed, 3 skipped, 4 expected to fail, 
+39 exceptions, in 11.47 seconds 
+DO *NOT* COMMIT!

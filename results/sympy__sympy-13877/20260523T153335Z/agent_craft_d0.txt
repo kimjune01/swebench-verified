@@ -1,0 +1,10 @@
+**RESOLVED**
+
+Fixed the determinant bug with two edits:
+
+1. **sympy/core/exprtools.py:1179** - Replaced `< 0` with `.is_negative` to avoid TypeError on NaN comparison
+2. **sympy/matrices/matrices.py** - Updated Bareiss algorithm to use `_find_reasonable_pivot` with `_is_zero_after_expand_mul` to properly detect zero pivots before they cause 0/0 division
+
+Gate result: All FAIL_TO_PASS tests pass (111 passed, 0 failed). The fix addresses both the symptom (TypeError) and root cause (NaN generation from weak pivot selection).
+
+---STDERR---

@@ -1,0 +1,66 @@
+# Recon: sympy__sympy-13877
+
+## Failure summary
+
+The test `test_determinant` checks that `M(n).det() == 0` for n=5, 6, 7, where `M(n) = Matrix([[i + a*j for i in range(n)] for j in range(n)])` and `a` is a symbol. The matrix has linearly dependent rows (arithmetic progressions with the same common difference), so the determinant is correctly 0.
+
+However, the test fails because:
+- `M(5).det()` returns `nan` instead of `0`
+- `M(6).det()` raises `TypeError: Invalid NaN comparison`
+
+The error traceback shows the exception originates at `sympy/core/exprtools.py:1179` inside `factor_terms()` when comparing a coefficient with 0: `if all(a.as_coeff_Mul()[0] < 0 for a in list_args):`
+
+## Suspect set
+
+- `sympy/core/exprtools.py` lines 1175-1181: The `factor_terms()` function's check for negative coefficients that raises the exception
+- `sympy/matrices/matrices.py` lines 208-212: The Bareiss algorithm's entry computation that produces nan values via `0/0` division
+
+## Root cause
+
+The Bareiss determinant algorithm computes intermediate matrix entries via division by cumulative pivot values. When the matrix has linearly dependent rows (determinant = 0), intermediate computations produce `0/0 = nan`. These nan values propagate to `cancel()` which calls `factor_terms()`.
+
+At line 1179 in `sympy/core/exprtools.py`, the code checks if all coefficients are negative:
+```python
+if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+```
+
+When a coefficient is `S.NaN`, the comparison `S.NaN < 0` triggers the guard at `sympy/core/expr.py:336` that raises `TypeError: Invalid NaN comparison`.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `sympy/core/exprtools.py:1179` — `if all(a.as_coeff_Mul()[0] < 0 for a in list_args):`
+- `sympy/core/expr.py:335-336` — `if me is S.NaN: raise TypeError("Invalid NaN comparison")`
+- Verified: `S(0)/S(0) is S.NaN` returns `True`
+- Verified: `S.NaN.is_negative` returns `None` (no exception)
+- Verified: `S.NaN.as_coeff_Mul()` returns `(nan, 1)`
+- Grep shows this is the **only** occurrence of `as_coeff_Mul.*< 0` pattern in the codebase
+
+## Edit sites
+
+- `sympy/core/exprtools.py` line 1179: Replace the comparison operator `< 0` with the `.is_negative` property
+
+**Change specification:**
+```python
+# CURRENT (line 1179):
+if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+
+# REPLACE WITH:
+if all(a.as_coeff_Mul()[0].is_negative for a in list_args):
+```
+
+**Rationale:** The `.is_negative` property returns `None` for nan, `True` for negative numbers, and `False` for non-negative numbers. Since `None` is falsy in Python, `all()` will return `False` if any coefficient is nan, which correctly skips the negative-factoring optimization when coefficients cannot be determined. This matches the semantic intent: only factor out a common negative if *all* coefficients are provably negative.
+
+## Competing hypotheses
+
+None — the fix is single-site and deterministic.
+
+## Rejected hypotheses
+
+None — this is the initial diagnosis based on direct code reading and stack trace analysis.
+
+## Open questions
+
+None — the fix is well-scoped, handles the nan case gracefully, and preserves existing behavior for all non-nan cases.
+
+---STDERR---
