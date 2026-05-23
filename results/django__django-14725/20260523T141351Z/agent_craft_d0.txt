@@ -1,0 +1,5 @@
+**RESOLVED**
+
+All three FAIL_TO_PASS tests now pass. The `edit_only` feature has been successfully implemented following the established pattern for boolean formset flags.
+
+---STDERR---

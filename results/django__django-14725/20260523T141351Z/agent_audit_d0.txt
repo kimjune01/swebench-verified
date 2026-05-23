@@ -1,0 +1,25 @@
+# Audit: django__django-14725
+
+## FAIL_TO_PASS
+- test_edit_only (model_formsets.tests.ModelFormsetTest): **PASS** ✓
+- test_edit_only_inlineformset_factory (model_formsets.tests.ModelFormsetTest): **PASS** ✓
+- test_edit_only_object_outside_of_queryset (model_formsets.tests.ModelFormsetTest): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 64 PASS_TO_PASS tests remain passing. No regressions detected.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the fail-on-base capture showed only the 3 FAIL_TO_PASS tests failing with ERRORs due to missing `edit_only` parameter. No other failures on base.
+
+## Summary
+The craft patch successfully implements the `edit_only` feature by:
+1. Adding the `edit_only` parameter to all three factory functions (`formset_factory`, `modelformset_factory`, `inlineformset_factory`)
+2. Setting it as a class attribute via the attrs dict
+3. Enforcing the behavior in `BaseModelFormSet.save_new_objects()` to skip saving new objects when `edit_only=True`
+
+All FAIL_TO_PASS tests now pass, and no PASS_TO_PASS tests regressed. The implementation follows Django's established pattern for boolean flags.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

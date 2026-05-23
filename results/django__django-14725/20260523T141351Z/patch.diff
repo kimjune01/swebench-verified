@@ -1,0 +1,69 @@
+diff --git a/django/forms/formsets.py b/django/forms/formsets.py
+index 75b0646512..62b2d0168e 100644
+--- a/django/forms/formsets.py
++++ b/django/forms/formsets.py
+@@ -475,7 +475,7 @@ class BaseFormSet(RenderableFormMixin):
+         return {'formset': self}
+ 
+ 
+-def formset_factory(form, formset=BaseFormSet, extra=1, can_order=False,
++def formset_factory(form, formset=BaseFormSet, extra=1, can_order=False, edit_only=False,
+                     can_delete=False, max_num=None, validate_max=False,
+                     min_num=None, validate_min=False, absolute_max=None,
+                     can_delete_extra=True, renderer=None):
+@@ -497,6 +497,7 @@ def formset_factory(form, formset=BaseFormSet, extra=1, can_order=False,
+         'form': form,
+         'extra': extra,
+         'can_order': can_order,
++        'edit_only': edit_only,
+         'can_delete': can_delete,
+         'can_delete_extra': can_delete_extra,
+         'min_num': min_num,
+diff --git a/django/forms/models.py b/django/forms/models.py
+index 7effb202e3..94d5fe9212 100644
+--- a/django/forms/models.py
++++ b/django/forms/models.py
+@@ -812,6 +812,8 @@ class BaseModelFormSet(BaseFormSet):
+         return saved_instances
+ 
+     def save_new_objects(self, commit=True):
++        if getattr(self, 'edit_only', False):
++            return []
+         self.new_objects = []
+         for form in self.extra_forms:
+             if not form.has_changed():
+@@ -870,7 +872,7 @@ class BaseModelFormSet(BaseFormSet):
+ 
+ 
+ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+-                         formset=BaseModelFormSet, extra=1, can_delete=False,
++                         formset=BaseModelFormSet, extra=1, can_delete=False, edit_only=False,
+                          can_order=False, max_num=None, fields=None, exclude=None,
+                          widgets=None, validate_max=False, localized_fields=None,
+                          labels=None, help_texts=None, error_messages=None,
+@@ -892,7 +894,7 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+                              error_messages=error_messages, field_classes=field_classes)
+     FormSet = formset_factory(form, formset, extra=extra, min_num=min_num, max_num=max_num,
+                               can_order=can_order, can_delete=can_delete,
+-                              validate_min=validate_min, validate_max=validate_max,
++                              validate_min=validate_min, validate_max=validate_max, edit_only=edit_only,
+                               absolute_max=absolute_max, can_delete_extra=can_delete_extra,
+                               renderer=renderer)
+     FormSet.model = model
+@@ -1070,7 +1072,7 @@ def _get_foreign_key(parent_model, model, fk_name=None, can_fail=False):
+ 
+ 
+ def inlineformset_factory(parent_model, model, form=ModelForm,
+-                          formset=BaseInlineFormSet, fk_name=None,
++                          formset=BaseInlineFormSet, fk_name=None, edit_only=False,
+                           fields=None, exclude=None, extra=3, can_order=False,
+                           can_delete=True, max_num=None, formfield_callback=None,
+                           widgets=None, validate_max=False, localized_fields=None,
+@@ -1092,6 +1094,7 @@ def inlineformset_factory(parent_model, model, form=ModelForm,
+         'formfield_callback': formfield_callback,
+         'formset': formset,
+         'extra': extra,
++        'edit_only': edit_only,
+         'can_delete': can_delete,
+         'can_order': can_order,
+         'fields': fields,

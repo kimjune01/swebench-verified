@@ -1,0 +1,54 @@
+# Recon: django__django-14725
+
+## Failure summary
+
+Three tests check that model formsets can be created with an `edit_only=True` parameter to prevent new object creation while allowing edits to existing objects. All three fail with `TypeError: modelformset_factory() got an unexpected keyword argument 'edit_only'` (and similarly for `inlineformset_factory()`). The feature doesn't exist yet.
+
+## Suspect set
+
+- `django/forms/formsets.py` lines 478-515: `formset_factory` function - needs to accept and propagate `edit_only` parameter
+- `django/forms/models.py` lines 872-900: `modelformset_factory` function - needs to accept and pass through `edit_only`
+- `django/forms/models.py` lines 1072-1115: `inlineformset_factory` function - needs to accept and pass through `edit_only`
+- `django/forms/models.py` lines 814-827: `BaseModelFormSet.save_new_objects` method - needs to check `edit_only` flag
+
+## Root cause
+
+The `edit_only` parameter is not implemented in the formset factory functions. The feature requires:
+
+1. Adding `edit_only` as a parameter to `formset_factory`, following the pattern of existing boolean flags like `can_delete` and `can_order`
+2. Setting `edit_only` as a class attribute on the generated FormSet class (via the `attrs` dict in `formset_factory`)
+3. Propagating the parameter through `modelformset_factory` and `inlineformset_factory`
+4. Modifying `BaseModelFormSet.save_new_objects` to return an empty list when `self.edit_only` is True
+
+The pattern is established by `can_delete`: it's a parameter to all three factory functions, gets set as a class attribute, and is checked at runtime (e.g., in `_should_delete_form`).
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/forms/formsets.py:478-481` — `formset_factory` signature lacks `edit_only`
+- `django/forms/formsets.py:498-501` — `attrs` dict where class attributes are set: `'can_delete': can_delete, 'can_delete_extra': can_delete_extra, ...`
+- `django/forms/models.py:872-878` — `modelformset_factory` signature lacks `edit_only`
+- `django/forms/models.py:895-898` — call to `formset_factory` with existing flags
+- `django/forms/models.py:1072-1080` — `inlineformset_factory` signature lacks `edit_only`
+- `django/forms/models.py:1093-1112` — kwargs dict building for `modelformset_factory`
+- `django/forms/models.py:814-827` — `save_new_objects` unconditionally saves `extra_forms`
+
+## Edit sites
+
+1. **django/forms/formsets.py line 478**: Add `edit_only=False` parameter to `formset_factory` signature
+2. **django/forms/formsets.py line 498**: Add `'edit_only': edit_only,` to the `attrs` dictionary (alongside `can_delete`, `can_order`, etc.)
+3. **django/forms/models.py line 872**: Add `edit_only=False` parameter to `modelformset_factory` signature
+4. **django/forms/models.py line 895**: Pass `edit_only=edit_only` to the `formset_factory()` call
+5. **django/forms/models.py line 1072**: Add `edit_only=False` parameter to `inlineformset_factory` signature
+6. **django/forms/models.py line 1093**: Add `'edit_only': edit_only,` to the `kwargs` dictionary that gets passed to `modelformset_factory`
+7. **django/forms/models.py line 814**: At the start of `save_new_objects`, add: `if getattr(self, 'edit_only', False): return []` to short-circuit when edit_only is True
+
+## Rejected hypotheses
+
+None. The failure is a straightforward missing feature; all three tests fail at the factory call site before any runtime logic executes.
+
+## Open questions
+
+None. The implementation pattern is clear from existing boolean flags like `can_delete`.
+
+---STDERR---
