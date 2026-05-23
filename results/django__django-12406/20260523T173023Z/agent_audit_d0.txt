@@ -1,0 +1,31 @@
+## Phase 5: Emit
+
+# Audit: django__django-12406
+
+## FAIL_TO_PASS
+- test_non_blank_foreign_key_with_radio (model_forms.tests.ModelFormBaseTest): **PASS** ✓
+- test_choices_radio_blank (model_forms.test_modelchoicefield.ModelChoiceFieldTests): **PASS** ✓
+- test_clean_model_instance (model_forms.test_modelchoicefield.ModelChoiceFieldTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 169 tests in the full suite passed
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — all baseline failures were in the FAIL_TO_PASS set and are now resolved
+
+## Summary
+
+The craft patch successfully resolves all three failing tests:
+
+1. **test_choices_radio_blank**: Fixed by adding the `blank` parameter to `ModelChoiceField.__init__()`, eliminating the TypeError
+2. **test_non_blank_foreign_key_with_radio**: Fixed by implementing the logic to suppress the empty option when `isinstance(self.widget, RadioSelect) and blank is False`
+3. **test_clean_model_instance**: Fixed as a side effect of accepting the `blank` parameter
+
+The patch introduces no regressions — the full test suite (169 tests) passes cleanly.
+
+**Contract fulfilled**: All FAIL_TO_PASS tests now pass AND zero PASS_TO_PASS regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

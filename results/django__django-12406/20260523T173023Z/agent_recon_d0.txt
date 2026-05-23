@@ -1,0 +1,76 @@
+# Recon: django__django-12406
+
+## Failure summary
+
+Three tests fail because ModelForm RadioSelect widgets for foreign keys incorrectly show a blank option even when blank=False on the model:
+
+1. **test_choices_radio_blank**: `TypeError: __init__() got an unexpected keyword argument 'blank'` - The test explicitly passes a `blank` parameter to `ModelChoiceField.__init__()`, but this parameter doesn't exist in the signature (line 1184-1187 of django/forms/models.py).
+
+2. **test_non_blank_foreign_key_with_radio**: `AssertionError: Lists differ: [('', '---------'), ...] != [(1, 'user')]` - When creating a ModelForm with a ForeignKey that has `blank=False` and a RadioSelect widget, the form field's choices incorrectly include a blank option `('', '---------')`. The test expects only the actual choice `[(1, 'user')]`.
+
+3. **test_clean_model_instance**: Listed in FAIL_TO_PASS but doesn't appear to fail in the gate output - likely passes once the other fixes are in place.
+
+## Suspect set
+
+- `django/forms/models.py` lines 1184-1202: `ModelChoiceField.__init__()` - Missing `blank` parameter, incorrect `empty_label` logic
+- `django/db/models/fields/related.py` lines 973-982: `ForeignKey.formfield()` - Doesn't pass `blank` value to form field
+- `django/forms/models.py` lines 1148-1156: `ModelChoiceIterator.__iter__()` - Yields blank option if `self.field.empty_label is not None` (correct, no change needed)
+
+## Root cause
+
+**ModelChoiceField doesn't support the `blank` parameter and doesn't properly handle blank=False from model fields.**
+
+Current behavior in `ModelChoiceField.__init__()` (lines 1188-1191):
+```python
+if required and (initial is not None):
+    self.empty_label = None
+else:
+    self.empty_label = empty_label
+```
+
+This only hides the blank option if BOTH `required=True` AND `initial is not None`. But for RadioSelect widgets (or when explicitly specified via `blank=False`), the blank option should be hidden whenever the field is required, regardless of whether there's an initial value. Unlike Select dropdowns which need a blank option to indicate "nothing selected", RadioSelect has an inherent unselected state (no radio button checked).
+
+When a ForeignKey with `blank=False` creates a ModelChoiceField, the model field's `formfield()` method passes `required=not self.blank` (i.e., `required=True`), but doesn't pass the `blank` attribute itself. Without an initial value, the blank option still appears.
+
+Confidence: **deduction** — 95%
+Supporting evidence:
+- `django/forms/models.py:1197` — `Field.__init__()` called with `**kwargs` containing `blank`, but parameter not in signature → TypeError
+- `django/forms/models.py:1188-1191` — Empty label logic checks `required and (initial is not None)`, missing check for explicit `blank=False`
+- `django/db/models/fields/related.py:978-981` — ForeignKey.formfield() passes `form_class`, `queryset`, `to_field_name`, but not `blank`
+- `django/db/models/fields/__init__.py:891` — Base Field.formfield() sets `'required': not self.blank` but doesn't pass `blank` itself
+
+## Edit sites
+
+1. **django/forms/models.py lines 1184-1191** (`ModelChoiceField.__init__`):
+   - Add `blank=None` parameter to signature after `limit_choices_to`
+   - Replace the `empty_label` logic with:
+     ```python
+     if blank is not None:
+         # Explicit blank parameter takes precedence
+         self.empty_label = empty_label if blank else None
+     elif required and (initial is not None):
+         self.empty_label = None
+     else:
+         self.empty_label = empty_label
+     ```
+   - This allows explicit control: `blank=False` → no blank option, `blank=True` → show blank option, `blank=None` (default) → use existing logic
+
+2. **django/db/models/fields/related.py lines 978-981** (`ForeignKey.formfield`):
+   - Add `'blank': self.blank` to the dictionary passed to `super().formfield()`
+   - This ensures ModelChoiceField receives the model field's blank value when auto-generating form fields for ModelForms
+
+## Competing hypotheses
+
+None — the root cause is clear from the error messages and code inspection.
+
+## Rejected hypotheses
+
+- **H₁: The issue is widget-specific logic** — Rejected because the test explicitly passes `blank` as a parameter, indicating it should work for all widgets, not just RadioSelect. The RadioSelect case mentioned in the problem description is just the most visible symptom.
+
+- **H₂: Need to check widget type in ModelChoiceField** — Rejected because the test shows the API should support an explicit `blank` parameter that works regardless of widget type. Widget-specific logic would be a hack; the proper fix is to respect the `blank` parameter.
+
+## Open questions
+
+None — the fix is straightforward: add the parameter and pass it from model fields.
+
+---STDERR---

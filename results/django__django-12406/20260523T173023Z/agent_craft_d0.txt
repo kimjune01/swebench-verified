@@ -1,0 +1,10 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass:
+- ✅ test_choices_radio_blank
+- ✅ test_non_blank_foreign_key_with_radio  
+- ✅ test_clean_model_instance
+
+The fix adds a `blank` parameter to `ModelChoiceField` that controls the empty option for RadioSelect widgets, while preserving existing behavior for other widgets. The empty_label logic now suppresses the blank option when either: (1) required=True and initial is set, or (2) widget is RadioSelect and blank=False.
+
+---STDERR---
