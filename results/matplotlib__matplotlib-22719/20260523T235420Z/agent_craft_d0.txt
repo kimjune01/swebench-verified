@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Fixed matplotlib__matplotlib-22719 in one gate iteration. The issue was that `all()` returns `True` for empty sequences, causing empty arrays to be misclassified as numeric and trigger a deprecation warning.
+
+**Applied change:** `lib/matplotlib/category.py:58` — Added `bool(values.size) and` before the `all()` check to prevent vacuous truth on empty input.
+
+codex caught the initial draft (early return) being too broad and suggested the narrower fix that preserves the normal categorical path. Gate green — all FAIL_TO_PASS tests pass.
+
+---STDERR---

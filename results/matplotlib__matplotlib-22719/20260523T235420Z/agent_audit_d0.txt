@@ -1,0 +1,25 @@
+# Audit: matplotlib__matplotlib-22719
+
+## FAIL_TO_PASS
+- `test_no_deprecation_on_empty_data`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 89 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — 8 xfailed tests are expected failures (xfail markers), not regressions.
+
+## Gate output
+```
+90 passed, 8 xfailed, 1 warning in 1.15s
+```
+
+All FAIL_TO_PASS tests now pass. Zero PASS_TO_PASS regressions. Full contract satisfied.
+
+## Applied patch
+The fix adds `bool(values.size) and` before the `all()` expression in `lib/matplotlib/category.py:58` to prevent vacuous truth on empty arrays. This correctly handles empty data without triggering the deprecation warning while preserving all normal categorical conversion behavior.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

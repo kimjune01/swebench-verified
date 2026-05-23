@@ -1,0 +1,39 @@
+# Recon: matplotlib__matplotlib-22719
+
+## Failure summary
+The test `test_no_deprecation_on_empty_data` verifies that plotting empty data (`ax.plot([], [])`) on an axis with category units should not emit a deprecation warning. The test fails with a `ConversionError: Failed to convert value(s) to axis units: array([], dtype=float64)`, caused by a deprecation warning being triggered and treated as an error during unit conversion.
+
+## Suspect set
+- `lib/matplotlib/category.py` lines 54-67: The `StrCategoryConverter.convert()` method, specifically the `is_numlike` check that incorrectly identifies empty arrays as numeric values
+
+## Root cause
+In `lib/matplotlib/category.py:58-60`, the category converter checks whether input values are numeric:
+
+```python
+is_numlike = all(units.ConversionInterface.is_numlike(v)
+                 and not isinstance(v, (str, bytes))
+                 for v in values)
+```
+
+Python's `all()` function returns `True` when evaluated on an empty sequence. When `ax.plot([], [])` is called with category units set, the empty list becomes an empty numpy array. The `all()` check over this empty array returns `True`, causing the code to incorrectly identify the empty array as "numlike" and trigger the deprecation warning at lines 62-65.
+
+**Confidence**: abduction — 85%
+
+**Supporting evidence**:
+- `lib/matplotlib/category.py:58` — `all()` on empty generator returns `True`
+- Verified: `python -c "print(all(x > 0 for x in []))"` → `True`
+- Git commit 90f2e4cf49 introduced this deprecation warning in version 3.5
+- Stack trace shows: `axis.py:1624` → `category.py:62` (the warn_deprecated call)
+
+## Edit sites
+- `lib/matplotlib/category.py` lines 56-67: Add early return for empty arrays before checking `is_numlike`
+  - After line 56 (`values = np.atleast_1d(np.array(value, dtype=object))`), add check for `len(values) == 0` or `values.size == 0`
+  - If empty, return `np.asarray(values, dtype=float)` immediately, bypassing the `is_numlike` check and deprecation warning
+
+## Rejected hypotheses
+None — no competing explanations identified during read-only diagnosis.
+
+## Open questions
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
