@@ -1,0 +1,103 @@
+2026-05-23 17:27:24,974 - INFO - Creating container for django__django-14011...
+2026-05-23 17:27:37,415 - INFO - Container for django__django-14011 created: cee68ebff926217e9977d371a106ba6d8b2eb19e304a7b8e6b3f26350295b4a9
+2026-05-23 17:27:37,900 - INFO - Container for django__django-14011 started: cee68ebff926217e9977d371a106ba6d8b2eb19e304a7b8e6b3f26350295b4a9
+2026-05-23 17:27:37,901 - INFO - Intermediate patch for django__django-14011 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14011/patch.diff, now applying to container...
+2026-05-23 17:27:37,973 - INFO - >>>>> Applied Patch:
+Checking patch django/core/servers/basehttp.py...
+Applied patch django/core/servers/basehttp.py cleanly.
+
+2026-05-23 17:27:38,604 - INFO - Git diff before:
+diff --git a/django/core/servers/basehttp.py b/django/core/servers/basehttp.py
+index 14dab517c9..417597a961 100644
+--- a/django/core/servers/basehttp.py
++++ b/django/core/servers/basehttp.py
+@@ -13,6 +13,8 @@ import socketserver
+ import sys
+ from wsgiref import simple_server
+ 
++from django.db import connections
++from django.db.backends.base.base import BaseDatabaseWrapper
+ from django.core.exceptions import ImproperlyConfigured
+ from django.core.handlers.wsgi import LimitedStream
+ from django.core.wsgi import get_wsgi_application
+@@ -81,6 +83,28 @@ class ThreadedWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
+     """A threaded version of the WSGIServer"""
+     daemon_threads = True
+ 
++    def __init__(self, *args, connections_override=None, **kwargs):
++        super().__init__(*args, **kwargs)
++        self.connections_override = connections_override
++
++    def process_request_thread(self, request, client_address):
++        if self.connections_override:
++            for alias, conn in self.connections_override.items():
++                connections[alias] = conn
++        super().process_request_thread(request, client_address)
++
++    def _close_connections(self):
++        # Close override connections directly
++        if self.connections_override:
++            for conn in self.connections_override.values():
++                BaseDatabaseWrapper.close(conn)
++        else:
++            connections.close_all()
++
++    def close_request(self, request):
++        self._close_connections()
++        super().close_request(request)
++
+ 
+ class ServerHandler(simple_server.ServerHandler):
+     http_version = '1.1'
+2026-05-23 17:27:38,604 - INFO - Eval script for django__django-14011 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14011/eval.sh; copying to container...
+2026-05-23 17:27:48,690 - INFO - Test runtime: 10.05 seconds
+2026-05-23 17:27:48,691 - INFO - Test output for django__django-14011 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14011/test_output.txt
+2026-05-23 17:27:48,785 - INFO - Git diff after:
+diff --git a/django/core/servers/basehttp.py b/django/core/servers/basehttp.py
+index 14dab517c9..417597a961 100644
+--- a/django/core/servers/basehttp.py
++++ b/django/core/servers/basehttp.py
+@@ -13,6 +13,8 @@ import socketserver
+ import sys
+ from wsgiref import simple_server
+ 
++from django.db import connections
++from django.db.backends.base.base import BaseDatabaseWrapper
+ from django.core.exceptions import ImproperlyConfigured
+ from django.core.handlers.wsgi import LimitedStream
+ from django.core.wsgi import get_wsgi_application
+@@ -81,6 +83,28 @@ class ThreadedWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
+     """A threaded version of the WSGIServer"""
+     daemon_threads = True
+ 
++    def __init__(self, *args, connections_override=None, **kwargs):
++        super().__init__(*args, **kwargs)
++        self.connections_override = connections_override
++
++    def process_request_thread(self, request, client_address):
++        if self.connections_override:
++            for alias, conn in self.connections_override.items():
++                connections[alias] = conn
++        super().process_request_thread(request, client_address)
++
++    def _close_connections(self):
++        # Close override connections directly
++        if self.connections_override:
++            for conn in self.connections_override.values():
++                BaseDatabaseWrapper.close(conn)
++        else:
++            connections.close_all()
++
++    def close_request(self, request):
++        self._close_connections()
++        super().close_request(request)
++
+ 
+ class ServerHandler(simple_server.ServerHandler):
+     http_version = '1.1'
+2026-05-23 17:27:48,786 - INFO - Grading answer for django__django-14011...
+2026-05-23 17:27:48,786 - INFO - report: {'django__django-14011': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_live_server_url_is_class_property (servers.tests.LiveServerAddress)', 'Data written to the database by a view can be read.', 'Fixtures are properly loaded and visible to the live server thread.', 'test_check_model_instance_from_subview (servers.tests.LiveServerThreadedTests)', 'test_view_calls_subview (servers.tests.LiveServerThreadedTests)', 'test_404 (servers.tests.LiveServerViews)', 'A HTTP 1.1 server is supposed to support keep-alive. Since our', 'test_environ (servers.tests.LiveServerViews)', 'test_keep_alive_connection_clears_previous_request_data (servers.tests.LiveServerViews)', 'See `test_closes_connection_without_content_length` for details. This', 'test_media_files (servers.tests.LiveServerViews)', 'LiveServerTestCase reports a 404 status code when HTTP client', 'Launched server serves with HTTP 1.1.', 'test_static_files (servers.tests.LiveServerViews)', 'test_view (servers.tests.LiveServerViews)', 'Each LiveServerTestCase binds to a unique port or fails to start a', "LiveServerTestCase.port customizes the server's port."], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_set_up_class (servers.tests.LiveServerTestCaseSetupTest)', 'Contrast to'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-14011: resolved: True
+2026-05-23 17:27:48,786 - INFO - Attempting to stop container sweb.eval.django__django-14011.batch...
+2026-05-23 17:28:04,175 - INFO - Attempting to remove container sweb.eval.django__django-14011.batch...
+2026-05-23 17:28:04,190 - INFO - Container sweb.eval.django__django-14011.batch removed.

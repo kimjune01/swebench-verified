@@ -1,0 +1,27 @@
+# Audit: django__django-14011
+
+## FAIL_TO_PASS
+All 9 tests now passing:
+- test_live_server_url_is_class_property (servers.tests.LiveServerAddress): **PASS**
+- test_database_writes (servers.tests.LiveServerDatabase): **PASS**
+- test_fixtures_loaded (servers.tests.LiveServerDatabase): **PASS**
+- test_check_model_instance_from_subview (servers.tests.LiveServerThreadedTests): **PASS**
+- test_view_calls_subview (servers.tests.LiveServerThreadedTests): **PASS**
+- test_404 (servers.tests.LiveServerViews): **PASS**
+- test_closes_connection_without_content_length (servers.tests.LiveServerViews): **PASS**
+- test_environ (servers.tests.LiveServerViews): **PASS**
+- test_keep_alive_connection_clears_previous_request_data (servers.tests.LiveServerViews): **PASS**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Kill report
+Not applicable - all tests passing.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,53 @@
+Now I'll output the diagnosis to stdout:
+
+```markdown
+# Recon: django__django-14011
+
+## Failure summary
+
+LiveServerTestCase creates a ThreadedWSGIServer to serve requests during tests. The tests expect the server to accept a `connections_override` parameter to share database connections from the main thread, and to close those connections after each request thread finishes. Currently, all tests fail with `TypeError: __init__() got an unexpected keyword argument 'connections_override'` because the server classes don't accept this parameter. The test `LiveServerTestCloseConnectionTest.test_closes_connections` specifically verifies that database connections are closed after each threaded request to prevent "database is being accessed by other users" errors when tearing down test databases.
+
+## Suspect set
+
+- `django/core/servers/basehttp.py` lines 60-79: WSGIServer and ThreadedWSGIServer classes need to accept `connections_override` parameter and implement connection cleanup after each thread
+
+## Root cause
+
+The `LiveServerThread._create_server()` method at line 1516 of `django/test/testcases.py` passes `connections_override=connections_override` to the server class constructor. However:
+
+1. `WSGIServer.__init__` (line 66) accepts `**kwargs` and passes them to `super().__init__(*args, **kwargs)` 
+2. The parent class `wsgiref.simple_server.WSGIServer` only accepts `(server_address, RequestHandlerClass, bind_and_activate=True)` and rejects unexpected keyword arguments
+3. When `connections_override` reaches the parent's `__init__`, it raises TypeError
+
+Additionally, `ThreadedWSGIServer` lacks the infrastructure to close database connections after each request thread completes, which is necessary to prevent leaked connections in threaded test scenarios.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/test/testcases.py:1516-1521` — passes `connections_override=connections_override` to `self.server_class()`
+- `django/core/servers/basehttp.py:66-72` — `WSGIServer.__init__` passes all `**kwargs` to parent without filtering
+- `tests/servers/tests.py:52-54` — test overrides `_close_connections()` and calls `super()._close_connections()`, expecting base class to implement this method
+- Python stdlib: `wsgiref.simple_server.WSGIServer.__init__` signature is `(self, server_address, RequestHandlerClass, bind_and_activate=True)` with no `**kwargs`
+- `socketserver.ThreadingMixIn.process_request_thread` — the standard pattern for cleanup is in the finally block after request handling
+
+## Edit sites
+
+1. `django/core/servers/basehttp.py` lines 66-72 — Modify `WSGIServer.__init__` to:
+   - Extract `connections_override` from kwargs before passing to super
+   - Store it as `self.connections_override = connections_override` for use by subclasses
+   - Prevent it from being passed to parent class which doesn't accept it
+
+2. `django/core/servers/basehttp.py` after line 79 — Add to `ThreadedWSGIServer`:
+   - `_close_connections()` method that calls `connections.close_all()` to close database connections for the current thread
+   - Override `process_request_thread(request, client_address)` to call `_close_connections()` in a finally block after handling the request, ensuring connections are closed even if request handling raises an exception
+
+## Rejected hypotheses
+
+None — the error message directly identifies the missing parameter support, and the test code explicitly shows the expected behavior.
+
+## Open questions
+
+None — the fix is straightforward and well-defined by the existing test expectations.
+```
+
+---STDERR---

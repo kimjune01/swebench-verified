@@ -1,0 +1,17 @@
+## RESOLVED
+
+All FAIL_TO_PASS tests now passing. The fix required two key insights from codex volleys:
+
+**Issue**: LiveServerTestCase passes `connections_override` parameter to ThreadedWSGIServer, but the server didn't accept it, causing `TypeError: __init__() got an unexpected keyword argument 'connections_override'`.
+
+**Fix implemented** (2 gate iterations):
+1. **ThreadedWSGIServer** now accepts `connections_override` parameter
+2. **process_request_thread()** installs the connection overrides for the request thread
+3. **_close_connections()** uses `BaseDatabaseWrapper.close()` to bypass SQLite's in-memory no-op close behavior
+4. **close_request()** ensures connections are closed after each request
+
+**Critical finding**: SQLite's backend overrides `close()` to no-op for in-memory databases (to avoid destroying the test database). The fix calls `BaseDatabaseWrapper.close(conn)` directly to force the connection wrapper to close even for in-memory databases.
+
+**Gate result**: 20/20 tests passing ✓
+
+---STDERR---
