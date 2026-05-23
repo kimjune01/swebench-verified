@@ -1,0 +1,58 @@
+Now I'll print the complete diagnosis to stdout:
+
+```markdown
+# Recon: django__django-15252
+
+## Failure summary
+
+Two tests fail related to MigrationRecorder's ensure_schema behavior:
+
+1. **test_migrate_skips_schema_creation** - expects that when `MigrationExecutor.migrate()` is called with an empty plan, no database queries should occur (the django_migrations table should not be created). Currently fails with "table django_migrations already exists" error because `ensure_schema()` is called unconditionally.
+
+2. **test_migrate_test_setting_false_ensure_schema** - expects that when `TEST['MIGRATE'] = False` (which results in an empty migration plan), `ensure_schema()` should not be called at all. Currently fails because it is called once.
+
+The underlying issue from the problem description is that MigrationRecorder does not respect db_router's `allow_migrate` rules when creating the django_migrations table.
+
+## Suspect set
+
+- `django/db/migrations/executor.py` lines 90-110: The `migrate()` method calls `self.recorder.ensure_schema()` unconditionally
+- `django/db/migrations/recorder.py` lines 59-71: The `ensure_schema()` method creates the table without checking router rules
+
+## Root cause
+
+**Primary issue:** In `MigrationExecutor.migrate()` at line ~100, `self.recorder.ensure_schema()` is called unconditionally before checking whether the migration plan is empty. When the plan is empty (no migrations to apply), there is no need to create the django_migrations table because nothing will be recorded.
+
+**Secondary issue:** In `MigrationRecorder.ensure_schema()` at lines 62-71, the method creates the django_migrations table without checking if migrations are allowed on this database connection via `router.allow_migrate()`. This violates the db_router contract - if a router specifies that migrations should not run on a particular database, the migrations table should not be created there either.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/migrations/executor.py:100` — `self.recorder.ensure_schema()` is called before the `if not plan:` check on line 109
+- `django/db/migrations/recorder.py:62-71` — `ensure_schema()` has no `allow_migrate` check, only checks `has_table()` then creates
+- `django/db/migrations/recorder.py:33` — Migration model has `app_label = 'migrations'`, which should be used for router checks
+- `django/db/migrations/executor.py:2` — `router` is already imported in executor.py
+- `django/db/migrations/operations/special.py:104` — shows pattern: `router.allow_migrate(schema_editor.connection.alias, app_label, **hints)`
+
+## Edit sites
+
+**Site 1:** `django/db/migrations/executor.py` lines 98-100
+- Move the `self.recorder.ensure_schema()` call inside the migration execution logic
+- Only call it when `plan` is not empty (when there are actual migrations to record)
+- Specifically: move line 100 to after the `if not plan:` block, so it's only called when migrations will actually be applied and recorded
+
+**Site 2:** `django/db/migrations/recorder.py` lines 59-71
+- Add import for `router` from `django.db` at top of file
+- In `ensure_schema()` method, add check before creating table:
+  - Call `router.allow_migrate(self.connection.alias, 'migrations')` 
+  - Return early if False (don't create table)
+  - The check should come after the `has_table()` check but before table creation
+
+## Open questions
+
+None - the fix is straightforward and both edit sites are independent but complementary:
+- Edit site 1 fixes the "empty plan" tests by avoiding unnecessary table creation
+- Edit site 2 fixes the router contract violation described in the problem statement
+- Both changes align with Django's design principles around migrations and routing
+```
+
+---STDERR---

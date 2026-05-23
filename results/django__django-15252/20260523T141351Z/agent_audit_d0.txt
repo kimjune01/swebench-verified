@@ -1,0 +1,25 @@
+# Audit: django__django-15252
+
+## FAIL_TO_PASS
+- test_migrate_test_setting_false_ensure_schema (backends.base.test_creation.TestDbCreationTests): **PASS** ✓
+- test_migrate_skips_schema_creation (migrations.test_executor.ExecutorTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 34 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - Base capture showed `test_migrate_skips_schema_creation` as ERROR, which was a FAIL_TO_PASS target, now resolved.
+
+## Kill report
+Not applicable - fix is complete.
+
+---
+
+**Gate output**: Ran 36 tests in 0.674s - **OK**
+
+The craft patch successfully resolves both FAIL_TO_PASS tests by conditionally calling `ensure_schema()` only when the migration plan is non-empty. No regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

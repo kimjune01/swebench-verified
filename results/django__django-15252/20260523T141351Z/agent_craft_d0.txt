@@ -1,0 +1,9 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass with the minimal executor.py fix:
+- test_migrate_test_setting_false_ensure_schema ✓
+- test_migrate_skips_schema_creation ✓
+
+The fix ensures `ensure_schema()` is only called when there are migrations to record, preventing unnecessary table creation when the migration plan is empty.
+
+---STDERR---
