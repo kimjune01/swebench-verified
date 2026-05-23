@@ -1,0 +1,23 @@
+# Audit: scikit-learn__scikit-learn-14629
+
+## FAIL_TO_PASS
+- `test_multi_output_classes_[estimator1]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Resolution Summary
+The patch successfully resolves the issue by adding the `classes_` attribute to `MultiOutputClassifier.fit()`:
+```python
+self.classes_ = [estimator.classes_ for estimator in self.estimators_]
+```
+
+All 27 tests pass. The previously failing test now passes, and no regressions were introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

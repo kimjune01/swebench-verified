@@ -1,0 +1,198 @@
+2026-05-23 15:31:10,960 - INFO - Creating container for scikit-learn__scikit-learn-14629...
+2026-05-23 15:31:11,992 - INFO - Container for scikit-learn__scikit-learn-14629 created: 60e0ee71893b423ba9e4c9938fea2634321152dd39f8d5124926d6ccefe582f3
+2026-05-23 15:31:12,236 - INFO - Container for scikit-learn__scikit-learn-14629 started: 60e0ee71893b423ba9e4c9938fea2634321152dd39f8d5124926d6ccefe582f3
+2026-05-23 15:31:12,237 - INFO - Intermediate patch for scikit-learn__scikit-learn-14629 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14629/patch.diff, now applying to container...
+2026-05-23 15:31:12,352 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:17: trailing whitespace.
+ 
+/tmp/patch.diff:81: trailing whitespace.
+ 
+Checking patch multioutput.patch...
+Checking patch sklearn/multioutput.py...
+Applied patch multioutput.patch cleanly.
+Applied patch sklearn/multioutput.py cleanly.
+warning: 2 lines add whitespace errors.
+
+2026-05-23 15:31:12,574 - INFO - Git diff before:
+diff --git a/sklearn/multioutput.py b/sklearn/multioutput.py
+index 463b72d40..563cf9421 100644
+--- a/sklearn/multioutput.py
++++ b/sklearn/multioutput.py
+@@ -228,6 +228,8 @@ class MultiOutputRegressor(MultiOutputEstimator, RegressorMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+@@ -320,10 +322,72 @@ class MultiOutputClassifier(MultiOutputEstimator, ClassifierMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+         super().__init__(estimator, n_jobs)
++    def fit(self, X, y, sample_weight=None):
++        """Fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets. An indicator matrix turns on multilabel
++            estimation.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().fit(X, y, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
++
++    @if_delegate_has_method('estimator')
++    def partial_fit(self, X, y, classes=None, sample_weight=None):
++        """Incrementally fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets.
++
++        classes : list of numpy arrays, shape (n_outputs)
++            Each array is unique classes for one output in str/int
++            Can be obtained by via
++            ``[np.unique(y[:, i]) for i in range(y.shape[1])]``, where y is the
++            target matrix of the entire dataset.
++            This argument is required for the first call to partial_fit
++            and can be omitted in the subsequent calls.
++            Note that y does not need to contain all labels in `classes`.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().partial_fit(X, y, classes=classes, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
+ 
+     def predict_proba(self, X):
+         """Probability estimates.
+2026-05-23 15:31:12,574 - INFO - Eval script for scikit-learn__scikit-learn-14629 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14629/eval.sh; copying to container...
+2026-05-23 15:31:18,479 - INFO - Test runtime: 5.80 seconds
+2026-05-23 15:31:18,479 - INFO - Test output for scikit-learn__scikit-learn-14629 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14629/test_output.txt
+2026-05-23 15:31:18,599 - INFO - Git diff after:
+diff --git a/sklearn/multioutput.py b/sklearn/multioutput.py
+index 463b72d40..563cf9421 100644
+--- a/sklearn/multioutput.py
++++ b/sklearn/multioutput.py
+@@ -228,6 +228,8 @@ class MultiOutputRegressor(MultiOutputEstimator, RegressorMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+@@ -320,10 +322,72 @@ class MultiOutputClassifier(MultiOutputEstimator, ClassifierMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+         super().__init__(estimator, n_jobs)
++    def fit(self, X, y, sample_weight=None):
++        """Fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets. An indicator matrix turns on multilabel
++            estimation.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().fit(X, y, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
++
++    @if_delegate_has_method('estimator')
++    def partial_fit(self, X, y, classes=None, sample_weight=None):
++        """Incrementally fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets.
++
++        classes : list of numpy arrays, shape (n_outputs)
++            Each array is unique classes for one output in str/int
++            Can be obtained by via
++            ``[np.unique(y[:, i]) for i in range(y.shape[1])]``, where y is the
++            target matrix of the entire dataset.
++            This argument is required for the first call to partial_fit
++            and can be omitted in the subsequent calls.
++            Note that y does not need to contain all labels in `classes`.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().partial_fit(X, y, classes=classes, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
+ 
+     def predict_proba(self, X):
+         """Probability estimates.
+2026-05-23 15:31:18,599 - INFO - Grading answer for scikit-learn__scikit-learn-14629...
+2026-05-23 15:31:18,600 - INFO - report: {'scikit-learn__scikit-learn-14629': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['sklearn/tests/test_multioutput.py::test_multi_output_classes_[estimator1]'], 'failure': []}, 'PASS_TO_PASS': {'success': ['sklearn/tests/test_multioutput.py::test_multi_target_regression', 'sklearn/tests/test_multioutput.py::test_multi_target_regression_partial_fit', 'sklearn/tests/test_multioutput.py::test_multi_target_regression_one_target', 'sklearn/tests/test_multioutput.py::test_multi_target_sparse_regression', 'sklearn/tests/test_multioutput.py::test_multi_target_sample_weights_api', 'sklearn/tests/test_multioutput.py::test_multi_target_sample_weight_partial_fit', 'sklearn/tests/test_multioutput.py::test_multi_target_sample_weights', 'sklearn/tests/test_multioutput.py::test_multi_output_classification_partial_fit_parallelism', 'sklearn/tests/test_multioutput.py::test_multi_output_predict_proba', 'sklearn/tests/test_multioutput.py::test_multi_output_classification_partial_fit', 'sklearn/tests/test_multioutput.py::test_multi_output_classification_partial_fit_no_first_classes_exception', 'sklearn/tests/test_multioutput.py::test_multi_output_classification', 'sklearn/tests/test_multioutput.py::test_multiclass_multioutput_estimator', 'sklearn/tests/test_multioutput.py::test_multiclass_multioutput_estimator_predict_proba', 'sklearn/tests/test_multioutput.py::test_multi_output_classification_sample_weights', 'sklearn/tests/test_multioutput.py::test_multi_output_classification_partial_fit_sample_weights', 'sklearn/tests/test_multioutput.py::test_multi_output_exceptions', 'sklearn/tests/test_multioutput.py::test_classifier_chain_fit_and_predict_with_linear_svc', 'sklearn/tests/test_multioutput.py::test_classifier_chain_fit_and_predict_with_sparse_data', 'sklearn/tests/test_multioutput.py::test_classifier_chain_vs_independent_models', 'sklearn/tests/test_multioutput.py::test_base_chain_fit_and_predict', 'sklearn/tests/test_multioutput.py::test_base_chain_fit_and_predict_with_sparse_data_and_cv', 'sklearn/tests/test_multioutput.py::test_base_chain_random_order', 'sklearn/tests/test_multioutput.py::test_base_chain_crossval_fit_and_predict', 'sklearn/tests/test_multioutput.py::test_multi_output_classes_[estimator0]', 'sklearn/tests/test_multioutput.py::test_multi_output_classes_[estimator2]'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for scikit-learn__scikit-learn-14629: resolved: True
+2026-05-23 15:31:18,600 - INFO - Attempting to stop container sweb.eval.scikit-learn__scikit-learn-14629.batch...
+2026-05-23 15:31:34,056 - INFO - Attempting to remove container sweb.eval.scikit-learn__scikit-learn-14629.batch...
+2026-05-23 15:31:34,062 - INFO - Container sweb.eval.scikit-learn__scikit-learn-14629.batch removed.

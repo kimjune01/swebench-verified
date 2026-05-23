@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is that `MultiOutputClassifier` doesn't expose a `classes_` attribute, which is expected by both the test and `cross_val_predict`. The fix is to override `fit` (and optionally `partial_fit`) to aggregate the classes from individual estimators, following the same pattern as `ClassifierChain`.
+
+---STDERR---

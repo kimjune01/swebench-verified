@@ -1,0 +1,169 @@
+diff --git a/multioutput.patch b/multioutput.patch
+new file mode 100644
+index 000000000..517e6909f
+--- /dev/null
++++ b/multioutput.patch
+@@ -0,0 +1,77 @@
++--- a/sklearn/multioutput.py
+++++ b/sklearn/multioutput.py
++@@ -319,10 +319,77 @@ class MultiOutputClassifier(MultiOutputEstimator, ClassifierMixin):
++     Attributes
++     ----------
++     estimators_ : list of ``n_output`` estimators
++         Estimators used for predictions.
+++    classes_ : list
+++        Class labels for each output.
++     """
++ 
++     def __init__(self, estimator, n_jobs=None):
++         super().__init__(estimator, n_jobs)
+++
+++    def fit(self, X, y, sample_weight=None):
+++        """Fit the model to data.
+++        Fit a separate model for each output variable.
+++
+++        Parameters
+++        ----------
+++        X : (sparse) array-like, shape (n_samples, n_features)
+++            Data.
+++
+++        y : (sparse) array-like, shape (n_samples, n_outputs)
+++            Multi-output targets. An indicator matrix turns on multilabel
+++            estimation.
+++
+++        sample_weight : array-like, shape = (n_samples) or None
+++            Sample weights. If None, then samples are equally weighted.
+++            Only supported if the underlying classifier supports sample
+++            weights.
+++
+++        Returns
+++        -------
+++        self : object
+++        """
+++        super().fit(X, y, sample_weight=sample_weight)
+++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
+++        return self
+++
+++    @if_delegate_has_method('estimator')
+++    def partial_fit(self, X, y, classes=None, sample_weight=None):
+++        """Incrementally fit the model to data.
+++        Fit a separate model for each output variable.
+++
+++        Parameters
+++        ----------
+++        X : (sparse) array-like, shape (n_samples, n_features)
+++            Data.
+++
+++        y : (sparse) array-like, shape (n_samples, n_outputs)
+++            Multi-output targets.
+++
+++        classes : list of numpy arrays, shape (n_outputs)
+++            Each array is unique classes for one output in str/int
+++            Can be obtained by via
+++            ``[np.unique(y[:, i]) for i in range(y.shape[1])]``, where y is the
+++            target matrix of the entire dataset.
+++            This argument is required for the first call to partial_fit
+++            and can be omitted in the subsequent calls.
+++            Note that y does not need to contain all labels in `classes`.
+++
+++        sample_weight : array-like, shape = (n_samples) or None
+++            Sample weights. If None, then samples are equally weighted.
+++            Only supported if the underlying classifier supports sample
+++            weights.
+++
+++        Returns
+++        -------
+++        self : object
+++        """
+++        super().partial_fit(X, y, classes=classes, sample_weight=sample_weight)
+++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
+++        return self
++ 
++     def predict_proba(self, X):
++         """Probability estimates.
+diff --git a/sklearn/multioutput.py b/sklearn/multioutput.py
+index 463b72d40..563cf9421 100644
+--- a/sklearn/multioutput.py
++++ b/sklearn/multioutput.py
+@@ -228,6 +228,8 @@ class MultiOutputRegressor(MultiOutputEstimator, RegressorMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+@@ -320,10 +322,72 @@ class MultiOutputClassifier(MultiOutputEstimator, ClassifierMixin):
+     ----------
+     estimators_ : list of ``n_output`` estimators
+         Estimators used for predictions.
++    classes_ : list
++        Class labels for each output.
+     """
+ 
+     def __init__(self, estimator, n_jobs=None):
+         super().__init__(estimator, n_jobs)
++    def fit(self, X, y, sample_weight=None):
++        """Fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets. An indicator matrix turns on multilabel
++            estimation.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().fit(X, y, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
++
++    @if_delegate_has_method('estimator')
++    def partial_fit(self, X, y, classes=None, sample_weight=None):
++        """Incrementally fit the model to data.
++        Fit a separate model for each output variable.
++
++        Parameters
++        ----------
++        X : (sparse) array-like, shape (n_samples, n_features)
++            Data.
++
++        y : (sparse) array-like, shape (n_samples, n_outputs)
++            Multi-output targets.
++
++        classes : list of numpy arrays, shape (n_outputs)
++            Each array is unique classes for one output in str/int
++            Can be obtained by via
++            ``[np.unique(y[:, i]) for i in range(y.shape[1])]``, where y is the
++            target matrix of the entire dataset.
++            This argument is required for the first call to partial_fit
++            and can be omitted in the subsequent calls.
++            Note that y does not need to contain all labels in `classes`.
++
++        sample_weight : array-like, shape = (n_samples) or None
++            Sample weights. If None, then samples are equally weighted.
++            Only supported if the underlying classifier supports sample
++            weights.
++
++        Returns
++        -------
++        self : object
++        """
++        super().partial_fit(X, y, classes=classes, sample_weight=sample_weight)
++        self.classes_ = [estimator.classes_ for estimator in self.estimators_]
++        return self
+ 
+     def predict_proba(self, X):
+         """Probability estimates.
