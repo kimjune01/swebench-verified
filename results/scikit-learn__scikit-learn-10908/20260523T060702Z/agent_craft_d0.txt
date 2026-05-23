@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully addresses the issue. The `get_feature_names()` method now calls `_validate_vocabulary()` to initialize the `vocabulary_` and `fixed_vocabulary_` attributes before using them, matching the pattern used in `transform()`. All 48 tests pass, including the previously failing `test_feature_names`.
+
+---STDERR---

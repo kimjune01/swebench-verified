@@ -1,0 +1,40 @@
+# Recon: scikit-learn__scikit-learn-10908
+
+## Failure summary
+
+The test `test_feature_names` checks that `CountVectorizer.get_feature_names()` behaves correctly in three scenarios: (1) raises ValueError when called on unfitted vectorizer without vocabulary, (2) returns correct feature names after fitting, and (3) returns correct feature names when vocabulary is provided at init without calling fit(). The test fails at line 547 with `AttributeError: 'CountVectorizer' object has no attribute 'fixed_vocabulary_'` when trying to assert that `cv.fixed_vocabulary_` is False after the ValueError is raised.
+
+## Suspect set
+
+- `sklearn/feature_extraction/text.py` lines 994-997: `get_feature_names()` method - does not initialize vocabulary attributes before checking them
+- `sklearn/feature_extraction/text.py` lines 273-300: `_validate_vocabulary()` method - sets `fixed_vocabulary_` and `vocabulary_` based on init parameters
+- `sklearn/feature_extraction/text.py` lines 953-954: `transform()` method - demonstrates the correct pattern for lazy vocabulary validation
+
+## Root cause
+
+`get_feature_names()` does not call `_validate_vocabulary()` to initialize `vocabulary_` and `fixed_vocabulary_` attributes before using them, unlike `transform()` which checks `if not hasattr(self, 'vocabulary_')` and calls `_validate_vocabulary()` if needed. When a CountVectorizer is created, `__init__` stores the vocabulary parameter in `self.vocabulary` (no underscore), but the fitted attributes `self.vocabulary_` and `self.fixed_vocabulary_` are only created when `_validate_vocabulary()` is called. Since `get_feature_names()` skips this step and goes directly to `_check_vocabulary()`, neither attribute exists, causing the AttributeError.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sklearn/feature_extraction/text.py:994-997` — `get_feature_names()` directly calls `self._check_vocabulary()` without checking if vocabulary_ exists
+- `sklearn/feature_extraction/text.py:953-954` — `transform()` calls `_validate_vocabulary()` if `vocabulary_` doesn't exist: `if not hasattr(self, 'vocabulary_'): self._validate_vocabulary()`
+- `sklearn/feature_extraction/text.py:297-300` — `_validate_vocabulary()` sets `self.fixed_vocabulary_ = True` and `self.vocabulary_ = dict(vocabulary)` when vocabulary provided, or `self.fixed_vocabulary_ = False` when not provided
+
+## Edit sites
+
+- `sklearn/feature_extraction/text.py` lines 994-997: Add vocabulary initialization check before calling `_check_vocabulary()`. Insert `if not hasattr(self, 'vocabulary_'): self._validate_vocabulary()` at the start of the method body, mirroring the pattern used in `transform()` at lines 953-954.
+
+## Competing hypotheses
+
+None — the code path is clear from reading and the fix pattern exists in the same file.
+
+## Rejected hypotheses
+
+None — first pass diagnosis, no alternatives considered yet.
+
+## Open questions
+
+None — the fix is straightforward and matches existing patterns in the codebase.
+
+---STDERR---

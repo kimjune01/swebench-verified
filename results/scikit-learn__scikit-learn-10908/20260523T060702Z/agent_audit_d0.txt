@@ -1,0 +1,26 @@
+# Audit: scikit-learn__scikit-learn-10908
+
+## FAIL_TO_PASS
+- `sklearn/feature_extraction/tests/test_text.py::test_feature_names`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 48 tests passed including all PASS_TO_PASS tests.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The test that was failing on base (`test_feature_names`) is now passing.
+
+## Full gate results
+All 48 tests passed in 0.82s with 4 warnings. The FAIL_TO_PASS test now passes, all PASS_TO_PASS tests remain passing, and no regressions were introduced.
+
+The patch added 3 lines to `sklearn/feature_extraction/text.py` in the `get_feature_names()` method:
+```python
+if not hasattr(self, "vocabulary_"):
+    self._validate_vocabulary()
+```
+
+This ensures the `fixed_vocabulary_` attribute is initialized before being accessed, matching the pattern used in `transform()`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
