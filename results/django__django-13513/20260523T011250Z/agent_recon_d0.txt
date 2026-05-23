@@ -1,0 +1,80 @@
+Now I'll print the structured handoff to stdout:
+
+# Recon: django__django-13513
+
+## Failure summary
+
+The test `test_innermost_exception_without_traceback` creates an exception chain where the outermost exception (`RuntimeError('My context')`) has no traceback, while the inner exception (`RuntimeError('Oops')`) does have a traceback. The test expects `ExceptionReporter.get_traceback_frames()` to return 1 frame (from the exception with a traceback), but it returns 0 frames, causing the assertion `self.assertEqual(len(frames), 1)` to fail with `AssertionError: 0 != 1`.
+
+## Suspect set
+
+- `django/views/debug.py` lines 397-471: `ExceptionReporter.get_traceback_frames()` method - handles exception chain traversal and frame collection
+- Specifically lines 425-427: Initial traceback selection logic
+- Specifically lines 464-468: Exception switching logic when current traceback exhausted
+
+## Root cause
+
+The `get_traceback_frames()` method collects exceptions in the chain and processes them from outermost to innermost. At line 427, it selects which traceback to use:
+
+```python
+exc_value = exceptions.pop()  # Pop outermost exception
+tb = self.tb if not exceptions else exc_value.__traceback__
+```
+
+The condition checks if there are more exceptions in the chain. If yes, it uses `exc_value.__traceback__`. **The bug: this can be None if the exception was never raised (has no traceback).** When `tb` is None, the `while tb is not None:` loop at line 429 never executes, resulting in an empty frames list.
+
+There's a secondary instance of the same bug at line 467, inside the frame-collection loop. When switching to the next exception after exhausting the current traceback, it directly assigns `tb = exc_value.__traceback__` without checking if it's None, which would cause premature loop exit.
+
+**Code path in failing test:**
+1. Exception chain: `[RuntimeError('Oops'), RuntimeError('My context')]`
+2. Pop 'My context' (no traceback), `exceptions` still has 'Oops'
+3. Since `exceptions` not empty, use `exc_value.__traceback__` → None
+4. Loop never runs, return empty list
+
+Confidence: **deduction** — 95%
+
+**Supporting evidence:**
+- `django/views/debug.py:427` — `tb = self.tb if not exceptions else exc_value.__traceback__`
+- `django/views/debug.py:429` — `while tb is not None:`
+- `django/views/debug.py:467` — `tb = exc_value.__traceback__` (within loop)
+
+## Edit sites
+
+**Primary fix at line 427 (after initial traceback selection):**
+After line 427, add logic to handle when `tb` is None: loop through remaining exceptions to find one with a traceback, or fall back to `self.tb` as a last resort.
+
+Specifically, after the line:
+```python
+tb = self.tb if not exceptions else exc_value.__traceback__
+```
+
+Add:
+```python
+# If the exception has no traceback, try the next one or fall back to self.tb
+while tb is None and exceptions:
+    exc_value = exceptions.pop()
+    tb = exc_value.__traceback__
+if tb is None and exceptions:
+    tb = self.tb
+```
+
+**Secondary fix at line 467 (when switching exceptions mid-loop):**
+After line 467 where `tb = exc_value.__traceback__` is assigned, add similar fallback logic to handle None traceback:
+
+```python
+# If this exception has no traceback, try the next one
+while tb is None and exceptions:
+    exc_value = exceptions.pop()
+    tb = exc_value.__traceback__
+```
+
+## Rejected hypotheses
+
+None - first diagnosis attempt.
+
+## Open questions
+
+- Should we also add the fallback `if tb is None: tb = self.tb` to the secondary fix at line 467, or is exiting the loop acceptable when all remaining exceptions have no traceback?
+- The test expects the "During handling of the above exception (My context), another exception occurred" message to appear in HTML even though 'My context' has no traceback. Need to verify that the `exc_cause` field in frames properly preserves this information after the fix.
+
+---STDERR---

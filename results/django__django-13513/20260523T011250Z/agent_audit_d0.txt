@@ -1,0 +1,27 @@
+# Audit: django__django-13513
+
+## FAIL_TO_PASS
+- test_innermost_exception_without_traceback (view_tests.tests.test_debug.ExceptionReporterTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 89 tests in the suite passed.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None.
+
+## Verification Summary
+- **Gate result**: All 89 tests passed in 2.205s - OK
+- **Patch present**: django/views/debug.py modified (14 insertions, 3 deletions)
+- **Contract fulfilled**: 
+  - ✓ All FAIL_TO_PASS tests pass (1/1)
+  - ✓ Zero PASS_TO_PASS regressions (0 failures in 88 baseline tests)
+
+The fix correctly handles exceptions without tracebacks in exception chains by:
+1. Using `self.tb` for `self.exc_value`, `__traceback__` for other exceptions
+2. Skipping exceptions with None tracebacks via while loops at both handoff sites
+3. Applying consistent logic at initial selection (line 429) and mid-loop switching (line 474)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

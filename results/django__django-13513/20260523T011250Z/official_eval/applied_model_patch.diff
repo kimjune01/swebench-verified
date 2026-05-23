@@ -1,0 +1,36 @@
+diff --git a/django/views/debug.py b/django/views/debug.py
+index 7a89f7bd15..ddee5ea0b6 100644
+--- a/django/views/debug.py
++++ b/django/views/debug.py
+@@ -421,9 +421,16 @@ class ExceptionReporter:
+         if not exceptions:
+             return frames
+ 
+-        # In case there's just one exception, take the traceback from self.tb
++        # Helper to get traceback: use self.tb for self.exc_value, __traceback__ for others
++        def get_tb(exc):
++            return self.tb if exc is self.exc_value else exc.__traceback__
++
+         exc_value = exceptions.pop()
+-        tb = self.tb if not exceptions else exc_value.__traceback__
++        tb = get_tb(exc_value)
++        # Skip exceptions without tracebacks
++        while tb is None and exceptions:
++            exc_value = exceptions.pop()
++            tb = get_tb(exc_value)
+ 
+         while tb is not None:
+             # Support for __traceback_hide__ which is used by a few libraries
+@@ -464,7 +471,11 @@ class ExceptionReporter:
+             # other exception.
+             if not tb.tb_next and exceptions:
+                 exc_value = exceptions.pop()
+-                tb = exc_value.__traceback__
++                tb = get_tb(exc_value)
++                # Skip exceptions without tracebacks
++                while tb is None and exceptions:
++                    exc_value = exceptions.pop()
++                    tb = get_tb(exc_value)
+             else:
+                 tb = tb.tb_next
+ 

@@ -1,0 +1,16 @@
+**RESOLVED**
+
+The fix successfully makes all FAIL_TO_PASS tests pass. Here's what was implemented:
+
+**Root cause** (as recon diagnosed): `get_traceback_frames()` assigns `tb = exc_value.__traceback__` which can be None when an exception was created but never raised. This causes the `while tb is not None` loop to never execute, returning empty frames.
+
+**Fix applied**:
+1. Added helper function `get_tb(exc)` that returns `self.tb` for `self.exc_value`, otherwise `exc.__traceback__`
+2. At both edit sites (initial selection ~line 429, mid-loop switching ~line 474), replaced direct `__traceback__` access with `get_tb()` and added skip loops to find exceptions with tracebacks
+3. This allows the code to properly handle exception chains where some exceptions have no traceback
+
+**Gate result**: ✅ All 89 tests pass, including the target test `test_innermost_exception_without_traceback`
+
+The fix is minimal, addresses exactly the edit sites recon identified, and makes the failing test pass without breaking any existing tests.
+
+---STDERR---
