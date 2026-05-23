@@ -1,0 +1,3 @@
+**RESOLVED** — The FAIL_TO_PASS test passes on first gate run. Fixed by changing `SECURE_REFERRER_POLICY` default from `None` to `'same-origin'` in `django/conf/global_settings.py:640`.
+
+---STDERR---

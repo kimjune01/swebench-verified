@@ -1,0 +1,39 @@
+# Recon: django__django-12419
+
+## Failure summary
+
+The test `test_middleware_headers` in `tests/project_template/test_settings.py` checks that the default Django project template's middleware sends expected security headers. The test expects the HTTP response to include `Referrer-Policy: same-origin` header, but this header is missing from the actual response. The test loads the default MIDDLEWARE from the project template (which includes `SecurityMiddleware`) and makes a request to verify headers are set correctly.
+
+## Suspect set
+
+- `django/conf/global_settings.py` line 640: Default value for `SECURE_REFERRER_POLICY`
+- `django/middleware/security.py` lines 18, 46-52: Where the setting is read and conditionally adds the header
+
+## Root cause
+
+The default value for `SECURE_REFERRER_POLICY` in `django/conf/global_settings.py` is `None`. The `SecurityMiddleware.process_response()` method only adds the `Referrer-Policy` header when `self.referrer_policy` is truthy (line 46: `if self.referrer_policy:`). Since `None` is falsy, no header is added to responses by default.
+
+The problem statement indicates Django should change the default to `'same-origin'` to reduce information leakage to third-party sites. The middleware code already supports this - it just needs the default value changed.
+
+**Confidence:** Deduction - 99%
+
+**Supporting evidence:**
+- `django/conf/global_settings.py:640` — `SECURE_REFERRER_POLICY = None`
+- `django/middleware/security.py:18` — `self.referrer_policy = settings.SECURE_REFERRER_POLICY`
+- `django/middleware/security.py:46-52` — `if self.referrer_policy:` guards the header addition
+
+## Edit sites
+
+- `django/conf/global_settings.py` line 640: Change `SECURE_REFERRER_POLICY = None` to `SECURE_REFERRER_POLICY = 'same-origin'`
+
+This is the only change required. The middleware already handles non-None values correctly by adding the header with the configured value. All existing tests explicitly override this setting when testing specific behaviors, so they won't be affected by the default change.
+
+## Rejected hypotheses
+
+None - the root cause is unambiguous from reading the code path.
+
+## Open questions
+
+None - the fix is straightforward and localized to a single line.
+
+---STDERR---

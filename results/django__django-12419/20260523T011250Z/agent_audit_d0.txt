@@ -1,0 +1,20 @@
+# Audit: django__django-12419
+
+## FAIL_TO_PASS
+- test_middleware_headers (project_template.test_settings.TestStartProjectSettings): **PASS**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Analysis
+The craft patch successfully changes `SECURE_REFERRER_POLICY` from `None` to `'same-origin'` in `django/conf/global_settings.py`. This causes Django's `SecurityMiddleware` to emit the `Referrer-Policy: same-origin` header by default, which is exactly what the failing test expected.
+
+The baseline showed the test failing because the header was missing. After applying the patch, the gate passes cleanly with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,34 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 project_template.test_settings
+
+test_middleware_headers (project_template.test_settings.TestStartProjectSettings) ... FAIL
+
+======================================================================
+FAIL: test_middleware_headers (project_template.test_settings.TestStartProjectSettings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/project_template/test_settings.py", line 43, in test_middleware_headers
+    b'X-Frame-Options: DENY',
+AssertionError: Lists differ: [b'Co[58 chars]', b'X-Content-Type-Options: nosniff', b'X-Fra[13 chars]ENY'] != [b'Co[58 chars]', b'Referrer-Policy: same-origin', b'X-Conten[46 chars]ENY']
+
+First differing element 2:
+b'X-Content-Type-Options: nosniff'
+b'Referrer-Policy: same-origin'
+
+Second list contains 1 additional elements.
+First extra element 4:
+b'X-Frame-Options: DENY'
+
+  [b'Content-Length: 0',
+   b'Content-Type: text/html; charset=utf-8',
++  b'Referrer-Policy: same-origin',
+   b'X-Content-Type-Options: nosniff',
+   b'X-Frame-Options: DENY']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.007s
+
+FAILED (failures=1)
+Testing against Django installed in '/testbed/django'
+Importing application project_template
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).
