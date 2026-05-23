@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-21612
+
+## FAIL_TO_PASS
+- test_Mul: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The fix successfully resolved the issue. The change from `isinstance(item.base, Mul)` to `isinstance(item.base, (Mul, Pow))` at line 336 in `sympy/printing/str.py` correctly handles the case where a Pow expression with negative exponent appears in the denominator, ensuring it gets parenthesized properly.
+
+**Gate output:** 100 tests passed, 0 failed
+- FAIL_TO_PASS test (test_Mul): now PASS  
+- All PASS_TO_PASS tests: remain PASS
+- Regressions: 0
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

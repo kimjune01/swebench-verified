@@ -1,0 +1,48 @@
+# Recon: sympy__sympy-21612
+
+## Failure summary
+
+The test `test_Mul` in `sympy/printing/tests/test_str.py` checks that `Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)` prints as `'x/(1/y)'`, but it currently prints as `'x/1/y'`. The missing parentheses around the denominator `1/y` create an ambiguous expression that changes the mathematical meaning from `x/(1/y) = xy` to `(x/1)/y = x/y`.
+
+## Suspect set
+
+- `sympy/printing/str.py` lines 335-338: The condition that determines when to add parentheses around denominator expressions containing Pow with exp=-1
+
+## Root cause
+
+In `_print_Mul` at lines 335-336, when an item is `Pow(base, -1)`, the code decides whether `base` needs parentheses in the denominator. The current check only handles when `base` is a `Mul` (to fix issue #14160), but doesn't handle when `base` itself is a `Pow` with negative exponent (representing a division).
+
+For `Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)`:
+1. The Pow has `base = 1/y` (which is `Pow(y, -1)`) and `exp = -1`
+2. Since `exp is S.NegativeOne`, the code appends `base` to the denominator list at line 338
+3. The check `isinstance(item.base, Mul)` at line 336 is False (it's a Pow, not Mul)
+4. So `item` is not added to `pow_paren` and the base doesn't get parenthesized
+5. Result: `'x/1/y'` instead of `'x/(1/y)'`
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `sympy/printing/str.py:335-336` — Only checks `isinstance(item.base, Mul)`:
+  ```python
+  if (len(item.args[0].args) != 1 and
+          isinstance(item.base, Mul)):
+  ```
+- `sympy/printing/str.py:337` — Comment "To avoid situations like #14160" indicates this was added for Mul case only
+
+## Edit sites
+
+- `sympy/printing/str.py` lines 335-336: Extend the condition to also check if `item.base` is a Pow with negative exponent. The check should be:
+  ```python
+  isinstance(item.base, Mul) or (isinstance(item.base, Pow) and bool(item.base.exp.as_coeff_Mul()[0] < 0))
+  ```
+  This reuses the same logic already used at line 330 to detect Pow with negative exponent.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection.
+
+## Open questions
+
+- Test case `Mul(x, Pow(y/z, -1, evaluate=False), evaluate=False)` produces `'x/((y/z))'` with double parentheses. This may be by design for clarity, or a separate issue. The failing test only requires `1/y` case to work.
+
+---STDERR---

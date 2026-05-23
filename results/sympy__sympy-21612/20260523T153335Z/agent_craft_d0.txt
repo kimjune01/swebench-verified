@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Extended `sympy/printing/str.py` line 336 to check for both `Mul` and `Pow` base types when determining whether to parenthesize denominators. The test `test_Mul` now passes with `Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)` correctly printing as `'x/(1/y)'` instead of `'x/1/y'`.
+
+---STDERR---
