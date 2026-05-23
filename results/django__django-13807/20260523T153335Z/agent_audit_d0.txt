@@ -1,0 +1,28 @@
+# Audit: django__django-13807
+
+## FAIL_TO_PASS
+- `test_check_constraints_sql_keywords (backends.tests.FkConstraintsTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 41 executed PASS_TO_PASS tests passed successfully.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - No pre-existing failures. Both baseline and gate show clean runs.
+
+## Summary
+The patch successfully resolves the issue by adding `self.ops.quote_name()` to three locations in `django/db/backends/sqlite3/base.py`:
+1. Line 330: PRAGMA foreign_key_check table name
+2. Line 336: PRAGMA foreign_key_list table name  
+3. Line 342: SELECT statement identifiers (primary_key_column_name, column_name, table_name)
+
+This allows SQLite to properly handle SQL reserved keywords (like "order", "select", "where") as table and column names by wrapping them in double quotes.
+
+**Gate result**: 50 tests ran, all passed (9 skipped as expected)
+- FAIL_TO_PASS test now passes
+- Zero PASS_TO_PASS regressions
+- No new failures introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

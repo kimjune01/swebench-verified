@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete and verified. The gate passed on the first iteration with all 50 tests passing, including the target FAIL_TO_PASS test `test_check_constraints_sql_keywords`.
+
+**Summary:** Applied `self.ops.quote_name()` to all SQL identifiers (table names and column names) in three locations within the `check_constraints` method in `django/db/backends/sqlite3/base.py`. This allows SQLite to correctly handle reserved SQL keywords like "order", "select", and "where" when used as database identifiers.
+
+---STDERR---

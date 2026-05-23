@@ -1,0 +1,41 @@
+# Recon: django__django-13807
+
+## Failure summary
+The test `test_check_constraints_sql_keywords` creates a model with `db_table='order'` (an SQL reserved keyword), `db_column='select'` for the primary key, and `db_column='where'` for a foreign key column. When calling `connection.check_constraints(table_names=['order'])`, SQLite raises `OperationalError: near "order": syntax error`. This occurs because the table name "order" is not quoted in the SQL statement `PRAGMA foreign_key_check(%s)`, causing SQLite to interpret it as the ORDER BY keyword rather than a table name identifier.
+
+## Suspect set
+- `django/db/backends/sqlite3/base.py` lines 316-353: The `check_constraints` method in `DatabaseWrapper` class
+
+## Root cause
+The `check_constraints` method constructs SQL statements with unquoted table and column names via string formatting. When these identifiers are SQL keywords (like "order", "select", "where"), SQLite cannot parse the statements. Specifically:
+- Line 330: `'PRAGMA foreign_key_check(%s)' % table_name` - table_name is inserted without quoting
+- Line 336: `'PRAGMA foreign_key_list(%s)' % table_name` - table_name is inserted without quoting
+- Lines 341-342: `'SELECT %s, %s FROM %s WHERE rowid = %%s' % (primary_key_column_name, column_name, table_name)` - all three identifiers are inserted without quoting
+
+This contrasts with the correct implementation in `django/db/backends/sqlite3/introspection.py` line 85, which uses `self.connection.ops.quote_name(table_name)` for the same PRAGMA statements.
+
+**Confidence**: deduction — 99%
+
+Supporting evidence:
+- `django/db/backends/sqlite3/base.py:330` — `cursor.execute('PRAGMA foreign_key_check(%s)' % table_name).fetchall()`
+- `django/db/backends/sqlite3/base.py:336` — `'PRAGMA foreign_key_list(%s)' % table_name`
+- `django/db/backends/sqlite3/base.py:341-342` — `'SELECT %s, %s FROM %s WHERE rowid = %%s' % (primary_key_column_name, column_name, table_name)`
+- `django/db/backends/sqlite3/introspection.py:85` — Correct usage: `'PRAGMA table_info(%s)' % self.connection.ops.quote_name(table_name)`
+- `django/db/backends/sqlite3/introspection.py:227` — Correct usage: `'PRAGMA foreign_key_list(%s)' % self.connection.ops.quote_name(table_name)`
+- `django/db/backends/sqlite3/operations.py:170-173` — `quote_name` implementation wraps identifiers in double quotes
+
+## Edit sites
+- `django/db/backends/sqlite3/base.py` line 330: Replace `table_name` with `self.ops.quote_name(table_name)` in the PRAGMA foreign_key_check statement
+- `django/db/backends/sqlite3/base.py` line 336: Replace `table_name` with `self.ops.quote_name(table_name)` in the PRAGMA foreign_key_list statement  
+- `django/db/backends/sqlite3/base.py` lines 341-342: Quote all three identifiers in the SELECT statement:
+  - Replace `primary_key_column_name` with `self.ops.quote_name(primary_key_column_name)`
+  - Replace `column_name` with `self.ops.quote_name(column_name)` (both occurrences in the format tuple)
+  - Replace `table_name` with `self.ops.quote_name(table_name)`
+
+## Rejected hypotheses
+None - the root cause is clear from the error message and code inspection.
+
+## Open questions
+None - the fix is straightforward and follows the established pattern used elsewhere in the SQLite backend.
+
+---STDERR---
