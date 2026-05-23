@@ -110,14 +110,18 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
-## 2026-05-23 — batch_010 launched (in flight)
+## 2026-05-23 — batch_010 archived: 27/30 (1 reasoning loss + 2 infra-DNF from a box OOM-death)
 
-batch_010 (seed=10, 30 disjoint instances: 18 django, 5 sympy, 2 matplotlib, 2 xarray, 1 each astropy/pytest/sklearn; pool=212, excluded=254). Fresh 10 boxes provisioned (180-min watchdogs), prior batch_009 boxes confirmed terminated. Sharded with the two matplotlib instances solo (b_1: matplotlib-20859, b_2: matplotlib-24026); rest packed 3-4 per box.
+batch_010 (seed=10, 30 disjoint: 18 django, 5 sympy, 2 matplotlib, 2 xarray, 1 each astropy/pytest/sklearn; pool=212, excluded=254). Fresh 10 boxes, subscription billing (verified the driver pops `ANTHROPIC_API_KEY` at rung4_driver.py:55-56). RUNID 20260523T194625Z. **Official 27/30.** Scoreboard now **248/256**, 260 runs.
 
-- **Launched with `CLAUDE_SUBSCRIPTION=1`** — verified the driver pops `ANTHROPIC_API_KEY` (set in this shell) so billing is the Max plan, not the metered API (rung4_driver.py:55-56). Launch bg `b4fbtfpfa`, log `/tmp/launch_b10.log`.
-- **Monitor armed** (zsh-safe `$~LG`, emit-on-change, failure set incl. `TimeoutExpired`). Counter advancing from 0/30.
-- **Watch items:** 5 sympy + 2 matplotlib carry the heavy-suite craft-DNF risk (see sympy-19040 / matplotlib-25311). Honest losses if they trip the 3600s cap, not bugs.
-- **RESUME STATE:** if session drops mid-run — boxes alive (`/tmp/b_*.env`), launch in bg. On completion: `wc -c` sweep → `grade_batch.sh b_1..b_10` → tally by batch_010 ids → `archive_batch.py` → `scoreboard.py` → commit → tear down all 10 + leak-sweep.
+Three not-won, two *different* causes:
+- `django__django-16263` — **reasoning loss**: oversized ~10KB patch, went `wants_rediagnose` at depth 1, applied cleanly but graded UNRESOLVED. The honest failure class (machine got it wrong, transparently).
+- `django__django-15563` + `django__django-14404` — **infra-DNF, new cause: a box went network-dead mid-run.** b_4 stopped writing at 11:44 (recon d1 of django-15563 done, craft d1 never produced output). EC2 hypervisor reported running/ok/ok but the OS was unreachable — 100% ping loss + SSH banner timeouts. Diagnosis: OOM-thrash under the django-15563 craft load (m7i.xlarge, 16GB). The driver hung on ssh into the dead box. Killed the hung driver, terminated the box, recorded both its unfinished instances as DNF (15563 had no patch; 14404 never started).
+  - **Recovery that saved the batch:** b_4's two *completed* instances (django-10999, sklearn-25102) had captured patches locally. Grading runs on the box, so a dead b_4 can't grade them — re-graded both on b_3's live box (output to `/tmp/grade_b_4`, which `archive_batch.py` globs by id). Both RESOLVED. So the box death cost only the 2 in-flight instances, not the 2 already done.
+- **New failure mode for the ledger:** box OOM-death is distinct from the craft-hang DNF (sympy-19040 / matplotlib-25311, where the box lives and the 3600s cap fires) and from the reasoning loss. Here the *box* died, not the loop. AWS status checks (ok/ok) don't catch OS-level OOM — ping/SSH liveness is the real signal. **`/retro` lever:** a per-box liveness probe in the monitor (ping or `ssh true`) would catch this mid-flight instead of at the post-run sweep; consider lowering craft's peak memory or a bigger instance type for django outer-loop runs.
+- Monitor (zsh-safe) advanced 0→28 cleanly, 0 empty / 0 errors on the live boxes; it can't see a box that dies silently (hence the liveness-probe lever).
+
+8 standing losses now: django-15987 (contamination, rerun-pending), sympy-19040 + matplotlib-25311 + django-15957 (craft-hang DNF), sympy-20438 + django-16263 (reasoning), django-15563 + django-14404 (box-death DNF). Re-runs deferred to campaign end. Boxes b_1-b_3,b_5-b_10 kept alive for batch_011 (b_4 replaced below).
 
 ## 2026-05-24 — batch_009 archived: 28/30 (first genuine reasoning loss); session close
 
