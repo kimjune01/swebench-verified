@@ -1,0 +1,14 @@
+## RESOLVED
+
+The fix successfully passes all FAIL_TO_PASS tests. The root cause was correctly identified by recon: when intersecting ImageSets with Reals, the code had multiple bugs in handling where the imaginary part equals zero.
+
+**Key fixes applied:**
+1. **Separate numerator/denominator** before solving for imaginary zeros (prevents solving denominator factors incorrectly)
+2. **Intersect instead of subtract** when restricting to imaginary-zero roots (preserves original domain)
+3. **Use `base_set` not `S.Integers`** in ConditionSet fallbacks (respects domain like S.Naturals0)
+4. **Factor denominators carefully** - only when it doesn't introduce new divisions
+5. **Unpack tuples** with `*xis` instead of wrapping them
+
+codex's adversarial review was essential - it caught the intersection vs. replacement bug before the first gate run, and identified the numerator/denominator separation issue after the second iteration. The gate progressed through 5 iterations with a divergent (improving) trajectory until resolution.
+
+---STDERR---
