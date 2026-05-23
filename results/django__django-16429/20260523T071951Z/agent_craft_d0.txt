@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Fixed the timezone-aware datetime bug in Django's `timesince()` function. The issue was that when creating a "pivot" datetime for intervals >= 1 month, the code used `datetime.datetime()` constructor without preserving the `tzinfo` from the original datetime `d`, causing a TypeError when subtracting naive and aware datetimes.
+
+**Solution**: Changed pivot creation from constructor to `d.replace()` method, which preserves all attributes (tzinfo, microsecond, fold) and only modifies year, month, and day as needed.
+
+**Gate result**: ✅ All 34 tests pass (first iteration), including all 4 FAIL_TO_PASS tests.
+
+---STDERR---

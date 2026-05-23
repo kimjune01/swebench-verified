@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 utils_tests.test_timesince
+
+Test other units. ... ok
+test_second_before_equal_first_humanize_time_strings (utils_tests.test_timesince.TimesinceTests) ... ok
+test_thousand_years_ago (utils_tests.test_timesince.TimesinceTests) ... ok
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_depth (utils_tests.test_timesince.TZAwareTimesinceTests) (<subtest>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 205, in test_depth
+    self.assertEqual(timesince(self.t, value, depth=depth), expected)
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_other_units (utils_tests.test_timesince.TZAwareTimesinceTests)
+Test other units.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 40, in test_other_units
+    self.assertEqual(timesince(self.t, self.t + self.onemonth), "1\xa0month")
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+======================================================================
+ERROR: test_thousand_years_ago (utils_tests.test_timesince.TZAwareTimesinceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/utils_tests/test_timesince.py", line 175, in test_thousand_years_ago
+    self.assertEqual(timesince(t, self.t), "1000\xa0years")
+  File "/testbed/django/utils/timesince.py", line 103, in timesince
+    remaining_time = (now - pivot).total_seconds()
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+----------------------------------------------------------------------
+Ran 34 tests in 0.019s
+
+FAILED (errors=11)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

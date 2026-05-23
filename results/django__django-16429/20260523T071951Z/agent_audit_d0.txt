@@ -1,0 +1,27 @@
+# Audit: django__django-16429
+
+## FAIL_TO_PASS
+- test_depth (utils_tests.test_timesince.TZAwareTimesinceTests): **PASS** ✓
+- test_depth_invalid (utils_tests.test_timesince.TZAwareTimesinceTests): **PASS** ✓
+- test_other_units (utils_tests.test_timesince.TZAwareTimesinceTests): **PASS** ✓
+- test_thousand_years_ago (utils_tests.test_timesince.TZAwareTimesinceTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 34 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — no tests failed in the gate run.
+
+## Verification
+The craft patch successfully fixed all FAIL_TO_PASS tests without introducing any regressions. The fix used `.replace()` to preserve timezone information when creating the pivot datetime, which correctly addressed the TypeError that occurred when subtracting offset-naive and offset-aware datetimes.
+
+All 34 tests in the suite passed:
+- 17 tests in TZAwareTimesinceTests (all passing)
+- 17 tests in TimesinceTests (all passing)
+
+The fix is minimal, correct, and complete.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
