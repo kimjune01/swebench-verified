@@ -1,0 +1,78 @@
+Now let me output the complete diagnosis:
+
+```markdown
+# Recon: django__django-16256
+
+## Failure summary
+
+The tests verify that async versions of `acreate()`, `aget_or_create()`, and `aupdate_or_create()` work correctly on related managers (both many-to-many forward relationships and reverse foreign key relationships). The failures show that objects are being created in the database, but the relationships are not being established. For example, `test_acreate` calls `await self.mtm1.simples.acreate(field=2)` which creates a SimpleModel instance, but when the test tries to retrieve it via `await self.mtm1.simples.aget()`, it raises `SimpleModel.DoesNotExist`. The assertion `self.assertEqual(await self.mtm1.simples.acount(), 1)` fails with `AssertionError: 0 != 1`, confirming the object exists in the database but is not linked to the mtm1 instance.
+
+The generic relations tests also fail with `IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id`, indicating that required relationship fields are not being populated.
+
+## Suspect set
+
+- `django/db/models/fields/related_descriptors.py` lines 630-850: `create_reverse_many_to_one_manager()` function - defines RelatedManager class for reverse foreign key relationships
+- `django/db/models/fields/related_descriptors.py` lines 941-1220: `create_forward_many_to_many_manager()` function - defines ManyRelatedManager class for many-to-many relationships
+
+Both manager classes define sync versions of `create()`, `get_or_create()`, and `update_or_create()` but lack async versions.
+
+## Root cause
+
+The async methods `acreate()`, `aget_or_create()`, and `aupdate_or_create()` are NOT defined in the RelatedManager classes. When these methods are called on a related manager instance, Python's method resolution inherits them from the QuerySet base class.
+
+The QuerySet async implementations (django/db/models/query.py lines 678, 947, 991) use:
+```python
+async def acreate(self, **kwargs):
+    return await sync_to_async(self.create)(**kwargs)
+```
+
+The critical flaw: at runtime, `self.create` resolves to `QuerySet.create`, NOT `RelatedManager.create`, because the async method is defined in QuerySet's scope. This bypasses all the relationship-establishing logic that RelatedManager's sync methods implement.
+
+**For reverse many-to-one relationships** (line 793-797), the sync `create()` method sets `kwargs[self.field.name] = self.instance` to establish the foreign key relationship before calling the superclass. This step is completely skipped when the inherited async version is used.
+
+**For many-to-many relationships** (lines 1185-1190), the sync `create()` method calls `self.add(new_obj, through_defaults=through_defaults)` after creating the object to establish the through-table relationship. This step is also skipped.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/fields/related_descriptors.py:793-797` — RelatedManager.create sets foreign key: `kwargs[self.field.name] = self.instance`
+- `django/db/models/fields/related_descriptors.py:1185-1190` — ManyRelatedManager.create calls add: `self.add(new_obj, through_defaults=through_defaults)`
+- `django/db/models/query.py:678` — QuerySet.acreate wraps self.create: `return await sync_to_async(self.create)(**kwargs)`
+- Test trace confirms object creation but zero count in relationship queryset
+
+## Edit sites
+
+Three specific locations must be modified in `django/db/models/fields/related_descriptors.py`:
+
+1. **Line 66 (imports section)** — Add import statement:
+   - Add `from asgiref.sync import sync_to_async` to enable async wrapping
+   - Should be placed near other Django imports (currently has imports from django.core, django.db, django.utils)
+
+2. **Lines 793-809 (reverse many-to-one manager)** — Add three async methods inside RelatedManager class after their sync counterparts:
+   - After `create.alters_data = True` (~line 793): Add `async def acreate(self, **kwargs)` that wraps `self.create` with `sync_to_async`, with `alters_data = True` attribute
+   - After `get_or_create.alters_data = True` (~line 800): Add `async def aget_or_create(self, **kwargs)` that wraps `self.get_or_create` with `sync_to_async`, with `alters_data = True` attribute
+   - After `update_or_create.alters_data = True` (~line 807): Add `async def aupdate_or_create(self, **kwargs)` that wraps `self.update_or_create` with `sync_to_async`, with `alters_data = True` attribute
+
+3. **Lines 1191-1217 (many-to-many manager)** — Add three async methods inside ManyRelatedManager class after their sync counterparts:
+   - After `create.alters_data = True` (~line 1191): Add `async def acreate(self, *, through_defaults=None, **kwargs)` that wraps `self.create` with `sync_to_async`, with `alters_data = True` attribute
+   - After `get_or_create.alters_data = True` (~line 1204): Add `async def aget_or_create(self, *, through_defaults=None, **kwargs)` that wraps `self.get_or_create` with `sync_to_async`, with `alters_data = True` attribute
+   - After `update_or_create.alters_data = True` (~line 1217): Add `async def aupdate_or_create(self, *, through_defaults=None, **kwargs)` that wraps `self.update_or_create` with `sync_to_async`, with `alters_data = True` attribute
+
+The implementation pattern should match QuerySet's async methods but wrap the RelatedManager's own sync methods instead of the parent's. For example:
+```python
+async def acreate(self, **kwargs):
+    return await sync_to_async(self.create)(**kwargs)
+```
+
+This ensures `self.create` resolves to the RelatedManager version (with relationship logic) rather than QuerySet version (without relationship logic).
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from code inspection and matches the problem statement's analysis exactly.
+
+## Open questions
+
+None — the fix is mechanical and follows the established pattern in QuerySet.
+```
+
+---STDERR---

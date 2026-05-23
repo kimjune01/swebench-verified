@@ -1,0 +1,302 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 async.models async.test_async_related_managers generic_relations.tests
+
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/async/test_async_related_managers.py", line 19, in test_acreate_reverse
+    new_relatedmodel = await self.s1.relatedmodel_set.aget()
+  File "/testbed/django/db/models/query.py", line 666, in aget
+    return await sync_to_async(self.get)(*args, **kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 654, in get
+    raise self.model.DoesNotExist(
+async.models.RelatedModel.DoesNotExist: RelatedModel matching query does not exist.
+
+======================================================================
+ERROR: test_generic_async_acreate (generic_relations.tests.GenericRelationsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/generic_relations/tests.py", line 49, in test_generic_async_acreate
+    await self.bacon.tags.acreate(tag="orange")
+  File "/testbed/django/db/models/query.py", line 679, in acreate
+    return await sync_to_async(self.create)(**kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 675, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/testbed/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/testbed/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+  File "/testbed/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+  File "/testbed/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+  File "/testbed/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 1822, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+  File "/testbed/django/db/models/sql/compiler.py", line 1768, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/testbed/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+======================================================================
+ERROR: test_generic_async_aget_or_create (generic_relations.tests.GenericRelationsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/models/query.py", line 932, in get_or_create
+    return self.get(**kwargs), False
+  File "/testbed/django/db/models/query.py", line 654, in get
+    raise self.model.DoesNotExist(
+generic_relations.models.TaggedItem.DoesNotExist: TaggedItem matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/generic_relations/tests.py", line 122, in test_generic_async_aget_or_create
+    tag, created = await self.bacon.tags.aget_or_create(tag="orange")
+  File "/testbed/django/db/models/query.py", line 948, in aget_or_create
+    return await sync_to_async(self.get_or_create)(
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 939, in get_or_create
+    return self.create(**params), True
+  File "/testbed/django/db/models/query.py", line 675, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/testbed/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/testbed/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+  File "/testbed/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+  File "/testbed/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+  File "/testbed/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 1822, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+  File "/testbed/django/db/models/sql/compiler.py", line 1768, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/testbed/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+======================================================================
+ERROR: test_generic_async_aupdate_or_create (generic_relations.tests.GenericRelationsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/models/query.py", line 932, in get_or_create
+    return self.get(**kwargs), False
+  File "/testbed/django/db/models/query.py", line 654, in get
+    raise self.model.DoesNotExist(
+generic_relations.models.TaggedItem.DoesNotExist: TaggedItem matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/generic_relations/tests.py", line 84, in test_generic_async_aupdate_or_create
+    tag, created = await self.bacon.tags.aupdate_or_create(tag="pink")
+  File "/testbed/django/db/models/query.py", line 992, in aupdate_or_create
+    return await sync_to_async(self.update_or_create)(
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 965, in update_or_create
+    obj, created = self.select_for_update().get_or_create(defaults, **kwargs)
+  File "/testbed/django/db/models/query.py", line 939, in get_or_create
+    return self.create(**params), True
+  File "/testbed/django/db/models/query.py", line 675, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/testbed/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/testbed/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+  File "/testbed/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+  File "/testbed/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+  File "/testbed/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 1822, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+  File "/testbed/django/db/models/sql/compiler.py", line 1768, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/testbed/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id
+
+======================================================================
+FAIL: test_aget_or_create (async.test_async_related_managers.AsyncRelatedManagersOperationTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/async/test_async_related_managers.py", line 25, in test_aget_or_create
+    self.assertEqual(await self.mtm1.simples.acount(), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_aget_or_create_reverse (async.test_async_related_managers.AsyncRelatedManagersOperationTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/async/test_async_related_managers.py", line 37, in test_aget_or_create_reverse
+    self.assertEqual(await self.s1.relatedmodel_set.acount(), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_aupdate_or_create (async.test_async_related_managers.AsyncRelatedManagersOperationTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/async/test_async_related_managers.py", line 43, in test_aupdate_or_create
+    self.assertEqual(await self.mtm1.simples.acount(), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_aupdate_or_create_reverse (async.test_async_related_managers.AsyncRelatedManagersOperationTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 254, in __call__
+    return call_result.result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/asgiref/sync.py", line 331, in main_wrap
+    result = await self.awaitable(*args, **kwargs)
+  File "/testbed/tests/async/test_async_related_managers.py", line 55, in test_aupdate_or_create_reverse
+    self.assertEqual(await self.s1.relatedmodel_set.acount(), 1)
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 64 tests in 0.136s
+
+FAILED (failures=4, errors=5)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
