@@ -1,0 +1,43 @@
+# Recon: django__django-11551
+
+## Failure summary
+
+The test `test_valid_field_accessible_via_instance` validates that a custom field (PositionField) accessible only via model instances—not the model class—should be valid in `list_display`. The field's descriptor raises `AttributeError` when accessed on the class (when `instance is None` in `__get__`), making `hasattr(TestModel, 'field')` return False. The test expects validation to pass, but it fails with admin.E108 error: "The value of 'list_display[0]' refers to 'field', which is not a callable, an attribute of 'TestModelAdmin', or an attribute or method on 'modeladmin.TestModel'."
+
+## Suspect set
+
+- `django/contrib/admin/checks.py` lines 718-749: `_check_list_display_item` method — the validation logic that raises admin.E108
+- Specifically line 723 checks `hasattr(obj.model, item)` which returns False for PositionField
+- Lines 738-749 constitute the else clause that immediately returns E108 without checking `model._meta.get_field(item)`
+
+## Root cause
+
+Commit 47016adbf5 ("Fixed #28490 -- Removed unused code in admin.E108 check") simplified the validation logic but incorrectly removed the fallback that checks `model._meta.get_field(item)` when `hasattr(model, item)` returns False. For fields like PositionField whose descriptors raise `AttributeError` when accessed on the class, `hasattr(model, item)` returns False, causing the current code to immediately return E108. However, the field IS registered in `model._meta` (via `contribute_to_class`) and should be valid. The old code (lines 677-693 before the commit) tried `model._meta.get_field(item)` in this case and only returned E108 if it raised `FieldDoesNotExist`.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/contrib/admin/checks.py:723` — `elif hasattr(obj.model, item):` returns False for PositionField
+- `django/contrib/admin/checks.py:738-749` — else clause returns E108 without checking `_meta.get_field`
+- `git show 47016adbf5` — diff shows removed lines 677-693 that had the fallback logic
+- `django/db/models/options.py:560-583` — `get_field()` uses internal field maps, not hasattr, so it works for PositionField
+
+## Edit sites
+
+- `django/contrib/admin/checks.py` lines 738-749: Replace the immediate E108 return in the else clause with logic that:
+  1. Tries `field = obj.model._meta.get_field(item)`
+  2. If `FieldDoesNotExist` is raised: return E108 error (field truly doesn't exist)
+  3. If field is obtained successfully and `isinstance(field, models.ManyToManyField)`: return E109 error
+  4. Otherwise: return [] (valid field)
+
+Note: The old code also had a bug (didn't check for ManyToManyField in the else clause). The fix should include this check as documented in the problem description's correctness table.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and git history.
+
+## Open questions
+
+None — the fix is straightforward: restore the `_meta.get_field()` fallback with ManyToManyField check.
+
+---STDERR---

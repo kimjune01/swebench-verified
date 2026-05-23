@@ -1,0 +1,23 @@
+# Audit: django__django-11551
+
+## FAIL_TO_PASS
+- `test_valid_field_accessible_via_instance (modeladmin.test_checks.ListDisplayTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 120 tests passed cleanly.
+
+## Pre-existing (not counted, confirmed against base capture)
+None applicable — gate output shows no failures.
+
+## Classification summary
+The patch is live (36 line changes in `django/contrib/admin/checks.py`). The full gate ran 120 tests with 0 failures:
+- All FAIL_TO_PASS tests passing: 1/1 ✓
+- Zero PASS_TO_PASS regressions
+- Zero pre-existing failures
+
+The fix correctly restores the fallback logic that checks `model._meta.get_field(item)` when `hasattr(obj.model, item)` returns False. This handles fields whose descriptors raise AttributeError when accessed on the class (like PositionField), while properly detecting ManyToManyField and truly missing fields.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
