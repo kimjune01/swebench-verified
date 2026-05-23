@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. Changed line 6689 in `lib/matplotlib/axes/_axes.py` from `hist_kwargs = dict(density=density)` to `hist_kwargs['density'] = density`, preserving the `range` parameter when `density=True`.
+
+---STDERR---

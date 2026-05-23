@@ -1,0 +1,25 @@
+# Audit: matplotlib__matplotlib-13989
+
+## FAIL_TO_PASS
+- test_hist_range_and_density: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+All 167 failures are pre-existing environmental issues:
+- Image comparison failures due to FreeType version mismatch (expected 2.6.1, found 2.11.1)
+- test_imshow[pdf], test_normal_axes, test_get_tightbbox_polar: Environmental/precision errors unrelated to histogram functionality, not in PASS_TO_PASS contract
+
+Verified PASS_TO_PASS tests still passing:
+- test_get_labels, test_spy_invalid_kwargs, test_twinx_cla, test_twinx_axis_scales[png], test_autoscale_tight, test_autoscale_log_shared, test_use_sticky_edges, test_arrow_simple[png]
+
+## Kill report
+Not applicable — fix is RESOLVED.
+
+The patch correctly changes line 6689 from `hist_kwargs = dict(density=density)` (which replaces the dict and loses the `range` key) to `hist_kwargs['density'] = density` (which updates the existing dict, preserving the `range` key). This directly resolves the root cause where `range=(0, 1)` was lost when `density=True`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
