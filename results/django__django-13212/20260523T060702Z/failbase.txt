@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 forms_tests.tests.test_validators
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [RegexValidator] (value='\u4f60 \u597d')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['\u4f60 \u597d']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [validate_ipv4_address] (value='256.1.1.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['256.1.1.1']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [validate_ipv6_address] (value='1:2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['1:2']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [validate_ipv46_address] (value='256.1.1.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['256.1.1.1']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [RegexValidator] (value='a,b,c')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['a,b,c']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [RegexValidator] (value='-1,2,3')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['-1,2,3']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [URLValidator] (value='no_scheme')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['no_scheme']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [URLValidator] (value='http://test[.com')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['http://test[.com']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [URLValidator] (value='http://[::1:2::3]/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['http://[::1:2::3]/']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [URLValidator] (value='http://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['http://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa[287 chars]aa']}
+
+======================================================================
+FAIL: test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [RegexValidator] (value='xxxxxx')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 109, in test_value_placeholder_with_char_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['xxxxxx']}
+
+======================================================================
+FAIL: test_value_placeholder_with_decimal_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) (value='NaN')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 157, in test_value_placeholder_with_decimal_field
+    self.assertEqual(form.errors, {'field': [value]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['NaN']}
+
+======================================================================
+FAIL: test_value_placeholder_with_integer_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) [URLValidator] (value='1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 137, in test_value_placeholder_with_integer_field
+    self.assertEqual(form.errors, {'field': [str(value)]})
+AssertionError: {'field': ['%(value)s']} != {'field': ['1']}
+
+======================================================================
+FAIL: test_value_placeholder_with_null_character (forms_tests.tests.test_validators.ValidatorCustomMessageTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/forms_tests/tests/test_validators.py", line 119, in test_value_placeholder_with_null_character
+    self.assertEqual(form.errors, {'field': ['a\x00b']})
+AssertionError: {'field': ['%(value)s']} != {'field': ['a\x00b']}
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.070s
+
+FAILED (failures=19, errors=4)
+Testing against Django installed in '/testbed/django'
+Importing application forms_tests
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

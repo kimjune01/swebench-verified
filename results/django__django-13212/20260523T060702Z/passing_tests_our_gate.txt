@@ -1,0 +1,18 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 forms_tests.tests.test_validators
+
+test_all_errors_get_reported (forms_tests.tests.test_validators.TestFieldWithValidators) ... ok
+test_field_validators_can_be_any_iterable (forms_tests.tests.test_validators.TestFieldWithValidators) ... ok
+test_value_placeholder_with_char_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) ... ok
+test_value_placeholder_with_decimal_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) ... ok
+test_value_placeholder_with_file_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) ... ok
+test_value_placeholder_with_integer_field (forms_tests.tests.test_validators.ValidatorCustomMessageTests) ... ok
+test_value_placeholder_with_null_character (forms_tests.tests.test_validators.ValidatorCustomMessageTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.069s
+
+OK
+Testing against Django installed in '/testbed/django'
+Importing application forms_tests
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

@@ -1,0 +1,19 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix required changes to two files:
+
+**django/core/validators.py** (18 sites):
+- RegexValidator: Added `params={'value': value}` 
+- URLValidator: Added `params={'value': value}` (5 locations)
+- EmailValidator: Added `params={'value': value}` (3 locations)
+- validate_ipv4_address, validate_ipv6_address, validate_ipv46_address: Added `params={'value': value}` (3 locations)
+- DecimalValidator: Added `'value': value` to existing params (4 locations)
+- FileExtensionValidator: Added `'value': value.name` to existing params
+- ProhibitNullCharactersValidator: Added `params={'value': value}`
+
+**django/forms/fields.py** (1 site):
+- DecimalField.validate(): Added `params={'value': value}` when raising ValidationError for non-finite Decimal values (line 358)
+
+The DecimalField fix was discovered after the first gate iteration when test_value_placeholder_with_decimal_field failed for the NaN case. The root cause was that DecimalField.validate() checks for non-finite values and raises ValidationError before the DecimalValidator runs, and it wasn't passing params.
+
+---STDERR---

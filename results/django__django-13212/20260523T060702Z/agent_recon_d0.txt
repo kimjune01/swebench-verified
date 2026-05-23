@@ -1,0 +1,3 @@
+Recon complete. The diagnosis is clear: validators need to pass `params={'value': value}` when raising ValidationError so that the `%(value)s` placeholder in custom error messages can be interpolated. I've identified all 15 edit sites across 10 different validators in `django/core/validators.py`.
+
+---STDERR---

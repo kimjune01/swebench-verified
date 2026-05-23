@@ -1,0 +1,28 @@
+# Audit: django__django-13212
+
+## FAIL_TO_PASS
+- test_value_placeholder_with_char_field: **PASS** ✓
+- test_value_placeholder_with_decimal_field: **PASS** ✓
+- test_value_placeholder_with_file_field: **PASS** ✓
+- test_value_placeholder_with_integer_field: **PASS** ✓
+- test_value_placeholder_with_null_character: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. Both tests still pass:
+- test_all_errors_get_reported: PASS ✓
+- test_field_validators_can_be_any_iterable: PASS ✓
+
+## Pre-existing (not counted, confirmed against base capture)
+The fail-on-base capture showed 6 failures (variants of test_value_placeholder_with_char_field with different validators). All now resolved.
+
+## Summary
+The patch successfully fixed the issue where the `%(value)s` placeholder in custom validator error messages was not being interpolated. The fix added `params={'value': value}` to all ValidationError raises across:
+- django/core/validators.py: RegexValidator, URLValidator, EmailValidator, IP validators, DecimalValidator, FileExtensionValidator, ProhibitNullCharactersValidator
+- django/forms/fields.py: DecimalField.validate() for non-finite values
+
+All 7 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
