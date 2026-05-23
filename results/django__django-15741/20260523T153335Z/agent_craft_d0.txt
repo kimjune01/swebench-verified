@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix is complete. The one-line change converts lazy translation strings to regular strings in `get_format()`, allowing both FAIL_TO_PASS tests to pass:
+
+- `test_get_format_lazy_format`: directly passes `gettext_lazy("DATE_FORMAT")` to `get_format()` ✅
+- `test_date_lazy`: uses date filter with lazy string `_("H:i")` ✅
+
+All 106 tests passed with no regressions.
+
+---STDERR---

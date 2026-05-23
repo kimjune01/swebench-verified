@@ -1,0 +1,35 @@
+Now I'll print my diagnosis to stdout:
+
+```markdown
+# Recon: django__django-15741
+
+## Failure summary
+The tests check whether `django.utils.formats.get_format()` can accept lazy translation strings (from `gettext_lazy()`) as the `format_type` parameter. The first test directly passes `gettext_lazy("DATE_FORMAT")` to `get_format()`. The second test uses the date template filter with a lazy format string `_("H:i")`. Both tests fail with `TypeError: getattr(): attribute name must be string` because `getattr()` requires a regular string as the attribute name, not a lazy proxy object.
+
+## Suspect set
+- `django/utils/formats.py` lines 100-143: `get_format()` function uses `format_type` parameter with `getattr()` and dict operations without converting lazy strings to regular strings
+
+## Root cause
+The `get_format()` function receives a lazy translation string via the `format_type` parameter but uses it directly with Python's built-in `getattr()` function at lines 128 and 134. The `getattr()` function requires its attribute name parameter to be a string type, not a lazy proxy object. Additionally, the lazy object is used as a dict key (lines 116, 135, 139) and in membership tests (lines 132, 135), which could cause cache misses and incorrect lookups.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/utils/formats.py:128` — `val = getattr(module, format_type, None)` - fails when format_type is lazy
+- `django/utils/formats.py:134` — `val = getattr(settings, format_type)` - fails when format_type is lazy
+- `django/utils/formats.py:116` — `cache_key = (format_type, lang)` - lazy object in cache key prevents cache hits
+- `django/utils/formats.py:135,139` — lazy object used as dict key in `ISO_INPUT_FORMATS`
+
+## Edit sites
+- `django/utils/formats.py` lines 109-116: Convert `format_type` to a string immediately after parameter validation, before the cache key is created. Use `str(format_type)` to force-evaluate lazy objects to regular strings. This single conversion fixes all downstream usages (getattr calls, dict lookups, membership tests, cache keys).
+
+Alternate approach (if imports are preferred): Import `force_str` from `django.utils.encoding` and use `format_type = force_str(format_type)` instead of `str()`.
+
+## Rejected hypotheses
+None - the root cause is directly observable from the stack trace and code inspection.
+
+## Open questions
+- Should the function return a lazy object when `format_type not in FORMAT_SETTINGS` (line 133), or should it return the string version? Current fix converts to string early, so it returns the string version, which seems more consistent.
+```
+
+---STDERR---
