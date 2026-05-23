@@ -1,0 +1,44 @@
+Now let me print the handoff to stdout:
+
+```markdown
+# Recon: django__django-15037
+
+## Failure summary
+
+The test `test_foreign_key_to_field` verifies that inspectdb correctly generates ForeignKey fields with the `to_field` parameter when a foreign key references a non-primary-key field. The test creates a table `inspectdb_foreignkeytofield` with a foreign key `to_field_fk_id` that references `inspectdb_peoplemoredata(people_unique_id)` instead of the primary key. When inspectdb runs on this table, it should generate `to_field_fk = models.ForeignKey('InspectdbPeoplemoredata', models.DO_NOTHING, to_field='people_unique_id')`, but it actually generates `to_field_fk = models.ForeignKey('InspectdbPeoplemoredata', models.DO_NOTHING')` without the `to_field` parameter.
+
+## Suspect set
+
+- `django/core/management/commands/inspectdb.py` lines 118-130: The relation-handling block that creates ForeignKey/OneToOneField declarations. This code uses `relations[column_name][1]` to get the referenced table but never examines `relations[column_name][0]` (the referenced column).
+
+## Root cause
+
+When inspectdb processes foreign key columns, it calls `connection.introspection.get_relations(cursor, table_name)` which returns a dictionary mapping each foreign key column to a tuple: `{column_name: (referenced_column, referenced_table)}`. The code at lines 123-126 extracts the referenced table name using `relations[column_name][1]` but completely ignores `relations[column_name][0]` (the referenced column name). As a result, the generated ForeignKey field has no `to_field` parameter, causing Django to assume the foreign key targets the primary key of the referenced table.
+
+The fix requires adding logic after line 126 to:
+1. Extract the referenced column from `relations[column_name][0]`
+2. Determine the primary key of the referenced table using `connection.introspection.get_primary_key_column(cursor, relations[column_name][1])`
+3. If the referenced column differs from the primary key, add `'to_field': referenced_column` to `extra_params`
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/core/management/commands/inspectdb.py:123-126` — `rel_to = ("self" if relations[column_name][1] == table_name else table2model(relations[column_name][1]))` only uses index [1]
+- `django/db/backends/sqlite3/introspection.py:168` — `relations[field_name] = (other_name, table)` confirms tuple structure
+- `django/db/backends/postgresql/introspection.py:88` — `return {row[0]: (row[2], row[1])}` confirms all backends use same structure
+- Test output shows missing `to_field='people_unique_id'` parameter in generated code
+
+## Edit sites
+
+- `django/core/management/commands/inspectdb.py` lines 118-130: In the `if is_relation:` block, after determining `rel_to` (around line 126), add logic to check if the foreign key references a non-primary-key field. If so, add `'to_field': relations[column_name][0]` to `extra_params`. The logic needs access to the cursor to call `get_primary_key_column` on the referenced table.
+
+## Rejected hypotheses
+
+None — the root cause is clear from reading the code and tracing the data flow.
+
+## Open questions
+
+None — the fix is straightforward once the referenced column information from `relations[column_name][0]` is used.
+```
+
+---STDERR---

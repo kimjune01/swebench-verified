@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_foreign_key_to_field` now passes. The fix correctly adds the `to_field` parameter to ForeignKey fields when they reference a non-primary-key column by:
+
+1. Extracting the referenced column from `relations[column_name][0]`
+2. Getting the primary key of the referenced table via `connection.introspection.get_primary_key_column(cursor, ref_db_table)`
+3. Adding `to_field` to `extra_params` when the referenced column differs from the primary key
+
+The remaining test failure (`test_custom_fields`) was confirmed as pre-existing and unrelated to this fix.
+
+---STDERR---
