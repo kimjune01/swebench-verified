@@ -1,0 +1,20 @@
+# Audit: django__django-13401
+
+## FAIL_TO_PASS
+- test_abstract_inherited_fields (model_fields.tests.BasicFieldTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 12 PASS_TO_PASS tests remain passing with no errors.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the only failure on base was test_abstract_inherited_fields, which is now resolved.
+
+## Summary
+The patch successfully fixes the issue. Field instances from abstract models that are inherited by different concrete models now correctly compare as unequal. The fix modifies Field.__eq__, Field.__lt__, and Field.__hash__ to consider both creation_counter and the model attribute, ensuring that fields with identical creation_counters (from abstract model inheritance) but different models are properly distinguished.
+
+All 33 tests passed with no regressions. The gate is clean.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

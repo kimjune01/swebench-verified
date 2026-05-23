@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix successfully makes Field instances from abstract models compare as unequal when inherited by different concrete models. All FAIL_TO_PASS tests passed (33/33 tests OK).
+
+**Changes made** to `django/db/models/fields/__init__.py`:
+- `__eq__` (line 516): Now compares both `creation_counter` and `model` (using identity check `is`)
+- `__lt__` (line 523): Orders by `creation_counter` first, then by stable model key `(app_label, model_name)`, with `id()` fallback for total ordering
+- `__hash__` (line 541): Hashes tuple `(creation_counter, model)` for consistency with equality
+
+The solution uses Django's model metadata for stable, deterministic ordering across runs while preserving `creation_counter` as the primary sort key.
+
+---STDERR---
