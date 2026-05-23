@@ -1,0 +1,42 @@
+# Recon: django__django-11211
+
+## Failure summary
+
+The test `test_prefetch_GFK_uuid_pk` creates an Article with a UUID primary key and a Comment with a GenericForeignKey pointing to it. When prefetching via `Comment.objects.prefetch_related('content_object_uuid')`, the test expects the comment's `content_object_uuid` attribute to return the Article object, but it returns `None` instead. The assertion `[c.content_object_uuid for c in qs] == [article]` fails with `[None] != [<Article>]`.
+
+## Suspect set
+
+- `django/contrib/contenttypes/fields.py` lines 171-215: `GenericForeignKey.get_prefetch_queryset()` method - specifically the `gfk_key` function at lines 198-206 that creates the matching key for instances
+
+## Root cause
+
+In `GenericForeignKey.get_prefetch_queryset()`, the `gfk_key` function (line 198-206) is responsible for creating a key from each Comment instance to match against fetched Article objects. At line 205, it uses:
+
+```python
+return (model._meta.pk.get_prep_value(getattr(obj, self.fk_field)), model)
+```
+
+The problem: `getattr(obj, self.fk_field)` retrieves the value from `object_pk_uuid` (a TextField), which stores the UUID as a **string**. The `get_prep_value` method doesn't convert this string back to a UUID object - it just returns the string as-is. Meanwhile, the related object's key (line 209) is `(obj.pk, obj.__class__)`, which uses the actual **UUID object** from Article.pk. Since `"18bd470c-1e8a..." != UUID("18bd470c-1e8a...")`, the matching fails and prefetch returns None.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `django/contrib/contenttypes/fields.py:232` — The `__get__` method uses `to_python` for the same purpose: `pk_match = rel_obj._meta.pk.to_python(pk_val) == rel_obj.pk`
+- `django/contrib/contenttypes/fields.py:575` — GenericRelation's prefetch also uses `to_python`: `object_id_converter = instances[0]._meta.pk.to_python`
+- Python test confirms: `str(uuid.uuid4()) == uuid.uuid4()` returns `False`
+
+## Edit sites
+
+- `django/contrib/contenttypes/fields.py` line 205: Change `model._meta.pk.get_prep_value(getattr(obj, self.fk_field))` to `model._meta.pk.to_python(getattr(obj, self.fk_field))`
+
+This converts the stored string value back to the proper Python type (UUID object) before creating the comparison key, matching the pattern already used in lines 232 and 575 of the same file for the same purpose.
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and consistent with existing patterns in the codebase.
+
+## Open questions
+
+None - the fix is straightforward and follows existing conventions in the same file.
+
+---STDERR---

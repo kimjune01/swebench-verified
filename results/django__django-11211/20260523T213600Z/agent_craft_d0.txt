@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_prefetch_GFK_uuid_pk` pass. Changed `get_prep_value` to `to_python` in `GenericForeignKey.get_prefetch_queryset()` at line 205, converting UUID strings to UUID objects for proper prefetch matching. All 77 tests pass.
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 prefetch_related.models prefetch_related.tests
+
+test_overriding_prefetch (prefetch_related.tests.PrefetchRelatedTests) ... ok
+test_reverse_m2m_to_attr_conflict (prefetch_related.tests.PrefetchRelatedTests) ... ok
+test_reverse_one_to_one_then_m2m (prefetch_related.tests.PrefetchRelatedTests) ... ok
+test_survives_clone (prefetch_related.tests.PrefetchRelatedTests) ... ok
+test_basic (prefetch_related.tests.RawQuerySetTests) ... ok
+test_clear (prefetch_related.tests.RawQuerySetTests) ... ok
+test_prefetch_before_raw (prefetch_related.tests.RawQuerySetTests) ... ok
+test_retrieves_results_from_prefetched_objects_cache (prefetch_related.tests.ReadPrefetchedObjectsCacheTests) ... ok
+test_bug (prefetch_related.tests.Ticket19607Tests) ... ok
+test_bug (prefetch_related.tests.Ticket21410Tests) ... ok
+test_bug (prefetch_related.tests.Ticket21760Tests) ... ok
+
+======================================================================
+FAIL: test_prefetch_GFK_uuid_pk (prefetch_related.tests.GenericRelationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/prefetch_related/tests.py", line 892, in test_prefetch_GFK_uuid_pk
+    self.assertEqual([c.content_object_uuid for c in qs], [article])
+AssertionError: Lists differ: [None] != [<Article: Article object (4463c92f-d7ff-43d2-9219-d9a7a3be1591)>]
+
+First differing element 0:
+None
+<Article: Article object (4463c92f-d7ff-43d2-9219-d9a7a3be1591)>
+
+- [None]
++ [<Article: Article object (4463c92f-d7ff-43d2-9219-d9a7a3be1591)>]
+
+----------------------------------------------------------------------
+Ran 77 tests in 0.237s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Destroying test database for alias 'other' ('file:memorydb_other?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application prefetch_related
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, prefetch_related, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table prefetch_related_author
+    Creating table prefetch_related_authorwithage
+    Creating table prefetch_related_favoriteauthors
+    Creating table prefetch_related_authoraddress
+    Creating table prefetch_related_book
+    Creating table prefetch_related_bookwithyear
+    Creating table prefetch_related_bio
+    Creating table prefetch_related_reader
+    Creating table prefetch_related_bookreview
+    Creating table prefetch_related_qualification
+    Creating table prefetch_related_teacher
+    Creating table prefetch_related_department
+    Creating table prefetch_related_taggeditem
+    Creating table prefetch_related_article
+    Creating table prefetch_related_bookmark
+    Creating table prefetch_related_comment
+    Creating table prefetch_related_house
+    Creating table prefetch_related_room
+    Creating table prefetch_related_person
+    Creating table prefetch_related_employee
+    Creating table prefetch_related_lessonentry
+    Creating table prefetch_related_wordentry
+    Creating table prefetch_related_author2
+    Creating table prefetch_related_pet
+    Creating table prefetch_related_flea
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, messages, prefetch_related, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table prefetch_related_author
+    Creating table prefetch_related_authorwithage
+    Creating table prefetch_related_favoriteauthors
+    Creating table prefetch_related_authoraddress
+    Creating table prefetch_related_book
+    Creating table prefetch_related_bookwithyear
+    Creating table prefetch_related_bio
+    Creating table prefetch_related_reader
+    Creating table prefetch_related_bookreview
+    Creating table prefetch_related_qualification
+    Creating table prefetch_related_teacher
+    Creating table prefetch_related_department
+    Creating table prefetch_related_taggeditem
+    Creating table prefetch_related_article
+    Creating table prefetch_related_bookmark
+    Creating table prefetch_related_comment
+    Creating table prefetch_related_house
+    Creating table prefetch_related_room
+    Creating table prefetch_related_person
+    Creating table prefetch_related_employee
+    Creating table prefetch_related_lessonentry
+    Creating table prefetch_related_wordentry
+    Creating table prefetch_related_author2
+    Creating table prefetch_related_pet
+    Creating table prefetch_related_flea
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

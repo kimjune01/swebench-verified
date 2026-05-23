@@ -1,0 +1,18 @@
+# Audit: django__django-11211
+
+## FAIL_TO_PASS
+- `test_prefetch_GFK_uuid_pk (prefetch_related.tests.GenericRelationTests)`: **PASS**
+
+## PASS_TO_PASS regressions
+None — all 77 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the only failure on base was the FAIL_TO_PASS test itself.
+
+## Outcome
+The patch successfully resolves the issue. Changed `get_prep_value()` to `to_python()` in `django/contrib/contenttypes/fields.py:205`, converting UUID strings from TextField storage to UUID objects for proper comparison during GenericForeignKey prefetch operations.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
