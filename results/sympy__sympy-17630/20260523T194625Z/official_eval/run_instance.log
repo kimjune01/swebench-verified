@@ -1,0 +1,49 @@
+2026-05-23 19:43:15,971 - INFO - Creating container for sympy__sympy-17630...
+2026-05-23 19:43:16,129 - INFO - Container for sympy__sympy-17630 created: 0737972294cdf59e3f3041dae65187e11538f6b661012ca5d01f4d5ed987eab1
+2026-05-23 19:43:16,433 - INFO - Container for sympy__sympy-17630 started: 0737972294cdf59e3f3041dae65187e11538f6b661012ca5d01f4d5ed987eab1
+2026-05-23 19:43:16,433 - INFO - Intermediate patch for sympy__sympy-17630 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17630/patch.diff, now applying to container...
+2026-05-23 19:43:16,518 - INFO - >>>>> Applied Patch:
+Checking patch sympy/matrices/expressions/matexpr.py...
+Applied patch sympy/matrices/expressions/matexpr.py cleanly.
+
+2026-05-23 19:43:16,773 - INFO - Git diff before:
+diff --git a/sympy/matrices/expressions/matexpr.py b/sympy/matrices/expressions/matexpr.py
+index fd1e6d970a..6a6f8aa606 100644
+--- a/sympy/matrices/expressions/matexpr.py
++++ b/sympy/matrices/expressions/matexpr.py
+@@ -627,7 +627,11 @@ def _postprocessor(expr):
+                 # manipulate them like non-commutative scalars.
+                 return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
+ 
+-        return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
++        if cls == Add and not nonmatrices:
++            # Don't prepend scalar S.Zero to MatAdd when there are no scalar terms
++            return mat_class(*matrices).doit(deep=False)
++        else:
++            return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
+     return _postprocessor
+2026-05-23 19:43:16,774 - INFO - Eval script for sympy__sympy-17630 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17630/eval.sh; copying to container...
+2026-05-23 19:43:19,299 - INFO - Test runtime: 2.42 seconds
+2026-05-23 19:43:19,299 - INFO - Test output for sympy__sympy-17630 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17630/test_output.txt
+2026-05-23 19:43:19,374 - INFO - Git diff after:
+diff --git a/sympy/matrices/expressions/matexpr.py b/sympy/matrices/expressions/matexpr.py
+index fd1e6d970a..6a6f8aa606 100644
+--- a/sympy/matrices/expressions/matexpr.py
++++ b/sympy/matrices/expressions/matexpr.py
+@@ -627,7 +627,11 @@ def _postprocessor(expr):
+                 # manipulate them like non-commutative scalars.
+                 return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
+ 
+-        return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
++        if cls == Add and not nonmatrices:
++            # Don't prepend scalar S.Zero to MatAdd when there are no scalar terms
++            return mat_class(*matrices).doit(deep=False)
++        else:
++            return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
+     return _postprocessor
+2026-05-23 19:43:19,374 - INFO - Grading answer for sympy__sympy-17630...
+2026-05-23 19:43:19,374 - INFO - report: {'sympy__sympy-17630': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_issue_17624', 'test_zero_matrix_add'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_bc_matmul', 'test_bc_matadd', 'test_bc_transpose', 'test_bc_dist_diag', 'test_block_plus_ident', 'test_BlockMatrix', 'test_block_collapse_explicit_matrices', 'test_BlockMatrix_trace', 'test_BlockMatrix_Determinant', 'test_squareBlockMatrix', 'test_BlockDiagMatrix', 'test_blockcut', 'test_reblock_2x2', 'test_deblock', 'test_sort_key', 'test_matadd_sympify', 'test_matadd_of_matrices', 'test_doit_args', 'test_generic_identity'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-17630: resolved: True
+2026-05-23 19:43:19,374 - INFO - Attempting to stop container sweb.eval.sympy__sympy-17630.batch...
+2026-05-23 19:43:34,771 - INFO - Attempting to remove container sweb.eval.sympy__sympy-17630.batch...
+2026-05-23 19:43:34,782 - INFO - Container sweb.eval.sympy__sympy-17630.batch removed.

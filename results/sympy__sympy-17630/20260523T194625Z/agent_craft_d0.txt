@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass:
+- ✅ test_issue_17624
+- ✅ test_zero_matrix_add
+
+The fix was applied at line 631 of matexpr.py in the Add postprocessor. When there are no scalar terms (`nonmatrices` is empty), the function now returns `MatAdd(*matrices).doit(deep=False)` instead of incorrectly prepending scalar `S.Zero`. This prevents the scalar zero from polluting matrix-only additions.
+
+---STDERR---

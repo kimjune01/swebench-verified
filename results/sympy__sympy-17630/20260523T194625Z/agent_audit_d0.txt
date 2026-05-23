@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-17630
+
+## FAIL_TO_PASS
+- test_issue_17624: PASS ✓
+- test_zero_matrix_add: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+All FAIL_TO_PASS tests now pass. All PASS_TO_PASS tests remain passing. Zero regressions detected. The craft patch successfully resolves the issue by fixing the Add postprocessor to avoid prepending scalar S.Zero when nonmatrices is empty.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

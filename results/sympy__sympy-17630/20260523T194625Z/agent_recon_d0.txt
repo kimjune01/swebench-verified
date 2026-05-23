@@ -1,0 +1,3 @@
+Recon complete. The root cause is in the Add postprocessor at line 631 of matexpr.py, which incorrectly prepends scalar `S.Zero` when converting core `Add(ZeroMatrix, ZeroMatrix)` to MatAdd. This causes rm_id to keep the scalar zero instead of the matrix zero, breaking both failing tests.
+
+---STDERR---
