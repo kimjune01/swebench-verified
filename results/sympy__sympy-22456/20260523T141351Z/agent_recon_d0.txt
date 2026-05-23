@@ -1,0 +1,44 @@
+# Recon: sympy__sympy-22456
+
+## Failure summary
+
+The `test_String` test in `sympy/codegen/tests/test_ast.py` line 270 checks that `String` supports standard argument invariance (`st.func(*st.args) == st`), which all `Basic` subclasses should satisfy. The test fails with `TypeError: No value for 'text' given and attribute has no default` raised from `sympy/codegen/ast.py:237` in `Token.__new__()`. This occurs because `String('foobar').args` returns an empty tuple `()`, so reconstructing with `st.func(*st.args)` is equivalent to calling `String()` with no arguments, which fails since `text` is required.
+
+## Suspect set
+
+- `sympy/codegen/ast.py` line 898: `not_in_args = ['text']` in the `String` class definition — this is the direct cause of `text` being excluded from `args`
+- `sympy/codegen/ast.py` lines 245-249: the filtering mechanism in `Token.__new__()` that respects `not_in_args` — this is working as designed, not the bug
+
+## Root cause
+
+The root cause is **line 898** in `sympy/codegen/ast.py`: `not_in_args = ['text']`. This class attribute explicitly excludes the `text` parameter from being passed to the `Basic` parent constructor, which means `text` is omitted from the `args` tuple. The Token.__new__() method (lines 245-248) filters `attrvals` to exclude attributes listed in `not_in_args` before passing them to `CodegenAST.__new__()`, which sets up the `args` tuple inherited from `Basic`. While `text` is still stored as an instance attribute (line 253), it's not in `args`, breaking the standard invariance `expr.func(*expr.args) == expr`.
+
+Testing confirms:
+- `String('foo').args` → `()` (empty)
+- `String('foo').kwargs()` → `{'text': 'foo'}`
+- `Basic('hello')` works fine — strings can be passed to Basic
+
+String is the ONLY class in the entire `ast.py` file that uses `not_in_args`, suggesting this was a special case that is no longer necessary (if it ever was).
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sympy/codegen/ast.py:898` — `not_in_args = ['text']`
+- `sympy/codegen/ast.py:247` — `if attr not in cls.not_in_args` (the filtering mechanism)
+- `git blame` shows line 898 was added in 2017 by Björn Dahlgren
+
+## Edit sites
+
+- `sympy/codegen/ast.py` line 898: **Remove** the line `not_in_args = ['text']` from the `String` class. This will cause `text` to be included in `args`, enabling the standard `func(*args)` reconstruction pattern.
+
+Note: `QuotedString` and `Comment` are subclasses of `String` that don't override `not_in_args`, so they inherit the current behavior and will also be fixed by this change.
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward with deductive certainty.
+
+## Open questions
+
+None — the fix is well-localized and has clear expected behavior.
+
+---STDERR---

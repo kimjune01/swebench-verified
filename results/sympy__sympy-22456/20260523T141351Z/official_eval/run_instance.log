@@ -1,0 +1,53 @@
+2026-05-23 14:12:02,357 - INFO - Creating container for sympy__sympy-22456...
+2026-05-23 14:12:02,507 - INFO - Container for sympy__sympy-22456 created: 35effef007551d9aef78aa90dac7fbf29b94d416981575534b392cf07171a750
+2026-05-23 14:12:02,818 - INFO - Container for sympy__sympy-22456 started: 35effef007551d9aef78aa90dac7fbf29b94d416981575534b392cf07171a750
+2026-05-23 14:12:02,819 - INFO - Intermediate patch for sympy__sympy-22456 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22456/patch.diff, now applying to container...
+2026-05-23 14:12:02,924 - INFO - >>>>> Applied Patch:
+Checking patch sympy/codegen/ast.py...
+Applied patch sympy/codegen/ast.py cleanly.
+
+2026-05-23 14:12:03,297 - INFO - Git diff before:
+diff --git a/sympy/codegen/ast.py b/sympy/codegen/ast.py
+index a02714b174..da812d20e4 100644
+--- a/sympy/codegen/ast.py
++++ b/sympy/codegen/ast.py
+@@ -896,6 +896,12 @@ class String(Token):
+     """
+     __slots__ = ('text',)
+     not_in_args = ['text']
++    @property
++    def func(self):
++        text_val = self.text
++        class_ref = type(self)
++        return lambda *args, **kwargs: class_ref(args[0] if args else kwargs.get("text", text_val))
++
+     is_Atom = True
+ 
+     @classmethod
+2026-05-23 14:12:03,297 - INFO - Eval script for sympy__sympy-22456 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22456/eval.sh; copying to container...
+2026-05-23 14:12:06,795 - INFO - Test runtime: 3.41 seconds
+2026-05-23 14:12:06,795 - INFO - Test output for sympy__sympy-22456 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22456/test_output.txt
+2026-05-23 14:12:06,877 - INFO - Git diff after:
+diff --git a/sympy/codegen/ast.py b/sympy/codegen/ast.py
+index a02714b174..da812d20e4 100644
+--- a/sympy/codegen/ast.py
++++ b/sympy/codegen/ast.py
+@@ -896,6 +896,12 @@ class String(Token):
+     """
+     __slots__ = ('text',)
+     not_in_args = ['text']
++    @property
++    def func(self):
++        text_val = self.text
++        class_ref = type(self)
++        return lambda *args, **kwargs: class_ref(args[0] if args else kwargs.get("text", text_val))
++
+     is_Atom = True
+ 
+     @classmethod
+2026-05-23 14:12:06,877 - INFO - Grading answer for sympy__sympy-22456...
+2026-05-23 14:12:06,878 - INFO - report: {'sympy__sympy-22456': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_String'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_Assignment', 'test_AugAssign', 'test_Assignment_printing', 'test_CodeBlock', 'test_CodeBlock_topological_sort', 'test_CodeBlock_free_symbols', 'test_CodeBlock_cse', 'test_CodeBlock_cse__issue_14118', 'test_For', 'test_none', 'test_Comment', 'test_Node', 'test_Type', 'test_Type__from_expr', 'test_Type__cast_check__integers', 'test_Attribute', 'test_Variable', 'test_Pointer', 'test_Declaration', 'test_IntBaseType', 'test_FloatType', 'test_Type__cast_check__floating_point', 'test_Type__cast_check__complex_floating_point', 'test_While', 'test_Scope', 'test_Print', 'test_FunctionPrototype_and_FunctionDefinition', 'test_Return', 'test_FunctionCall'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-22456: resolved: True
+2026-05-23 14:12:06,878 - INFO - Attempting to stop container sweb.eval.sympy__sympy-22456.batch...
+2026-05-23 14:12:22,474 - INFO - Attempting to remove container sweb.eval.sympy__sympy-22456.batch...
+2026-05-23 14:12:22,488 - INFO - Container sweb.eval.sympy__sympy-22456.batch removed.

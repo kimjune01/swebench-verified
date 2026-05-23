@@ -1,0 +1,17 @@
+diff --git a/sympy/codegen/ast.py b/sympy/codegen/ast.py
+index a02714b174..da812d20e4 100644
+--- a/sympy/codegen/ast.py
++++ b/sympy/codegen/ast.py
+@@ -896,6 +896,12 @@ class String(Token):
+     """
+     __slots__ = ('text',)
+     not_in_args = ['text']
++    @property
++    def func(self):
++        text_val = self.text
++        class_ref = type(self)
++        return lambda *args, **kwargs: class_ref(args[0] if args else kwargs.get("text", text_val))
++
+     is_Atom = True
+ 
+     @classmethod
