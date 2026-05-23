@@ -1,0 +1,34 @@
+# Audit: pylint-dev__pylint-4970
+
+## FAIL_TO_PASS
+- `tests/checkers/unittest_similar.py::test_set_duplicate_lines_to_zero`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 17 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - all tests pass on the patched code.
+
+## Resolution Summary
+
+The patch successfully fixes the issue where `similar.Run(["--duplicates=0", ...])` was printing a TOTAL summary line instead of returning empty output.
+
+**Patch location**: `pylint/checkers/similar.py` lines 393-394
+```python
+if self.min_lines == 0:
+    return
+```
+
+**What it does**: Adds an early return in `Similar.run()` when `min_lines=0`, preventing the similarity computation and display logic from executing when no duplicate line checking is requested.
+
+**Test results**:
+- Base behavior: test failed with unwanted output `"TOTAL lines=62 duplicates=0 percent=0.00\n\n"`
+- After patch: test passes with empty output as expected
+- All 17 other tests preserved - no behavioral changes to normal operation
+
+The fix is surgical, minimal, and directly addresses the root cause identified in recon.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

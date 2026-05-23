@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix has been successfully implemented and validated. The FAIL_TO_PASS test `test_set_duplicate_lines_to_zero` now passes along with all other tests.
+
+**Summary**: Added an early return check in `Similar.run()` at line 393 to return immediately when `min_lines == 0`, preventing the TOTAL summary line from being printed when `--duplicates=0` is specified.
+
+---STDERR---

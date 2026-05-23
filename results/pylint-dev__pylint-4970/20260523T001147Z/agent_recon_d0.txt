@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is that `Similar.run()` doesn't check if `min_lines <= 0` before running the similarity checker. Even though no actual duplicates are found when `min_lines=0`, the TOTAL summary line is still printed unconditionally. The fix is to add an early return in the `run()` method when `self.min_lines <= 0`.
+
+---STDERR---
