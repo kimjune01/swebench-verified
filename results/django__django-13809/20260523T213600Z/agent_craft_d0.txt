@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Added `--skip-checks` support to runserver in 1 gate iteration. Both edit sites applied: argument parser now accepts the option, and `inner_run` conditionally skips system checks when the flag is set. All 276 tests pass.
+
+---STDERR---

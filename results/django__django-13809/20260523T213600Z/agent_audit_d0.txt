@@ -1,0 +1,24 @@
+# Audit: django__django-13809
+
+## FAIL_TO_PASS
+- **test_skip_checks (admin_scripts.tests.ManageRunserver)**: ✅ **PASS**
+
+## PASS_TO_PASS regressions
+**None.** All 276 tests in the gate passed, including all specified PASS_TO_PASS tests.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+**None.**
+
+## Summary
+
+The craft patch successfully adds the `--skip-checks` option to the runserver command:
+- Added `--skip-checks` argument to the parser in `add_arguments`
+- Wrapped system check execution in a conditional that respects the flag
+- Migration checks still run (correct behavior per the issue requirements)
+
+The FAIL_TO_PASS test now passes, recognizing and properly handling the `--skip-checks` option. Zero regressions detected across the full test suite (276 tests). The contract is fully satisfied.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

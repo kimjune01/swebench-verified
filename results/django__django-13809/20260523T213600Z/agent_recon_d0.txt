@@ -1,0 +1,37 @@
+# Recon: django__django-13809
+
+## Failure summary
+
+The test `test_skip_checks` verifies that the runserver command supports a `--skip-checks` option to skip system checks during server startup. The test calls `call_command('runserver', skip_checks=True)` and expects (1) the check method to not be called and (2) "Performing system checks..." to not appear in output. The test fails with `TypeError: Unknown option(s) for runserver command: skip_checks` because the option doesn't exist.
+
+## Suspect set
+
+- `django/core/management/commands/runserver.py` lines 38-52: `add_arguments` method that defines command options — missing `--skip-checks`
+- `django/core/management/commands/runserver.py` lines 117-121: `inner_run` method that unconditionally performs system checks
+- `django/core/management/commands/runserver.py` line 28: `requires_system_checks = []` prevents BaseCommand from auto-adding the option
+
+## Root cause
+
+The runserver command does not support `--skip-checks` because: (1) it has `requires_system_checks = []` which prevents BaseCommand from automatically adding the `--skip-checks` argument (BaseCommand only adds it when `requires_system_checks` is truthy per base.py:316-319), (2) the command doesn't manually add the argument in `add_arguments`, and (3) `inner_run` unconditionally prints "Performing system checks..." and calls `self.check()` regardless of any option value.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `django/core/management/commands/runserver.py:28` — `requires_system_checks = []` (falsy, so BaseCommand won't add the option)
+- `django/core/management/base.py:316-319` — `if self.requires_system_checks: parser.add_argument('--skip-checks', ...)`
+- `django/core/management/commands/runserver.py:38-52` — `add_arguments` method contains no `--skip-checks` argument
+- `django/core/management/commands/runserver.py:117-118` — `self.stdout.write("Performing system checks...\n\n")` and `self.check(display_num_errors=True)` executed unconditionally
+- `django/core/management/commands/migrate.py:23-25` — reference implementation: `parser.add_argument('--skip-checks', action='store_true', help='Skip system checks.')`
+- `django/core/management/commands/migrate.py:64-65` — reference usage: `if not options['skip_checks']: self.check(...)`
+
+## Edit sites
+
+1. `django/core/management/commands/runserver.py` lines 38-52 (in `add_arguments` method): Add `--skip-checks` argument with `action='store_true'` and help text "Skip system checks."
+
+2. `django/core/management/commands/runserver.py` lines 117-121 (in `inner_run` method): Wrap the "Performing system checks..." print statement and the `self.check(display_num_errors=True)` call in a conditional: `if not options.get('skip_checks', False):`. The default `False` ensures checks run when the option is not provided.
+
+## Open questions
+
+None — the pattern is well-established in other management commands (migrate, makemigrations) and the test expectations are explicit.
+
+---STDERR---
