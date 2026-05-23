@@ -1,0 +1,51 @@
+# Recon: django__django-14534
+
+## Failure summary
+
+Two tests fail related to `BoundWidget.id_for_label` property. The first test (`test_boundfield_subwidget_id_for_label`) checks that when a form is initialized with a custom `auto_id='prefix_%s'`, the generated IDs in subwidgets (from `CheckboxSelectMultiple`) should use that prefix (e.g., `'prefix_field_0'`), but instead they use the hardcoded default prefix (e.g., `'id_field_0'`). The second test (`test_iterable_boundfield_select`) checks that when `auto_id=False`, subwidget `id_for_label` should return `None`, but it returns a generated ID like `'id_name_0'` instead.
+
+**Error messages**:
+- Test 1: `AssertionError: 'id_field_0' != 'prefix_field_0'`
+- Test 2: `AssertionError: 'id_name_0' != None`
+
+## Suspect set
+
+- `django/forms/boundfield.py` lines 286-288: `BoundWidget.id_for_label` property - constructs ID from scratch instead of using pre-computed value
+- `django/forms/boundfield.py` lines 35-48: `BoundField.subwidgets` property - passes `auto_id` to widget, which properly formats IDs
+- `django/forms/widgets.py` lines 608-628: `ChoiceWidget.create_option` method - properly formats IDs with index and stores in returned dict
+
+## Root cause
+
+The `BoundWidget.id_for_label` property at line 288 in `django/forms/boundfield.py` hardcodes the ID format as `'id_%s_%s' % (self.data['name'], self.data['index'])`, completely ignoring the ID that was already computed and stored in `self.data['attrs']['id']`.
+
+**Code path**:
+1. `BoundField.subwidgets` (line 35) computes base ID from form's `auto_id` setting (e.g., `'prefix_field'` when `auto_id='prefix_%s'`, or empty string when `auto_id=False`)
+2. This base ID is passed to `widget.subwidgets()` via `attrs={'id': id_}`
+3. `ChoiceWidget.create_option()` (widgets.py:~615) correctly appends the index to this base ID: `option_attrs['id'] = self.id_for_label(option_attrs['id'], index)`, producing IDs like `'prefix_field_0'`, `'prefix_field_1'`, etc.
+4. This properly formatted ID is stored in the returned dict as `data['attrs']['id']`
+5. However, `BoundWidget.id_for_label` ignores this value and reconstructs its own ID using the hardcoded `'id'` prefix
+
+When `auto_id=False`, step 3 is skipped (no 'id' key is added to attrs), so `data['attrs']` has no 'id' key, yet `BoundWidget.id_for_label` still generates an ID.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/forms/boundfield.py:288` — `return 'id_%s_%s' % (self.data['name'], self.data['index'])`
+- `django/forms/boundfield.py:35-48` — Shows ID is computed from `auto_id` and passed to widget
+- `django/forms/widgets.py:615` — `if 'id' in option_attrs: option_attrs['id'] = self.id_for_label(option_attrs['id'], index)` — Shows ID is properly formatted and stored
+
+## Edit sites
+
+- `django/forms/boundfield.py` lines 286-288: Change `BoundWidget.id_for_label` property to return `self.data['attrs'].get('id')` instead of constructing a new ID string. This will:
+  - Return the properly formatted ID when one exists (respecting the form's `auto_id` format)
+  - Return `None` when no ID was set (when `auto_id=False`)
+
+## Rejected hypotheses
+
+None - the root cause was immediately clear from tracing the call path through the code.
+
+## Open questions
+
+None - the fix is straightforward and localized to a single property.
+
+---STDERR---

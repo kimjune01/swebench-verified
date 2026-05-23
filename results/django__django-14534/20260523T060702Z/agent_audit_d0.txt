@@ -1,0 +1,21 @@
+# Audit: django__django-14534
+
+## FAIL_TO_PASS
+- test_form_with_iterable_boundfield_id: **PASS** ✅
+- test_iterable_boundfield_select: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**none** - All 121 tests passed, including all PASS_TO_PASS tests from baseline.
+
+## Pre-existing (not counted, confirmed against base capture)
+**none** - Baseline comparison shows no pre-existing failures in scope.
+
+## Kill report
+Not applicable - fix is complete and verified.
+
+**Summary**: The patch successfully resolves both FAIL_TO_PASS test failures with zero regressions. The fix changed `BoundWidget.id_for_label` in django/forms/boundfield.py:288 from hardcoding `'id_%s_%s'` format to returning `self.data.get('attrs', {}).get('id')`, which respects the form's `auto_id` setting. Full test suite (121 tests) passes cleanly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

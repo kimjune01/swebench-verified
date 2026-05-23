@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix was straightforward: `BoundWidget.id_for_label` now returns the pre-computed ID from `self.data['attrs']` instead of reconstructing it with a hardcoded format, respecting the form's `auto_id` setting.
+
+---STDERR---
