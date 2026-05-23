@@ -1,0 +1,33 @@
+# Audit: django__django-16631
+
+## FAIL_TO_PASS
+- test_get_user_fallback_secret (auth_tests.test_basic.TestGetUser.test_get_user_fallback_secret): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 12 PASS_TO_PASS tests continue to pass:
+- test_get_user: PASS ✓
+- test_get_user_anonymous: PASS ✓
+- test_get_user_model: PASS ✓
+- test_superuser: PASS ✓
+- test_superuser_no_email_or_password: PASS ✓
+- test_swappable_user: PASS ✓
+- test_swappable_user_bad_setting: PASS ✓
+- test_swappable_user_nonexistent_model: PASS ✓
+- test_unicode_username: PASS ✓
+- test_user: PASS ✓
+- test_user_no_email: PASS ✓
+- test_user_verbose_names_translatable: PASS ✓
+
+## Pre-existing failures
+None
+
+## Gate output
+All 13 tests passed in 0.019s. The fix correctly:
+1. Makes sessions with hashes from fallback secrets validate successfully
+2. Upgrades the session to use the current SECRET_KEY after validating with a fallback
+3. Maintains backward compatibility with existing user models
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

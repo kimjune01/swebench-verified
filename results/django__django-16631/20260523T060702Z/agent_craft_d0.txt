@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix implements SECRET_KEY fallback support for session authentication. The FAIL_TO_PASS test `test_get_user_fallback_secret` now passes along with all other tests (13/13 passing).
+
+**Implementation**:
+1. Added private `_get_session_auth_hash(secret=None)` helper to `AbstractBaseUser` 
+2. Modified `get_user()` to try current secret first, then iterate through `SECRET_KEY_FALLBACKS`
+3. When verified with a fallback secret, automatically upgrades the session by rotating the key and updating the hash
+
+The fix maintains backward compatibility by preserving the public `get_session_auth_hash()` signature and only using fallback logic when available on the user object.
+
+---STDERR---

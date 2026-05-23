@@ -1,0 +1,62 @@
+Now I'll output the complete recon report:
+
+```markdown
+# Recon: django__django-16631
+
+## Failure summary
+
+The test `test_get_user_fallback_secret` verifies that after SECRET_KEY rotation, sessions created with the old key remain valid when the old key is in SECRET_KEY_FALLBACKS. The test creates a user, logs them in (session hash stored with old key), then rotates the SECRET_KEY with the old key in fallbacks. When `get_user(request)` is called, it returns `AnonymousUser` instead of the logged-in `User`, failing at line 156 with:
+```
+AssertionError: <django.contrib.auth.models.AnonymousUser object at 0x7f6648f51410> is not an instance of <class 'django.contrib.auth.models.User'>
+```
+
+## Suspect set
+
+- `django/contrib/auth/__init__.py` lines 200-207: Session hash verification in `get_user()` - only checks current SECRET_KEY
+- `django/contrib/auth/base_user.py` lines 134-143: `get_session_auth_hash()` - doesn't accept secret parameter, always uses current SECRET_KEY
+
+## Root cause
+
+The `get_user()` function verifies session authenticity by comparing the stored session hash (`HASH_SESSION_KEY`) with a freshly generated hash from `user.get_session_auth_hash()`. However, `get_session_auth_hash()` always uses the current `settings.SECRET_KEY` via `salted_hmac()`, never trying `SECRET_KEY_FALLBACKS`. When the SECRET_KEY is rotated, the stored hash (created with old key) doesn't match the generated hash (using new key), causing verification to fail and the session to be flushed.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/contrib/auth/__init__.py:200-206` — verification calls `user.get_session_auth_hash()` without trying fallbacks:
+  ```python
+  session_hash_verified = session_hash and constant_time_compare(
+      session_hash, user.get_session_auth_hash()
+  )
+  ```
+- `django/contrib/auth/base_user.py:139` — `salted_hmac()` called without `secret` parameter, defaults to `settings.SECRET_KEY`
+- `django/utils/crypto.py:26-27` — `salted_hmac(secret=None)` uses `settings.SECRET_KEY`, doesn't check `SECRET_KEY_FALLBACKS`
+- `django/contrib/auth/tokens.py:55-67` — password reset tokens correctly iterate: `for secret in [self.secret, *self.secret_fallbacks]`
+- `django/core/signing.py:61-63` — signing module correctly iterates: `for key in [self.key, *self.fallback_keys]`
+
+## Edit sites
+
+### 1. `django/contrib/auth/base_user.py` lines 134-143
+Modify `get_session_auth_hash()` method signature:
+- Change `def get_session_auth_hash(self):` to `def get_session_auth_hash(self, secret=None):`
+- Pass secret to salted_hmac: change `salted_hmac(key_salt, self.password, algorithm="sha256")` to `salted_hmac(key_salt, self.password, secret=secret, algorithm="sha256")`
+- Maintains backward compatibility (all existing calls without arguments work as-is)
+
+### 2. `django/contrib/auth/__init__.py` lines 200-207
+Replace single verification with fallback iteration:
+- Instead of single `constant_time_compare(session_hash, user.get_session_auth_hash())`, iterate through `[None, *settings.SECRET_KEY_FALLBACKS]`
+- Track which secret succeeded (if any)
+- If verification succeeds with a fallback secret (not None):
+  - Call `request.session.cycle_key()` to rotate session key
+  - Update hash: `request.session[HASH_SESSION_KEY] = user.get_session_auth_hash()` (using current key)
+- Only flush session if all secrets fail verification
+
+## Rejected hypotheses
+
+None - the code path is direct and unambiguous.
+
+## Open questions
+
+None - the fix pattern is well-established in Django's password reset tokens and signing modules.
+```
+
+---STDERR---
