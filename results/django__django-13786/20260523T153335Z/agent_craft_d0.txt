@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test now passes. The fix adds option removal logic to `CreateModel.reduce()` when handling `AlterModelOptions`, matching the behavior in `AlterModelOptions.state_forwards()`. When `AlterModelOptions` has empty or fewer options, the optimization now correctly removes options from `ALTER_OPTION_KEYS` that are not present in the new options dict.
+
+---STDERR---

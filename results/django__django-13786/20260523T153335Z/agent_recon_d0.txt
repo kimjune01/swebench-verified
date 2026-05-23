@@ -1,0 +1,40 @@
+# Recon: django__django-13786
+
+## Failure summary
+
+The test `test_create_model_and_remove_model_options` checks that when squashing migrations, a CreateModel operation with options followed by an AlterModelOptions operation should result in a single CreateModel with the correctly updated options. Specifically, when AlterModelOptions has fewer options or empty options ({}), it should remove options from the CreateModel. Currently, the optimization fails because options are merged but never removed—the test expects `CreateModel('MyModel', fields=[])` but gets `CreateModel('MyModel', fields=[], options={'verbose_name': 'My Model'})`.
+
+## Suspect set
+
+- `django/db/migrations/operations/models.py` lines 139-147: CreateModel.reduce() method's handling of AlterModelOptions
+- `django/db/migrations/operations/models.py` lines 675-679: AlterModelOptions.state_forwards() showing correct removal logic
+- `django/db/migrations/operations/models.py` lines 642-654: ALTER_OPTION_KEYS definition
+
+## Root cause
+
+CreateModel.reduce() uses simple dict merging when combining with AlterModelOptions: `options={**self.options, **operation.options}` (line 144). This only adds or overwrites options; it never removes options that are absent from `operation.options`. 
+
+AlterModelOptions.state_forwards() implements the correct behavior (lines 675-679): after merging options, it iterates through ALTER_OPTION_KEYS and removes any keys not present in the new options dict using `model_state.options.pop(key, False)`. When AlterModelOptions has `options={}`, this removal loop clears all ALTER_OPTION_KEYS from the model state.
+
+CreateModel.reduce() must apply the same removal logic to correctly optimize the two operations into one.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/db/migrations/operations/models.py:144` — `options={**self.options, **operation.options}` performs merge-only
+- `django/db/migrations/operations/models.py:677-679` — removal logic: `for key in self.ALTER_OPTION_KEYS: if key not in self.options: model_state.options.pop(key, False)`
+- Test output shows `options={'verbose_name': 'My Model'}` persists when it should be removed
+
+## Edit sites
+
+- `django/db/migrations/operations/models.py` lines 139-147: In CreateModel.reduce() where it handles AlterModelOptions, change the options calculation from simple merge to merge-and-remove. After merging `{**self.options, **operation.options}`, remove any keys from ALTER_OPTION_KEYS that are not present in `operation.options`, matching the logic in AlterModelOptions.state_forwards().
+
+## Rejected hypotheses
+
+None—the root cause is clear from first inspection.
+
+## Open questions
+
+None—the fix location and required logic are both evident from the code.
+
+---STDERR---
