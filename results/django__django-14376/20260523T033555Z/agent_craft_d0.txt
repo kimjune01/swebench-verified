@@ -1,0 +1,10 @@
+**RESOLVED**
+
+All three FAIL_TO_PASS tests now pass:
+- `test_options_non_deprecated_keys_preferred` 
+- `test_options_override_settings_proper_values`
+- `test_parameters`
+
+The fix updated `django/db/backends/mysql/client.py` line 11 to prefer the non-deprecated `'database'` key over the deprecated `'db'` key when extracting the database name from OPTIONS, matching the pattern already used for password handling.
+
+---STDERR---

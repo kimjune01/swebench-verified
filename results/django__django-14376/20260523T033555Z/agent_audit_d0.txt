@@ -1,0 +1,32 @@
+# Audit: django__django-14376
+
+## FAIL_TO_PASS
+- test_options_non_deprecated_keys_preferred: ✅ PASS
+- test_options_override_settings_proper_values: ✅ PASS
+- test_parameters: ✅ PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+
+The patch successfully addresses the issue by modifying `django/db/backends/mysql/client.py` to prefer the non-deprecated 'database' key over 'db' when extracting the database name from OPTIONS. The fix:
+
+```python
+db = settings_dict['OPTIONS'].get(
+    'database',
+    settings_dict['OPTIONS'].get('db', settings_dict['NAME'])
+)
+```
+
+This nested fallback preserves backward compatibility while giving priority to the correct key. All 9 tests pass with no regressions.
+
+**Baseline check**: The fail-on-base capture showed 2 explicit failures (test_options_non_deprecated_keys_preferred and test_options_override_settings_proper_values), both now resolved. All PASS_TO_PASS tests remain passing.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
