@@ -1,0 +1,53 @@
+Now I'll output my diagnosis to stdout:
+
+# Recon: django__django-16595
+
+## Failure summary
+The test `test_alter_alter_field` checks that two consecutive `AlterField` operations on the same model field are optimized into a single operation (keeping only the final state). The test creates two AlterField operations on model "Foo", field "name": first changing it to `IntegerField()`, then to `IntegerField(help_text="help")`. Expected result: only the second AlterField. Actual result: both AlterField operations remain unoptimized.
+
+Error message:
+```
+AssertionError: Lists differ: ["migrations.AlterField(...field=models.IntegerField(help_text='help'),...)"] != ["migrations.AlterField(...field=models.IntegerField(),...)","migrations.AlterField(...field=models.IntegerField(help_text='help'),...)"]
+```
+
+## Suspect set
+- `django/db/migrations/operations/fields.py` lines 248-266: AlterField.reduce() method - missing case for reducing AlterField with AlterField
+
+## Root cause
+The `AlterField.reduce()` method does not handle the case where the `operation` parameter is also an `AlterField` on the same field. The method only has specific cases for `RemoveField` (lines 249-251) and `RenameField` (lines 253-264), then falls back to `super().reduce()` (line 265) for all other operation types. When two `AlterField` operations on the same field are encountered, the parent class's reduce method returns `False` (no reduction possible), so both operations remain in the optimized list.
+
+By contrast, similar model-level operations like `AlterModelTable`, `AlterUniqueTogether`, etc. inherit from `ModelOptionOperation`, which implements reduction for same-class operations:
+
+```python
+# django/db/migrations/operations/models.py (ModelOptionOperation.reduce)
+def reduce(self, operation, app_label):
+    if (
+        isinstance(operation, (self.__class__, DeleteModel))
+        and self.name_lower == operation.name_lower
+    ):
+        return [operation]
+    return super().reduce(operation, app_label)
+```
+
+This pattern returns `[operation]` (keeping only the later operation) when two operations of the same class operate on the same target.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/migrations/operations/fields.py:248-266` — AlterField.reduce() contains no isinstance check for AlterField
+- `django/db/migrations/operations/models.py` (ModelOptionOperation) — Working implementation shows the pattern for same-operation reduction
+- Test suite: other `test_alter_alter_*` tests pass because they use ModelOptionOperation subclasses that implement this pattern
+
+## Edit sites
+- `django/db/migrations/operations/fields.py` lines 248-249: Add a new condition at the beginning of `AlterField.reduce()` method:
+  - Check if `isinstance(operation, AlterField)` AND `self.is_same_field_operation(operation)`
+  - If true, return `[operation]` (keep only the second/later AlterField)
+  - This should be the first condition checked, before the existing RemoveField and RenameField cases
+
+## Rejected hypotheses
+None - the root cause is definitively identified through code inspection and comparison with working similar operations.
+
+## Open questions
+None - the fix is straightforward and follows the established pattern in ModelOptionOperation.
+
+---STDERR---

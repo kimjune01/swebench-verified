@@ -1,0 +1,30 @@
+# Audit: django__django-16595
+
+## FAIL_TO_PASS
+- test_alter_alter_field: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 37 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted)
+None - clean gate run with no failures on base or patched.
+
+## Analysis
+The craft patch adds a 4-line optimization to `AlterField.reduce()` that handles consecutive `AlterField` operations on the same field by returning `[operation]` (keeping only the later operation, which represents the final field state). This matches the pattern used in `ModelOptionOperation.reduce()`.
+
+**Patch diff:**
+```python
+def reduce(self, operation, app_label):
+    if isinstance(operation, AlterField) and self.is_same_field_operation(
+        operation
+    ):
+        return [operation]
+    # existing RemoveField and RenameField cases follow
+```
+
+**Gate result:** All 38 tests passed, including the failing `test_alter_alter_field`. Zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
