@@ -1,0 +1,22 @@
+# Audit: django__django-11099
+
+## FAIL_TO_PASS
+- test_ascii_validator (auth_tests.test_validators.UsernameValidatorsTests): PASS ✓
+- test_unicode_validator (auth_tests.test_validators.UsernameValidatorsTests): PASS ✓
+- test_help_text (auth_tests.test_validators.UserAttributeSimilarityValidatorTest): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The craft patch successfully resolved the issue by replacing `^` and `$` regex anchors with `\A` and `\Z` in both ASCIIUsernameValidator and UnicodeUsernameValidator. This prevents usernames with trailing newlines from passing validation, as `^`/`$` match at line boundaries while `\A`/`\Z` only match at absolute string boundaries.
+
+All 22 tests pass. The two failing tests on base (test_ascii_validator and test_unicode_validator) now correctly raise ValidationError for usernames with trailing newlines.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

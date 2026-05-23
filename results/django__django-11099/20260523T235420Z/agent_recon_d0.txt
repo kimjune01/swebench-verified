@@ -1,0 +1,31 @@
+# Recon: django__django-11099
+
+## Failure summary
+The tests verify that `ASCIIUsernameValidator` and `UnicodeUsernameValidator` reject invalid usernames. Both tests fail when checking usernames with trailing newlines (`'trailingnewline\n'` and `'trailingnewline\u000A'`). The validators incorrectly accept these inputs instead of raising `ValidationError`. The failure message is "ValidationError not raised" for the trailing newline test cases.
+
+## Suspect set
+- `django/contrib/auth/validators.py` lines 9-16: ASCIIUsernameValidator class with regex pattern
+- `django/contrib/auth/validators.py` lines 19-25: UnicodeUsernameValidator class with regex pattern
+
+## Root cause
+Both validators use the regex pattern `r'^[\w.@+-]+$'`. In Python's regex engine, the `$` anchor matches both at the absolute end of a string AND before a trailing newline character. This is a documented quirk of Python regexes. As a result, usernames like `'test\n'` incorrectly pass validation because the regex matches the portion before the newline, and `$` matches before the `\n`.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `django/contrib/auth/validators.py:10` — `regex = r'^[\w.@+-]+$'` in ASCIIUsernameValidator
+- `django/contrib/auth/validators.py:20` — `regex = r'^[\w.@+-]+$'` in UnicodeUsernameValidator
+- Experimental verification confirms `re.match(r'^[\w.@+-]+$', 'test\n')` returns True (matches), while `re.match(r'\A[\w.@+-]+\Z', 'test\n')` returns False (no match)
+- Pattern has existed since validators were created (commit 526575c641) — appears to be an oversight rather than deliberate design
+
+## Edit sites
+- `django/contrib/auth/validators.py` line 10: Change `regex = r'^[\w.@+-]+$'` to `regex = r'\A[\w.@+-]+\Z'` in ASCIIUsernameValidator
+- `django/contrib/auth/validators.py` line 20: Change `regex = r'^[\w.@+-]+$'` to `regex = r'\A[\w.@+-]+\Z'` in UnicodeUsernameValidator
+
+## Rejected hypotheses
+None — the diagnosis is straightforward with clear evidence from code inspection and experimental verification.
+
+## Open questions
+None — the fix is well-defined and affects only these two regex patterns. Grep confirms no other occurrences of this pattern in the codebase.
+
+---STDERR---

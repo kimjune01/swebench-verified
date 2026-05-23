@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed regex anchors from `^...$` to `\A...\Z` in both username validators to properly reject trailing newlines. All FAIL_TO_PASS tests now pass.
+
+---STDERR---
