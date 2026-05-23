@@ -1,0 +1,46 @@
+# Recon: sympy__sympy-14531
+
+## Failure summary
+
+Two tests fail in the SymPy printing module:
+1. `test_python_relational` expects `python(Eq(x, y))` to include symbol definitions (`x = Symbol('x')\ny = Symbol('y')\ne = Eq(x, y)`) but gets only `'e = Eq(x, y)'`
+2. `test_Rational` expects `sstr(Eq(x, Rational(2, 3)), sympy_integers=True)` to output `'Eq(x, S(2)/3)'` with the `S()` wrapper, but gets `'Eq(x, 2/3)'` without it
+
+Both failures stem from printer settings not being respected for subexpressions within `Eq` and `Limit` objects.
+
+## Suspect set
+
+- `sympy/printing/str.py` lines 619-637: `_print_Relational` method
+- `sympy/printing/str.py` lines 216-221: `_print_Limit` method
+
+## Root cause
+
+The `_print_Relational` and `_print_Limit` methods in `StrPrinter` directly format subexpressions using Python's `%` string formatting operator, which calls `str()` on the expression objects instead of routing through the printer's `self._print()` method. This breaks the printer architecture in two ways:
+
+1. **Settings not propagated**: When `sympy_integers=True` is passed to `sstr()`, it configures the printer to wrap rationals with `S()`. However, when `_print_Relational` formats `expr.lhs` and `expr.rhs` directly with `%s`, those subexpressions bypass the printer and use their default `__str__` method, ignoring the setting.
+
+2. **Symbol tracking broken**: `PythonPrinter` (which inherits from `StrPrinter`) overrides `_print_Symbol()` to collect symbols into `self.symbols` for code generation. When `_print_Relational` bypasses `self._print()`, symbols inside the relational expression never trigger `_print_Symbol()`, so they aren't collected.
+
+Confidence: **deduction** — 95%  
+Supporting evidence:
+- `sympy/printing/str.py:632` — `return '%s(%s, %s)' % (charmap[expr.rel_op], expr.lhs, expr.rhs)` directly formats without calling `self._print()`
+- `sympy/printing/str.py:219` — `return "Limit(%s, %s, %s)" % (e, z, z0)` same issue
+- `sympy/printing/str.py:199` — Contrast with `_print_AccumBounds`: `return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))` shows correct pattern
+
+## Edit sites
+
+1. **sympy/printing/str.py line 632**: In `_print_Relational`, change `return '%s(%s, %s)' % (charmap[expr.rel_op], expr.lhs, expr.rhs)` to call `self._print()` on `expr.lhs` and `expr.rhs`
+
+2. **sympy/printing/str.py line 219**: In `_print_Limit`, change `return "Limit(%s, %s, %s)" % (e, z, z0)` to call `self._print()` on `e`, `z`, and `z0`
+
+3. **sympy/printing/str.py line 221**: In `_print_Limit`, change `return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)` to call `self._print()` on `e`, `z`, and `z0` (but not `dir`, which is a string direction indicator)
+
+## Rejected hypotheses
+
+None — this is the first-pass diagnosis. The evidence directly shows the code path and mechanism.
+
+## Open questions
+
+None — the fix is straightforward and the test cases clearly define expected behavior.
+
+---STDERR---

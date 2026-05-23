@@ -1,0 +1,27 @@
+# Audit: sympy__sympy-14531
+
+## FAIL_TO_PASS
+- test_python_relational: **PASS** ✓
+- test_Rational: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 86 PASS_TO_PASS tests remain passing with no new failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_python_functions_conjugates (expected fail 'f' on both base and patched)
+
+## Summary
+
+The patch successfully resolves both failing tests by ensuring `_print_Relational` and `_print_Limit` route subexpressions through `self._print()` instead of direct string formatting. This fix:
+
+1. Enables settings like `sympy_integers=True` to propagate to nested expressions
+2. Allows `PythonPrinter` to track symbols by calling `_print_Symbol()` on all symbols
+
+**Changed**: 3 lines in `sympy/printing/str.py` (lines 219, 221, 633)
+**Test results**: 88 passed, 1 expected to fail, 0 regressions
+**Contract satisfied**: All FAIL_TO_PASS tests pass AND zero PASS_TO_PASS regressions
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
