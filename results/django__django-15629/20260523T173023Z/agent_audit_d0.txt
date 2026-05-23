@@ -1,0 +1,26 @@
+# Audit: django__django-15629
+
+## FAIL_TO_PASS
+- test_alter_field_pk_fk_db_collation (AlterField operation of db_collation on primary keys changes any FKs): **PASS** ✅
+- test_create_fk_models_to_pk_field_db_collation (Creation of models with a FK to a PK with db_collation): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 123 tests in the gate passed with OK status.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None - the fail-on-base capture showed all visible tests passing before the patch.
+
+## Kill report
+Not applicable - patch is RESOLVED.
+
+**Gate results**: Ran 123 tests in 0.851s - OK (skipped=1)
+
+Both FAIL_TO_PASS tests now pass, and no regressions were introduced. The fix successfully:
+1. Propagates db_collation from PK to FK columns during model creation
+2. Updates FK column collations when PK collation is altered via AlterField
+3. Handles SQLite's table remake requirements for collation changes
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

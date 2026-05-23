@@ -1,0 +1,40 @@
+# Recon: django__django-15629
+
+## Failure summary
+The tests verify that when a primary key field has `db_collation`, any foreign key columns referencing it should inherit that collation. Two scenarios fail: (1) creating a FK to a PK with db_collation, and (2) altering a PK to add db_collation. Both fail with `AssertionError: None != 'nocase'`, meaning the FK columns (`pony_id`) have no collation when they should have 'nocase'.
+
+## Suspect set
+- `django/db/models/fields/related.py` lines 1182-1183: `ForeignKey.db_parameters()` method - doesn't include collation from target field
+- `django/db/backends/base/schema.py` lines 1031-1047: FK column alteration when PK changes - only handles type, not collation
+- `django/db/backends/base/schema.py` lines 278-284: `_iter_column_sql()` reads collation from field_db_params, but FK's db_parameters doesn't provide it
+
+## Root cause
+Foreign key columns fail to inherit `db_collation` from their target primary key fields. The issue occurs in two distinct code paths:
+
+**Creation path**: When a ForeignKey field is created, `ForeignKey.db_parameters()` (line 1182 of related.py) only returns `{"type": self.db_type(connection), "check": self.db_check(connection)}`. It doesn't include collation, even though CharField and TextField override this method to add `db_params["collation"] = self.db_collation`. The FK should check its `target_field` for `db_collation` and propagate it.
+
+**Alteration path**: When a PK field's collation is altered via `AlterField`, the code in `_alter_field()` (lines 1031-1047 of schema.py) updates related FK columns but only calls `_alter_column_type_sql()`, not `_alter_column_collation_sql()`. The collation change is lost even though `rel_db_params` would contain it if the ForeignKey properly propagated collation from its target.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `django/db/models/fields/related.py:1182-1183` — ForeignKey.db_parameters only returns type and check
+- `django/db/models/fields/__init__.py:1185-1188` — CharField.db_parameters adds collation via `db_params["collation"] = self.db_collation`
+- `django/db/backends/base/schema.py:1031-1038` — FK column update only extracts `rel_type`, ignoring `rel_db_params["collation"]`
+- `django/db/backends/base/schema.py:919-924` — PK field itself handles collation via `_alter_column_collation_sql`, but this isn't applied to FKs
+
+## Edit sites
+- `django/db/models/fields/related.py` lines 1182-1183: Modify `ForeignKey.db_parameters()` to check if `self.target_field` has a `db_collation` attribute (via its own `db_parameters()`), and if so, include it in the returned dict
+- `django/db/backends/base/schema.py` lines 1031-1047: When iterating through `rels_to_update` to alter FK columns, check if `old_rel` and `new_rel` fields have different collations (via their `db_parameters()`), and if so, call `_alter_column_collation_sql()` in addition to or instead of `_alter_column_type_sql()`
+
+## Competing hypotheses
+None - both edit sites are needed to fix both test cases. Site 1 fixes FK creation, Site 2 fixes PK alteration propagation.
+
+## Rejected hypotheses
+None
+
+## Open questions
+- Should OneToOneField also propagate collation? (It inherits from ForeignKey, so the fix should cover it)
+- Do M2M through tables need similar handling? (The test does check M2M via `stable_ponies.pony_id`)
+
+---STDERR---

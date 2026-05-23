@@ -1,0 +1,11 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix required three edit sites:
+
+1. **django/db/models/fields/related.py**: ForeignKey.db_parameters() now propagates db_collation from target_field
+2. **django/db/backends/base/schema.py**: Added PK collation change detection to trigger FK column updates
+3. **django/db/backends/sqlite3/schema.py**: Extended table remake condition to include collation changes (critical for SQLite's table-rebuild approach)
+
+The key insight from the codex volley was that SQLite uses a different alteration strategy (table remakes) than other databases (ALTER COLUMN), so the fix needed to address both paths.
+
+---STDERR---
