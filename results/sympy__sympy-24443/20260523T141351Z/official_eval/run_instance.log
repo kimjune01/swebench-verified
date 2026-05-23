@@ -1,0 +1,59 @@
+2026-05-23 14:12:02,817 - INFO - Creating container for sympy__sympy-24443...
+2026-05-23 14:12:03,950 - INFO - Container for sympy__sympy-24443 created: b36ba851c58b06d6566e706848e7285fbedd898dc7ec6b6941ede61e56a4a673
+2026-05-23 14:12:04,475 - INFO - Container for sympy__sympy-24443 started: b36ba851c58b06d6566e706848e7285fbedd898dc7ec6b6941ede61e56a4a673
+2026-05-23 14:12:04,475 - INFO - Intermediate patch for sympy__sympy-24443 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24443/patch.diff, now applying to container...
+2026-05-23 14:12:04,537 - INFO - >>>>> Applied Patch:
+Checking patch sympy/combinatorics/homomorphisms.py...
+Applied patch sympy/combinatorics/homomorphisms.py cleanly.
+
+2026-05-23 14:12:04,920 - INFO - Git diff before:
+diff --git a/sympy/combinatorics/homomorphisms.py b/sympy/combinatorics/homomorphisms.py
+index bb7bdf32ba..5ec1b9b468 100644
+--- a/sympy/combinatorics/homomorphisms.py
++++ b/sympy/combinatorics/homomorphisms.py
+@@ -333,8 +333,13 @@ def _image(r):
+             # both indices
+             while i < len(r):
+                 power = r_arr[j][1]
+-                if isinstance(domain, PermutationGroup) and r[i] in gens:
+-                    s = domain.generators[gens.index(r[i])]
++                if isinstance(domain, PermutationGroup):
++                    if r[i] in gens:
++                        s = domain.generators[gens.index(r[i])]
++                    elif r[i]**-1 in gens:
++                        s = domain.generators[gens.index(r[i]**-1)]
++                    else:
++                        s = r[i]
+                 else:
+                     s = r[i]
+                 if s in images:
+2026-05-23 14:12:04,920 - INFO - Eval script for sympy__sympy-24443 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24443/eval.sh; copying to container...
+2026-05-23 14:12:08,310 - INFO - Test runtime: 3.33 seconds
+2026-05-23 14:12:08,311 - INFO - Test output for sympy__sympy-24443 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-24443/test_output.txt
+2026-05-23 14:12:08,450 - INFO - Git diff after:
+diff --git a/sympy/combinatorics/homomorphisms.py b/sympy/combinatorics/homomorphisms.py
+index bb7bdf32ba..5ec1b9b468 100644
+--- a/sympy/combinatorics/homomorphisms.py
++++ b/sympy/combinatorics/homomorphisms.py
+@@ -333,8 +333,13 @@ def _image(r):
+             # both indices
+             while i < len(r):
+                 power = r_arr[j][1]
+-                if isinstance(domain, PermutationGroup) and r[i] in gens:
+-                    s = domain.generators[gens.index(r[i])]
++                if isinstance(domain, PermutationGroup):
++                    if r[i] in gens:
++                        s = domain.generators[gens.index(r[i])]
++                    elif r[i]**-1 in gens:
++                        s = domain.generators[gens.index(r[i]**-1)]
++                    else:
++                        s = r[i]
+                 else:
+                     s = r[i]
+                 if s in images:
+2026-05-23 14:12:08,450 - INFO - Grading answer for sympy__sympy-24443...
+2026-05-23 14:12:08,450 - INFO - report: {'sympy__sympy-24443': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_homomorphism'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_isomorphisms'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-24443: resolved: True
+2026-05-23 14:12:08,451 - INFO - Attempting to stop container sweb.eval.sympy__sympy-24443.batch...
+2026-05-23 14:12:24,481 - INFO - Attempting to remove container sweb.eval.sympy__sympy-24443.batch...
+2026-05-23 14:12:24,492 - INFO - Container sweb.eval.sympy__sympy-24443.batch removed.

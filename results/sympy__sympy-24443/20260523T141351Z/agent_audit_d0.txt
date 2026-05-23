@@ -1,0 +1,25 @@
+# Audit: sympy__sympy-24443
+
+## FAIL_TO_PASS
+- test_homomorphism: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+
+The patch successfully fixes the failing test. On the base (unpatched) tree, `test_homomorphism` failed with `ValueError: The given images do not define a homomorphism`. After applying the craft patch (7 insertions, 2 deletions to `sympy/combinatorics/homomorphisms.py`), all three tests pass:
+
+- test_homomorphism: ok (FAIL → PASS)
+- test_isomorphisms: ok (PASS → PASS)  
+- test_check_homomorphism: ok (PASS → PASS)
+
+No regressions introduced. Contract fully satisfied.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

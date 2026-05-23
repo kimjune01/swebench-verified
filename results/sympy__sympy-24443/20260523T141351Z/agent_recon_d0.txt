@@ -1,0 +1,72 @@
+# Recon: sympy__sympy-24443
+
+## Failure summary
+
+The test `test_homomorphism` attempts to create an identity homomorphism from DihedralGroup(3) to itself by mapping generators to themselves. This should succeed, but instead raises `ValueError: The given images do not define a homomorphism` at line 307 of `sympy/combinatorics/homomorphisms.py`. The error occurs during the validation phase in `_check_homomorphism`, which evaluates relators from the group's presentation to verify the mapping preserves group structure.
+
+## Suspect set
+
+- `sympy/combinatorics/homomorphisms.py` lines 336-339: The conditional logic that maps FreeGroup generator elements from relators to PermutationGroup generators for lookup in the `images` dict.
+
+## Root cause
+
+The `_image()` helper function (nested inside `_check_homomorphism` at line 318) processes relators from a PermutationGroup's FreeGroup presentation. The relators are FreeGroupElements, while the `images` dict uses Permutations as keys. The code must map from FreeGroup generator symbols to their corresponding Permutations.
+
+At line 336, the code checks:
+```python
+if isinstance(domain, PermutationGroup) and r[i] in gens:
+    s = domain.generators[gens.index(r[i])]
+```
+
+This works when `r[i]` is a positive generator (e.g., the FreeGroupElement `x_1`), but fails when `r[i]` is an inverted generator (e.g., `x_1**-1`):
+- The check `r[i] in gens` evaluates to `x_1**-1 in (x_0, x_1)` → False
+- Code falls through to `s = r[i]`, setting `s` to a FreeGroupElement
+- Both lookups `s in images` and `s**-1 in images` fail because `images` contains Permutation keys, not FreeGroupElements
+- The generator's contribution is silently omitted from the product `w`
+- `_image(r)` returns an incorrect value
+- The relator doesn't map to identity in the codomain, so the homomorphism check fails
+
+DihedralGroup(3)'s presentation includes the relator `x_1*x_0*x_1**-1*x_0`, where `r[2] = x_1**-1` triggers this bug.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `sympy/combinatorics/homomorphisms.py:336` — condition fails for inverted generators
+- Test execution shows: `r[2] = x_1**-1`, `r[2] in gens = False`, `r[2]**-1 in gens = True`
+
+## Edit sites
+
+- `sympy/combinatorics/homomorphisms.py` lines 336-339: Add handling for inverted generators by checking `r[i]**-1 in gens` when `r[i] in gens` fails. When `r[i]` is an inverted generator, use `r[i]**-1` to look up the index in `gens`, then map to the corresponding `domain.generators[]` element.
+
+Specifically, change:
+```python
+if isinstance(domain, PermutationGroup) and r[i] in gens:
+    s = domain.generators[gens.index(r[i])]
+else:
+    s = r[i]
+```
+
+To:
+```python
+if isinstance(domain, PermutationGroup):
+    if r[i] in gens:
+        s = domain.generators[gens.index(r[i])]
+    elif r[i]**-1 in gens:
+        s = domain.generators[gens.index(r[i]**-1)]
+    else:
+        s = r[i]
+else:
+    s = r[i]
+```
+
+This ensures both positive and inverted FreeGroup generators are correctly mapped to their corresponding Permutation generators for lookup in the `images` dict.
+
+## Rejected hypotheses
+
+None — the root cause was identified on first analysis via code tracing and verified with test execution.
+
+## Open questions
+
+None — the fix is localized and well-defined.
+
+---STDERR---

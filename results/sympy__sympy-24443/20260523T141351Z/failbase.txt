@@ -1,0 +1,28 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/combinatorics/tests/test_homomorphisms.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        69792871
+hash randomization: on (PYTHONHASHSEED=2461444530)
+
+sympy/combinatorics/tests/test_homomorphisms.py[3] 
+test_homomorphism E
+test_isomorphisms ok
+test_check_homomorphism ok                                                [FAIL]
+
+
+________________________________________________________________________________
+______ sympy/combinatorics/tests/test_homomorphisms.py:test_homomorphism _______
+Traceback (most recent call last):
+  File "/testbed/sympy/combinatorics/tests/test_homomorphisms.py", line 61, in test_homomorphism
+    T = homomorphism(D3, D3, D3.generators, D3.generators)
+  File "/testbed/sympy/combinatorics/homomorphisms.py", line 307, in homomorphism
+    raise ValueError("The given images do not define a homomorphism")
+ValueError: The given images do not define a homomorphism
+
+=========== tests finished: 2 passed, 1 exceptions, in 0.36 seconds ============
+DO *NOT* COMMIT!

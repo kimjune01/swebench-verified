@@ -1,0 +1,6 @@
+{"instance": "sympy__sympy-24443", "stage": "start"}
+{"instance": "sympy__sympy-24443", "stage": "recon", "depth": 0, "wall_s": 317, "fixed_point": false}
+{"instance": "sympy__sympy-24443", "stage": "craft", "depth": 0, "wall_s": 225, "claim": true, "wants_rediagnose": false}
+{"instance": "sympy__sympy-24443", "stage": "audit", "depth": 0, "wall_s": 40, "verdict": "RESOLVED", "route": "none"}
+{"instance": "sympy__sympy-24443", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_sympy__sympy-24443.txt"}
+{"instance": "sympy__sympy-24443", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": false, "patch_bytes": 900, "patch_file": "/tmp/swebench-abduction/r4_patch_sympy__sympy-24443.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_sympy__sympy-24443.md"}
