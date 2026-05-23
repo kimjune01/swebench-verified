@@ -1,0 +1,37 @@
+# Recon: django__django-15731
+
+## Failure summary
+The test `test_manager_method_signature` checks that `inspect.signature(Article.objects.bulk_create)` returns the correct signature with all parameters. Instead, it returns `(*args, **kwargs)`, causing the assertion to fail. The test expects `(objs, batch_size=None, ignore_conflicts=False, update_conflicts=False, update_fields=None, unique_fields=None)` but gets the generic wrapper signature.
+
+## Suspect set
+- `django/db/models/manager.py` lines 1-6: imports section (missing `functools`)
+- `django/db/models/manager.py` lines 83-91: `create_method` function within `_get_queryset_methods` (manually assigns metadata instead of using `functools.wraps`)
+
+## Root cause
+Manager methods like `bulk_create` are not direct references to QuerySet methods but wrapper functions created by `_get_queryset_methods`. The `create_method` helper (lines 83-91) creates a `manager_method` wrapper with signature `(self, *args, **kwargs)` that delegates to the actual QuerySet method. It manually copies `__name__` and `__doc__` from the original method, but this is insufficient for `inspect.signature()` to retrieve the correct signature. Python's `inspect.signature()` looks for the `__wrapped__` attribute to follow decorator chains to the original function, but manual assignment doesn't set this attribute.
+
+Confidence: **Deduction — 98%**
+
+Supporting evidence:
+- `django/db/models/manager.py:84-88` — The wrapper is defined as `def manager_method(self, *args, **kwargs):` with manual metadata copying
+- Verified experimentally that `functools.wraps` preserves signature while manual `__name__`/`__doc__` assignment does not
+- `tests/basic/tests.py:740-746` — Test confirms `inspect.signature(Article.objects.bulk_create)` returns `(*args, **kwargs)` instead of the expected signature
+
+## Edit sites
+1. `django/db/models/manager.py` line 1: Add `import functools` to the stdlib imports section (after `import copy` or in alphabetical order)
+2. `django/db/models/manager.py` lines 84-88: Replace the inner function definition and manual metadata assignment with:
+   ```python
+   @functools.wraps(method)
+   def manager_method(self, *args, **kwargs):
+       return getattr(self.get_queryset(), name)(*args, **kwargs)
+   return manager_method
+   ```
+   Remove the manual `manager_method.__name__ = method.__name__` and `manager_method.__doc__ = method.__doc__` lines (87-88) as `functools.wraps` handles this automatically.
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and the problem description explicitly identifies this location.
+
+## Open questions
+None — the fix is straightforward and well-supported.
+
+---STDERR---

@@ -1,0 +1,28 @@
+# Audit: django__django-15731
+
+## FAIL_TO_PASS
+- `test_manager_method_signature (basic.tests.ManagerTest)` → **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — all 61 tests passed
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — 2 skipped tests are expected database feature skips, not failures:
+- `test_emptyqs_distinct` (requires can_distinct_on_fields)
+- `test_concurrent_delete_with_save` (requires test_db_allows_multiple_connections)
+
+## Analysis
+
+The patch successfully resolves the issue by adding a single line:
+```python
+manager_method.__wrapped__ = method
+```
+
+This enables `inspect.signature()` to unwrap manager methods to their underlying QuerySet method signatures, fixing the test that expected the full signature instead of `(*args, **kwargs)`.
+
+**Full gate results:** 61 tests ran, 61 passed, 0 failures, 2 expected skips.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
