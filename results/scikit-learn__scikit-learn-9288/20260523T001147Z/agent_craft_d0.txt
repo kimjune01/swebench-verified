@@ -1,0 +1,11 @@
+## RESOLVED
+
+The fix successfully makes KMeans produce identical results for `n_jobs=1` and `n_jobs=2` with the same `random_state`. The solution aligns the sequential execution path with the parallel path by generating deterministic seeds upfront rather than passing a mutable RandomState object that gets modified between iterations.
+
+**Final patch:**
+- Added seed generation before the sequential loop: `seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)`
+- Changed sequential case to pass individual seeds: `random_state=seeds[it]`
+
+**Gate result:** ✅ All 124 tests pass, including `test_result_of_kmeans_equal_in_diff_n_jobs`
+
+---STDERR---

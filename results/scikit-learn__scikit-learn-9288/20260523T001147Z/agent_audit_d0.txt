@@ -1,0 +1,20 @@
+# Audit: scikit-learn__scikit-learn-9288
+
+## FAIL_TO_PASS
+- `sklearn/cluster/tests/test_k_means.py::test_result_of_kmeans_equal_in_diff_n_jobs`: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully resolves the issue by synchronizing the random seed generation strategy between single-threaded (n_jobs=1) and multi-threaded (n_jobs>1) execution paths. The sequential case now pre-generates independent seeds for each n_init iteration, matching the parallel behavior.
+
+All 124 tests passed including the target FAIL_TO_PASS test. No regressions were introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

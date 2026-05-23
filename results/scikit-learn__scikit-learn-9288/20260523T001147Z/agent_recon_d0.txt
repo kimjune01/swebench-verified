@@ -1,0 +1,29 @@
+# Recon: scikit-learn__scikit-learn-9288
+
+## Failure summary
+The test `test_result_of_kmeans_equal_in_diff_n_jobs` checks that KMeans produces identical results regardless of the `n_jobs` parameter when given the same `random_state`. The test fits KMeans with `n_jobs=1` and `n_jobs=2` on the same data with `random_state=0`, then asserts the cluster labels are equal. The test fails with 78% of labels mismatched, indicating fundamentally different clustering results rather than minor numerical differences.
+
+## Suspect set
+- `sklearn/cluster/k_means_.py` lines 363-398: The branching logic that handles sequential (n_jobs=1) vs. parallel (n_jobs>1) execution of n_init runs
+- `sklearn/cluster/k_means_.py` lines 519-523: Call to `_init_centroids` in `_kmeans_single_lloyd` that uses random_state
+- `sklearn/cluster/k_means_.py` lines 683-760: The `_init_centroids` function that mutates random_state during initialization
+
+## Root cause
+The sequential case (n_jobs=1) passes the same RandomState object to all n_init iterations, causing each iteration to start from a different random state after the previous iteration mutates it. The parallel case (n_jobs>1) generates n_init distinct integer seeds upfront (line 381), ensuring each run starts from a deterministic, independent state. This divergence in seed generation strategy causes different results.
+
+**Confidence: deduction — 95%**
+
+Supporting evidence:
+- `sklearn/cluster/k_means_.py:366-372` — Sequential loop: `for it in range(n_init): ... kmeans_single(..., random_state=random_state)` passes same object
+- `sklearn/cluster/k_means_.py:381` — Parallel case: `seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)` generates distinct seeds
+- `sklearn/cluster/k_means_.py:519` — Inside `_kmeans_single_lloyd`: `centers = _init_centroids(X, n_clusters, init, random_state=random_state, ...)` uses the random_state
+- `sklearn/cluster/k_means_.py:721` — In `_init_centroids` with 'k-means++': `centers = _k_init(X, k, random_state=random_state, ...)` mutates state
+- `sklearn/cluster/k_means_.py:743` — In `_init_centroids` with 'random': `seeds = random_state.permutation(n_samples)[:k]` mutates state
+
+## Edit sites
+- `sklearn/cluster/k_means_.py` lines 363-378: Modify the sequential case to generate seeds before the loop. Add `seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)` before line 366, then change line 372 to pass `random_state=seeds[it]` instead of `random_state=random_state` to `kmeans_single`.
+
+## Open questions
+None — the root cause is clear and the fix is straightforward: make the sequential case use the same seed generation strategy as the parallel case.
+
+---STDERR---
