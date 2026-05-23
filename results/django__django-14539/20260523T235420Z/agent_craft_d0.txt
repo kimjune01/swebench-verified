@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully passes all tests on the first gate iteration. The recon diagnosis was correct: the `trim_punctuation()` function was incorrectly slicing the escaped string using a position calculated from the unescaped string. 
+
+The fix calculates how many characters were removed from the unescaped string (`removed_len`), then removes the same number of characters from the END of the escaped string, preserving HTML entity integrity while correctly moving only the trailing punctuation to the trail.
+
+---STDERR---

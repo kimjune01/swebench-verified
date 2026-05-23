@@ -1,0 +1,53 @@
+2026-05-23 23:51:04,352 - INFO - Creating container for django__django-14539...
+2026-05-23 23:51:06,436 - INFO - Container for django__django-14539 created: 1e3b778f593be7950e6337892afbda26847fb7bb401cb5e6ed5161f1be74bfc4
+2026-05-23 23:51:06,849 - INFO - Container for django__django-14539 started: 1e3b778f593be7950e6337892afbda26847fb7bb401cb5e6ed5161f1be74bfc4
+2026-05-23 23:51:06,850 - INFO - Intermediate patch for django__django-14539 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14539/patch.diff, now applying to container...
+2026-05-23 23:51:06,947 - INFO - >>>>> Applied Patch:
+Checking patch django/utils/html.py...
+Applied patch django/utils/html.py cleanly.
+
+2026-05-23 23:51:07,567 - INFO - Git diff before:
+diff --git a/django/utils/html.py b/django/utils/html.py
+index 3bc02b8dd3..bb5b7a78cf 100644
+--- a/django/utils/html.py
++++ b/django/utils/html.py
+@@ -283,8 +283,11 @@ def urlize(text, trim_url_limit=None, nofollow=False, autoescape=False):
+             middle_unescaped = html.unescape(middle)
+             stripped = middle_unescaped.rstrip(TRAILING_PUNCTUATION_CHARS)
+             if middle_unescaped != stripped:
+-                trail = middle[len(stripped):] + trail
+-                middle = middle[:len(stripped) - len(middle_unescaped)]
++                # Calculate characters removed from unescaped string
++                removed_len = len(middle_unescaped) - len(stripped)
++                # Remove same number of characters from end of escaped string
++                trail = middle[-removed_len:] + trail
++                middle = middle[:-removed_len]
+                 trimmed_something = True
+         return lead, middle, trail
+2026-05-23 23:51:07,568 - INFO - Eval script for django__django-14539 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14539/eval.sh; copying to container...
+2026-05-23 23:51:13,126 - INFO - Test runtime: 5.47 seconds
+2026-05-23 23:51:13,126 - INFO - Test output for django__django-14539 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14539/test_output.txt
+2026-05-23 23:51:13,201 - INFO - Git diff after:
+diff --git a/django/utils/html.py b/django/utils/html.py
+index 3bc02b8dd3..bb5b7a78cf 100644
+--- a/django/utils/html.py
++++ b/django/utils/html.py
+@@ -283,8 +283,11 @@ def urlize(text, trim_url_limit=None, nofollow=False, autoescape=False):
+             middle_unescaped = html.unescape(middle)
+             stripped = middle_unescaped.rstrip(TRAILING_PUNCTUATION_CHARS)
+             if middle_unescaped != stripped:
+-                trail = middle[len(stripped):] + trail
+-                middle = middle[:len(stripped) - len(middle_unescaped)]
++                # Calculate characters removed from unescaped string
++                removed_len = len(middle_unescaped) - len(stripped)
++                # Remove same number of characters from end of escaped string
++                trail = middle[-removed_len:] + trail
++                middle = middle[:-removed_len]
+                 trimmed_something = True
+         return lead, middle, trail
+2026-05-23 23:51:13,201 - INFO - Grading answer for django__django-14539...
+2026-05-23 23:51:13,201 - INFO - report: {'django__django-14539': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_urlize (utils_tests.test_html.TestUtilsHtml)', 'test_urlize_unchanged_inputs (utils_tests.test_html.TestUtilsHtml)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_conditional_escape (utils_tests.test_html.TestUtilsHtml)', 'test_escape (utils_tests.test_html.TestUtilsHtml)', 'test_escapejs (utils_tests.test_html.TestUtilsHtml)', 'test_format_html (utils_tests.test_html.TestUtilsHtml)', 'test_html_safe (utils_tests.test_html.TestUtilsHtml)', 'test_html_safe_defines_html_error (utils_tests.test_html.TestUtilsHtml)', 'test_html_safe_doesnt_define_str (utils_tests.test_html.TestUtilsHtml)', 'test_html_safe_subclass (utils_tests.test_html.TestUtilsHtml)', 'test_json_script (utils_tests.test_html.TestUtilsHtml)', 'test_linebreaks (utils_tests.test_html.TestUtilsHtml)', 'test_smart_urlquote (utils_tests.test_html.TestUtilsHtml)', 'test_strip_spaces_between_tags (utils_tests.test_html.TestUtilsHtml)', 'test_strip_tags (utils_tests.test_html.TestUtilsHtml)', 'test_strip_tags_files (utils_tests.test_html.TestUtilsHtml)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-14539: resolved: True
+2026-05-23 23:51:13,201 - INFO - Attempting to stop container sweb.eval.django__django-14539.batch...
+2026-05-23 23:51:28,574 - INFO - Attempting to remove container sweb.eval.django__django-14539.batch...
+2026-05-23 23:51:28,589 - INFO - Container sweb.eval.django__django-14539.batch removed.

@@ -1,0 +1,19 @@
+# Audit: django__django-14539
+
+## FAIL_TO_PASS
+- test_urlize (utils_tests.test_html.TestUtilsHtml): PASS ✓
+- test_urlize_unchanged_inputs (utils_tests.test_html.TestUtilsHtml): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+All 16 tests passed. The craft patch successfully fixed the urlize function to properly stop URL detection at HTML entity boundaries like `&lt`, preventing false matches that included the entity text as part of the URL.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

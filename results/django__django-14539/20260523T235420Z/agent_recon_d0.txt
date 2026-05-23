@@ -1,0 +1,75 @@
+# Recon: django__django-14539
+
+## Failure summary
+
+The `urlize()` function incorrectly handles HTML-escaped URLs with trailing punctuation. When a URL contains an HTML entity (like `&lt` representing `<`) followed by trailing punctuation (like `!`), the function splits the entity incorrectly, leaving part of the entity outside the link.
+
+Test input: `'Search for google.com/?q=1&lt! and see.'`
+Expected: `'Search for <a href="http://google.com/?q=1%3C">google.com/?q=1&lt</a>! and see.'`
+Actual: `'Search for <a href="http://google.com/?q=1%3C">google.com/?q=1&lt</a>lt! and see.'`
+
+The difference: `lt!` appears after the link instead of just `!`.
+
+The test `test_urlize` fails with an AssertionError showing the link is followed by `lt!` when it should be followed by just `!`.
+
+## Suspect set
+
+- `django/utils/html.py` lines 266-291: `trim_punctuation()` function
+  - Specifically line 288: incorrect trail calculation when HTML entities are present
+
+## Root cause
+
+The `trim_punctuation()` function in `django/utils/html.py` at line 288 incorrectly calculates the `trail` (punctuation to move outside the link) when HTML entities are present in the URL.
+
+**The bug**: Line 288 uses `trail = middle[len(stripped):] + trail`, which slices the escaped string using a position calculated from the unescaped string. When HTML entities are present, the escaped and unescaped strings have different lengths, causing the slice to occur at the wrong position.
+
+**Example**:
+- `middle` (escaped): `"google.com/?q=1&lt!"` (19 chars)
+- `middle_unescaped`: `"google.com/?q=1<!"` (17 chars) - `&lt` → `<`
+- `stripped`: `"google.com/?q=1<"` (16 chars) - removed `!`
+- Line 288: `middle[16:]` = `"lt!"` ❌ (slices at char 16, which is the `l` in `&lt`)
+- Should be: `"!"` ✓ (just the trailing punctuation)
+
+The entity `&lt` is 3 characters in escaped form but only 1 character (`<`) when unescaped. Using `len(stripped)` = 16 (measured on the unescaped string) as an index into `middle` (the escaped string) lands in the middle of the `&lt` entity.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/utils/html.py:288` - `trail = middle[len(stripped):] + trail`
+- `django/utils/html.py:283-284` - unescapes before stripping, creating length mismatch
+- Test failure shows `lt!` after link instead of `!`
+- Historical: commit 8d76443aba (2019) switched to `html.unescape()` which handles entities without semicolons (`&lt`), exposing this latent bug
+
+## Edit sites
+
+- `django/utils/html.py` line 288: Replace `trail = middle[len(stripped):] + trail` with logic that calculates how many characters were removed from the unescaped string, then removes the same number from the END of the escaped string.
+
+  Change from:
+  ```python
+  trail = middle[len(stripped):] + trail
+  ```
+  
+  To:
+  ```python
+  # Calculate characters removed from unescaped string
+  removed_len = len(middle_unescaped) - len(stripped)
+  # Remove same number of characters from end of escaped string
+  trail = middle[-removed_len:] + trail
+  ```
+
+- `django/utils/html.py` line 289: Update the middle calculation to use the same `removed_len`:
+  ```python
+  middle = middle[:-removed_len]
+  ```
+
+  The current calculation `middle[:len(stripped) - len(middle_unescaped)]` happens to produce the correct result but is harder to understand and couples the two lines unnecessarily.
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and the test failure.
+
+## Open questions
+
+None - the fix is straightforward and well-localized.
+
+---STDERR---
