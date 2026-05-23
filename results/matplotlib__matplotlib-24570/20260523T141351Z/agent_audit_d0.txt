@@ -1,0 +1,31 @@
+# Audit: matplotlib__matplotlib-24570
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_offsetbox.py::test_packers[bottom]`: **PASS**
+- `lib/matplotlib/tests/test_offsetbox.py::test_packers[top]`: **PASS**
+
+## PASS_TO_PASS regressions
+None — all 275 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — baseline had all tests passing except the two FAIL_TO_PASS tests.
+
+## Summary
+The patch correctly swapped "top"↔"bottom" in the alignment groupings at lines 169 and 172 of `lib/matplotlib/offsetbox.py`. Both target tests now pass, with zero regressions across the full 277-test suite.
+
+**Patch:**
+```diff
+-    elif align in ["left", "top"]:
++    elif align in ["left", "bottom"]:
+         descent = 0.
+         offsets = [d for h, d in hd_list]
+-    elif align in ["right", "bottom"]:
++    elif align in ["right", "top"]:
+         descent = 0.
+         offsets = [height - h + d for h, d in hd_list]
+```
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

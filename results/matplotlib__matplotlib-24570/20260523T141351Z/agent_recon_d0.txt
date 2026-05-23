@@ -1,0 +1,50 @@
+Now I'll print the recon handoff to stdout:
+
+```markdown
+# Recon: matplotlib__matplotlib-24570
+
+## Failure summary
+
+The test `test_packers` checks that HPacker and VPacker correctly align child boxes using the `align` parameter. The test creates two DrawingArea boxes of different heights (30 and 60) and packs them horizontally with HPacker. For `align="bottom"`, it expects both boxes to align at the bottom (smaller box at y-offset 0), but the smaller box is actually placed at y-offset 30 (top-aligned behavior). For `align="top"`, it expects the smaller box to be pushed up to y-offset 30 to align the tops, but it's placed at y-offset 0 (bottom-aligned behavior). The behaviors are exactly reversed.
+
+**Error messages**:
+- `align="bottom"`: Expected `[(0, 0), (10, 0)]`, got `[(0, 30), (10, 0)]`
+- `align="top"`: Expected `[(0, 30), (10, 0)]`, got `[(0, 0), (10, 0)]`
+
+## Suspect set
+
+- `lib/matplotlib/offsetbox.py` lines 130-179: `_get_aligned_offsets()` function — handles alignment logic for both HPacker and VPacker
+
+## Root cause
+
+The `_get_aligned_offsets()` function at lines 169-174 has the alignment conditions reversed. It groups `["left", "top"]` together and `["right", "bottom"]` together, but the offset calculations are backwards:
+
+- For "top" alignment in HPacker (horizontal packing, vertical alignment), smaller boxes should be pushed UP by offset `(height - h)`, but currently get offset `d` (typically 0)
+- For "bottom" alignment in HPacker, smaller boxes should stay at the BOTTOM with offset `d` (typically 0), but currently get offset `(height - h + d)`
+
+The same reversal affects VPacker with "left"/"right" alignment.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `lib/matplotlib/offsetbox.py:169-171` — `elif align in ["left", "top"]: offsets = [d for h, d in hd_list]` produces offset≈0, which is bottom/left behavior
+- `lib/matplotlib/offsetbox.py:172-174` — `elif align in ["right", "bottom"]: offsets = [height - h + d for h, d in hd_list]` produces offset=(height-h), which is top/right behavior
+- `lib/matplotlib/tests/test_offsetbox.py:359-366` — test expects bottom→0, top→30; actual is bottom→30, top→0
+
+## Edit sites
+
+- `lib/matplotlib/offsetbox.py` line 169: Change `elif align in ["left", "top"]:` to `elif align in ["left", "bottom"]:`
+- `lib/matplotlib/offsetbox.py` line 172: Change `elif align in ["right", "bottom"]:` to `elif align in ["right", "top"]:`
+
+These are the only two changes needed. Swapping which alignment values are grouped together will reverse the offset calculations to match the expected behavior.
+
+## Rejected hypotheses
+
+None — the diagnosis was direct from reading the test failures and tracing to the implementation.
+
+## Open questions
+
+None — the fix is straightforward and localized to two lines.
+```
+
+---STDERR---
