@@ -1,0 +1,43 @@
+2026-05-23 06:04:50,892 - INFO - Creating container for sympy__sympy-23534...
+2026-05-23 06:04:56,765 - INFO - Container for sympy__sympy-23534 created: bcc2d8928f0e9c0eb5cf3e1e134e06dba109dbf06b3779c07f0403b72f09cb8d
+2026-05-23 06:04:57,388 - INFO - Container for sympy__sympy-23534 started: bcc2d8928f0e9c0eb5cf3e1e134e06dba109dbf06b3779c07f0403b72f09cb8d
+2026-05-23 06:04:57,388 - INFO - Intermediate patch for sympy__sympy-23534 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23534/patch.diff, now applying to container...
+2026-05-23 06:04:57,484 - INFO - >>>>> Applied Patch:
+Checking patch sympy/core/symbol.py...
+Applied patch sympy/core/symbol.py cleanly.
+
+2026-05-23 06:04:57,903 - INFO - Git diff before:
+diff --git a/sympy/core/symbol.py b/sympy/core/symbol.py
+index f4a555c13f..2aca8bab27 100644
+--- a/sympy/core/symbol.py
++++ b/sympy/core/symbol.py
+@@ -791,7 +791,7 @@ def literal(s):
+         return tuple(result)
+     else:
+         for name in names:
+-            result.append(symbols(name, **args))
++            result.append(symbols(name, cls=cls, **args))
+ 
+         return type(names)(result)
+2026-05-23 06:04:57,904 - INFO - Eval script for sympy__sympy-23534 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23534/eval.sh; copying to container...
+2026-05-23 06:05:01,391 - INFO - Test runtime: 3.45 seconds
+2026-05-23 06:05:01,391 - INFO - Test output for sympy__sympy-23534 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-23534/test_output.txt
+2026-05-23 06:05:01,500 - INFO - Git diff after:
+diff --git a/sympy/core/symbol.py b/sympy/core/symbol.py
+index f4a555c13f..2aca8bab27 100644
+--- a/sympy/core/symbol.py
++++ b/sympy/core/symbol.py
+@@ -791,7 +791,7 @@ def literal(s):
+         return tuple(result)
+     else:
+         for name in names:
+-            result.append(symbols(name, **args))
++            result.append(symbols(name, cls=cls, **args))
+ 
+         return type(names)(result)
+2026-05-23 06:05:01,500 - INFO - Grading answer for sympy__sympy-23534...
+2026-05-23 06:05:01,501 - INFO - report: {'sympy__sympy-23534': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_symbols'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_Str', 'test_Symbol', 'test_Dummy', 'test_Dummy_force_dummy_index', 'test_lt_gt', 'test_no_len', 'test_ineq_unequal', 'test_Wild_properties', 'test_symbols_become_functions_issue_3539', 'test_unicode', 'test_uniquely_named_symbol_and_Symbol'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-23534: resolved: True
+2026-05-23 06:05:01,501 - INFO - Attempting to stop container sweb.eval.sympy__sympy-23534.batch...
+2026-05-23 06:05:17,083 - INFO - Attempting to remove container sweb.eval.sympy__sympy-23534.batch...
+2026-05-23 06:05:17,098 - INFO - Container sweb.eval.sympy__sympy-23534.batch removed.

@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix is complete. The issue was that the `symbols()` function's recursive call for iterable inputs (line 794) didn't pass the `cls` parameter. Since `cls` is keyword-only, it's not captured in `**args`. 
+
+**Applied fix:** Changed `symbols(name, **args)` to `symbols(name, cls=cls, **args)` at line 794.
+
+**Gate result:** ✅ All 13 tests pass, including the failing `test_symbols` test that checks `symbols(('q:2', 'u:2'), cls=Function)` returns UndefinedFunction instances.
+
+---STDERR---

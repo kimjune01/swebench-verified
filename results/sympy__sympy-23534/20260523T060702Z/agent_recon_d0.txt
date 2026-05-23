@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-23534
+
+## Failure summary
+
+The test `test_symbols` in `sympy/core/tests/test_symbol.py` checks that using `symbols()` with a tuple of range strings and `cls=Function` produces UndefinedFunction instances. The test fails because `symbols(('q:2', 'u:2'), cls=Function)[0][0]` returns a Symbol instead of an UndefinedFunction. The assertion error shows that the type is `sympy.core.symbol.Symbol` when it should be `sympy.core.function.UndefinedFunction`.
+
+## Suspect set
+
+- `sympy/core/symbol.py` lines 792-797: The else block that handles non-string iterables (tuples, lists, sets) in the `symbols()` function
+
+## Root cause
+
+The `symbols()` function has two code paths: one for string inputs (lines 703-791) and one for iterable inputs (lines 792-797). When the input is a non-string iterable like a tuple, the function recursively calls `symbols()` for each element. However, the recursive call at line 794 passes only `**args` and fails to pass the `cls` parameter.
+
+The function signature declares `cls` as a keyword-only parameter: `def symbols(names, *, cls=Symbol, **args) -> Any:` (line 586). Keyword-only parameters (those after the `*`) are NOT included in `**args`. Therefore, the recursive call `symbols(name, **args)` uses the default `cls=Symbol` instead of the `cls=Function` that was passed to the outer call.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `sympy/core/symbol.py:586` — Function signature: `def symbols(names, *, cls=Symbol, **args) -> Any:`
+- `sympy/core/symbol.py:794` — Recursive call: `result.append(symbols(name, **args))` (missing `cls=cls`)
+- Test confirms: `symbols('q:2', cls=Function)[0]` returns UndefinedFunction (string path works)
+- Test confirms: `symbols(('q:2', 'u:2'), cls=Function)[0][0]` returns Symbol (tuple path broken)
+
+## Edit sites
+
+- `sympy/core/symbol.py` line 794: Change `result.append(symbols(name, **args))` to `result.append(symbols(name, cls=cls, **args))` to pass the `cls` parameter through to recursive calls
+
+## Rejected hypotheses
+
+None — the root cause is definitively identified by code inspection.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

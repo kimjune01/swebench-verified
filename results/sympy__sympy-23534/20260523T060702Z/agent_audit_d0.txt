@@ -1,0 +1,26 @@
+# Audit: sympy__sympy-23534
+
+## FAIL_TO_PASS
+- test_symbols: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_disambiguate (was failing on base, now passing - bonus fix)
+
+## Summary
+The craft patch successfully resolves the issue. The fix adds `cls=cls` to the recursive `symbols()` call, ensuring the `cls` parameter is propagated through nested tuple unpacking when processing sequences like `('q:2', 'u:2')`.
+
+**Patch:**
+```diff
+-            result.append(symbols(name, **args))
++            result.append(symbols(name, cls=cls, **args))
+```
+
+All FAIL_TO_PASS tests now pass. All PASS_TO_PASS tests remain passing. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

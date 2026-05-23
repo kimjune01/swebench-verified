@@ -1,0 +1,36 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/core/tests/test_symbol.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        69406374
+hash randomization: on (PYTHONHASHSEED=1357417711)
+
+sympy/core/tests/test_symbol.py[13] 
+test_Str ok
+test_Symbol ok
+test_Dummy ok
+test_Dummy_force_dummy_index ok
+test_lt_gt ok
+test_no_len ok
+test_ineq_unequal ok
+test_Wild_properties ok
+test_symbols F
+test_symbols_become_functions_issue_3539 ok
+test_unicode ok
+test_uniquely_named_symbol_and_Symbol ok
+test_disambiguate ok                                                      [FAIL]
+
+
+________________________________________________________________________________
+_________________ sympy/core/tests/test_symbol.py:test_symbols _________________
+Traceback (most recent call last):
+  File "/testbed/sympy/core/tests/test_symbol.py", line 298, in test_symbols
+    assert type(symbols(('q:2', 'u:2'), cls=Function)[0][0]) == UndefinedFunction  # issue 23532
+AssertionError
+
+============= tests finished: 12 passed, 1 failed, in 0.19 seconds =============
+DO *NOT* COMMIT!
