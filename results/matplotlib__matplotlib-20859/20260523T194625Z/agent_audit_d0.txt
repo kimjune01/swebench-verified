@@ -1,0 +1,22 @@
+# Audit: matplotlib__matplotlib-20859
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_legend.py::test_subfigure_legend`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the only pre-existing failure was `test_subfigure_legend` (the FAIL_TO_PASS target), which is now resolved.
+
+## Summary
+The patch successfully resolves the issue by changing the type check in `Legend.__init__` from `isinstance(parent, Figure)` to `isinstance(parent, FigureBase)`. This allows SubFigure instances (which inherit from FigureBase but not from Figure) to be accepted as valid legend parents.
+
+- The failing test now passes
+- Zero regressions introduced
+- All 89 tests passed, 10 skipped
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

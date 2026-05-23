@@ -1,0 +1,41 @@
+# Recon: matplotlib__matplotlib-20859
+
+## Failure summary
+
+The test `test_subfigure_legend` creates a SubFigure, plots data on an axis within it, and attempts to call `subfig.legend()`. The test expects this to create a legend attached to the subfigure, but instead it raises `TypeError: Legend needs either Axes or Figure as parent` at `lib/matplotlib/legend.py:441`. The issue is that the `Legend.__init__` method only recognizes `Axes` and `Figure` as valid parent types, but `SubFigure` is a sibling class of `Figure` (both inherit from `FigureBase`), so SubFigure instances are rejected by the type check.
+
+## Suspect set
+
+- `lib/matplotlib/legend.py` lines 363-364: Local imports of `Axes` and `Figure` (FigureBase needs to be imported here)
+- `lib/matplotlib/legend.py` lines 433-441: Type checking logic that validates parent parameter
+- `lib/matplotlib/legend.py` line 335: Docstring describing accepted parent types (should mention FigureBase or SubFigure)
+
+## Root cause
+
+The `Legend.__init__` method performs a type check at line 437 using `isinstance(parent, Figure)`, which only matches `Figure` instances. However, `SubFigure` is defined as `class SubFigure(FigureBase)` at `lib/matplotlib/figure.py:1924`, making it a sibling of `Figure` (which is defined as `class Figure(FigureBase)` at line 2112). Since SubFigure does not inherit from Figure, the isinstance check fails. The `legend()` method is implemented in `FigureBase` (line 941) and calls `mlegend.Legend(self, ...)` at line 1068, passing the FigureBase instance (which could be either a Figure or SubFigure) as the parent.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `lib/matplotlib/figure.py:181` — `class FigureBase(Artist):` base class documentation explicitly states: "Base class for `.figure.Figure` and `.figure.SubFigure`"
+- `lib/matplotlib/figure.py:1924` — `class SubFigure(FigureBase):` 
+- `lib/matplotlib/figure.py:2112` — `class Figure(FigureBase):`
+- `lib/matplotlib/legend.py:437` — `elif isinstance(parent, Figure):` only matches Figure, not SubFigure
+- `lib/matplotlib/legend.py:363-364` — Only imports `Axes` and `Figure`, not `FigureBase`
+
+## Edit sites
+
+- `lib/matplotlib/legend.py` line 363-364: Add `FigureBase` to the import statement. Change `from matplotlib.figure import Figure` to `from matplotlib.figure import Figure, FigureBase`
+- `lib/matplotlib/legend.py` line 437: Change `isinstance(parent, Figure)` to `isinstance(parent, FigureBase)` to accept both Figure and SubFigure instances
+- `lib/matplotlib/legend.py` line 335 (optional): Update docstring from `parent : ~matplotlib.axes.Axes or .Figure` to mention FigureBase or explicitly list SubFigure as an accepted type
+- `lib/matplotlib/legend.py` line 441 (optional): Update error message from "Legend needs either Axes or Figure as parent" to "Legend needs either Axes or FigureBase as parent" for technical accuracy
+
+## Rejected hypotheses
+
+None — the root cause is clear from reading the class hierarchy and type checking code.
+
+## Open questions
+
+None — the fix is straightforward and well-localized.
+
+---STDERR---

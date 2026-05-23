@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_subfigure_legend` pass. Changed `Legend.__init__` to accept `FigureBase` instead of only `Figure`, which allows both `Figure` and `SubFigure` instances as valid legend parents.
+
+---STDERR---
