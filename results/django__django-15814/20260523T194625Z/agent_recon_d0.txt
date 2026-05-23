@@ -1,0 +1,44 @@
+Now let me output the structured handoff:
+
+# Recon: django__django-15814
+
+## Failure summary
+The test `test_select_related_only` creates a `ProxyTrackerUser` (a proxy model) and an `Issue` with a ForeignKey to it. When executing `Issue.objects.select_related("assignee").only("assignee__status")`, the query crashes with `ValueError: 'baseuser_ptr_id' is not in list` at line 2599 in `/testbed/django/db/models/query.py` within `RelatedPopulator.__init__`. The error occurs because the primary key field is missing from the `init_list` when populating related objects through a proxy model with `only()` restrictions.
+
+## Suspect set
+- `/testbed/django/db/models/sql/query.py` lines 735-810 (`deferred_to_data` method): Builds the `only_load` dictionary that determines which fields to fetch, incorrectly splits pk and field info across different model keys when proxy models are involved
+- `/testbed/django/db/models/sql/compiler.py` lines 799-845 (`get_default_columns` method): Uses `field.model` to check against `only_load` keys, which don't match when proxy models are used
+- `/testbed/django/db/models/query.py` lines 2560-2600 (`RelatedPopulator.__init__`): Where the crash occurs when trying to find pk in `init_list`
+
+## Root cause
+When `deferred_to_data()` processes `only("assignee__status")` where `assignee` is a ForeignKey to a proxy model (`ProxyTrackerUser`):
+
+1. **Line 751**: Sets `opts = cur_model._meta` where `cur_model = ProxyTrackerUser` (the proxy)
+2. **Line 757**: Stores the pk under `must_include[ProxyTrackerUser]`
+3. **Lines 759-767**: For the "status" field, computes `model = field.model._meta.concrete_model = TrackerUser`
+4. **Line 763-764**: Checks `if model == opts.model` → `TrackerUser != ProxyTrackerUser` → stores under `seen[TrackerUser]`
+5. **Result**: `only_load` dict has split keys: `{ProxyTrackerUser: {'baseuser_ptr_id'}, TrackerUser: {'status'}}`
+6. **In `get_default_columns` line 840**: Checks `if field.model in only_load`
+7. **For pk field**: `field.model = TrackerUser` IS in `only_load`, but `'baseuser_ptr_id'` is NOT in `only_load[TrackerUser]` → field gets skipped
+8. **Cascade**: Pk missing from selected columns → missing from `init_list` → `ValueError` when `RelatedPopulator` tries to find it
+
+The fix is to use the concrete model's `_meta` instead of the proxy model's `_meta` at line 751. This makes `opts.model = TrackerUser` (concrete), causing the comparison at line 763 to match (`TrackerUser == TrackerUser`), which triggers `model = cur_model = ProxyTrackerUser`, storing both pk and status field under the same key `ProxyTrackerUser` in the `only_load` dict. Then in `get_default_columns`, since `TrackerUser` is not in `only_load` (only `ProxyTrackerUser` is), the field filtering check fails and both fields are included.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `/testbed/django/db/models/sql/query.py:751` — `opts = cur_model._meta` uses proxy model's _meta
+- `/testbed/django/db/models/sql/query.py:763-764` — comparison `model == opts.model` determines which key to use in `seen` dict
+- `/testbed/django/db/models/sql/compiler.py:840` — `field.model in only_load` check fails to find pk when keys are mismatched
+- Stack trace shows `ValueError: 'baseuser_ptr_id' is not in list` at `RelatedPopulator.__init__:2599`
+
+## Edit sites
+- `/testbed/django/db/models/sql/query.py` line 751: Change `opts = cur_model._meta` to `opts = cur_model._meta.concrete_model._meta` to use the concrete model's _meta when `cur_model` is a proxy model, ensuring the `opts.model` comparison at line 763-764 correctly identifies fields belonging to the concrete model and stores them under the proxy model key
+
+## Rejected hypotheses
+None — first pass analysis directly identified the root cause through code tracing and stack trace analysis
+
+## Open questions
+None — the fix is well-defined and matches the problem statement's suggested solution
+
+---STDERR---

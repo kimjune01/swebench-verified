@@ -1,0 +1,13 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 33cc636b22..813bca4e4d 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -759,7 +759,7 @@ class Query(BaseExpression):
+             is_reverse_object = field.auto_created and not field.concrete
+             model = field.related_model if is_reverse_object else field.model
+             model = model._meta.concrete_model
+-            if model == opts.model:
++            if model == opts.concrete_model:
+                 model = cur_model
+             if not is_reverse_o2o(field):
+                 add_to_dict(seen, model, field)

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `/testbed/django/db/models/sql/query.py:762` from `if model == opts.model:` to `if model == opts.concrete_model:` to normalize the concrete model comparison when processing `only()` with proxy models. The gate passed all 30 tests including `test_select_related_only` on the first iteration.
+
+---STDERR---

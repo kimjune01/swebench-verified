@@ -1,0 +1,26 @@
+# Audit: django__django-15814
+
+## FAIL_TO_PASS
+- test_select_related_only (proxy_models.tests.ProxyModelTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 29 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Patch summary
+The fix changes line 762 in `django/db/models/sql/query.py`:
+```diff
+-            if model == opts.model:
++            if model == opts.concrete_model:
+```
+
+This ensures that when resolving select_related fields, Django compares against the concrete model rather than potentially comparing a concrete model against a proxy model, which was causing the KeyError when using select_related with only() on proxy models.
+
+All 30 tests pass, including the target FAIL_TO_PASS test with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
