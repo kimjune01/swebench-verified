@@ -1,0 +1,59 @@
+2026-05-23 06:04:12,646 - INFO - Creating container for django__django-11555...
+2026-05-23 06:04:17,593 - INFO - Container for django__django-11555 created: f0d02a9e986ca10895edd87dfdc784cf8b897ecde127436e82c0060925e4ff84
+2026-05-23 06:04:17,946 - INFO - Container for django__django-11555 started: f0d02a9e986ca10895edd87dfdc784cf8b897ecde127436e82c0060925e4ff84
+2026-05-23 06:04:17,947 - INFO - Intermediate patch for django__django-11555 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11555/patch.diff, now applying to container...
+2026-05-23 06:04:18,089 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/sql/compiler.py...
+Applied patch django/db/models/sql/compiler.py cleanly.
+
+2026-05-23 06:04:18,848 - INFO - Git diff before:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index eaccc96d7d..a812e1267b 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -722,6 +722,15 @@ class SQLCompiler:
+ 
+             results = []
+             for item in opts.ordering:
++                # Handle expression objects (OrderBy, F().asc(), etc.) in Meta.ordering
++                if hasattr(item, 'resolve_expression'):
++                    if not isinstance(item, OrderBy):
++                        item = item.desc() if descending else item.asc()
++                    elif descending:
++                        item = item.copy()
++                        item.reverse_ordering()
++                    results.append((item, False))
++                    continue
+                 results.extend(self.find_ordering_name(item, opts, alias,
+                                                        order, already_seen))
+             return results
+2026-05-23 06:04:18,849 - INFO - Eval script for django__django-11555 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11555/eval.sh; copying to container...
+2026-05-23 06:04:24,311 - INFO - Test runtime: 5.36 seconds
+2026-05-23 06:04:24,311 - INFO - Test output for django__django-11555 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11555/test_output.txt
+2026-05-23 06:04:24,414 - INFO - Git diff after:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index eaccc96d7d..a812e1267b 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -722,6 +722,15 @@ class SQLCompiler:
+ 
+             results = []
+             for item in opts.ordering:
++                # Handle expression objects (OrderBy, F().asc(), etc.) in Meta.ordering
++                if hasattr(item, 'resolve_expression'):
++                    if not isinstance(item, OrderBy):
++                        item = item.desc() if descending else item.asc()
++                    elif descending:
++                        item = item.copy()
++                        item.reverse_ordering()
++                    results.append((item, False))
++                    continue
+                 results.extend(self.find_ordering_name(item, opts, alias,
+                                                        order, already_seen))
+             return results
+2026-05-23 06:04:24,414 - INFO - Grading answer for django__django-11555...
+2026-05-23 06:04:24,415 - INFO - report: {'django__django-11555': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_order_by_ptr_field_with_default_ordering_by_expression (ordering.tests.OrderingTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_default_ordering (ordering.tests.OrderingTests)', 'F expressions can be used in Meta.ordering.', 'test_default_ordering_override (ordering.tests.OrderingTests)', 'test_deprecated_values_annotate (ordering.tests.OrderingTests)', 'test_extra_ordering (ordering.tests.OrderingTests)', 'test_extra_ordering_quoting (ordering.tests.OrderingTests)', 'test_extra_ordering_with_table_name (ordering.tests.OrderingTests)', 'test_no_reordering_after_slicing (ordering.tests.OrderingTests)', 'test_order_by_constant_value (ordering.tests.OrderingTests)', 'test_order_by_constant_value_without_output_field (ordering.tests.OrderingTests)', 'test_order_by_f_expression (ordering.tests.OrderingTests)', 'test_order_by_f_expression_duplicates (ordering.tests.OrderingTests)', 'test_order_by_fk_attname (ordering.tests.OrderingTests)', 'test_order_by_nulls_first (ordering.tests.OrderingTests)', 'test_order_by_nulls_first_and_last (ordering.tests.OrderingTests)', 'test_order_by_nulls_last (ordering.tests.OrderingTests)', 'test_order_by_override (ordering.tests.OrderingTests)', 'test_order_by_pk (ordering.tests.OrderingTests)', 'test_orders_nulls_first_on_filtered_subquery (ordering.tests.OrderingTests)', 'test_random_ordering (ordering.tests.OrderingTests)', 'test_related_ordering_duplicate_table_reference (ordering.tests.OrderingTests)', 'test_reverse_meta_ordering_pure (ordering.tests.OrderingTests)', 'test_reverse_ordering_pure (ordering.tests.OrderingTests)', 'test_reversed_ordering (ordering.tests.OrderingTests)', 'test_stop_slicing (ordering.tests.OrderingTests)', 'test_stop_start_slicing (ordering.tests.OrderingTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-11555: resolved: True
+2026-05-23 06:04:24,415 - INFO - Attempting to stop container sweb.eval.django__django-11555.batch...
+2026-05-23 06:04:39,755 - INFO - Attempting to remove container sweb.eval.django__django-11555.batch...
+2026-05-23 06:04:39,771 - INFO - Container sweb.eval.django__django-11555.batch removed.

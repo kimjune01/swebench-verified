@@ -1,0 +1,24 @@
+# Audit: django__django-11555
+
+## FAIL_TO_PASS
+- `test_order_by_ptr_field_with_default_ordering_by_expression`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 26 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The single pre-existing failure is now resolved.
+
+## Summary
+
+The craft patch successfully resolves the issue:
+- **FAIL_TO_PASS**: 1/1 passing (was ERROR with "TypeError: 'OrderBy' object does not support indexing", now PASS)
+- **PASS_TO_PASS**: 26/26 passing (no regressions)
+- **Gate**: GREEN (27 tests, 0.058s)
+
+The fix adds an expression check inside the `opts.ordering` loop in `find_ordering_name` (compiler.py:724), intercepting OrderBy/F expression objects before they reach `get_order_dir`, which expects strings. The check respects the `descending` parameter and handles both `F().asc()`/`desc()` and `OrderBy()` expressions correctly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

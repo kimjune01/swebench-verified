@@ -1,0 +1,65 @@
+Now let me output the diagnosis to stdout:
+
+```markdown
+# Recon: django__django-11555
+
+## Failure summary
+
+The test `test_order_by_ptr_field_with_default_ordering_by_expression` creates a child model `ChildArticle` that inherits from `Article` via multi-table inheritance. When ordering `ChildArticle` objects by the parent pointer field (`article_ptr`), Django attempts to apply the parent model's default ordering. The parent `Article` model has `Meta.ordering` that contains expression objects (`F('author__name').asc()` and `OrderBy(F('second_author__name'))`). The query compilation fails with `TypeError: 'OrderBy' object does not support indexing` at line 2221 in `django/db/models/sql/query.py` within the `get_order_dir` function.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 700-730: `find_ordering_name` function - calls `get_order_dir` without checking if name is an expression
+- `django/db/models/sql/query.py` lines 2212-2223: `get_order_dir` function - assumes field is a string and tries to index it
+
+## Root cause
+
+In `find_ordering_name` (compiler.py:707), when recursively processing a parent model's `Meta.ordering` that contains expression objects, those objects are passed directly to `get_order_dir` which expects a string field name. The bug occurs because:
+
+1. `order_by('article_ptr')` triggers recursive processing of Article's `Meta.ordering`
+2. Each item in `opts.ordering` (including `OrderBy` and `F().asc()` objects) is passed to `find_ordering_name`
+3. Line 707 unconditionally calls `name, order = get_order_dir(name, default_order)`
+4. `get_order_dir` tries `field[0] == '-'` which fails because expression objects don't support indexing
+
+The parallel code in `get_order_by` (lines 282-291) correctly handles this by checking `if hasattr(field, 'resolve_expression')` before calling `get_order_dir`.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `compiler.py:707` — `name, order = get_order_dir(name, default_order)` unconditional call
+- `compiler.py:721-722` — `for item in opts.ordering: results.extend(self.find_ordering_name(item, ...))` passes expression objects
+- `compiler.py:282-291` — correct pattern: checks `hasattr(field, 'resolve_expression')` before calling `get_order_dir`
+- `query.py:2221` — `if field[0] == '-':` assumes string, fails on objects
+- `tests/ordering/models.py:34-37` — Article.Meta.ordering contains `F().asc()` and `OrderBy()` objects
+
+## Edit sites
+
+**Primary fix location**: `django/db/models/sql/compiler.py` lines 700-710
+
+In the `find_ordering_name` method, immediately after the docstring and before line 707 where `get_order_dir` is called, add a check to handle expression objects:
+
+```python
+# After line 706 (end of docstring), before line 707:
+if hasattr(name, 'resolve_expression'):
+    # name is already an expression (OrderBy, F().asc(), etc.)
+    # Return it directly without trying to parse as a field name
+    if not isinstance(name, OrderBy):
+        name = name.asc()
+    if not self.query.standard_ordering:
+        name = name.copy()
+        name.reverse_ordering()
+    return [(name, False)]
+```
+
+This mirrors the pattern already used in `get_order_by` at lines 282-291 and prevents expression objects from being passed to `get_order_dir`.
+
+## Rejected hypotheses
+
+None - the code path is deterministic and the type mismatch is clear from the traceback.
+
+## Open questions
+
+None - the fix location and approach are unambiguous. The pattern is already established in `get_order_by` and just needs to be applied to `find_ordering_name`.
+```
+
+---STDERR---

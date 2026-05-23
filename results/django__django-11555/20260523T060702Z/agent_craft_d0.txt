@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix successfully makes `test_order_by_ptr_field_with_default_ordering_by_expression` pass. 
+
+**Root cause**: When ordering by a parent pointer field (`article_ptr`), Django recursively processes the parent model's `Meta.ordering`. If that ordering contains expression objects (`F().asc()`, `OrderBy()`), they were passed directly to `get_order_dir()` which expects strings and tries to index `field[0]`, causing `TypeError`.
+
+**Solution**: In `django/db/models/sql/compiler.py` at line 724, inside the loop that expands `opts.ordering`, added a check to detect and handle expression objects before the recursive call:
+- Normalize non-OrderBy expressions to OrderBy with correct direction
+- Clone and reverse if descending
+- Append directly to results without recursing
+
+All 27 ordering tests pass with zero regressions.
+
+---STDERR---
