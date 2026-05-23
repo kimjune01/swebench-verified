@@ -1,0 +1,39 @@
+# Recon: django__django-13315
+
+## Failure summary
+
+The test `test_limit_choices_to_no_duplicates` creates ForeignKey and ManyToManyField form fields with `limit_choices_to` filters involving multiple related lookups across joins. The test expects each Character to appear exactly once in the queryset, but instead finds duplicates: `threepwood` appears 4 times (expected 1) and `marley` appears 3 times (expected 1). The assertion `self.assertCountEqual(form.fields['character1'].queryset, [self.marley, self.threepwood])` fails with element count mismatch.
+
+## Suspect set
+
+- `django/forms/models.py` lines 98-103: `apply_limit_choices_to_to_formfield` function applies the limit_choices_to filter but doesn't deduplicate
+- `django/db/models/query.py` lines 968-984: `complex_filter` method applies filters without deduplication
+- `django/forms/models.py` lines 1180-1219: `ModelChoiceField` class stores and uses the queryset
+
+## Root cause
+
+The `apply_limit_choices_to_to_formfield` function in `django/forms/models.py:103` applies `limit_choices_to` filters using `complex_filter()`, which doesn't deduplicate results. When the filter contains multiple related lookups (e.g., `jokes__funny=True, jokes_today__funny=True`), the SQL generates JOINs that create a cartesian product.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/forms/models.py:103` — `formfield.queryset = formfield.queryset.complex_filter(limit_choices_to)` 
+- `django/db/models/query.py:970-975` — complex_filter just calls `add_q(filter_obj)` for Q objects, no distinct
+- Test data shows exact cartesian product: threepwood has 2 `jokes` × 2 `jokes_today` = 4 rows; marley has 1 `jokes` × 3 `jokes_today` = 3 rows
+
+The SQL without DISTINCT produces duplicate Character rows because each combination of related objects creates a separate result row, even though they all reference the same Character instance.
+
+## Edit sites
+
+- `django/forms/models.py` line 103: Change `formfield.queryset = formfield.queryset.complex_filter(limit_choices_to)` to `formfield.queryset = formfield.queryset.complex_filter(limit_choices_to).distinct()` to deduplicate results after applying the filter
+
+## Rejected hypotheses
+
+None — the cartesian product behavior from multiple joins is the only explanation for the exact duplicate counts observed (4 and 3).
+
+## Open questions
+
+- Should `django/db/models/fields/__init__.py:883` (get_choices method) and `django/db/models/fields/reverse_related.py:153` also use distinct()? They have the same pattern but aren't tested by the failing test.
+- The failing test only checks ForeignKey with Q objects and dicts, plus ManyToManyField with Q objects. The fix should handle all cases.
+
+---STDERR---

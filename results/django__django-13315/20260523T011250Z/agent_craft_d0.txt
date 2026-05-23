@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully deduplicates `limit_choices_to` queryset results by adding `.distinct()` after `complex_filter()` in `django/forms/models.py:103`. The FAIL_TO_PASS test now passes in 1 iteration.
+
+---STDERR---
