@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed on the first gate iteration. Changed `max(powers.values())` to `sum(powers.values())` at lines 130 and 142 in `sympy/polys/monomials.py`. The bug was filtering by maximum individual power instead of total degree - now `itermonomials([x, y], 3, 3)` correctly returns all four degree-3 monomials.
+
+---STDERR---

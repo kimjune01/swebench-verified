@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-21847
+
+## FAIL_TO_PASS
+- `test_monomials`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+All tests passed successfully. The craft patch correctly fixed the `itermonomials` function by changing the filter condition from `max(powers.values())` to `sum(powers.values())` at lines 130 and 142, ensuring monomials are filtered by total degree rather than maximum individual power.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

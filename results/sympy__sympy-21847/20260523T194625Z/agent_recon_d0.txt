@@ -1,0 +1,43 @@
+# Recon: sympy__sympy-21847
+
+## Failure summary
+
+The test `test_monomials` in `sympy/polys/tests/test_monomials.py` fails when checking that `itermonomials([x, y], 3, 3)` returns all monomials with total degree exactly 3. The function currently returns only `{x**3, y**3}` instead of the expected `{x**3, x**2*y, x*y**2, y**3}`. The same issue affects other test cases with `min_degrees` argument. The error is an `AssertionError` at line 116.
+
+## Suspect set
+
+- `sympy/polys/monomials.py` lines 120-133: Commutative variable handling in `itermonomials` function - contains buggy filter condition at line 130
+- `sympy/polys/monomials.py` lines 134-145: Non-commutative variable handling in `itermonomials` function - contains same buggy filter condition at line 142
+
+## Root cause
+
+The `itermonomials` function uses `max(powers.values()) >= min_degree` to filter generated monomials, checking if the maximum power of any single variable is >= min_degree. This is incorrect according to the documentation, which states: "A generator of all monomials monom is returned, such that either min_degree <= total_degree(monom) <= max_degree". The filter should check the **total degree** (sum of all variable powers), not the maximum individual power.
+
+For example, when `itermonomials([x, y], 3, 3)` is called:
+- The combination `(x, x, y)` generates monomial `x**2*y` with powers `{x: 2, y: 1, S.One: 0}`
+- Current buggy check: `max({x: 2, y: 1, S.One: 0}.values()) = 2 < 3` → excluded ❌
+- Correct check: `sum({x: 2, y: 1, S.One: 0}.values()) = 3` → should be included ✓
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/polys/monomials.py:130` — `if max(powers.values()) >= min_degree:` (commutative case)
+- `sympy/polys/monomials.py:142` — `if max(powers.values()) >= min_degree:` (non-commutative case)
+- Manual trace confirms: `combinations_with_replacement([x, y, S.One], 3)` generates all monomials of degree 0-3, then the filter excludes those with total degree in range but max individual power below min_degree
+
+## Edit sites
+
+- `sympy/polys/monomials.py` line 130: Change `if max(powers.values()) >= min_degree:` to `if sum(powers.values()) >= min_degree:` for commutative variables
+- `sympy/polys/monomials.py` line 142: Change `if max(powers.values()) >= min_degree:` to `if sum(powers.values()) >= min_degree:` for non-commutative variables
+
+Both changes replace the incorrect max-power check with a correct total-degree check. Since `combinations_with_replacement` already ensures degree <= max_degree, we only need to check `>= min_degree`, though adding the upper bound check `<= max_degree` would be more explicit and safe.
+
+## Rejected hypotheses
+
+None - the root cause is clear from tracing the code path.
+
+## Open questions
+
+None - the fix is straightforward and localized to two lines with identical logic.
+
+---STDERR---

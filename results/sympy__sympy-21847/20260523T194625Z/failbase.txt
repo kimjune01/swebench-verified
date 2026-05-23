@@ -1,0 +1,34 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/polys/tests/test_monomials.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        17571493
+hash randomization: on (PYTHONHASHSEED=2630069878)
+
+sympy/polys/tests/test_monomials.py[11] 
+test_monomials F
+test_monomial_count ok
+test_monomial_mul ok
+test_monomial_div ok
+test_monomial_gcd ok
+test_monomial_lcm ok
+test_monomial_max ok
+test_monomial_pow ok
+test_monomial_min ok
+test_monomial_divides ok
+test_Monomial ok                                                          [FAIL]
+
+
+________________________________________________________________________________
+______________ sympy/polys/tests/test_monomials.py:test_monomials ______________
+Traceback (most recent call last):
+  File "/testbed/sympy/polys/tests/test_monomials.py", line 116, in test_monomials
+    assert set(itermonomials([x, y], 3, 3)) == {x**3, x**2*y, x*y**2, y**3}
+AssertionError
+
+============= tests finished: 10 passed, 1 failed, in 0.10 seconds =============
+DO *NOT* COMMIT!
