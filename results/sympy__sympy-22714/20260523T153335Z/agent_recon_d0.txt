@@ -1,0 +1,30 @@
+```markdown
+# Recon: sympy__sympy-22714
+
+## Failure summary
+The test `test_issue_22684` attempts to create `Point(1, 2)` inside an `evaluate(False)` context. The test expects this to succeed, but it fails with `ValueError: Imaginary coordinates are not permitted.` The error is raised at line 156 in `sympy/geometry/point.py`.
+
+## Suspect set
+- `sympy/geometry/point.py` lines 155-156: The imaginary coordinate validation check
+
+## Root cause
+The check at line 155 validates that coordinates don't have imaginary parts using `if any(a.is_number and im(a) for a in coords)`. When `evaluate=False` is in effect (via the `with evaluate(False)` context manager), calling `im(1)` on a real number doesn't evaluate to `0`. Instead, it returns an unevaluated `im(1)` expression object. This unevaluated expression is truthy when converted to bool, causing the validation to incorrectly conclude that real coordinates have imaginary parts.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `sympy/geometry/point.py:155` — `if any(a.is_number and im(a) for a in coords):`
+- Tested behavior: Without `evaluate(False)`: `im(1) = 0, bool(im(1)) = False`. With `evaluate(False)`: `im(1) = im(1), bool(im(1)) = True`
+- The imaginary check occurs before any evaluation-dependent processing (lines 165-168 handle Float conversion only when `evaluate=True`)
+
+## Edit sites
+- `sympy/geometry/point.py` line 155: Modify the imaginary coordinate check to force evaluation of `im(a)` even when `evaluate=False` is in effect. Wrap the check in an `evaluate(True)` context so that `im(a)` evaluates to its actual numeric value (0 for real numbers) rather than remaining as an unevaluated expression.
+
+## Rejected hypotheses
+None — this is the first diagnosis.
+
+## Open questions
+None — the root cause is clear and the fix is straightforward.
+```
+
+---STDERR---

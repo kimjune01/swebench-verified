@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-22714
+
+## FAIL_TO_PASS
+- test_issue_22684: ✅ PASS
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully resolves the issue. The FAIL_TO_PASS test now passes, and all 11 PASS_TO_PASS tests remain passing. No regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

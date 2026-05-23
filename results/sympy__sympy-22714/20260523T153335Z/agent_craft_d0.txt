@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes `test_issue_22684` pass. The root cause was correctly identified: under `evaluate(False)`, `im(1)` returns an unevaluated expression instead of `0`, which is truthy and causes the validation to incorrectly reject real coordinates. 
+
+Wrapping the imaginary coordinate check in `evaluate_context(True)` forces evaluation of `im(a)` regardless of the global evaluation mode, fixing the false positive without affecting the stored coordinates or surrounding code.
+
+---STDERR---
