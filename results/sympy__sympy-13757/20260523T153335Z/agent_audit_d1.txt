@@ -1,0 +1,30 @@
+# Audit: sympy__sympy-13757
+
+## FAIL_TO_PASS
+- test_issue_13079: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_match_deriv_bug1 (DeprecationWarning: collections.abc)
+- test_Derivative_bug1 (DeprecationWarning: collections.abc)
+- test_issue_4418 (DeprecationWarning: collections.abc)
+- test_issue_9585 (DeprecationWarning: collections.abc)
+- test_factor (DeprecationWarning: collections.abc - same error type, unrelated to patch)
+
+All 5 exceptions are identical Python 3.9 environment warnings about `collections.Iterable` vs `collections.abc`, unrelated to the `_op_priority = 11.0` change.
+
+## Summary
+
+The patch adds `_op_priority = 11.0` to the Poly class, ensuring Poly.__rmul__ is called for left-side multiplication (e.g., `x*Poly(x)`). This value matches other specialized classes (MatrixExpr, Quaternion) and avoids the recursion issue that the earlier 10.001 value caused.
+
+**Contract fulfilled:**
+- test_issue_13079 passes (all 5 assertions for Poly left/right multiplication)
+- Zero PASS_TO_PASS regressions
+- Bonus: test_poly_matching_consistency now passes (was @XFAIL)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

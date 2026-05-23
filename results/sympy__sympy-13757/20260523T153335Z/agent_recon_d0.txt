@@ -1,0 +1,51 @@
+# Recon: sympy__sympy-13757
+
+## Failure summary
+
+The test `test_issue_13079` checks that multiplying a Poly object with expressions evaluates correctly regardless of operand order. The test fails on the assertion `assert x*Poly(x) == Poly(x**2, x, domain='ZZ')`. Currently, `x*Poly(x)` returns a Mul object (`x*Poly(x, x, domain='ZZ')`) instead of evaluating to `Poly(x**2)`. The right-side multiplication `Poly(x)*x` works correctly, but left-side multiplication does not.
+
+Related test `test_poly_matching_consistency` also fails because `I*Poly(x, x)` doesn't evaluate to a Poly, causing the pattern match `e.match(I*p)` to return `{p: Poly(x, x)}` instead of the expected `{p: x}`.
+
+## Suspect set
+
+- `sympy/polys/polytools.py` lines 62-120: Poly class definition and attributes
+- `sympy/core/expr.py` lines 95-145: Expr._op_priority definition and binary operators (__mul__, __rmul__)
+- `sympy/core/decorators.py` lines 98-134: call_highest_priority decorator implementation
+
+## Root cause
+
+The Poly class inherits `_op_priority = 10.0` from its parent Expr class, which is the same priority value used by Symbol and other basic expressions. This causes the operator priority mechanism to fail when an expression is multiplied by a Poly from the left.
+
+The call flow for `x * Poly(x)` is:
+1. Python calls `x.__mul__(Poly(x))` (Symbol inherits Expr.__mul__)
+2. Expr.__mul__ is decorated with `@call_highest_priority('__rmul__')`
+3. The decorator checks: `if other._op_priority > self._op_priority` (line 125 in decorators.py)
+4. Since `Poly(x)._op_priority (10.0) > x._op_priority (10.0)` is False (strictly greater, not >=)
+5. The decorator does not delegate to `Poly(x).__rmul__(x)`
+6. Instead, it proceeds with the default: `return Mul(x, Poly(x))`
+
+This creates a Mul object instead of invoking Poly's __rmul__ method, which would correctly convert x to a Poly and multiply them.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `sympy/core/expr.py:105` — `_op_priority = 10.0` with comment "Custom subclasses that want to define their own binary special methods should set an _op_priority value that is higher than the default"
+- `sympy/core/decorators.py:125` — `if other._op_priority > self._op_priority:` (uses strict inequality)
+- `sympy/polys/polytools.py:62` — `class Poly(Expr):` (inherits default _op_priority)
+- `sympy/polys/polytools.py:4051-4058` — Poly.__rmul__ implementation exists and is correct, but never gets called
+- Multiple other classes in the codebase override _op_priority: Quaternion (11.0), MatrixExpr (11.0), Dimension (13.0), HolonomicFunction (20)
+
+## Edit sites
+
+- `sympy/polys/polytools.py` lines 112-114: Add `_op_priority = 11.0` as a class attribute in the Poly class, right after the existing `is_commutative = True` and `is_Poly = True` attributes. This follows the pattern used by other specialized classes in the codebase (Quaternion, MatrixExpr, etc.).
+
+## Rejected hypotheses
+
+- H₁: Poly.__rmul__ implementation is incorrect — Rejected because manual testing shows __rmul__ works correctly when called directly. The issue is that it's never invoked due to the priority mechanism.
+- H₂: Symbol.__mul__ needs to special-case Poly — Rejected because the _op_priority mechanism is specifically designed to handle this case. Other classes (MatrixExpr, Quaternion) solve the same problem by increasing their priority.
+
+## Open questions
+
+None — the root cause is clear, the fix is simple, and the pattern is established in the codebase.
+
+---STDERR---

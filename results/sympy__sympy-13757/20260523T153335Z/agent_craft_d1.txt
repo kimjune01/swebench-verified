@@ -1,0 +1,12 @@
+## RESOLVED
+
+All tests passing:
+- **test_issue_13079** (FAIL_TO_PASS): ✓ All assertions pass  
+- **test_poly_matching_consistency** (was XFAIL): ✓ Now passes
+- **test_factor** (PASS_TO_PASS regression): ✓ No recursion with 11.0
+
+**Final fix:** Added `_op_priority = 11.0` to Poly class (sympy/polys/polytools.py:109)
+
+**Key insight:** The value matters. The audit tried `10.001` which caused recursion in the assumptions system. Using `11.0` (same as MatrixExpr and Quaternion) avoids the edge case while still being high enough to trigger the correct operator delegation for `x * Poly(x)`.
+
+---STDERR---

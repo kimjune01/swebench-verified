@@ -1,0 +1,36 @@
+# Audit: sympy__sympy-13757
+
+## FAIL_TO_PASS
+- test_issue_13079: **PASS** ✅
+
+## PASS_TO_PASS regressions
+- **test_factor** (sympy/polys/tests/test_polytools.py): Deep recursion in assumptions system when creating expressions with symbols that have assumptions (positive, real). The `_op_priority = 10.001` patch changes operator dispatch for Poly, triggering a different code path in `Mul.flatten` that leads to infinite recursion through `is_zero` → `is_nonnegative` → `_monotonic_sign` → `diff` → recursion.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_match_deriv_bug1 (DeprecationWarning)
+- test_Derivative_bug1 (DeprecationWarning)
+- test_issue_4418 (DeprecationWarning)
+- test_issue_9585 (DeprecationWarning)
+
+## Kill report
+
+**Regression:** test_factor fails during expression creation at line 2373:
+```python
+p = Symbol('p', positive=True)
+r = Symbol('r', real=True)
+f = sqrt(expand((r**2 + 1)*(p + 1)*(p - 1)*(p - 2)**3))
+```
+
+The modified `_op_priority = 10.001` changes how Poly participates in Mul operations. When Mul.flatten evaluates the expression, it checks `a.is_zero` and `a.is_Rational` on operands. For expressions with assumed symbols, this triggers assumptions evaluation that calls `_monotonic_sign`, which calls `diff()`, creating new expressions that re-enter the assumptions system, causing deep/infinite recursion.
+
+**Impact:** The _op_priority fix is too broad—it affects ALL Poly operations, not just the specific left-multiplication case from issue 13079. While it solves the FAIL_TO_PASS test, it introduces recursion issues in the assumptions system that break unrelated tests.
+
+**Suggested narrowing:** The craft iteration needs to either:
+1. Find a different _op_priority value (though 10.001 is already minimal above Expr's 10.0)
+2. Implement the fix differently without changing global priority (e.g., special handling in __rmul__ only)
+3. Add recursion guards to prevent the assumptions system from entering infinite loops
+
+VERDICT: NOT_RESOLVED — regressions
+RE-ENTER: craft
+
+---STDERR---

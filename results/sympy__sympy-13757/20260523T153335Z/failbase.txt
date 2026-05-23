@@ -1,0 +1,122 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/core/tests/test_match.py sympy/polys/tests/test_polytools.py
+
+test_all_roots ok
+test_nroots ok
+test_ground_roots ok
+test_nth_power_roots_poly ok
+test_torational_factor_list ok
+test_cancel ok
+test_reduced ok
+test_groebner ok
+test_fglm ok
+test_is_zero_dimensional ok
+test_GroebnerBasis ok
+test_poly ok
+test_keep_coeff ok
+test_poly_matching_consistency f
+test_issue_5786 f
+test_noncommutative ok
+test_to_rational_coeffs ok
+test_factor_terms ok
+test_issue_11198 ok
+test_Poly_precision ok
+test_issue_12400 ok                                                       [FAIL]
+
+
+________________________________________________________________________________
+_____________ sympy/core/tests/test_match.py:test_match_deriv_bug1 _____________
+  File "/testbed/sympy/core/tests/test_match.py", line 279, in test_match_deriv_bug1
+    e = diff(l(x), x)/x - diff(diff(n(x), x), x)/2 - \
+  File "/testbed/sympy/core/function.py", line 1900, in diff
+    return Derivative(f, *symbols, **kwargs)
+  File "/testbed/sympy/core/function.py", line 1227, in __new__
+    if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+_____________ sympy/core/tests/test_match.py:test_Derivative_bug1 ______________
+  File "/testbed/sympy/core/tests/test_match.py", line 372, in test_Derivative_bug1
+    eq = f(x).diff(x)
+  File "/testbed/sympy/core/expr.py", line 3008, in diff
+    return Derivative(self, *new_symbols, **assumptions)
+  File "/testbed/sympy/core/function.py", line 1227, in __new__
+    if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+________________ sympy/core/tests/test_match.py:test_issue_4418 ________________
+  File "/testbed/sympy/core/tests/test_match.py", line 455, in test_issue_4418
+    eq = diff(g(x)*f(x).diff(x), x)
+  File "/testbed/sympy/core/expr.py", line 3008, in diff
+    return Derivative(self, *new_symbols, **assumptions)
+  File "/testbed/sympy/core/function.py", line 1227, in __new__
+    if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+_____________ sympy/polys/tests/test_polytools.py:test_issue_9585 ______________
+  File "/testbed/sympy/polys/tests/test_polytools.py", line 1457, in test_issue_9585
+    assert Derivative(Poly(x**2 + x), x).doit() == Poly(2*x + 1)
+  File "/testbed/sympy/core/function.py", line 1366, in doit
+    return self.func(expr, *self.variables, **hints)
+  File "/testbed/sympy/core/function.py", line 1227, in __new__
+    if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+________________________________________________________________________________
+_______________ sympy/polys/tests/test_polytools.py:test_factor ________________
+  File "/testbed/sympy/polys/tests/test_polytools.py", line 2373, in test_factor
+    f = sqrt(expand((r**2 + 1)*(p + 1)*(p - 1)*(p - 2)**3))
+  File "/testbed/sympy/core/decorators.py", line 91, in __sympifyit_wrapper
+    return func(a, b)
+  File "/testbed/sympy/core/decorators.py", line 132, in binary_op_wrapper
+    return func(self, other)
+  File "/testbed/sympy/core/expr.py", line 140, in __mul__
+    return Mul(self, other)
+  File "/testbed/sympy/core/operations.py", line 42, in __new__
+    c_part, nc_part, order_symbols = cls.flatten(args)
+  File "/testbed/sympy/core/mul.py", line 184, in flatten
+    if not a.is_zero and a.is_Rational:
+  File "/testbed/sympy/core/assumptions.py", line 248, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 291, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/mul.py", line 1100, in _eval_is_zero
+    z = a.is_zero
+  File "/testbed/sympy/core/assumptions.py", line 248, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 303, in _ask
+    _ask(pk, obj)
+  File "/testbed/sympy/core/assumptions.py", line 291, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/add.py", line 592, in _eval_is_positive
+    if s != self and s.is_positive and a.is_nonnegative:
+  File "/testbed/sympy/core/assumptions.py", line 248, in getit
+    return _ask(fact, self)
+  File "/testbed/sympy/core/assumptions.py", line 291, in _ask
+    a = evaluate(obj)
+  File "/testbed/sympy/core/add.py", line 595, in _eval_is_positive
+    v = _monotonic_sign(self)
+  File "/testbed/sympy/core/exprtools.py", line 120, in _monotonic_sign
+    d = self.diff(x)
+  File "/testbed/sympy/core/expr.py", line 3008, in diff
+    return Derivative(self, *new_symbols, **assumptions)
+  File "/testbed/sympy/core/function.py", line 1227, in __new__
+    if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/collections/__init__.py", line 62, in __getattr__
+    warnings.warn("Using or importing the ABCs from 'collections' instead "
+DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+
+________________________________________________________________________________
+_____________ sympy/polys/tests/test_polytools.py:test_issue_13079 _____________
+  File "/testbed/sympy/polys/tests/test_polytools.py", line 682, in test_issue_13079
+    assert x*Poly(x) == Poly(x**2, x, domain='ZZ')
+AssertionError
+
+ tests finished: 168 passed, 1 failed, 5 expected to fail, 5 exceptions, 
+in 4.11 seconds 
+DO *NOT* COMMIT!

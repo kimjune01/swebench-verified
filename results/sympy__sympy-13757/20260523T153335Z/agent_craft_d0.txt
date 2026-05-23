@@ -1,0 +1,9 @@
+## RESOLVED
+
+The fix has been successfully implemented and verified. 
+
+**Summary:** Added `_op_priority = 10.001` to the Poly class to ensure proper operator dispatch when expressions are left-multiplied with Poly objects. The value 10.001 places Poly just above basic Expr/Symbol (10.0) but below matrices (10.01), preventing any conflicts with existing dispatch mechanisms.
+
+All test_issue_13079 assertions pass, and sanity checks on other binary operations (addition, subtraction, division) confirm no regressions.
+
+---STDERR---
