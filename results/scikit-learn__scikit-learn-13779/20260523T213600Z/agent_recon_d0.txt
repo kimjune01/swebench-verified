@@ -1,0 +1,44 @@
+# Recon: scikit-learn__scikit-learn-13779
+
+## Failure summary
+
+The tests `test_none_estimator_with_weights` check that a VotingClassifier or VotingRegressor can have an estimator set to None via `set_params(lr=None)` and still fit successfully when `sample_weight` is provided. The tests fail with `AttributeError: 'NoneType' object has no attribute 'fit'` originating from `sklearn/utils/validation.py:808` in the `has_fit_parameter` function.
+
+## Suspect set
+
+- `sklearn/ensemble/voting.py` lines 79-83: sample_weight validation loop in `_BaseVoting.fit` method
+- `sklearn/utils/validation.py` lines 784-808: `has_fit_parameter` function (not the root cause, just where the error surfaces)
+
+## Root cause
+
+In `_BaseVoting.fit` at lines 79-83, when `sample_weight` is not None, the code iterates through all estimators to verify they support sample_weight by calling `has_fit_parameter(step, 'sample_weight')`. However, it doesn't check if `step` is None before making this call. The `has_fit_parameter` function at line 808 tries to access `estimator.fit`, which raises AttributeError when estimator is None.
+
+Later in the same `fit` method (line 96), None estimators are properly handled with a filter: `for clf in clfs if clf is not None`. The sample_weight validation loop needs the same None check.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `sklearn/ensemble/voting.py:81` — `if not has_fit_parameter(step, 'sample_weight'):` called without None check
+- `sklearn/ensemble/voting.py:96` — `for clf in clfs if clf is not None` shows the pattern used elsewhere in same method
+- `sklearn/utils/validation.py:808` — `return parameter in signature(estimator.fit).parameters` fails on None
+- Stack trace confirms: VotingRegressor.fit:451 → _BaseVoting.fit:81 → has_fit_parameter:808
+
+## Edit sites
+
+- `sklearn/ensemble/voting.py` line 81: Add None check before calling `has_fit_parameter`. Change `if not has_fit_parameter(step, 'sample_weight'):` to `if step is not None and not has_fit_parameter(step, 'sample_weight'):`
+
+This single change will allow None estimators to be skipped during sample_weight validation, consistent with how they're already skipped during the actual fitting at line 96.
+
+## Competing hypotheses
+
+None — the root cause is unambiguous from the stack trace and code inspection.
+
+## Rejected hypotheses
+
+None — first diagnosis.
+
+## Open questions
+
+None — the fix is straightforward and localized.
+
+---STDERR---

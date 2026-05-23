@@ -1,0 +1,24 @@
+# Audit: scikit-learn__scikit-learn-13779
+
+## FAIL_TO_PASS
+- `test_none_estimator_with_weights[X0-y0-voter0]`: **PASS** ✓
+- `test_none_estimator_with_weights[X1-y1-voter1]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 18 PASS_TO_PASS tests passed cleanly.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - all tests that passed were expected to pass.
+
+## Summary
+The patch successfully resolves the issue. The single-line change adds a None check (`step is not None and`) before calling `has_fit_parameter(step, 'sample_weight')` at line 81 in `sklearn/ensemble/voting.py`. This prevents the AttributeError when an estimator is set to None while using sample_weight.
+
+All 20 tests in the test suite passed:
+- Both FAIL_TO_PASS tests now pass
+- All 18 PASS_TO_PASS tests continue to pass
+- Zero regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ pytest -rA sklearn/ensemble/tests/test_voting.py
+
+        estimator : object
+            An estimator to inspect.
+    
+        parameter : str
+            The searched parameter.
+    
+        Returns
+        -------
+        is_parameter: bool
+            Whether the parameter was found to be a named parameter of the
+            estimator's fit method.
+    
+        Examples
+        --------
+        >>> from sklearn.svm import SVC
+        >>> has_fit_parameter(SVC(), "sample_weight")
+        True
+    
+        """
+>       return parameter in signature(estimator.fit).parameters
+E       AttributeError: 'NoneType' object has no attribute 'fit'
+
+sklearn/utils/validation.py:808: AttributeError
+________________ test_none_estimator_with_weights[X1-y1-voter1] ________________
+
+X = array([[6.3200e-03, 1.8000e+01, 2.3100e+00, ..., 1.5300e+01, 3.9690e+02,
+        4.9800e+00],
+       [2.7310e-02, 0.00...02,
+        6.4800e+00],
+       [4.7410e-02, 0.0000e+00, 1.1930e+01, ..., 2.1000e+01, 3.9690e+02,
+        7.8800e+00]])
+y = array([24. , 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, 18.9, 15. ,
+       18.9, 21.7, 20.4, 18.2, 19.9, 23.1, 17....6, 15.2,  7. ,  8.1, 13.6, 20.1, 21.8, 24.5,
+       23.1, 19.7, 18.3, 21.2, 17.5, 16.8, 22.4, 20.6, 23.9, 22. , 11.9])
+voter = VotingRegressor(estimators=[('lr', None),
+                            ('rf',
+                             RandomForest...e=0,
+                                                   warm_start=False))],
+                n_jobs=None, weights=None)
+
+    @pytest.mark.filterwarnings('ignore: Default solver will be changed')  # 0.22
+    @pytest.mark.filterwarnings('ignore: Default multi_class will')  # 0.22
+    @pytest.mark.parametrize(
+        "X, y, voter",
+        [(X, y, VotingClassifier(
+            [('lr', LogisticRegression()),
+             ('rf', RandomForestClassifier(n_estimators=5))])),
+         (X_r, y_r, VotingRegressor(
+             [('lr', LinearRegression()),
+              ('rf', RandomForestRegressor(n_estimators=5))]))]
+    )
+    def test_none_estimator_with_weights(X, y, voter):
+        # check that an estimator can be set to None and passing some weight
+        # regression test for
+        # https://github.com/scikit-learn/scikit-learn/issues/13777
+        voter.fit(X, y, sample_weight=np.ones(y.shape))
+        voter.set_params(lr=None)
+>       voter.fit(X, y, sample_weight=np.ones(y.shape))
+
+sklearn/ensemble/tests/test_voting.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sklearn/ensemble/voting.py:451: in fit
+    return super().fit(X, y, sample_weight)
+sklearn/ensemble/voting.py:81: in fit
+    if not has_fit_parameter(step, 'sample_weight'):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+estimator = None, parameter = 'sample_weight'
+
+    def has_fit_parameter(estimator, parameter):
+        """Checks whether the estimator's fit method supports the given parameter.
+    
+        Parameters
+        ----------
+        estimator : object
+            An estimator to inspect.
+    
+        parameter : str
+            The searched parameter.
+    
+        Returns
+        -------
+        is_parameter: bool
+            Whether the parameter was found to be a named parameter of the
+            estimator's fit method.
+    
+        Examples
+        --------
+        >>> from sklearn.svm import SVC
+        >>> has_fit_parameter(SVC(), "sample_weight")
+        True
+    
+        """
+>       return parameter in signature(estimator.fit).parameters
+E       AttributeError: 'NoneType' object has no attribute 'fit'
+
+sklearn/utils/validation.py:808: AttributeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/ensemble/tests/test_voting.py::test_estimator_init
+PASSED sklearn/ensemble/tests/test_voting.py::test_predictproba_hardvoting
+PASSED sklearn/ensemble/tests/test_voting.py::test_notfitted
+PASSED sklearn/ensemble/tests/test_voting.py::test_majority_label_iris
+PASSED sklearn/ensemble/tests/test_voting.py::test_tie_situation
+PASSED sklearn/ensemble/tests/test_voting.py::test_weights_iris
+PASSED sklearn/ensemble/tests/test_voting.py::test_weights_regressor
+PASSED sklearn/ensemble/tests/test_voting.py::test_predict_on_toy_problem
+PASSED sklearn/ensemble/tests/test_voting.py::test_predict_proba_on_toy_problem
+PASSED sklearn/ensemble/tests/test_voting.py::test_multilabel
+PASSED sklearn/ensemble/tests/test_voting.py::test_gridsearch
+PASSED sklearn/ensemble/tests/test_voting.py::test_parallel_fit
+PASSED sklearn/ensemble/tests/test_voting.py::test_sample_weight
+PASSED sklearn/ensemble/tests/test_voting.py::test_sample_weight_kwargs
+PASSED sklearn/ensemble/tests/test_voting.py::test_set_params
+PASSED sklearn/ensemble/tests/test_voting.py::test_set_estimator_none
+PASSED sklearn/ensemble/tests/test_voting.py::test_estimator_weights_format
+PASSED sklearn/ensemble/tests/test_voting.py::test_transform
+FAILED sklearn/ensemble/tests/test_voting.py::test_none_estimator_with_weights[X0-y0-voter0]
+FAILED sklearn/ensemble/tests/test_voting.py::test_none_estimator_with_weights[X1-y1-voter1]
+=================== 2 failed, 18 passed, 1 warning in 1.62s ====================

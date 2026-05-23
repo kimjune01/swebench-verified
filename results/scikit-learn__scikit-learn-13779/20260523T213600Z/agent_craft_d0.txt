@@ -1,0 +1,3 @@
+**RESOLVED** — The fix successfully passes all tests. The single-line change adds a None check before calling `has_fit_parameter`, allowing VotingClassifier and VotingRegressor to handle None estimators when `sample_weight` is provided.
+
+---STDERR---
