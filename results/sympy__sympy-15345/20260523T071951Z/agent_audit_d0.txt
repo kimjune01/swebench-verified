@@ -1,0 +1,20 @@
+# Audit: sympy__sympy-15345
+
+## FAIL_TO_PASS
+- test_Function: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The craft patch successfully fixed `test_Function`. The test was failing on base because `Max` and `Min` were being printed with parentheses `()` instead of square brackets `[]`. The fix rebinds `_print_Expr = _print_Function` in `MCodePrinter`, ensuring that `Max`/`Min` (which inherit from `Expr`) use the Mathematica-style square bracket formatting.
+
+All 10 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

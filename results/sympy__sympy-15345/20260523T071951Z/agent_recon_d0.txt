@@ -1,0 +1,38 @@
+# Recon: sympy__sympy-15345
+
+## Failure summary
+The test `test_Function` in `sympy/printing/tests/test_mathematica.py` checks that `Max` and `Min` functions are formatted correctly for Mathematica code. The test expects `mcode(Max(x,y,z)*Min(y,z))` to return `"Max[x, y, z]*Min[y, z]"` (with square brackets), but it actually returns `"Max(x, y, z)*Min(y, z)"` (with parentheses). Mathematica requires square brackets for function calls, so the parentheses syntax is invalid.
+
+## Suspect set
+- `sympy/printing/mathematica.py` lines 38-118: `MCodePrinter` class - missing `_print_LatticeOp` method
+- `sympy/printing/str.py` line 222-224: `_print_LatticeOp` method that formats with parentheses (inherited by `MCodePrinter`)
+
+## Root cause
+`Max` and `Min` inherit from `LatticeOp` (via `MinMaxBase`). When the Mathematica printer encounters these objects, it searches for a matching print method in the MRO. The MRO for `Max` is: Max → MinMaxBase → Expr → **LatticeOp** → AssocOp → Application → Basic.
+
+The printer finds `_print_LatticeOp` (from the parent `StrPrinter` class) before it would find any method for `Application`. This inherited method formats the output as `expr.func.__name__ + "(%s)"` with parentheses, which is correct for Python string representation but incorrect for Mathematica code (which requires square brackets).
+
+In contrast, regular functions like `sin` have MRO: sin → TrigonometricFunction → **Function** → Application, so they use `_print_Function` which correctly formats with square brackets.
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `sympy/printing/str.py:222-224` — `_print_LatticeOp` uses parentheses: `return expr.func.__name__ + "(%s)" % ", ".join(self._print(arg) for arg in args)`
+- `sympy/printing/mathematica.py` — no `_print_LatticeOp` override exists
+- Verified MRO and method dispatch through Python introspection
+- Confirmed actual output matches predicted behavior
+
+## Edit sites
+- `sympy/printing/mathematica.py` lines 96-103: Add `_print_LatticeOp` method after `_print_Function`. The method should format using square brackets and use `self.stringify(expr.args, ", ")` to properly print arguments, matching the pattern used in `_print_Function`:
+  ```python
+  def _print_LatticeOp(self, expr):
+      return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
+  ```
+
+## Rejected hypotheses
+None — the root cause was immediately clear from MRO analysis and confirmed by tracing the code path.
+
+## Open questions
+None — the fix is straightforward and well-defined.
+
+---STDERR---

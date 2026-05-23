@@ -1,0 +1,16 @@
+## RESOLVED
+
+The fix required rebinding `_print_Expr` to point to MCodePrinter's overridden `_print_Function` method. 
+
+**Root cause correction**: The recon diagnosis was incomplete. While Max/Min do inherit from LatticeOp, the printer finds `_print_Expr` (from CodePrinter, aliased to CodePrinter's old `_print_Function` with parentheses) before checking `_print_LatticeOp` due to MRO ordering: `Max → MinMaxBase → **Expr** → LatticeOp → ...`
+
+**Fix**: Added one line after `_print_Function`:
+```python
+_print_Expr = _print_Function
+```
+
+This rebinds the inherited alias to MCodePrinter's override that uses square brackets.
+
+**Gate result**: ✅ All 10 tests pass, including `test_Function` which now correctly outputs `Max[x, y, z]*Min[y, z]`
+
+---STDERR---
