@@ -1,0 +1,24 @@
+# Audit: matplotlib__matplotlib-26113
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_axes.py::test_hexbin_mincnt_behavior_upon_C_parameter[png]`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+**None.** All 813 tests passed with no failures detected.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None.** The 66 skipped tests are due to missing dependencies (Inkscape for SVG conversion), consistent with baseline.
+
+## Summary
+The craft patch successfully resolved the issue. The fix changed two lines in `lib/matplotlib/axes/_axes.py`:
+1. Default mincnt for C!=None path: `0` → `1` (matching documented behavior)
+2. Comparison operator: `len(acc) > mincnt` → `len(acc) >= mincnt` (aligning with C=None path)
+
+This ensures consistent behavior: both code paths now keep bins with count >= mincnt, fixing the test failure where mincnt=1 with C parameter showed only 1 hexbin instead of 3.
+
+**Full gate result:** 813 passed, 66 skipped, 0 failed
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

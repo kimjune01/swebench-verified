@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The hexbin mincnt inconsistency is fixed. The issue was an off-by-one error in the C!=None code path that used `len(acc) > mincnt` instead of `len(acc) >= mincnt`, combined with a default value conversion to 0 instead of 1.
+
+**Fix applied:**
+- Line 5015: Changed `mincnt = 0` to `mincnt = 1` (preserves default behavior of filtering to bins with at least 1 point)
+- Line 5017: Changed `len(acc) > mincnt` to `len(acc) >= mincnt` (makes mincnt semantics consistent with C=None path)
+
+**Result:**
+- FAIL_TO_PASS test `test_hexbin_mincnt_behavior_upon_C_parameter[png]` now passes
+- All 813 tests in test_axes.py pass
+- Both code paths now correctly interpret mincnt=1 as "bins with at least 1 point"
+
+---STDERR---
