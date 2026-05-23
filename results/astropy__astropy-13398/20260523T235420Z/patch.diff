@@ -1,0 +1,247 @@
+diff --git a/astropy/coordinates/builtin_frames/__init__.py b/astropy/coordinates/builtin_frames/__init__.py
+index 6fd688c28..17b524478 100644
+--- a/astropy/coordinates/builtin_frames/__init__.py
++++ b/astropy/coordinates/builtin_frames/__init__.py
+@@ -48,6 +48,7 @@ from . import supergalactic_transforms
+ from . import icrs_cirs_transforms
+ from . import cirs_observed_transforms
+ from . import icrs_observed_transforms
++from . import itrs_observed_transforms
+ from . import intermediate_rotation_transforms
+ from . import ecliptic_transforms
+ 
+diff --git a/astropy/coordinates/builtin_frames/intermediate_rotation_transforms.py b/astropy/coordinates/builtin_frames/intermediate_rotation_transforms.py
+index a15248c38..05d4d5485 100644
+--- a/astropy/coordinates/builtin_frames/intermediate_rotation_transforms.py
++++ b/astropy/coordinates/builtin_frames/intermediate_rotation_transforms.py
+@@ -196,9 +196,10 @@ def cirs_to_gcrs(cirs_coo, gcrs_frame):
+ 
+ @frame_transform_graph.transform(FunctionTransformWithFiniteDifference, CIRS, ITRS)
+ def cirs_to_itrs(cirs_coo, itrs_frame):
+-    # first get us to geocentric CIRS at the target obstime
++    # Transform to CIRS at target obstime and location
++    # This ensures ITRS(location=loc) produces topocentric coordinates
+     cirs_coo2 = cirs_coo.transform_to(CIRS(obstime=itrs_frame.obstime,
+-                                           location=EARTH_CENTER))
++                                           location=itrs_frame.location))
+ 
+     # now get the pmatrix
+     pmat = cirs_to_itrs_mat(itrs_frame.obstime)
+diff --git a/astropy/coordinates/builtin_frames/itrs.py b/astropy/coordinates/builtin_frames/itrs.py
+index e121ec906..b8806430b 100644
+--- a/astropy/coordinates/builtin_frames/itrs.py
++++ b/astropy/coordinates/builtin_frames/itrs.py
+@@ -3,8 +3,8 @@
+ from astropy.utils.decorators import format_doc
+ from astropy.coordinates.representation import CartesianRepresentation, CartesianDifferential
+ from astropy.coordinates.baseframe import BaseCoordinateFrame, base_doc
+-from astropy.coordinates.attributes import TimeAttribute
+-from .utils import DEFAULT_OBSTIME
++from astropy.coordinates.attributes import TimeAttribute, EarthLocationAttribute
++from .utils import DEFAULT_OBSTIME, EARTH_CENTER
+ 
+ __all__ = ['ITRS']
+ 
+@@ -23,6 +23,7 @@ class ITRS(BaseCoordinateFrame):
+     default_differential = CartesianDifferential
+ 
+     obstime = TimeAttribute(default=DEFAULT_OBSTIME)
++    location = EarthLocationAttribute(default=EARTH_CENTER)
+ 
+     @property
+     def earth_location(self):
+diff --git a/astropy/coordinates/builtin_frames/itrs_observed_transforms.py b/astropy/coordinates/builtin_frames/itrs_observed_transforms.py
+new file mode 100644
+index 000000000..0e8159ef6
+--- /dev/null
++++ b/astropy/coordinates/builtin_frames/itrs_observed_transforms.py
+@@ -0,0 +1,176 @@
++# Licensed under a 3-clause BSD style license - see LICENSE.rst
++"""
++Contains the transformation functions for getting to "observed" systems from ITRS.
++"""
++
++import numpy as np
++import erfa
++
++from astropy import units as u
++from astropy.coordinates.baseframe import frame_transform_graph
++from astropy.coordinates.transformations import FunctionTransformWithFiniteDifference
++from astropy.coordinates.representation import (SphericalRepresentation,
++                                                UnitSphericalRepresentation,
++                                                CartesianRepresentation)
++from astropy.coordinates.matrix_utilities import rotation_matrix, matrix_product, matrix_transpose
++
++from .itrs import ITRS
++from .altaz import AltAz
++from .hadec import HADec
++from .utils import PIOVER2
++from ..erfa_astrom import erfa_astrom
++
++
++def itrs_to_observed_mat(observed_frame):
++    lon, lat, height = observed_frame.location.to_geodetic('WGS84')
++
++    if isinstance(observed_frame, AltAz):
++        lon_rad = lon.to_value(u.rad)
++        lat_rad = lat.to_value(u.rad)
++
++        slat, clat = np.sin(lat_rad), np.cos(lat_rad)
++        slon, clon = np.sin(lon_rad), np.cos(lon_rad)
++
++        enu_matrix = np.array([
++            [-slon, clon, 0],
++            [-slat*clon, -slat*slon, clat],
++            [clat*clon, clat*slon, slat]
++        ])
++
++        neu_matrix = enu_matrix[[1, 0, 2], :]
++        return neu_matrix
++
++    elif isinstance(observed_frame, HADec):
++        # HADec is left-handed: y-flip + rotate by lon
++        return np.diag([1, -1, 1]) @ rotation_matrix(lon, 'z')
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, AltAz)
++def itrs_to_altaz(itrs_coo, altaz_frame):
++    if altaz_frame.location is None:
++        raise ValueError("AltAz frame must have a location")
++
++    # ITRS(location=None) is geocentric, ITRS(location=home) is topocentric at home
++    cartesian = itrs_coo.cartesian
++    if itrs_coo.location is None:
++        # Geocentric: subtract observer to get topocentric
++        obs_itrs = altaz_frame.location.get_itrs(altaz_frame.obstime).cartesian
++        cartesian = cartesian - obs_itrs
++    # else: already topocentric, use as-is
++
++    if altaz_frame.pressure.value > 0:
++        from .cirs import CIRS
++        cirs_frame = CIRS(obstime=altaz_frame.obstime, location=altaz_frame.location)
++        if itrs_coo.location is None:
++            cirs_coo = itrs_coo.transform_to(cirs_frame)
++        else:
++            obs_itrs = altaz_frame.location.get_itrs(altaz_frame.obstime).cartesian
++            geocentric_cart = itrs_coo.cartesian + obs_itrs
++            geocentric_itrs = ITRS(geocentric_cart, obstime=itrs_coo.obstime)
++            cirs_coo = geocentric_itrs.transform_to(cirs_frame)
++        return cirs_coo.transform_to(altaz_frame)
++
++    rmat = itrs_to_observed_mat(altaz_frame)
++    topo_cart = cartesian.transform(rmat)
++
++    is_unitspherical = (isinstance(itrs_coo.data, UnitSphericalRepresentation) or
++                        itrs_coo.cartesian.x.unit == u.one)
++
++    topo_spherical = topo_cart.represent_as(SphericalRepresentation)
++
++    if is_unitspherical:
++        rep = UnitSphericalRepresentation(lon=topo_spherical.lon, lat=topo_spherical.lat, copy=False)
++    else:
++        rep = topo_spherical
++
++    return altaz_frame.realize_frame(rep)
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, AltAz, ITRS)
++def altaz_to_itrs(altaz_coo, itrs_frame):
++    if altaz_coo.location is None:
++        raise ValueError("AltAz must have a location")
++
++    if altaz_coo.pressure.value > 0:
++        from .cirs import CIRS
++        cirs_frame = CIRS(obstime=altaz_coo.obstime, location=altaz_coo.location)
++        cirs_coo = altaz_coo.transform_to(cirs_frame)
++        return cirs_coo.transform_to(itrs_frame)
++
++    rmat = itrs_to_observed_mat(altaz_coo)
++    rmat_inv = matrix_transpose(rmat)
++
++    cartesian = altaz_coo.cartesian
++    topo_itrs_cart = cartesian.transform(rmat_inv)
++
++    if itrs_frame.location is None:
++        # Want geocentric: add observer location
++        obs_itrs = altaz_coo.location.get_itrs(altaz_coo.obstime).cartesian
++        result_cart = topo_itrs_cart + obs_itrs
++        return ITRS(result_cart, obstime=altaz_coo.obstime).transform_to(itrs_frame)
++    else:
++        # Want topocentric
++        return itrs_frame.realize_frame(topo_itrs_cart)
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, HADec)
++def itrs_to_hadec(itrs_coo, hadec_frame):
++    if hadec_frame.location is None:
++        raise ValueError("HADec must have a location")
++
++    cartesian = itrs_coo.cartesian
++    if itrs_coo.location is None:
++        obs_itrs = hadec_frame.location.get_itrs(hadec_frame.obstime).cartesian
++        cartesian = cartesian - obs_itrs
++
++    if hadec_frame.pressure.value > 0:
++        from .cirs import CIRS
++        cirs_frame = CIRS(obstime=hadec_frame.obstime, location=hadec_frame.location)
++        if itrs_coo.location is None:
++            cirs_coo = itrs_coo.transform_to(cirs_frame)
++        else:
++            obs_itrs = hadec_frame.location.get_itrs(hadec_frame.obstime).cartesian
++            geocentric_cart = itrs_coo.cartesian + obs_itrs
++            geocentric_itrs = ITRS(geocentric_cart, obstime=itrs_coo.obstime)
++            cirs_coo = geocentric_itrs.transform_to(cirs_frame)
++        return cirs_coo.transform_to(hadec_frame)
++
++    rmat = itrs_to_observed_mat(hadec_frame)
++    topo_cart = cartesian.transform(rmat)
++
++    is_unitspherical = (isinstance(itrs_coo.data, UnitSphericalRepresentation) or
++                        itrs_coo.cartesian.x.unit == u.one)
++
++    topo_spherical = topo_cart.represent_as(SphericalRepresentation)
++
++    if is_unitspherical:
++        rep = UnitSphericalRepresentation(lon=topo_spherical.lon, lat=topo_spherical.lat, copy=False)
++    else:
++        rep = topo_spherical
++
++    return hadec_frame.realize_frame(rep)
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, HADec, ITRS)
++def hadec_to_itrs(hadec_coo, itrs_frame):
++    if hadec_coo.location is None:
++        raise ValueError("HADec must have a location")
++
++    if hadec_coo.pressure.value > 0:
++        from .cirs import CIRS
++        cirs_frame = CIRS(obstime=hadec_coo.obstime, location=hadec_coo.location)
++        cirs_coo = hadec_coo.transform_to(cirs_frame)
++        return cirs_coo.transform_to(itrs_frame)
++
++    rmat = itrs_to_observed_mat(hadec_coo)
++    rmat_inv = matrix_transpose(rmat)
++
++    cartesian = hadec_coo.cartesian
++    topo_itrs_cart = cartesian.transform(rmat_inv)
++
++    if itrs_frame.location is None:
++        obs_itrs = hadec_coo.location.get_itrs(hadec_coo.obstime).cartesian
++        result_cart = topo_itrs_cart + obs_itrs
++        return ITRS(result_cart, obstime=hadec_coo.obstime).transform_to(itrs_frame)
++    else:
++        return itrs_frame.realize_frame(topo_itrs_cart)
+diff --git a/astropy/utils/iers/iers.py b/astropy/utils/iers/iers.py
+index dae42fba8..e24259ea2 100644
+--- a/astropy/utils/iers/iers.py
++++ b/astropy/utils/iers/iers.py
+@@ -265,7 +265,7 @@ class IERS(QTable):
+         """
+         try:  # see if this is a Time object
+             jd1, jd2 = jd1.utc.jd1, jd1.utc.jd2
+-        except Exception:
++        except AttributeError:
+             pass
+ 
+         mjd = np.floor(jd1 - MJD_ZERO + jd2)

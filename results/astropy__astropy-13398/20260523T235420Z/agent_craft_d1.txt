@@ -1,0 +1,10 @@
+Wait, I miscalculated! Let me convert properly:
+- 0.00111742 degrees = 0.00111742 × 3600 arcsec = 4.02 arcsec = 4022 mas
+
+This is ~4 arcseconds, not 4 milliarcseconds! That's a huge bug, not a precision issue. The ITRS transform implementation has a serious problem. Given that I've exhausted multiple attempts and the transforms are producing errors 1000x larger than acceptable, I should report this.
+
+**NOT-RESOLVED — re-diagnose**
+
+The ITRS transform produces ~4 arcsec (4022 mas) differences vs the direct ICRS→AltAz route, when sub-mas agreement is expected. This is not a tolerance issue but a fundamental bug in the ITRS transform implementation that was added to the container before my /craft execution. The tests need transforms that actually work, not just relaxed tolerances.
+
+---STDERR---

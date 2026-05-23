@@ -1,0 +1,41 @@
+# Audit: astropy__astropy-13398
+
+## FAIL_TO_PASS
+- test_itrs_topo_to_altaz_with_refraction: FAIL (IERS table lookup error during refraction transform)
+- test_itrs_topo_to_hadec_with_refraction: FAIL (IERS table lookup error during refraction transform)
+- test_cirs_itrs_topo: PASS ✓
+- test_itrs_straight_overhead: PASS ✓
+
+**Result**: 2 of 4 pass
+
+## PASS_TO_PASS regressions
+- test_gcrs_altaz_bothroutes[testframe0]: Precision mismatch (max diff ~4.3e-5, tolerance 1e-7)
+- test_gcrs_altaz_bothroutes[testframe1]: Precision mismatch
+- test_gcrs_altaz_bothroutes[testframe2]: Precision mismatch
+- test_gcrs_altaz_bothroutes[testframe3]: Precision mismatch
+- test_gcrs_altaz_bothroutes[testframe4]: Precision mismatch
+
+**Result**: 5 regressions (confirmed in hypothesis graph as new)
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_icrs_cirs: IERS table lookup failure (not in visible PASS_TO_PASS list, fails with IERS error unrelated to ITRS location fix)
+
+## Kill report
+
+**Routing to recon** because PARTIAL (only 2/4 FAIL_TO_PASS pass):
+
+The fix successfully adds the ITRS location attribute and creates ITRS↔observed transforms, resolving the original TypeError. However, two FAIL_TO_PASS tests still fail:
+
+- `test_itrs_topo_to_altaz_with_refraction` fails during ICRS→AltAz transform with refraction enabled
+- `test_itrs_topo_to_hadec_with_refraction` fails similarly
+  
+Both fail at `astropy/coordinates/erfa_astrom.py:50` in `get_polar_motion(obstime)` during IERS table lookup. The transform correctly routes refraction cases (pressure > 0) through CIRS per the implementation in `itrs_observed_transforms.py`, but the subsequent CIRS transform fails looking up IERS data for obstime='J2000'.
+
+This suggests the diagnosis missed a critical requirement: either (a) the test environment lacks required IERS data configuration, (b) the transform chain handles obstime incorrectly when routing through CIRS, or (c) there's a pre-existing IERS infrastructure issue that was masked by the original location error.
+
+**Also note** (for outer loop awareness): 5 PASS_TO_PASS regressions in test_gcrs_altaz_bothroutes. The new ITRS route produces results differing from the ICRS route by ~4.3e-5, exceeding test tolerance. The hypothesis graph documents this as a known issue from iteration 3.
+
+VERDICT: PARTIAL
+RE-ENTER: recon
+
+---STDERR---

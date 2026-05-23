@@ -1,0 +1,62 @@
+Now let me output the diagnosis to stdout:
+
+# Recon: astropy__astropy-13398
+
+## Failure summary
+The tests fail because the ITRS coordinate frame doesn't accept a `location` keyword argument. All four failing tests attempt to create ITRS instances with a location parameter (e.g., `ITRS(location=loc)` or `ITRS(itrs_repr, obstime=t, location=home)`), which triggers:
+```
+TypeError: Coordinate frame ITRS got unexpected keywords: ['location']
+```
+at `astropy/coordinates/baseframe.py:319`.
+
+The tests are validating a new direct ITRS↔Observed transformation approach that keeps coordinates within the ITRS frame when converting to/from topocentric observed coordinates (AltAz, HADec), rather than routing through CIRS/GCRS with geocentric/topocentric aberration complications.
+
+## Suspect set
+- `astropy/coordinates/builtin_frames/itrs.py` lines 11-25: ITRS class definition — currently only defines `obstime` attribute, missing `location`
+- `astropy/coordinates/builtin_frames/__init__.py` lines 1-50: Module imports — no itrs_observed_transforms import
+- Missing file: `astropy/coordinates/builtin_frames/itrs_observed_transforms.py` — ITRS↔AltAz and ITRS↔HADec transformations don't exist
+
+## Root cause
+The ITRS frame is missing a `location` frame attribute required for topocentric transformations. The problem description explains that the new approach treats ITRS positions as time-invariant and tied to a specific Earth location, avoiding the issue where ITRS→ITRS transforms for different obstimes incorrectly reference positions to the SSB instead of the rotating ITRF.
+
+Currently:
+- ITRS only has `obstime = TimeAttribute(default=DEFAULT_OBSTIME)` (itrs.py:25)
+- CIRS has both `obstime` and `location = EarthLocationAttribute(default=EARTH_CENTER)` (cirs.py:35-36)
+- AltAz has `location = EarthLocationAttribute(default=None)` (altaz.py:101)
+
+Additionally, no transformation functions exist between ITRS and observed frames (AltAz, HADec). Current observed transforms are:
+- CIRS↔AltAz, CIRS↔HADec in cirs_observed_transforms.py
+- ICRS↔AltAz in icrs_observed_transforms.py
+
+The problem description includes partial code showing the intended implementation uses rotation matrices rather than ERFA celestial-to-horizontal transforms, staying entirely within ITRS.
+
+**Confidence: deduction — 98%**
+
+Supporting evidence:
+- `astropy/coordinates/builtin_frames/itrs.py:25` — only `obstime` attribute exists
+- `astropy/coordinates/builtin_frames/cirs.py:36` — CIRS pattern: `location = EarthLocationAttribute(default=EARTH_CENTER)`
+- `astropy/coordinates/baseframe.py:319` — error site: kwargs validation rejects unexpected `location`
+- No matches for `itrs_observed_transforms` in builtin_frames directory
+
+## Edit sites
+
+1. **`astropy/coordinates/builtin_frames/itrs.py` lines 8-25**: Add `location` attribute to ITRS class
+   - Import `EarthLocationAttribute` in the imports section (line 8 area)
+   - Import `EARTH_CENTER` from `.utils` (line 8 area)
+   - Add `location = EarthLocationAttribute(default=EARTH_CENTER)` after line 25 (after obstime attribute)
+
+2. **Create `astropy/coordinates/builtin_frames/itrs_observed_transforms.py`**: Implement ITRS↔AltAz and ITRS↔HADec transformations
+   - Four transform functions: `itrs_to_altaz`, `altaz_to_itrs`, `itrs_to_hadec`, `hadec_to_itrs`
+   - Use rotation matrix approach from problem description (stays within ITRS, doesn't use ERFA atioq/atoiq)
+   - Handle refraction: observed frame with non-zero pressure should apply refraction correction
+   - Extract location lon/lat via `observed_frame.location.to_geodetic('WGS84')`
+   - AltAz: rotation_matrix(π/2 - lat, 'y') @ rotation_matrix(lon, 'z') with x-flip for left-handedness
+   - HADec: rotation_matrix(lon, 'z') with y-flip for left-handedness
+
+3. **`astropy/coordinates/builtin_frames/__init__.py` line ~47**: Import new transform module
+   - Add `from . import itrs_observed_transforms` after existing observed transform imports (after line with `from . import icrs_observed_transforms`)
+
+## Open questions
+- Refraction handling: The problem description says "I have yet to add refraction" but the tests include `test_itrs_topo_to_altaz_with_refraction`. Need to determine if ITRS↔Observed transforms should support refraction via ERFA astrom (like CIRS does) or use a different approach given the matrix-based implementation.
+
+---STDERR---

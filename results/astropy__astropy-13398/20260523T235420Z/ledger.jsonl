@@ -1,0 +1,12 @@
+{"instance": "astropy__astropy-13398", "stage": "start"}
+{"instance": "astropy__astropy-13398", "stage": "recon", "depth": 0, "wall_s": 211, "fixed_point": false}
+{"instance": "astropy__astropy-13398", "stage": "craft", "depth": 0, "wall_s": 1178, "claim": false, "wants_rediagnose": false}
+{"instance": "astropy__astropy-13398", "stage": "audit", "depth": 0, "wall_s": 234, "verdict": "PARTIAL", "route": "recon"}
+{"instance": "astropy__astropy-13398", "stage": "recon", "depth": 1, "wall_s": 544, "fixed_point": false}
+{"instance": "astropy__astropy-13398", "stage": "craft", "depth": 1, "wall_s": 974, "claim": false, "wants_rediagnose": true}
+{"instance": "astropy__astropy-13398", "stage": "recon", "depth": 2, "wall_s": 264, "fixed_point": false}
+{"instance": "astropy__astropy-13398", "stage": "craft", "depth": 2, "wall_s": 758, "claim": false, "wants_rediagnose": true}
+{"instance": "astropy__astropy-13398", "stage": "audit", "depth": 2, "wall_s": 232, "verdict": "PARTIAL", "route": "craft"}
+{"instance": "astropy__astropy-13398", "stage": "halt", "msg": "depth budget exhausted at PARTIAL"}
+{"instance": "astropy__astropy-13398", "stage": "verify_gate", "agent_verdict": "PARTIAL", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_astropy__astropy-13398.txt"}
+{"instance": "astropy__astropy-13398", "stage": "done", "final_verdict": "PARTIAL", "driver_f2p_pass": false, "patch_bytes": 10246, "patch_file": "/tmp/swebench-abduction/r4_patch_astropy__astropy-13398.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_astropy__astropy-13398.md"}

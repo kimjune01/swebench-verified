@@ -1,0 +1,302 @@
+$ pytest -rA astropy/coordinates/tests/test_intermediate_transformations.py
+
+E                  9.118401e+01, 3.136762e+02, 1.761685e+02, 3.866071e+01,...
+E            y: array([1.112452e+02, 3.337387e+02, 1.962306e+02, 5.872257e+01,
+E                  2.812154e+02, 1.437071e+02, 6.199551e+00, 2.286919e+02,
+E                  9.118379e+01, 3.136764e+02, 1.761684e+02, 3.866062e+01,...
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+____________________ test_gcrs_altaz_bothroutes[testframe0] ____________________
+
+testframe = <AltAz Frame (obstime=J2000.000, location=(-4.96525481e-10, -2702958.82600294, 5757709.84149597) m, pressure=0.0 hPa, temperature=0.0 deg_C, relative_humidity=0.0, obswl=1.0 micron)>
+
+    @pytest.mark.parametrize('testframe', totest_frames)
+    def test_gcrs_altaz_bothroutes(testframe):
+        """
+        Repeat of both the moonish and sunish tests above to make sure the two
+        routes through the coordinate graph are consistent with each other
+        """
+        sun = get_sun(testframe.obstime)
+        sunaa_viaicrs = sun.transform_to(ICRS()).transform_to(testframe)
+        sunaa_viaitrs = sun.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+        moon = GCRS(MOONDIST_CART, obstime=testframe.obstime)
+        moonaa_viaicrs = moon.transform_to(ICRS()).transform_to(testframe)
+        moonaa_viaitrs = moon.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+>       assert_allclose(sunaa_viaicrs.cartesian.xyz, sunaa_viaitrs.cartesian.xyz)
+
+astropy/coordinates/tests/test_intermediate_transformations.py:566: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+astropy/tests/helper.py:463: in assert_quantity_allclose
+    np.testing.assert_allclose(*_unquantify_allclose_arguments(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7f4ee03c85e0>, array([-0.14703175,  0.904777  , -0.35598286]), array([-0.14703195,  0.9047769 , -0.35594055]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-07, atol=0', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-07, atol=0
+E           
+E           Mismatched elements: 3 / 3 (100%)
+E           Max absolute difference: 4.23024756e-05
+E           Max relative difference: 0.00011885
+E            x: array([-0.147032,  0.904777, -0.355983])
+E            y: array([-0.147032,  0.904777, -0.355941])
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+____________________ test_gcrs_altaz_bothroutes[testframe1] ____________________
+
+testframe = <AltAz Frame (obstime=J2000.000, location=(-2615213.42010018, 4529682.51624948, -3637866.9093781) m, pressure=0.0 hPa, temperature=0.0 deg_C, relative_humidity=0.0, obswl=1.0 micron)>
+
+    @pytest.mark.parametrize('testframe', totest_frames)
+    def test_gcrs_altaz_bothroutes(testframe):
+        """
+        Repeat of both the moonish and sunish tests above to make sure the two
+        routes through the coordinate graph are consistent with each other
+        """
+        sun = get_sun(testframe.obstime)
+        sunaa_viaicrs = sun.transform_to(ICRS()).transform_to(testframe)
+        sunaa_viaitrs = sun.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+        moon = GCRS(MOONDIST_CART, obstime=testframe.obstime)
+        moonaa_viaicrs = moon.transform_to(ICRS()).transform_to(testframe)
+        moonaa_viaitrs = moon.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+>       assert_allclose(sunaa_viaicrs.cartesian.xyz, sunaa_viaitrs.cartesian.xyz)
+
+astropy/coordinates/tests/test_intermediate_transformations.py:566: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+astropy/tests/helper.py:463: in assert_quantity_allclose
+    np.testing.assert_allclose(*_unquantify_allclose_arguments(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7f4ee03c8700>, array([-0.56610323, -0.79214473, -0.13776448]), array([-0.56610252, -0.79214517, -0.13772175]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-07, atol=0', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-07, atol=0
+E           
+E           Mismatched elements: 3 / 3 (100%)
+E           Max absolute difference: 4.27293953e-05
+E           Max relative difference: 0.00031026
+E            x: array([-0.566103, -0.792145, -0.137764])
+E            y: array([-0.566103, -0.792145, -0.137722])
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+____________________ test_gcrs_altaz_bothroutes[testframe2] ____________________
+
+testframe = <AltAz Frame (obstime=2014-01-01 00:00:00.000, location=(-4.96525481e-10, -2702958.82600294, 5757709.84149597) m, pressure=0.0 hPa, temperature=0.0 deg_C, relative_humidity=0.0, obswl=1.0 micron)>
+
+    @pytest.mark.parametrize('testframe', totest_frames)
+    def test_gcrs_altaz_bothroutes(testframe):
+        """
+        Repeat of both the moonish and sunish tests above to make sure the two
+        routes through the coordinate graph are consistent with each other
+        """
+        sun = get_sun(testframe.obstime)
+        sunaa_viaicrs = sun.transform_to(ICRS()).transform_to(testframe)
+        sunaa_viaitrs = sun.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+        moon = GCRS(MOONDIST_CART, obstime=testframe.obstime)
+        moonaa_viaicrs = moon.transform_to(ICRS()).transform_to(testframe)
+        moonaa_viaitrs = moon.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+>       assert_allclose(sunaa_viaicrs.cartesian.xyz, sunaa_viaitrs.cartesian.xyz)
+
+astropy/coordinates/tests/test_intermediate_transformations.py:566: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+astropy/tests/helper.py:463: in assert_quantity_allclose
+    np.testing.assert_allclose(*_unquantify_allclose_arguments(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7f4edfe04280>, array([-0.17436813, -0.90494699, -0.34305628]), array([-0.17436814, -0.90494709, -0.34301355]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-07, atol=0', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-07, atol=0
+E           
+E           Mismatched elements: 2 / 3 (66.7%)
+E           Max absolute difference: 4.27253684e-05
+E           Max relative difference: 0.00012456
+E            x: array([-0.174368, -0.904947, -0.343056])
+E            y: array([-0.174368, -0.904947, -0.343014])
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+____________________ test_gcrs_altaz_bothroutes[testframe3] ____________________
+
+testframe = <AltAz Frame (obstime=2014-08-01 08:00:00.000, location=(-4.96525481e-10, -2702958.82600294, 5757709.84149597) m, pressure=0.0 hPa, temperature=0.0 deg_C, relative_humidity=0.0, obswl=1.0 micron)>
+
+    @pytest.mark.parametrize('testframe', totest_frames)
+    def test_gcrs_altaz_bothroutes(testframe):
+        """
+        Repeat of both the moonish and sunish tests above to make sure the two
+        routes through the coordinate graph are consistent with each other
+        """
+        sun = get_sun(testframe.obstime)
+        sunaa_viaicrs = sun.transform_to(ICRS()).transform_to(testframe)
+        sunaa_viaitrs = sun.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+        moon = GCRS(MOONDIST_CART, obstime=testframe.obstime)
+        moonaa_viaicrs = moon.transform_to(ICRS()).transform_to(testframe)
+        moonaa_viaitrs = moon.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+>       assert_allclose(sunaa_viaicrs.cartesian.xyz, sunaa_viaitrs.cartesian.xyz)
+
+astropy/coordinates/tests/test_intermediate_transformations.py:566: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+astropy/tests/helper.py:463: in assert_quantity_allclose
+    np.testing.assert_allclose(*_unquantify_allclose_arguments(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7f4edfe044c0>, array([ 0.90205504,  0.45925393, -0.07461138]), array([ 0.9020552 ,  0.4592534 , -0.07456888]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-07, atol=0', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-07, atol=0
+E           
+E           Mismatched elements: 3 / 3 (100%)
+E           Max absolute difference: 4.24955928e-05
+E           Max relative difference: 0.00056988
+E            x: array([ 0.902055,  0.459254, -0.074611])
+E            y: array([ 0.902055,  0.459253, -0.074569])
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+____________________ test_gcrs_altaz_bothroutes[testframe4] ____________________
+
+testframe = <AltAz Frame (obstime=2014-01-01 00:00:00.000, location=(-2615213.42010018, 4529682.51624948, -3637866.9093781) m, pressure=0.0 hPa, temperature=0.0 deg_C, relative_humidity=0.0, obswl=1.0 micron)>
+
+    @pytest.mark.parametrize('testframe', totest_frames)
+    def test_gcrs_altaz_bothroutes(testframe):
+        """
+        Repeat of both the moonish and sunish tests above to make sure the two
+        routes through the coordinate graph are consistent with each other
+        """
+        sun = get_sun(testframe.obstime)
+        sunaa_viaicrs = sun.transform_to(ICRS()).transform_to(testframe)
+        sunaa_viaitrs = sun.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+        moon = GCRS(MOONDIST_CART, obstime=testframe.obstime)
+        moonaa_viaicrs = moon.transform_to(ICRS()).transform_to(testframe)
+        moonaa_viaitrs = moon.transform_to(ITRS(obstime=testframe.obstime)).transform_to(testframe)
+    
+>       assert_allclose(sunaa_viaicrs.cartesian.xyz, sunaa_viaitrs.cartesian.xyz)
+
+astropy/coordinates/tests/test_intermediate_transformations.py:566: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+astropy/tests/helper.py:463: in assert_quantity_allclose
+    np.testing.assert_allclose(*_unquantify_allclose_arguments(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7f4edfe04430>, array([-0.06198176,  0.79024132,  0.58190992]), array([-0.06198169,  0.79024088,  0.58195311]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-07, atol=0', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-07, atol=0
+E           
+E           Mismatched elements: 3 / 3 (100%)
+E           Max absolute difference: 4.31831491e-05
+E           Max relative difference: 7.42038296e-05
+E            x: array([-0.061982,  0.790241,  0.58191 ])
+E            y: array([-0.061982,  0.790241,  0.581953])
+
+/opt/miniconda3/envs/testbed/lib/python3.9/contextlib.py:79: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs[icoo0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs[icoo1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs_dist_diff[gframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs_dist_diff[gframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_to_altaz
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_to_hadec
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_itrs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_itrs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_cirs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_hadec
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessed_geocentric
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessed_geocentric_different_obstime
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_self_transform_closeby
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_teme_itrf
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessedgeocentric_loopback
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_teme_loopback
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_tete_transforms
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_straight_overhead
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_straight_overhead
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_aa_high_precision_nodata
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_get_gcrs_posvel
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_tete_quick
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_cirs_quick
+SKIPPED [1] ../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/pytest_remotedata/plugin.py:85: need --remote-data option to run
+SKIPPED [1] astropy/coordinates/tests/test_intermediate_transformations.py:819: requires jplephem
+SKIPPED [1] astropy/coordinates/tests/test_intermediate_transformations.py:982: requires jplephem >= 2.15
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_cirs
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_topo_to_altaz_with_refraction
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_topo_to_hadec_with_refraction
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_itrs_topo
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe0]
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe1]
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe2]
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe3]
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe4]
+=================== 9 failed, 64 passed, 3 skipped in 1.29s ====================

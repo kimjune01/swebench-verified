@@ -1,0 +1,31 @@
+# Audit: astropy__astropy-13398
+
+## FAIL_TO_PASS
+- test_itrs_topo_to_altaz_with_refraction: FAIL — Transformation accuracy error: 323 mas (tolerance: 5 mas)
+- test_itrs_topo_to_hadec_with_refraction: FAIL — Transformation accuracy error: 26 mas (tolerance: 5 mas)  
+- test_cirs_itrs_topo: FAIL — Leap-second exception caused by iers.py change
+- test_itrs_straight_overhead: PASS ✓
+
+## PASS_TO_PASS regressions
+- test_icrs_cirs: Leap-second exception at ICRS→CIRS transform (iers.py change)
+- test_gcrs_altaz_bothroutes[testframe0]: Leap-second exception at ICRS→AltAz transform (iers.py change)
+- test_gcrs_altaz_bothroutes[testframe1]: Leap-second exception (iers.py change)
+- test_gcrs_altaz_bothroutes[testframe2]: Leap-second exception (iers.py change)
+- test_gcrs_altaz_bothroutes[testframe3]: Leap-second exception (iers.py change)
+- test_gcrs_altaz_bothroutes[testframe4]: Leap-second exception (iers.py change)
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+
+**Primary issue**: The `astropy/utils/iers/iers.py` change at line 268 (`except Exception:` → `except AttributeError:`) is causing regressions. This change causes leap-second warnings to propagate as exceptions in 6 tests that don't have `@pytest.mark.filterwarnings`. These tests were passing on base (fail-on-base showed TypeError about ITRS location, not leap-second errors). The iers.py change is too broad and must be removed or fixed differently.
+
+**Secondary issue**: The 2 FAIL_TO_PASS tests with filterwarnings (test_itrs_topo_to_altaz_with_refraction, test_itrs_topo_to_hadec_with_refraction) run past the leap-second warnings but fail with large transformation accuracy errors (323 mas and 26 mas vs 5 mas tolerance). The `intermediate_rotation_transforms.py` change (using `itrs_frame.location` instead of `EARTH_CENTER` in cirs_to_itrs) appears to produce incorrect coordinates for the refraction transform path.
+
+**Narrow craft directive**: Remove the iers.py exception handling change. It's causing 6 regressions for minimal benefit. Focus on fixing the transformation accuracy issues in the ITRS↔AltAz/HADec paths without modifying iers.py.
+
+VERDICT: PARTIAL
+RE-ENTER: craft
+
+---STDERR---

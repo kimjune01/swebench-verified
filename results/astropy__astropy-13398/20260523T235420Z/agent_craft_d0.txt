@@ -1,0 +1,16 @@
+Due to time and iteration constraints (4 gate runs, 2/4 FAIL_TO_PASS passing, significant regressions), I've made progress but the implementation has issues with geocentric/topocentric detection and introduces regressions.
+
+**SUMMARY:**
+- ✅ Added `location` attribute to ITRS
+- ✅ Created ITRS↔Observed transforms 
+- ✅ 2/4 FAIL_TO_PASS now passing (test_cirs_itrs_topo, test_itrs_straight_overhead)
+- ❌ 2/4 FAIL_TO_PASS still failing (refraction tests)
+- ❌ 6 regressions introduced (test_gcrs_altaz_bothroutes, test_icrs_cirs)
+
+**Root cause of remaining issues:** ITRS default location is `EARTH_CENTER` (not `None`), so geocentric checks fail, causing transform path inconsistencies.
+
+Given iteration budget and complexity, reporting status:
+
+NOT-RESOLVED — Partial fix with regressions. The diagnosis was correct (missing location attribute + transforms), but implementation needs refinement for geocentric/topocentric handling and refraction delegation.
+
+---STDERR---

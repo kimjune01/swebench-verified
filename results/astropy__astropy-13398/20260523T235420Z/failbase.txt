@@ -1,0 +1,122 @@
+$ pytest -rA astropy/coordinates/tests/test_intermediate_transformations.py
+
+copy = True, representation_type = None, differential_type = None
+args = (<CartesianRepresentation (x, y, z) in km
+    (6.15567707, -0.10744774, 7.88010754)>,)
+kwargs = {'location': <EarthLocation (3934.36115314, -68.67452938, 5002.80334548) km>}
+values = {'obstime': <Time object: scale='tt' format='jyear_str' value=J2010.000>}
+fnm = 'obstime'
+fdefault = <Time object: scale='tt' format='jyear_str' value=J2000.000>
+value = <Time object: scale='tt' format='jyear_str' value=J2010.000>
+
+    def __init__(self, *args, copy=True, representation_type=None,
+                 differential_type=None, **kwargs):
+        self._attr_names_with_defaults = []
+    
+        self._representation = self._infer_representation(representation_type, differential_type)
+        self._data = self._infer_data(args, copy, kwargs)  # possibly None.
+    
+        # Set frame attributes, if any
+    
+        values = {}
+        for fnm, fdefault in self.get_frame_attr_names().items():
+            # Read-only frame attributes are defined as FrameAttribute
+            # descriptors which are not settable, so set 'real' attributes as
+            # the name prefaced with an underscore.
+    
+            if fnm in kwargs:
+                value = kwargs.pop(fnm)
+                setattr(self, '_' + fnm, value)
+                # Validate attribute by getting it. If the instance has data,
+                # this also checks its shape is OK. If not, we do it below.
+                values[fnm] = getattr(self, fnm)
+            else:
+                setattr(self, '_' + fnm, fdefault)
+                self._attr_names_with_defaults.append(fnm)
+    
+        if kwargs:
+>           raise TypeError(
+                f'Coordinate frame {self.__class__.__name__} got unexpected '
+                f'keywords: {list(kwargs)}')
+E           TypeError: Coordinate frame ITRS got unexpected keywords: ['location']
+
+astropy/coordinates/baseframe.py:319: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs[icoo0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs[icoo1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs_dist_diff[gframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrs_dist_diff[gframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_to_altaz
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_to_hadec
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_itrs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_itrs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_cirs
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_hadec
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessed_geocentric
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessed_geocentric_different_obstime
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_sunish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_altaz_bothroutes[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_altaz_nodist[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_icrs_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_icrs_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_gcrscirs_sunish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe0]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe1]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe2]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe3]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_altaz_moonish[testframe4]
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_gcrs_self_transform_closeby
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_teme_itrf
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_precessedgeocentric_loopback
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_teme_loopback
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_tete_transforms
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_straight_overhead
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::test_aa_high_precision_nodata
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_get_gcrs_posvel
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_tete_quick
+PASSED astropy/coordinates/tests/test_intermediate_transformations.py::TestGetLocationGCRS::test_cirs_quick
+SKIPPED [1] ../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/pytest_remotedata/plugin.py:85: need --remote-data option to run
+SKIPPED [1] astropy/coordinates/tests/test_intermediate_transformations.py:817: requires jplephem
+SKIPPED [1] astropy/coordinates/tests/test_intermediate_transformations.py:980: requires jplephem >= 2.15
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_icrs_cirs
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_topo_to_altaz_with_refraction
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_topo_to_hadec_with_refraction
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_cirs_itrs_topo
+FAILED astropy/coordinates/tests/test_intermediate_transformations.py::test_itrs_straight_overhead
+=================== 5 failed, 68 passed, 3 skipped in 1.27s ====================

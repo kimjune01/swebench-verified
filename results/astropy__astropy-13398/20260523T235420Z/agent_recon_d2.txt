@@ -1,0 +1,63 @@
+# Recon: astropy__astropy-13398
+
+## Failure summary
+
+The tests verify that transforming ICRS -> ITRS -> AltAz/HADec produces the same results as the direct ICRS -> AltAz/HADec path. Four tests fail because the ITRS -> AltAz/HADec transforms produce errors of ~4 arcseconds instead of sub-milliarcsecond agreement. The root cause is a faulty assumption about what the `location` attribute on an ITRS frame means for the coordinates.
+
+## Suspect set
+
+- `astropy/coordinates/builtin_frames/itrs_observed_transforms.py` lines 48-157: All four transform functions (itrs_to_altaz, altaz_to_itrs, itrs_to_hadec, hadec_to_itrs) contain the same flawed logic
+
+## Root cause
+
+**The transforms assume that ITRS coordinates with a `location` attribute are topocentric, but ITRS coordinates are always geocentric.**
+
+Verified by experiment: transforming ICRS to `ITRS(location=loc)` vs `ITRS()` produces identical coordinates (difference < 10cm). The ICRS->ITRS path goes through CIRS, and `cirs_to_itrs()` explicitly converts to geocentric CIRS before applying the rotation matrix.
+
+The four transform functions have conditional logic that checks `itrs_coo.location` or `itrs_frame.location` to decide whether coordinates are geocentric or topocentric:
+
+**In itrs_to_altaz/hadec** (lines 52-58, 108-113):
+- Only subtracts observer location when `itrs_coo.location is None`
+- Comment says "else: already topocentric, use as-is"
+- **Bug**: Should ALWAYS subtract observer since ITRS is always geocentric
+
+**In altaz/hadec_to_itrs** (lines 94-100, 151-157):
+- When `itrs_frame.location is None`: adds observer to get geocentric (correct)
+- When `itrs_frame.location is not None`: returns topocentric coordinates
+- **Bug**: Should ALWAYS return geocentric since ITRS is always geocentric
+
+**Refraction path also broken** (lines 59-70, 114-125):
+- When `itrs_coo.location is not None` and pressure > 0, it ADDS the observer position before transforming to CIRS
+- This assumes coordinates are topocentric, but they're geocentric
+- Results in wrong position being passed to CIRS transform
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `itrs_observed_transforms.py:52-58` — conditional observer subtraction based on location attribute
+- `itrs_observed_transforms.py:94-100` — conditional observer addition based on location attribute
+- Verified experimentally that ITRS coords are always geocentric regardless of location attribute
+
+## Edit sites
+
+All in `astropy/coordinates/builtin_frames/itrs_observed_transforms.py`:
+
+1. **itrs_to_altaz (lines 48-84)**: Remove `if itrs_coo.location is None` check. Always compute `cartesian = itrs_coo.cartesian - obs_itrs` to get topocentric coordinates before rotation.
+
+2. **altaz_to_itrs (lines 87-100)**: Remove `if itrs_frame.location is None` check. Always add observer location to get geocentric ITRS: `result_cart = topo_itrs_cart + obs_itrs`.
+
+3. **itrs_to_hadec (lines 103-140)**: Same changes as itrs_to_altaz.
+
+4. **hadec_to_itrs (lines 143-157)**: Same changes as altaz_to_itrs.
+
+In all four functions, the refraction path (when `pressure > 0`) also needs fixing: remove the conditional logic that adds/doesn't add the observer based on location attribute. The transform to CIRS should receive geocentric ITRS coordinates.
+
+## Rejected hypotheses
+
+- **H0 (from audit kill)**: "ITRS transform produces ~4 arcsec differences, need to relax tolerances" — Rejected because the error is a bug, not a precision issue. The transforms have incorrect logic for handling the location attribute.
+
+## Open questions
+
+None — the root cause is clear and the fix is straightforward. The location attribute on ITRS is metadata for transform setup, not an indicator of coordinate origin.
+
+---STDERR---

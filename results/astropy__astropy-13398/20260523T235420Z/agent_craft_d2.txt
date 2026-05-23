@@ -1,0 +1,21 @@
+**NOT-RESOLVED — re-diagnose**
+
+After 2 gate iterations, the fix is stuck. The recon diagnosis was partially correct but incomplete:
+
+**What recon got right**:
+- ITRS coords from ICRS->ITRS transform are geocentric even when `location` is set
+- The ~4 arcsec errors are real bugs, not tolerance issues
+
+**What recon missed**:
+- `ITRS(data, location=loc)` semantically means "data is topocentric relative to loc" (per docs and tests)
+- Changing CIRS->ITRS to produce topocentric coords breaks CIRS self-transforms and other paths
+- The transform graph has complex interactions - fixing one path breaks others
+
+**Evidence**:
+- Fixing `cirs_to_itrs` gets 1/4 FAIL_TO_PASS passing (test_itrs_straight_overhead)
+- But breaks 9 other tests (test_icrs_cirs, test_gcrs_altaz_bothroutes variants)
+- The 3 remaining FAIL_TO_PASS tests (refraction paths) still fail
+
+The bug is in the transform graph topology/semantics, not just the individual transform functions. Needs deeper diagnosis of which transform paths should produce geocentric vs topocentric ITRS.
+
+---STDERR---
