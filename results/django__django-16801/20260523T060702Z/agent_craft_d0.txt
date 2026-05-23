@@ -1,0 +1,11 @@
+## RESOLVED
+
+The fix successfully makes the FAIL_TO_PASS test pass on the first gate iteration. The change prevents `ImageField` from connecting the post_init signal handler when no dimension fields are configured, eliminating unnecessary overhead and resolving the 30-40% performance regression.
+
+**Final diff**: One line changed in `django/db/models/fields/files.py:444`
+```python
+-        if not cls._meta.abstract:
++        if not cls._meta.abstract and (self.width_field or self.height_field):
+```
+
+---STDERR---

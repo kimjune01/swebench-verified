@@ -1,0 +1,40 @@
+# Recon: django__django-16801
+
+## Failure summary
+The test `test_post_init_not_connected` checks that models with an ImageField that has no dimension fields (`width_field` or `height_field`) should NOT have a post_init signal handler connected. The test fails because the Person model's ID is found in the post_init signal receivers list, when it shouldn't be there. The error is: `AssertionError: 1033947536 unexpectedly found in [1033947536, ...]`
+
+## Suspect set
+- `django/db/models/fields/files.py` lines 439-445: The `contribute_to_class` method unconditionally connects the post_init signal
+
+## Root cause
+The `ImageField.contribute_to_class` method connects the `update_dimension_fields` signal handler to the model's `post_init` signal for ALL non-abstract models, regardless of whether the ImageField has dimension fields configured. When `width_field` and `height_field` are both `None`, the signal handler becomes a no-op (it returns immediately), but Django still incurs the overhead of calling it on every model instantiation. This causes the 30-40% performance regression mentioned in the issue description.
+
+The code path:
+1. `ImageField.__init__` stores `width_field` and `height_field` attributes (line 403)
+2. `ImageField.contribute_to_class` unconditionally connects the signal if not abstract (line 445)
+3. `ImageField.update_dimension_fields` immediately returns if no dimension fields exist (line 464)
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `django/db/models/fields/files.py:445` — `signals.post_init.connect(self.update_dimension_fields, sender=cls)` is called without checking if dimension fields exist
+- `django/db/models/fields/files.py:464` — `has_dimension_fields = self.width_field or self.height_field` followed by early return shows the handler is a no-op when no dimension fields exist
+- `tests/model_fields/models.py:276-283` — Person model has ImageField with no `width_field` or `height_field` parameters
+
+## Edit sites
+- `django/db/models/fields/files.py` lines 439-445: Modify the condition to only connect the signal when dimension fields are present. Change line 444 from:
+  ```python
+  if not cls._meta.abstract:
+  ```
+  to:
+  ```python
+  if not cls._meta.abstract and (self.width_field or self.height_field):
+  ```
+
+## Rejected hypotheses
+None. The diagnosis is straightforward from reading the code.
+
+## Open questions
+None. The fix is clear and localized.
+
+---STDERR---

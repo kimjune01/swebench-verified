@@ -1,0 +1,34 @@
+# Audit: django__django-16801
+
+## FAIL_TO_PASS
+- test_post_init_not_connected (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_post_init_not_connected): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 46 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the baseline capture showed only test_post_init_not_connected failing on base.
+
+## Summary
+
+The craft patch successfully modified `django/db/models/fields/files.py:444` to add a conditional check `(self.width_field or self.height_field)` before connecting the post_init signal. This prevents unnecessary signal connections for ImageFields without dimension fields.
+
+**Gate output**: All 47 tests pass, including the previously failing test_post_init_not_connected.
+
+**Baseline comparison**: 
+- Before: test_post_init_not_connected FAILED (signal incorrectly connected)
+- After: test_post_init_not_connected PASSES (signal correctly not connected)
+
+**No regressions detected** — all test classes maintain their passing status:
+- ImageFieldDimensionsFirstTests: 7/7 ✓
+- ImageFieldNoDimensionsTests: 7/7 ✓  
+- ImageFieldOneDimensionTests: 7/7 ✓
+- ImageFieldTests: 5/5 ✓
+- ImageFieldTwoDimensionsTests: 7/7 ✓
+- ImageFieldUsingFileTests: 7/7 ✓
+- TwoImageFieldTests: 5/5 ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

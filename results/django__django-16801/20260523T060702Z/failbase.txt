@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 model_fields.test_imagefield
+
+    Creating table model_fields_nullablejsonmodel
+    Creating table model_fields_relatedjsonmodel
+    Creating table model_fields_allfieldsmodel
+    Creating table model_fields_manytomany
+    Creating table model_fields_uuidmodel
+    Creating table model_fields_nullableuuidmodel
+    Creating table model_fields_primarykeyuuidmodel
+    Creating table model_fields_relatedtouuidmodel
+    Creating table model_fields_uuidchild
+    Creating table model_fields_uuidgrandchild
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).
+test_assignment_to_None (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_assignment_to_None)
+Assigning ImageField to None clears dimensions. ... ok
+test_constructor (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_constructor)
+Tests assigning an image field through the model's constructor. ... ok
+test_create (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_create)
+Tests assigning an image in Manager.create(). ... ok
+test_default_value (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_default_value)
+The default value for an ImageField is an instance of ... ok
+test_dimensions (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_field_save_and_delete_methods)
+Tests assignment using the field's save method and deletion using ... ok
+test_image_after_constructor (model_fields.test_imagefield.ImageFieldDimensionsFirstTests.test_image_after_constructor)
+Tests behavior when image is not passed in constructor. ... ok
+test_assignment_to_None (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_assignment_to_None)
+Assigning ImageField to None clears dimensions. ... ok
+test_constructor (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_constructor)
+Tests assigning an image field through the model's constructor. ... ok
+test_create (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_create)
+Tests assigning an image in Manager.create(). ... ok
+test_default_value (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_default_value)
+The default value for an ImageField is an instance of ... ok
+test_dimensions (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_field_save_and_delete_methods)
+Tests assignment using the field's save method and deletion using ... ok
+test_image_after_constructor (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_image_after_constructor)
+Tests behavior when image is not passed in constructor. ... ok
+test_post_init_not_connected (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_post_init_not_connected) ... FAIL
+test_assignment_to_None (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_assignment_to_None)
+Assigning ImageField to None clears dimensions. ... ok
+test_constructor (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_constructor)
+Tests assigning an image field through the model's constructor. ... ok
+test_create (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_create)
+Tests assigning an image in Manager.create(). ... ok
+test_default_value (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_default_value)
+The default value for an ImageField is an instance of ... ok
+test_dimensions (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_field_save_and_delete_methods)
+Tests assignment using the field's save method and deletion using ... ok
+test_image_after_constructor (model_fields.test_imagefield.ImageFieldOneDimensionTests.test_image_after_constructor)
+Tests behavior when image is not passed in constructor. ... ok
+test_defer (model_fields.test_imagefield.ImageFieldTests.test_defer) ... ok
+test_delete_when_missing (model_fields.test_imagefield.ImageFieldTests.test_delete_when_missing)
+Bug #8175: correctly delete an object where the file no longer ... ok
+test_equal_notequal_hash (model_fields.test_imagefield.ImageFieldTests.test_equal_notequal_hash)
+Bug #9786: Ensure '==' and '!=' work correctly. ... ok
+test_instantiate_missing (model_fields.test_imagefield.ImageFieldTests.test_instantiate_missing)
+If the underlying file is unavailable, still create instantiate the ... ok
+test_pickle (model_fields.test_imagefield.ImageFieldTests.test_pickle)
+ImageField can be pickled, unpickled, and that the image of ... ok
+test_size_method (model_fields.test_imagefield.ImageFieldTests.test_size_method)
+Bug #8534: FileField.size should not leave the file open. ... ok
+test_assignment_to_None (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_assignment_to_None)
+Assigning ImageField to None clears dimensions. ... ok
+test_constructor (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_constructor)
+Tests assigning an image field through the model's constructor. ... ok
+test_create (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_create)
+Tests assigning an image in Manager.create(). ... ok
+test_default_value (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_default_value)
+The default value for an ImageField is an instance of ... ok
+test_dimensions (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_field_save_and_delete_methods)
+Tests assignment using the field's save method and deletion using ... ok
+test_image_after_constructor (model_fields.test_imagefield.ImageFieldTwoDimensionsTests.test_image_after_constructor)
+Tests behavior when image is not passed in constructor. ... ok
+test_assignment_to_None (model_fields.test_imagefield.ImageFieldUsingFileTests.test_assignment_to_None)
+Assigning ImageField to None clears dimensions. ... ok
+test_constructor (model_fields.test_imagefield.ImageFieldUsingFileTests.test_constructor)
+Tests assigning an image field through the model's constructor. ... ok
+test_create (model_fields.test_imagefield.ImageFieldUsingFileTests.test_create)
+Tests assigning an image in Manager.create(). ... ok
+test_default_value (model_fields.test_imagefield.ImageFieldUsingFileTests.test_default_value)
+The default value for an ImageField is an instance of ... ok
+test_dimensions (model_fields.test_imagefield.ImageFieldUsingFileTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.ImageFieldUsingFileTests.test_field_save_and_delete_methods)
+Tests assignment using the field's save method and deletion using ... ok
+test_image_after_constructor (model_fields.test_imagefield.ImageFieldUsingFileTests.test_image_after_constructor)
+Tests behavior when image is not passed in constructor. ... ok
+test_assignment (model_fields.test_imagefield.TwoImageFieldTests.test_assignment) ... ok
+test_constructor (model_fields.test_imagefield.TwoImageFieldTests.test_constructor) ... ok
+test_create (model_fields.test_imagefield.TwoImageFieldTests.test_create) ... ok
+test_dimensions (model_fields.test_imagefield.TwoImageFieldTests.test_dimensions)
+Dimensions are updated correctly in various situations. ... ok
+test_field_save_and_delete_methods (model_fields.test_imagefield.TwoImageFieldTests.test_field_save_and_delete_methods) ... ok
+
+======================================================================
+FAIL: test_post_init_not_connected (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_post_init_not_connected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_imagefield.py", line 334, in test_post_init_not_connected
+    self.assertNotIn(
+AssertionError: 235110624 unexpectedly found in [235110624, 235127072, 235140000, 235152928, 235167392, 235167392, 236329712, 236831920, 236845072, 236859760, 236875984, 236875984, 237568560, 237580176, 237593328, 237608016, 237624240, 237624240, 239001120, 239012736, 239025888, 239040576, 239056800, 239056800]
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.040s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
