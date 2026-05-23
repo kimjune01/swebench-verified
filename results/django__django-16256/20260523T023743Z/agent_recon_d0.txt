@@ -1,0 +1,84 @@
+# Recon: django__django-16256
+
+## Failure summary
+
+The tests verify that async methods `acreate()`, `aget_or_create()`, and `aupdate_or_create()` work correctly on related managers (many-to-many, reverse foreign key, and generic relations). The tests fail because:
+
+1. **Many-to-many tests** (`test_acreate`, `test_aget_or_create`, `test_aupdate_or_create`): Objects are created but not added to the M2M relationship - `acount()` returns 0 instead of 1, indicating `self.add()` was never called.
+
+2. **Reverse FK tests** (`test_acreate_reverse`, `test_aget_or_create_reverse`, `test_aupdate_or_create_reverse`): Objects are created but the foreign key field is not set - `acount()` returns 0 instead of 1.
+
+3. **Generic relation tests** (`test_generic_async_acreate`, etc.): `IntegrityError: NOT NULL constraint failed: generic_relations_taggeditem.content_type_id` - the content_type_id and object_id fields required for generic relations are not being set.
+
+## Suspect set
+
+- `django/db/models/fields/related_descriptors.py` lines 788-810: RelatedManager's sync methods (create/get_or_create/update_or_create) that set FK fields
+- `django/db/models/fields/related_descriptors.py` lines 1186-1220: ManyRelatedManager's sync methods that call `self.add()` after creation  
+- `django/contrib/contenttypes/fields.py` lines 741-766: GenericRelatedObjectManager's sync methods that set content_type and object_id fields
+- `django/db/models/query.py` lines 678, 947, 991: QuerySet's async method implementations
+
+## Root cause
+
+Related managers override `create()`, `get_or_create()`, and `update_or_create()` to automatically set relationship-specific fields before/after object creation:
+
+1. **RelatedManager** (reverse FK): Sets `kwargs[self.field.name] = self.instance` to establish the foreign key relationship
+2. **ManyRelatedManager** (M2M): Calls `self.add(new_obj, through_defaults=through_defaults)` after creation to add the through-table entry
+3. **GenericRelatedObjectManager**: Sets `kwargs[self.content_type_field_name]` and `kwargs[self.object_id_field_name]` for generic relations
+
+The async versions (`acreate`, `aget_or_create`, `aupdate_or_create`) are only defined in QuerySet and are NOT overridden in related managers. When called on a related manager instance, these async methods are inherited from QuerySet but fail to invoke the related manager's overridden sync methods that perform the relationship setup. Instead, they call QuerySet's sync methods directly via `sync_to_async`, bypassing the critical relationship field assignment logic.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/fields/related_descriptors.py:788-793` — RelatedManager.create sets FK: `kwargs[self.field.name] = self.instance`
+- `django/db/models/fields/related_descriptors.py:1186-1191` — ManyRelatedManager.create calls add: `self.add(new_obj, through_defaults=through_defaults)`
+- `django/contrib/contenttypes/fields.py:741-746` — GenericRelatedObjectManager.create sets fields: `kwargs[self.content_type_field_name] = self.content_type; kwargs[self.object_id_field_name] = self.pk_val`
+- No async versions defined: `grep "async def acreate\|async def aget_or_create\|async def aupdate_or_create" related_descriptors.py` returns empty
+- `django/db/models/query.py:678-679` — QuerySet.acreate: `return await sync_to_async(self.create)(**kwargs)` - when inherited by related manager, `self.create` should resolve to related manager's version, but doesn't work as expected
+
+## Edit sites
+
+**File 1: django/db/models/fields/related_descriptors.py**
+
+1. **Line ~65** (in imports section): Add `from asgiref.sync import sync_to_async`
+
+2. **After line 794** (after `create.alters_data = True` in RelatedManager within `create_reverse_many_to_one_manager`):
+   - Add async method: `async def acreate(self, **kwargs): return await sync_to_async(self.create)(**kwargs)` plus `acreate.alters_data = True`
+
+3. **After line 802** (after `get_or_create.alters_data = True` in RelatedManager):
+   - Add async method: `async def aget_or_create(self, **kwargs): return await sync_to_async(self.get_or_create)(**kwargs)` plus `aget_or_create.alters_data = True`
+
+4. **After line 810** (after `update_or_create.alters_data = True` in RelatedManager):
+   - Add async method: `async def aupdate_or_create(self, **kwargs): return await sync_to_async(self.update_or_create)(**kwargs)` plus `aupdate_or_create.alters_data = True`
+
+5. **After line 1193** (after `create.alters_data = True` in ManyRelatedManager within `create_forward_many_to_many_manager`):
+   - Add async method with through_defaults parameter: `async def acreate(self, *, through_defaults=None, **kwargs): return await sync_to_async(self.create)(through_defaults=through_defaults, **kwargs)` plus `acreate.alters_data = True`
+
+6. **After line 1206** (after `get_or_create.alters_data = True` in ManyRelatedManager):
+   - Add async method with through_defaults parameter: `async def aget_or_create(self, *, through_defaults=None, **kwargs): return await sync_to_async(self.get_or_create)(through_defaults=through_defaults, **kwargs)` plus `aget_or_create.alters_data = True`
+
+7. **After line 1220** (after `update_or_create.alters_data = True` in ManyRelatedManager):
+   - Add async method with through_defaults parameter: `async def aupdate_or_create(self, *, through_defaults=None, **kwargs): return await sync_to_async(self.update_or_create)(through_defaults=through_defaults, **kwargs)` plus `aupdate_or_create.alters_data = True`
+
+**File 2: django/contrib/contenttypes/fields.py**
+
+8. **Line ~1** (in imports section): Add `from asgiref.sync import sync_to_async`
+
+9. **After line 749** (after `create.alters_data = True` in GenericRelatedObjectManager within `create_generic_related_manager`):
+   - Add async method: `async def acreate(self, **kwargs): return await sync_to_async(self.create)(**kwargs)` plus `acreate.alters_data = True`
+
+10. **After line 757** (after `get_or_create.alters_data = True` in GenericRelatedObjectManager):
+    - Add async method: `async def aget_or_create(self, **kwargs): return await sync_to_async(self.get_or_create)(**kwargs)` plus `aget_or_create.alters_data = True`
+
+11. **After line 766** (after `update_or_create.alters_data = True` in GenericRelatedObjectManager):
+    - Add async method: `async def aupdate_or_create(self, **kwargs): return await sync_to_async(self.update_or_create)(**kwargs)` plus `aupdate_or_create.alters_data = True`
+
+## Rejected hypotheses
+
+None - initial diagnosis.
+
+## Open questions
+
+None - the fix is straightforward: add async wrappers that explicitly call the related manager's overridden sync methods via `sync_to_async`.
+
+---STDERR---

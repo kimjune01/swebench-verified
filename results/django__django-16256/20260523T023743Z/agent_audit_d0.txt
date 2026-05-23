@@ -1,0 +1,28 @@
+# Audit: django__django-16256
+
+## FAIL_TO_PASS
+- ✓ test_acreate (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_acreate_reverse (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_aget_or_create (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_aget_or_create_reverse (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_aupdate_or_create (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_aupdate_or_create_reverse (async.test_async_related_managers.AsyncRelatedManagersOperationTest): PASS
+- ✓ test_generic_async_acreate (generic_relations.tests.GenericRelationsTests): PASS
+- ✓ test_generic_async_aget_or_create (generic_relations.tests.GenericRelationsTests): PASS
+- ✓ test_generic_async_aupdate_or_create (generic_relations.tests.GenericRelationsTests): PASS
+
+**9/9 FAIL_TO_PASS tests now passing**
+
+## PASS_TO_PASS regressions
+None — all 55 PASS_TO_PASS tests remain passing (64 total tests, all passed).
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the fail-on-base capture showed IntegrityError failures in the async generic relations tests, which are now resolved.
+
+## Summary
+The patch successfully adds async method wrappers to three related manager classes, delegating to their sync counterparts via `sync_to_async`. This ensures relationship fields (ForeignKey, ManyToMany, GenericForeignKey) are properly set during async object creation. All target tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,11 @@
+**RESOLVED**
+
+All 9 FAIL_TO_PASS tests now pass. The fix adds async wrappers (`acreate`, `aget_or_create`, `aupdate_or_create`) to three related manager classes that explicitly call their own overridden sync methods via `sync_to_async`:
+
+1. **RelatedManager** (reverse FK): Sets `kwargs[self.field.name] = self.instance` to establish FK relationship
+2. **ManyRelatedManager** (M2M): Calls `self.add()` after creation to add through-table entry, preserves `through_defaults` parameter
+3. **GenericRelatedObjectManager**: Sets `content_type_field_name` and `object_id_field_name` for generic relations
+
+The async methods now route through the related manager's sync implementations instead of bypassing them to call QuerySet methods directly. Gate output: 64 tests passed in 0.134s.
+
+---STDERR---
