@@ -1,0 +1,42 @@
+# Recon: django__django-9296
+
+## Failure summary
+
+The test `test_paginator_iteration` creates a Paginator with a list `[1, 2, 3]` and `per_page=2`, then attempts to iterate over the paginator using `iter(paginator)`. The test expects to receive Page objects containing `[1, 2]` and `[3]` respectively. However, it fails immediately at `page_iterator = iter(paginator)` with `TypeError: 'Paginator' object is not iterable` because the Paginator class doesn't implement the `__iter__` magic method.
+
+## Suspect set
+
+- `django/core/paginator.py` lines 27-127: The Paginator class definition - specifically, it lacks the `__iter__` method required for iteration
+
+## Root cause
+
+The Paginator class is missing the `__iter__` magic method. In Python, objects must implement `__iter__` (or `__getitem__` with integer indexing from 0) to be iterable. The test expects `iter(paginator)` to return an iterator that yields Page objects for each page in the paginator. The class has all the necessary infrastructure (the `page_range` property provides page numbers 1 through `num_pages`, and the `page(number)` method returns Page objects), but doesn't expose an iterator interface.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/core/paginator.py:27` — `class Paginator:` has no `__iter__` method (confirmed by grep showing no `__iter__` in the file)
+- `django/core/paginator.py:102-107` — `page_range` property returns `range(1, self.num_pages + 1)` 
+- `django/core/paginator.py:71-78` — `page(number)` method returns a Page object for a given page number
+- `tests/pagination/tests.py:298-303` — Test expects iteration yielding Page objects that can be converted to lists
+- Error message: `TypeError: 'Paginator' object is not iterable` (line 302)
+
+## Edit sites
+
+- `django/core/paginator.py` after line 107 (or anywhere within the Paginator class): Add `__iter__` method that iterates over `self.page_range` and yields `self.page(page_num)` for each page number. The implementation should be:
+  ```python
+  def __iter__(self):
+      for page_num in self.page_range:
+          yield self.page(page_num)
+  ```
+  This method should be placed logically near the `page` and `page_range` methods, or after `__init__` following Python convention for magic methods.
+
+## Rejected hypotheses
+
+None - this is the initial diagnosis. The failure mode is unambiguous and the code path is direct.
+
+## Open questions
+
+None - the fix is straightforward and the test clearly specifies the expected behavior.
+
+---STDERR---

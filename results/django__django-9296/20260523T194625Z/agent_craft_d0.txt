@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_paginator_iteration` pass by adding the `__iter__` method to the Paginator class. The implementation iterates over `self.page_range` and yields `self.page(page_num)` for each page number, enabling the Paginator to be used in iteration contexts. All 21 tests pass with no regressions.
+
+---STDERR---
