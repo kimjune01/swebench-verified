@@ -1,0 +1,25 @@
+# Audit: django__django-11964
+
+## FAIL_TO_PASS
+- test_str (model_enums.tests.ChoicesTests): ✅ **PASS**
+- test_textchoices (model_enums.tests.ChoicesTests): ✅ **PASS**
+
+## PASS_TO_PASS regressions
+**None** — all 15 PASS_TO_PASS tests continue passing
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — clean baseline, all tests now pass
+
+## Summary
+
+The craft patch successfully resolves the issue:
+- **Patch**: Added `__str__()` method to `Choices` class returning `str(self.value)`
+- **Gate result**: 17/17 tests pass (0.002s)
+- **Contract**: Both FAIL_TO_PASS tests now pass, zero regressions introduced
+
+The diagnosis was correct — enum members were inheriting Python's default `enum.Enum.__str__()` which returns the enum representation (e.g., "YearInSchool.FRESHMAN"). Overriding `__str__()` in the base `Choices` class to return `str(self.value)` makes all TextChoices and IntegerChoices members stringify to their values as expected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,35 @@
+# Recon: django__django-11964
+
+## Failure summary
+
+The failing tests (`test_str` and `test_textchoices`) check that calling `str()` on TextChoices and IntegerChoices enum members returns the string representation of their values, not the enum representation. Currently, `str(YearInSchool.FRESHMAN)` returns "YearInSchool.FRESHMAN" instead of "FR", and `str(Suit.HEART)` returns "Suit.HEART" instead of "3". The tests iterate over Gender, Suit, YearInSchool, and Vehicle enums, asserting that `str(test[member.name])` equals `str(member.value)`.
+
+## Suspect set
+
+- `django/db/models/enums.py` lines 1-76: The entire enums module, specifically the `Choices`, `TextChoices`, and `IntegerChoices` class definitions
+
+## Root cause
+
+Python's `enum.Enum.__str__()` method returns `"%s.%s" % (self.__class__.__name__, self._name_)`, which produces the enum representation (e.g., "YearInSchool.FRESHMAN"). The `Choices` class (defined at `django/db/models/enums.py:56`) inherits from `enum.Enum` but doesn't override `__str__()`. Therefore, all TextChoices and IntegerChoices members use Enum's default `__str__` method, which returns the enum representation instead of the value's string representation.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/enums.py:56-58` — `class Choices(enum.Enum, metaclass=ChoicesMeta): """Class for creating enumerated choices.""" pass` — No `__str__` override
+- `django/db/models/enums.py:61-63` — `class IntegerChoices(int, Choices): """Class for creating enumerated integer choices.""" pass` — No `__str__` override
+- `django/db/models/enums.py:66-70` — `class TextChoices(str, Choices): """Class for creating enumerated string choices.""" def _generate_next_value_(name, start, count, last_values): return name` — No `__str__` override
+- Verified via container: `str(YearInSchool.FRESHMAN)` returns "YearInSchool.FRESHMAN" but `str(YearInSchool.FRESHMAN.value)` returns "FR"
+
+## Edit sites
+
+- `django/db/models/enums.py` lines 56-58 (the `Choices` class): Add a `__str__` method that returns `str(self.value)` to override `enum.Enum.__str__()` and return the string representation of the value instead of the enum representation.
+
+## Rejected hypotheses
+
+None. The root cause is clear from tracing the MRO and verifying that no `__str__` override exists.
+
+## Open questions
+
+None. The fix is straightforward: add `__str__()` method to return `str(self.value)`.
+
+---STDERR---

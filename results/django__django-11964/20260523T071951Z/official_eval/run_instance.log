@@ -1,0 +1,49 @@
+2026-05-23 07:17:01,078 - INFO - Creating container for django__django-11964...
+2026-05-23 07:17:06,887 - INFO - Container for django__django-11964 created: 0b403b293efaf5a5ed1e221483027bebd17beb1939248fc88cd341e100da0aa1
+2026-05-23 07:17:07,190 - INFO - Container for django__django-11964 started: 0b403b293efaf5a5ed1e221483027bebd17beb1939248fc88cd341e100da0aa1
+2026-05-23 07:17:07,190 - INFO - Intermediate patch for django__django-11964 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11964/patch.diff, now applying to container...
+2026-05-23 07:17:07,320 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/enums.py...
+Applied patch django/db/models/enums.py cleanly.
+
+2026-05-23 07:17:07,957 - INFO - Git diff before:
+diff --git a/django/db/models/enums.py b/django/db/models/enums.py
+index bbe362a6ab..1c73ab21b2 100644
+--- a/django/db/models/enums.py
++++ b/django/db/models/enums.py
+@@ -60,7 +60,9 @@ class ChoicesMeta(enum.EnumMeta):
+ 
+ class Choices(enum.Enum, metaclass=ChoicesMeta):
+     """Class for creating enumerated choices."""
+-    pass
++
++    def __str__(self):
++        return str(self.value)
+ 
+ 
+ class IntegerChoices(int, Choices):
+2026-05-23 07:17:07,958 - INFO - Eval script for django__django-11964 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11964/eval.sh; copying to container...
+2026-05-23 07:17:12,035 - INFO - Test runtime: 4.00 seconds
+2026-05-23 07:17:12,035 - INFO - Test output for django__django-11964 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11964/test_output.txt
+2026-05-23 07:17:12,121 - INFO - Git diff after:
+diff --git a/django/db/models/enums.py b/django/db/models/enums.py
+index bbe362a6ab..1c73ab21b2 100644
+--- a/django/db/models/enums.py
++++ b/django/db/models/enums.py
+@@ -60,7 +60,9 @@ class ChoicesMeta(enum.EnumMeta):
+ 
+ class Choices(enum.Enum, metaclass=ChoicesMeta):
+     """Class for creating enumerated choices."""
+-    pass
++
++    def __str__(self):
++        return str(self.value)
+ 
+ 
+ class IntegerChoices(int, Choices):
+2026-05-23 07:17:12,121 - INFO - Grading answer for django__django-11964...
+2026-05-23 07:17:12,122 - INFO - report: {'django__django-11964': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_str (model_enums.tests.ChoicesTests)', 'test_textchoices (model_enums.tests.ChoicesTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_integerchoices (model_enums.tests.ChoicesTests)', 'test_integerchoices_auto_label (model_enums.tests.ChoicesTests)', 'test_integerchoices_containment (model_enums.tests.ChoicesTests)', 'test_integerchoices_empty_label (model_enums.tests.ChoicesTests)', 'test_integerchoices_functional_api (model_enums.tests.ChoicesTests)', 'test_invalid_definition (model_enums.tests.ChoicesTests)', 'test_textchoices_auto_label (model_enums.tests.ChoicesTests)', 'test_textchoices_blank_value (model_enums.tests.ChoicesTests)', 'test_textchoices_containment (model_enums.tests.ChoicesTests)', 'test_textchoices_empty_label (model_enums.tests.ChoicesTests)', 'test_textchoices_functional_api (model_enums.tests.ChoicesTests)', 'test_bool_unsupported (model_enums.tests.CustomChoicesTests)', 'test_labels_valid (model_enums.tests.CustomChoicesTests)', 'test_timezone_unsupported (model_enums.tests.CustomChoicesTests)', 'test_uuid_unsupported (model_enums.tests.CustomChoicesTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-11964: resolved: True
+2026-05-23 07:17:12,122 - INFO - Attempting to stop container sweb.eval.django__django-11964.batch...
+2026-05-23 07:17:27,504 - INFO - Attempting to remove container sweb.eval.django__django-11964.batch...
+2026-05-23 07:17:27,521 - INFO - Container sweb.eval.django__django-11964.batch removed.

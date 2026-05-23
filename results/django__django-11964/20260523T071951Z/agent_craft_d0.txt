@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix was implemented successfully in a single gate iteration. Added a `__str__` method to the `Choices` class in `django/db/models/enums.py` that returns `str(self.value)`, overriding Python's default `enum.Enum.__str__()` behavior. Both FAIL_TO_PASS tests now pass, along with all other tests in the suite.
+
+---STDERR---
