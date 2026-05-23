@@ -1,0 +1,25 @@
+## **RESOLVED**
+
+The fix has been successfully implemented and all tests pass.
+
+### Summary
+
+**Root cause**: Django's `loaddata` command failed to detect when `settings.FIXTURE_DIRS` contained Path instances pointing to default app fixture directories, because it compared string paths (`app_dir`) against potentially Path objects using Python's `in` operator.
+
+**Fix applied**:
+1. **django/core/management/commands/loaddata.py:364** - Normalized Path instances to strings:
+   ```python
+   fixture_dirs = [os.fspath(d) for d in settings.FIXTURE_DIRS]
+   ```
+
+2. **tests/fixtures_regress/tests.py** - Added regression test `test_fixture_dirs_with_default_fixture_path_as_pathlib` to verify the fix works with Path instances
+
+**Validation**:
+- ✅ Gate passed (58/58 tests, +1 new test)
+- ✅ FAIL_TO_PASS test now passes
+- ✅ No regressions in existing tests
+- ✅ Codex reviewed and approved: "No concerns from the change shown"
+
+The minimal fix normalizes all FIXTURE_DIRS entries to strings immediately after retrieval, ensuring consistent string comparison throughout the method while maintaining backward compatibility.
+
+---STDERR---

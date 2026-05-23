@@ -1,0 +1,19 @@
+# Audit: django__django-15987
+
+## FAIL_TO_PASS
+- test_fixture_dirs_with_default_fixture_path: **PASS** ✅
+- test_fixture_dirs_with_default_fixture_path_as_pathlib: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — All 58 tests passed, including all M2M natural key tests, natural key fixture tests, and general fixture tests.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — No tests failing on base; no failures in current run.
+
+## Summary
+The craft patch successfully resolves the issue. The fix normalizes Path instances in `FIXTURE_DIRS` to strings using `os.fspath()`, enabling correct duplicate detection and default fixture path validation. Both FAIL_TO_PASS tests now pass, and zero regressions were introduced across the 58-test suite.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
