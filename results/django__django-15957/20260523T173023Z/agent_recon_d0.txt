@@ -1,0 +1,80 @@
+# Recon: django__django-15957
+
+## Failure summary
+The tests check that Prefetch objects work with sliced querysets (e.g., `Prefetch("authors", authors[1:], to_attr="authors_sliced")`). All four tests fail with `TypeError: Cannot filter a query once a slice has been taken.` The error occurs when the prefetch mechanism tries to filter the sliced queryset to retrieve only the related objects for the instances being prefetched.
+
+## Suspect set
+- `django/db/models/fields/related_descriptors.py` lines 124-160: ForwardManyToOneDescriptor.get_prefetch_queryset - calls `queryset.filter(**query)` without checking if queryset is sliced
+- `django/db/models/fields/related_descriptors.py` lines 398-424: ReverseOneToOneDescriptor.get_prefetch_queryset - same issue
+- `django/db/models/fields/related_descriptors.py` lines 711-731: ReverseManyToOneDescriptor.get_prefetch_queryset - same issue (test failure at line 722)
+- `django/db/models/fields/related_descriptors.py` lines 1047-1099: ManyToManyDescriptor.get_prefetch_queryset - same issue (test failure at line 1055)
+- `django/db/models/query.py` lines 1440-1442: _filter_or_exclude - enforces the prohibition against filtering sliced querysets
+
+## Root cause
+When a user passes a sliced queryset to a Prefetch object (e.g., `queryset[1:3]`), Django marks the queryset as sliced by setting `query.low_mark` and/or `query.high_mark`. During prefetch execution, the `get_prefetch_queryset` methods in the related descriptors must filter this queryset to retrieve only objects related to the instances being prefetched. However, all four descriptor classes call `.filter(**query)` directly on the passed queryset without checking `queryset.query.is_sliced`. This triggers the error at `query.py:1442` which explicitly prohibits filtering after slicing.
+
+The prohibition exists because the SQL semantics are ambiguous: should the filter be applied before or after the slice? For prefetching to work correctly, the filter MUST be applied before the slice (otherwise we'd get the wrong subset of related objects).
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/query.py:1442` — `if (args or kwargs) and self.query.is_sliced: raise TypeError("Cannot filter a query once a slice has been taken.")`
+- `django/db/models/fields/related_descriptors.py:722` — `queryset = queryset.filter(**query)` (called on sliced queryset)
+- `django/db/models/fields/related_descriptors.py:1055` — `queryset = queryset._next_is_sticky().filter(**query)` (called on sliced queryset)
+- `django/db/models/sql/query.py:2087` — `def is_sliced(self): return self.low_mark != 0 or self.high_mark is not None`
+- `django/db/models/sql/query.py:2081` — `def clear_limits(self): self.low_mark, self.high_mark = 0, None`
+- `django/db/models/sql/query.py:2058` — `def set_limits(self, low=None, high=None):` provides method to reapply slice
+
+## Edit sites
+All four `get_prefetch_queryset` methods need the same fix:
+
+1. `django/db/models/fields/related_descriptors.py` lines 124-160 (ForwardManyToOneDescriptor.get_prefetch_queryset):
+   - Before line 159 (`queryset = queryset.filter(**query)`), check if `queryset.query.is_sliced`
+   - If sliced: save low_mark/high_mark, clear limits, filter, then restore limits
+
+2. `django/db/models/fields/related_descriptors.py` lines 398-410 (ReverseOneToOneDescriptor.get_prefetch_queryset):
+   - Before line 409 (`queryset = queryset.filter(**query)`), apply the same fix
+
+3. `django/db/models/fields/related_descriptors.py` lines 711-731 (ReverseManyToOneDescriptor.get_prefetch_queryset):
+   - Before line 722 (`queryset = queryset.filter(**query)`), apply the same fix
+   - This is in a nested RelatedManager class
+
+4. `django/db/models/fields/related_descriptors.py` lines 1047-1099 (ManyToManyDescriptor.get_prefetch_queryset):
+   - Before line 1055 (`queryset = queryset._next_is_sticky().filter(**query)`), apply the same fix
+   - Note: this one calls `_next_is_sticky()` first, but the fix pattern is the same
+
+The fix pattern for each location:
+```python
+# Before: queryset = queryset.filter(**query)
+# After:
+if queryset.query.is_sliced:
+    low_mark, high_mark = queryset.query.low_mark, queryset.query.high_mark
+    queryset.query.clear_limits()
+    queryset = queryset.filter(**query)
+    queryset.query.set_limits(low=low_mark, high=high_mark)
+else:
+    queryset = queryset.filter(**query)
+```
+
+For the ManyToMany case (line 1055), `_next_is_sticky()` must be called before checking `is_sliced`:
+```python
+# Before: queryset = queryset._next_is_sticky().filter(**query)
+# After:
+queryset = queryset._next_is_sticky()
+if queryset.query.is_sliced:
+    low_mark, high_mark = queryset.query.low_mark, queryset.query.high_mark
+    queryset.query.clear_limits()
+    queryset = queryset.filter(**query)
+    queryset.query.set_limits(low=low_mark, high=high_mark)
+else:
+    queryset = queryset.filter(**query)
+```
+
+## Rejected hypotheses
+None - the root cause is clear from the stack trace and code inspection.
+
+## Open questions
+- Should there be a helper method in QuerySet to handle "filter with slice preservation" to avoid code duplication?
+- Are there other locations in Django that might have similar issues with sliced querysets?
+
+---STDERR---

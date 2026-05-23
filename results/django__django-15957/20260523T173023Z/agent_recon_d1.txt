@@ -1,0 +1,96 @@
+# Recon: django__django-15957
+
+## Failure summary
+
+The tests check that `Prefetch` objects with sliced querysets (e.g., `Prefetch("authors", authors[1:], to_attr="authors_sliced")`) correctly apply the slice per-instance. The tests fail because the slice is applied globally to all fetched related objects rather than to each instance's related objects individually.
+
+For example, `test_m2m_forward` expects that for a book with one author, `authors_sliced` using `[1:]` should be an empty list (since `[1:]` of a single-item list is empty). However, it returns `[<Author: Charlotte>]` because the slice is applied to the combined result set of authors across all books.
+
+The error manifests as incorrect slice results, not as exceptions. Test output shows:
+- Book 2 (1 author): expects `authors_sliced = []`, gets `[<Author: Charlotte>]`  
+- Book 3 (1 author): expects `authors_sliced = []`, gets `[<Author: Emily>]`
+
+## Suspect set
+
+- `django/db/models/fields/related_descriptors.py` lines 124-175 (ForwardManyToOneDescriptor.get_prefetch_queryset) — handles sliced querysets incorrectly
+- `django/db/models/fields/related_descriptors.py` lines 412-450 (ReverseOneToOneDescriptor.get_prefetch_queryset) — same issue
+- `django/db/models/fields/related_descriptors.py` lines 739-770 (ReverseManyToOneDescriptor.get_prefetch_queryset) — same issue
+- `django/db/models/fields/related_descriptors.py` lines 1083-1145 (ManyToManyDescriptor.get_prefetch_queryset) — same issue
+- `django/db/models/query.py` lines 2498-2530 (prefetch_one_level distribution loop) — where per-instance slice should be applied
+
+## Root cause
+
+Django's prefetch_related mechanism fetches all related objects across all instances in a single SQL query, then distributes the results to individual instances. When a `Prefetch` object uses a sliced queryset (e.g., `authors[1:]`), the current implementation applies the slice to the entire combined SQL query result, not to each instance's subset of related objects.
+
+**The code path:**
+1. In `get_prefetch_queryset` (4 implementations in related_descriptors.py), when the queryset is sliced:
+   - The slice limits are temporarily cleared
+   - A filter is applied to match instances
+   - The slice is reapplied to the filtered queryset
+   - This produces a globally-sliced query (WRONG)
+
+2. In `prefetch_one_level` (query.py:2470):
+   - `all_related_objects = list(rel_qs)` executes the sliced query
+   - Results are grouped by instance ID into `rel_obj_cache` (line 2472-2474)
+   - For each instance, `vals = rel_obj_cache.get(instance_attr_val, [])` (line 2501)
+   - `vals` is assigned to the instance (lines 2520, 2528)
+
+Since the slice was applied in SQL to the global result set, the per-instance `vals` lists are already incorrectly filtered.
+
+**Example:**
+- Book 1: authors [A, B, C] → `[1:]` should give [B, C]
+- Book 2: authors [D] → `[1:]` should give []
+- Combined query: `[A, B, C, D]`
+- SQL slice `[1:]`: `[B, C, D]` (global slice)
+- Distribution: Book 1 → [B, C] ✓, Book 2 → [D] ✗ (expected [])
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/fields/related_descriptors.py:1095-1126` — M2M get_prefetch_queryset reapplies slice after filter
+- `django/db/models/query.py:2470` — query executed globally: `all_related_objects = list(rel_qs)`
+- `django/db/models/query.py:2501` — per-instance retrieval: `vals = rel_obj_cache.get(instance_attr_val, [])`
+- Test output confirms global vs. per-instance slice mismatch
+
+## Edit sites
+
+### Remove global slice reapplication (4 locations):
+
+1. **django/db/models/fields/related_descriptors.py lines 151-161** (ForwardManyToOneDescriptor.get_prefetch_queryset):
+   - Remove lines 158-161 that reapply the slice
+   - Keep lines 151-153 that clear the slice (needed to fetch all objects)
+
+2. **django/db/models/fields/related_descriptors.py lines 427-433** (ReverseOneToOneDescriptor.get_prefetch_queryset):
+   - Remove the slice reapplication code
+   - Keep the slice clearing code
+
+3. **django/db/models/fields/related_descriptors.py lines 750-757** (ReverseManyToOneDescriptor.RelatedManager.get_prefetch_queryset):
+   - Remove lines 755-757 that restore slice limits
+   - Keep lines 751-753 that clear the slice
+
+4. **django/db/models/fields/related_descriptors.py lines 1121-1126** (ManyToManyDescriptor.ManyRelatedManager.get_prefetch_queryset):
+   - Remove the slice reapplication using queryset slicing syntax
+   - Keep lines 1095-1097 that clear the slice
+
+### Add per-instance slice application (1 location):
+
+5. **django/db/models/query.py lines 2498-2520** (prefetch_one_level distribution loop):
+   - After line 2501 where `vals = rel_obj_cache.get(instance_attr_val, [])` retrieves per-instance results
+   - Add logic to check if `lookup.queryset` is not None and is sliced (`lookup.queryset.query.is_sliced`)
+   - If sliced, extract `low_mark` and `high_mark` from `lookup.queryset.query`
+   - Apply the slice to `vals`: `vals = vals[low_mark:high_mark]`
+   - This must happen before `vals` is used in the assignment logic (lines 2503-2530)
+
+The fix ensures that:
+- `get_prefetch_queryset` fetches ALL related objects (no SQL-level slice)
+- `prefetch_one_level` applies the slice to each instance's `vals` list during distribution
+
+## Rejected hypotheses
+
+- H₁ (from prior iteration): Applying slice in SQL after filter — killed by gate showing wrong per-instance results. The SQL slice operates on the global result set, which is fundamentally incompatible with per-instance slicing semantics.
+
+## Open questions
+
+None. The root cause is clear from code trace and test failures. The fix requires coordinated changes: removing global slice application in 4 `get_prefetch_queryset` methods and adding per-instance slice application in `prefetch_one_level`.
+
+---STDERR---

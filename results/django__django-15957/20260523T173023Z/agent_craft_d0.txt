@@ -1,0 +1,9 @@
+NOT-RESOLVED — re-diagnose
+
+The current approach of clearing/restoring slice limits doesn't work because the slice is applied globally to the combined queryset, not per-instance. After 3 stuck iterations with the same error pattern, the root cause appears different from the recon diagnosis. 
+
+The issue is that prefetch fetches all related objects in ONE SQL query, then distributes results to instances. A SQL-level slice applies to the entire result set, not per-instance. But the tests expect per-instance slicing (e.g., for each book, get [1:] of ITS authors).
+
+The fix needs a fundamentally different approach - either allowing filters on sliced querysets with proper SQL clause ordering, or applying slices during result distribution rather than in the query itself.
+
+---STDERR---
