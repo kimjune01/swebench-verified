@@ -1,0 +1,22 @@
+# Audit: django__django-10973
+
+## FAIL_TO_PASS
+- test_accent (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase): PASS ✓
+- test_basic (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase): PASS ✓
+- test_column (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase): PASS ✓
+- test_nopass (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase): PASS ✓
+- test_sigint_handler (SIGINT is ignored in Python and passed to psql to abort quries.): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+Not applicable — all tests pass.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

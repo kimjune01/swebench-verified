@@ -1,0 +1,56 @@
+# Recon: django__django-10973
+
+## Failure summary
+
+The 5 failing tests in `tests/dbshell/test_postgresql.py` validate that Django's PostgreSQL database shell client correctly invokes `psql` with passwords passed via the `PGPASSWORD` environment variable using `subprocess.run()`. All tests fail because they mock `subprocess.run` to capture arguments and environment variables, but the implementation still uses the legacy `subprocess.check_call()` API with password passed via a temporary `.pgpass` file. The mock never intercepts the actual subprocess call, causing the unmocked `check_call` to attempt executing the real `psql` binary, which either fails with `FileNotFoundError: [Errno 2] No such file or directory: 'psql'` (psql not installed) or `UnicodeEncodeError` when trying to write non-ASCII characters to the temp file.
+
+## Suspect set
+
+- `django/db/backends/postgresql/client.py` lines 9-13: `_escape_pgpass()` function - only needed for .pgpass file format, obsolete with PGPASSWORD approach
+- `django/db/backends/postgresql/client.py` lines 39-61: `runshell_db()` method - creates temporary `.pgpass` file and calls `subprocess.check_call(args)` instead of using `subprocess.run(args, env=...)` with `PGPASSWORD`
+
+## Root cause
+
+The PostgreSQL client backend uses the legacy `subprocess.check_call()` API and password delivery via temporary `.pgpass` file (requiring character escaping for colons and backslashes), instead of the modern `subprocess.run()` API with password passed through the `PGPASSWORD` environment variable. The failing tests mock `subprocess.run` expecting the new API, so the mock never intercepts the actual `subprocess.check_call()` call. This causes the unmocked code path to execute, attempting to run the real `psql` binary.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `client.py:61` — `subprocess.check_call(args)` called directly
+- `client.py:40-56` — temp `.pgpass` file creation with `NamedTemporaryFile`, sets `os.environ['PGPASSFILE']`
+- `client.py:45-51` — Uses `_escape_pgpass()` to escape special characters for .pgpass format
+- `test_postgresql.py:19` — Test helper mocks `subprocess.run`, not `subprocess.check_call`
+- `test_postgresql.py:20-21` — Test captures `env.get('PGPASSWORD')`, expects password in environment
+
+## Edit sites
+
+**File:** `django/db/backends/postgresql/client.py`
+
+1. **Line 4** — Remove import: `from django.core.files.temp import NamedTemporaryFile` (no longer needed)
+
+2. **Lines 9-13** — Delete `_escape_pgpass()` function entirely (only used for .pgpass file escaping)
+
+3. **Lines 39-61 in `runshell_db()` method** — Replace temp file + `subprocess.check_call()` with environment dict + `subprocess.run()`:
+   - Remove: `temp_pgpass` variable and all temp file creation/cleanup
+   - Remove: `_escape_pgpass()` calls and `.pgpass` file writing
+   - Remove: `os.environ['PGPASSFILE']` assignment and deletion
+   - Remove: `UnicodeEncodeError` exception handling (not needed with env vars)
+   - Add: Create environment dict with `env = os.environ.copy()`
+   - Add: If password exists, set `env['PGPASSWORD'] = passwd`
+   - Replace: `subprocess.check_call(args)` → `subprocess.run(args, check=True, env=env)`
+   - Keep: SIGINT handling (`signal.signal(signal.SIGINT, signal.SIG_IGN)` before subprocess, restore in finally)
+   - Simplify finally block: only restore SIGINT handler, remove temp file cleanup
+
+## Competing hypotheses
+
+None — the mismatch between mocked API (`subprocess.run`) and called API (`subprocess.check_call`) is unambiguous.
+
+## Rejected hypotheses
+
+None explored.
+
+## Open questions
+
+None — fix is direct API replacement, `subprocess.run(check=True)` behaves identically to `subprocess.check_call()`.
+
+---STDERR---
