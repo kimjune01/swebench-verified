@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix for `scikit-learn__scikit-learn-13496` is complete. The `warm_start` parameter has been successfully exposed in `IsolationForest.__init__()` and passed through to the parent `BaseBagging` class. All 20 tests passed on the first gate attempt, including the failing test `test_iforest_warm_start`.
+
+---STDERR---

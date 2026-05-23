@@ -1,0 +1,55 @@
+Now let me output the structured diagnosis to stdout:
+
+# Recon: scikit-learn__scikit-learn-13496
+
+## Failure summary
+The test `test_iforest_warm_start` attempts to instantiate `IsolationForest` with `warm_start=True` to verify incremental tree addition. The test fails immediately at instantiation with `TypeError: __init__() got an unexpected keyword argument 'warm_start'` because the `warm_start` parameter is not exposed in `IsolationForest.__init__()`, even though the parent class `BaseBagging` fully supports this functionality.
+
+## Suspect set
+- `sklearn/ensemble/iforest.py` lines 167-189: `IsolationForest.__init__()` method - missing `warm_start` parameter in signature and missing pass-through to parent class
+- `sklearn/ensemble/iforest.py` lines 50-125: docstring - missing `warm_start` parameter documentation
+
+## Root cause
+`IsolationForest` inherits from `BaseBagging`, which implements full `warm_start` support for incremental ensemble building. However, `IsolationForest.__init__()` does not expose the `warm_start` parameter in its signature (line 167), nor does it pass it to the parent class's `super().__init__()` call (line 177). This prevents users from enabling warm_start at instantiation time, despite the functionality being fully implemented in the parent class.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sklearn/ensemble/iforest.py:167-176` — `__init__` signature has no `warm_start` parameter:
+  ```python
+  def __init__(self,
+               n_estimators=100,
+               max_samples="auto",
+               contamination="legacy",
+               max_features=1.,
+               bootstrap=False,
+               n_jobs=None,
+               behaviour='old',
+               random_state=None,
+               verbose=0):
+  ```
+- `sklearn/ensemble/bagging.py:200` — `BaseBagging.__init__` accepts `warm_start=False`
+- `sklearn/ensemble/bagging.py:213` — `BaseBagging` stores: `self.warm_start = warm_start`
+- `sklearn/ensemble/bagging.py:338-362` — `BaseBagging._fit()` implements warm_start logic: reuses existing estimators and only trains `n_more_estimators = self.n_estimators - len(self.estimators_)`
+- `sklearn/ensemble/forest.py:1004,1019` — Reference implementation: `RandomForestClassifier` exposes `warm_start` in signature and passes it to parent
+
+## Edit sites
+1. **sklearn/ensemble/iforest.py line 176** — Add `warm_start=False` parameter after `verbose=0` in the `__init__` signature
+
+2. **sklearn/ensemble/iforest.py line 177-189** — Add `warm_start=warm_start` to the `super().__init__()` call arguments (after `verbose=verbose`, before closing paren)
+
+3. **sklearn/ensemble/iforest.py lines ~120-125** — Add parameter documentation in the docstring between the `verbose` parameter docs (ending ~line 125) and the `behaviour` parameter docs (starting ~line 95). Use the same format as `RandomForestClassifier`:
+   ```
+   warm_start : bool, optional (default=False)
+       When set to ``True``, reuse the solution of the previous call to fit
+       and add more estimators to the ensemble, otherwise, just fit a whole
+       new forest. See :term:`the Glossary <warm_start>`.
+   ```
+
+## Rejected hypotheses
+None — the root cause is unambiguous from code inspection.
+
+## Open questions
+None — the fix is straightforward parameter exposure with no behavioral changes needed.
+
+---STDERR---
