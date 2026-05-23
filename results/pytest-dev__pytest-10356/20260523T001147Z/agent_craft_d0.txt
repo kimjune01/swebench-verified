@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_mark_mro` now passes. The fix correctly implements MRO-based mark collection for multiple inheritance, ensuring marks from all base classes are collected in MRO order while preventing duplicate storage through the `consider_mro` parameter.
+
+---STDERR---

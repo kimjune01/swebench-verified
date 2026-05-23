@@ -1,0 +1,18 @@
+# Audit: pytest-dev__pytest-10356
+
+## FAIL_TO_PASS
+- `testing/test_mark.py::test_mark_mro`: PASSED ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- Three `test_marker_expr_eval_failure_handling` subtests show captured stderr errors (expected behavior - these tests validate error handling)
+
+## Verdict summary
+The craft patch successfully resolves the issue. The FAIL_TO_PASS test now passes, all 89 PASS_TO_PASS tests remain passing with 1 expected xfail, and no regressions were introduced. The fix correctly implements MRO traversal for mark collection from all base classes while preventing duplicate storage when marks are added.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

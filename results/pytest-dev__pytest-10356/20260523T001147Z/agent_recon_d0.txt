@@ -1,0 +1,56 @@
+# Recon: pytest-dev__pytest-10356
+
+## Failure summary
+
+Test `test_mark_mro` checks that when a class C inherits from multiple base classes A and B, each decorated with pytest markers, C should collect marks from all base classes following MRO order. The test fails because `get_unpacked_marks(C)` returns only `[xfail("a"), xfail("c")]` instead of the expected `[xfail("c"), xfail("a"), xfail("b")]`. The marker from base class B is missing.
+
+## Suspect set
+
+- `src/_pytest/mark/structures.py` lines 358-363: `get_unpacked_marks()` — only uses `getattr(obj, "pytestmark")` which doesn't walk MRO
+- `src/_pytest/mark/structures.py` lines 383-391: `store_mark()` — copies inherited marks when storing new marks, contributing to the problem
+
+## Root cause
+
+`get_unpacked_marks()` uses `getattr(obj, "pytestmark", [])` which follows Python's normal attribute lookup via MRO. For multiple inheritance `C(A, B)`, this only finds pytestmark from the first base class A, never reaching B's marks. When `@xfail("c")` decorator is applied to C, `store_mark` calls `get_unpacked_marks(C)` which returns A's marks (inherited), then stores `C.pytestmark = [*A_marks, xfail("c")]`. The marks from B are never collected.
+
+The fix requires:
+1. Adding a `consider_mro` parameter to `get_unpacked_marks` (default True)
+2. When True and obj is a class: walk through `obj.__mro__` and collect marks from each class's `__dict__`
+3. When False: return only marks directly in `obj.__dict__` (not inherited)
+4. Update `store_mark` to use `consider_mro=False` to avoid copying inherited marks
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- Traced code execution: `getattr(C, "pytestmark")` returns A's pytestmark via MRO, B is never reached
+- Verified with reproduction: `C.__mro__ = (C, A, B, object)` but only A and C's marks are present
+- `C.__dict__["pytestmark"]` contains `[xfail("a"), xfail("c")]` — A's mark was copied, B's was lost
+
+## Edit sites
+
+**File:** `src/_pytest/mark/structures.py`
+
+**Site 1 (lines 358-363):** Modify `get_unpacked_marks` function signature and implementation
+- Add parameter `consider_mro: bool = True`
+- When `consider_mro=True` and `inspect.isclass(obj)`: iterate through `obj.__mro__` and collect marks from each class's `__dict__.get("pytestmark", [])`
+- When `consider_mro=False` or obj is not a class: only get marks from `obj.__dict__.get("pytestmark", [])` if it's a class, otherwise use `getattr` as before
+- Maintain order: own marks first, then parent classes in MRO order
+- Return via `normalize_mark_list()` as currently done
+
+**Site 2 (line 391):** Update `store_mark` function call to `get_unpacked_marks`
+- Change `obj.pytestmark = [*get_unpacked_marks(obj), mark]` to `obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]`
+- This ensures only directly-owned marks are retrieved, not inherited ones, preventing duplicates and missing marks
+
+## Competing hypotheses
+
+None — the root cause is confirmed through code trace and reproduction.
+
+## Rejected hypotheses
+
+None were explored as the initial hypothesis was confirmed.
+
+## Open questions
+
+None — the fix is straightforward and localized.
+
+---STDERR---

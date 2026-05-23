@@ -1,0 +1,49 @@
+diff --git a/src/_pytest/mark/structures.py b/src/_pytest/mark/structures.py
+index 800a25c92..bb4161ab4 100644
+--- a/src/_pytest/mark/structures.py
++++ b/src/_pytest/mark/structures.py
+@@ -355,12 +355,30 @@ class MarkDecorator:
+         return self.with_args(*args, **kwargs)
+ 
+ 
+-def get_unpacked_marks(obj: object) -> Iterable[Mark]:
++def get_unpacked_marks(obj: object, consider_mro: bool = True) -> Iterable[Mark]:
+     """Obtain the unpacked marks that are stored on an object."""
+-    mark_list = getattr(obj, "pytestmark", [])
+-    if not isinstance(mark_list, list):
+-        mark_list = [mark_list]
+-    return normalize_mark_list(mark_list)
++    if consider_mro and inspect.isclass(obj):
++        # Walk through MRO and collect marks from each class
++        mark_list = []
++        for klass in obj.__mro__:
++            # Get marks directly from this class's dict (not inherited)
++            if "pytestmark" in klass.__dict__:
++                marks = klass.__dict__["pytestmark"]
++                if isinstance(marks, list):
++                    mark_list.extend(marks)
++                else:
++                    mark_list.append(marks)
++    elif inspect.isclass(obj):
++        # Get only directly-owned marks for this class
++        mark_list = obj.__dict__.get("pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    else:
++        # For non-class objects, use getattr as before
++        mark_list = getattr(obj, "pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    return list(normalize_mark_list(mark_list))
+ 
+ 
+ def normalize_mark_list(
+@@ -388,7 +406,7 @@ def store_mark(obj, mark: Mark) -> None:
+     assert isinstance(mark, Mark), mark
+     # Always reassign name to avoid updating pytestmark in a reference that
+     # was only borrowed.
+-    obj.pytestmark = [*get_unpacked_marks(obj), mark]
++    obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]
+ 
+ 
+ # Typing for builtin pytest marks. This is cheating; it gives builtin marks

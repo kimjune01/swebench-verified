@@ -1,0 +1,117 @@
+2026-05-23 00:09:46,319 - INFO - Creating container for pytest-dev__pytest-10356...
+2026-05-23 00:09:47,165 - INFO - Container for pytest-dev__pytest-10356 created: 578de88102bba9ca7360c3e39b6ee8fec94929403570a666f9f2062692d21d51
+2026-05-23 00:09:47,487 - INFO - Container for pytest-dev__pytest-10356 started: 578de88102bba9ca7360c3e39b6ee8fec94929403570a666f9f2062692d21d51
+2026-05-23 00:09:47,487 - INFO - Intermediate patch for pytest-dev__pytest-10356 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-10356/patch.diff, now applying to container...
+2026-05-23 00:09:47,600 - INFO - >>>>> Applied Patch:
+Checking patch src/_pytest/mark/structures.py...
+Applied patch src/_pytest/mark/structures.py cleanly.
+
+2026-05-23 00:09:47,684 - INFO - Git diff before:
+diff --git a/src/_pytest/mark/structures.py b/src/_pytest/mark/structures.py
+index 800a25c92..bb4161ab4 100644
+--- a/src/_pytest/mark/structures.py
++++ b/src/_pytest/mark/structures.py
+@@ -355,12 +355,30 @@ class MarkDecorator:
+         return self.with_args(*args, **kwargs)
+ 
+ 
+-def get_unpacked_marks(obj: object) -> Iterable[Mark]:
++def get_unpacked_marks(obj: object, consider_mro: bool = True) -> Iterable[Mark]:
+     """Obtain the unpacked marks that are stored on an object."""
+-    mark_list = getattr(obj, "pytestmark", [])
+-    if not isinstance(mark_list, list):
+-        mark_list = [mark_list]
+-    return normalize_mark_list(mark_list)
++    if consider_mro and inspect.isclass(obj):
++        # Walk through MRO and collect marks from each class
++        mark_list = []
++        for klass in obj.__mro__:
++            # Get marks directly from this class's dict (not inherited)
++            if "pytestmark" in klass.__dict__:
++                marks = klass.__dict__["pytestmark"]
++                if isinstance(marks, list):
++                    mark_list.extend(marks)
++                else:
++                    mark_list.append(marks)
++    elif inspect.isclass(obj):
++        # Get only directly-owned marks for this class
++        mark_list = obj.__dict__.get("pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    else:
++        # For non-class objects, use getattr as before
++        mark_list = getattr(obj, "pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    return list(normalize_mark_list(mark_list))
+ 
+ 
+ def normalize_mark_list(
+@@ -388,7 +406,7 @@ def store_mark(obj, mark: Mark) -> None:
+     assert isinstance(mark, Mark), mark
+     # Always reassign name to avoid updating pytestmark in a reference that
+     # was only borrowed.
+-    obj.pytestmark = [*get_unpacked_marks(obj), mark]
++    obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]
+ 
+ 
+ # Typing for builtin pytest marks. This is cheating; it gives builtin marks
+2026-05-23 00:09:47,684 - INFO - Eval script for pytest-dev__pytest-10356 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-10356/eval.sh; copying to container...
+2026-05-23 00:09:53,698 - INFO - Test runtime: 5.98 seconds
+2026-05-23 00:09:53,698 - INFO - Test output for pytest-dev__pytest-10356 written to logs/run_evaluation/batch/recon-craft-audit/pytest-dev__pytest-10356/test_output.txt
+2026-05-23 00:09:53,791 - INFO - Git diff after:
+diff --git a/src/_pytest/mark/structures.py b/src/_pytest/mark/structures.py
+index 800a25c92..bb4161ab4 100644
+--- a/src/_pytest/mark/structures.py
++++ b/src/_pytest/mark/structures.py
+@@ -355,12 +355,30 @@ class MarkDecorator:
+         return self.with_args(*args, **kwargs)
+ 
+ 
+-def get_unpacked_marks(obj: object) -> Iterable[Mark]:
++def get_unpacked_marks(obj: object, consider_mro: bool = True) -> Iterable[Mark]:
+     """Obtain the unpacked marks that are stored on an object."""
+-    mark_list = getattr(obj, "pytestmark", [])
+-    if not isinstance(mark_list, list):
+-        mark_list = [mark_list]
+-    return normalize_mark_list(mark_list)
++    if consider_mro and inspect.isclass(obj):
++        # Walk through MRO and collect marks from each class
++        mark_list = []
++        for klass in obj.__mro__:
++            # Get marks directly from this class's dict (not inherited)
++            if "pytestmark" in klass.__dict__:
++                marks = klass.__dict__["pytestmark"]
++                if isinstance(marks, list):
++                    mark_list.extend(marks)
++                else:
++                    mark_list.append(marks)
++    elif inspect.isclass(obj):
++        # Get only directly-owned marks for this class
++        mark_list = obj.__dict__.get("pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    else:
++        # For non-class objects, use getattr as before
++        mark_list = getattr(obj, "pytestmark", [])
++        if not isinstance(mark_list, list):
++            mark_list = [mark_list]
++    return list(normalize_mark_list(mark_list))
+ 
+ 
+ def normalize_mark_list(
+@@ -388,7 +406,7 @@ def store_mark(obj, mark: Mark) -> None:
+     assert isinstance(mark, Mark), mark
+     # Always reassign name to avoid updating pytestmark in a reference that
+     # was only borrowed.
+-    obj.pytestmark = [*get_unpacked_marks(obj), mark]
++    obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]
+ 
+ 
+ # Typing for builtin pytest marks. This is cheating; it gives builtin marks
+2026-05-23 00:09:53,791 - INFO - Grading answer for pytest-dev__pytest-10356...
+2026-05-23 00:09:53,794 - INFO - report: {'pytest-dev__pytest-10356': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['testing/test_mark.py::test_mark_mro'], 'failure': []}, 'PASS_TO_PASS': {'success': ['testing/test_mark.py::TestMark::test_pytest_exists_in_namespace_all[mark]', 'testing/test_mark.py::TestMark::test_pytest_exists_in_namespace_all[param]', 'testing/test_mark.py::TestMark::test_pytest_mark_notcallable', 'testing/test_mark.py::TestMark::test_mark_with_param', 'testing/test_mark.py::TestMark::test_pytest_mark_name_starts_with_underscore', 'testing/test_mark.py::TestMarkDecorator::test__eq__[lhs0-rhs0-True]', 'testing/test_mark.py::TestMarkDecorator::test__eq__[lhs1-rhs1-False]', 'testing/test_mark.py::TestMarkDecorator::test__eq__[lhs2-bar-False]', 'testing/test_mark.py::TestMarkDecorator::test__eq__[foo-rhs3-False]', 'testing/test_mark.py::TestMarkDecorator::test_aliases', 'testing/test_mark.py::test_pytest_param_id_requires_string', 'testing/test_mark.py::test_pytest_param_id_allows_none_or_string[None]', 'testing/test_mark.py::test_pytest_param_id_allows_none_or_string[hello', 'testing/test_mark.py::test_marked_class_run_twice', 'testing/test_mark.py::test_ini_markers', 'testing/test_mark.py::test_markers_option', 'testing/test_mark.py::test_ini_markers_whitespace', 'testing/test_mark.py::test_marker_without_description', 'testing/test_mark.py::test_markers_option_with_plugin_in_current_dir', 'testing/test_mark.py::test_mark_on_pseudo_function', 'testing/test_mark.py::test_strict_prohibits_unregistered_markers[--strict-markers]', 'testing/test_mark.py::test_strict_prohibits_unregistered_markers[--strict]', 'testing/test_mark.py::test_mark_option[xyz-expected_passed0]', 'testing/test_mark.py::test_mark_option[(((', 'testing/test_mark.py::test_mark_option[not', 'testing/test_mark.py::test_mark_option[xyz', 'testing/test_mark.py::test_mark_option[xyz2-expected_passed4]', 'testing/test_mark.py::test_mark_option_custom[interface-expected_passed0]', 'testing/test_mark.py::test_mark_option_custom[not', 'testing/test_mark.py::test_keyword_option_custom[interface-expected_passed0]', 'testing/test_mark.py::test_keyword_option_custom[not', 'testing/test_mark.py::test_keyword_option_custom[pass-expected_passed2]', 'testing/test_mark.py::test_keyword_option_custom[1', 'testing/test_mark.py::test_keyword_option_considers_mark', 'testing/test_mark.py::test_keyword_option_parametrize[None-expected_passed0]', 'testing/test_mark.py::test_keyword_option_parametrize[[1.3]-expected_passed1]', 'testing/test_mark.py::test_keyword_option_parametrize[2-3-expected_passed2]', 'testing/test_mark.py::test_parametrize_with_module', 'testing/test_mark.py::test_keyword_option_wrong_arguments[foo', 'testing/test_mark.py::test_keyword_option_wrong_arguments[(foo-at', 'testing/test_mark.py::test_keyword_option_wrong_arguments[or', 'testing/test_mark.py::test_keyword_option_wrong_arguments[not', 'testing/test_mark.py::test_parametrized_collected_from_command_line', 'testing/test_mark.py::test_parametrized_collect_with_wrong_args', 'testing/test_mark.py::test_parametrized_with_kwargs', 'testing/test_mark.py::test_parametrize_iterator', 'testing/test_mark.py::TestFunctional::test_merging_markers_deep', 'testing/test_mark.py::TestFunctional::test_mark_decorator_subclass_does_not_propagate_to_base', 'testing/test_mark.py::TestFunctional::test_mark_should_not_pass_to_siebling_class', 'testing/test_mark.py::TestFunctional::test_mark_decorator_baseclasses_merged', 'testing/test_mark.py::TestFunctional::test_mark_closest', 'testing/test_mark.py::TestFunctional::test_mark_with_wrong_marker', 'testing/test_mark.py::TestFunctional::test_mark_dynamically_in_funcarg', 'testing/test_mark.py::TestFunctional::test_no_marker_match_on_unmarked_names', 'testing/test_mark.py::TestFunctional::test_keywords_at_node_level', 'testing/test_mark.py::TestFunctional::test_keyword_added_for_session', 'testing/test_mark.py::TestFunctional::test_mark_from_parameters', 'testing/test_mark.py::TestFunctional::test_reevaluate_dynamic_expr', 'testing/test_mark.py::TestKeywordSelection::test_select_simple', 'testing/test_mark.py::TestKeywordSelection::test_select_extra_keywords[xxx]', 'testing/test_mark.py::TestKeywordSelection::test_select_extra_keywords[xxx', 'testing/test_mark.py::TestKeywordSelection::test_select_extra_keywords[TestClass]', 'testing/test_mark.py::TestKeywordSelection::test_select_extra_keywords[TestClass', 'testing/test_mark.py::TestKeywordSelection::test_keyword_extra', 'testing/test_mark.py::TestKeywordSelection::test_no_magic_values[__]', 'testing/test_mark.py::TestKeywordSelection::test_no_magic_values[+]', 'testing/test_mark.py::TestKeywordSelection::test_no_magic_values[..]', 'testing/test_mark.py::TestKeywordSelection::test_no_match_directories_outside_the_suite', 'testing/test_mark.py::test_parameterset_for_parametrize_marks[None]', 'testing/test_mark.py::test_parameterset_for_parametrize_marks[]', 'testing/test_mark.py::test_parameterset_for_parametrize_marks[skip]', 'testing/test_mark.py::test_parameterset_for_parametrize_marks[xfail]', 'testing/test_mark.py::test_parameterset_for_fail_at_collect', 'testing/test_mark.py::test_parameterset_for_parametrize_bad_markname', 'testing/test_mark.py::test_mark_expressions_no_smear', 'testing/test_mark.py::test_addmarker_order', 'testing/test_mark.py::test_markers_from_parametrize', 'testing/test_mark.py::test_marker_expr_eval_failure_handling[NOT', 'testing/test_mark.py::test_marker_expr_eval_failure_handling[bogus=]'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pytest-dev__pytest-10356: resolved: True
+2026-05-23 00:09:53,794 - INFO - Attempting to stop container sweb.eval.pytest-dev__pytest-10356.batch...
+2026-05-23 00:10:10,970 - INFO - Attempting to remove container sweb.eval.pytest-dev__pytest-10356.batch...
+2026-05-23 00:10:10,996 - INFO - Container sweb.eval.pytest-dev__pytest-10356.batch removed.
