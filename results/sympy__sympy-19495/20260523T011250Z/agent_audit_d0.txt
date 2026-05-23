@@ -1,0 +1,35 @@
+# Audit: sympy__sympy-19495
+
+## FAIL_TO_PASS
+- test_subs_CondSet: ✅ PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_failing_contains (expected to fail)
+
+## Summary
+
+The craft patch successfully resolves the issue:
+
+**Patch applied:**
+```python
+# Line 246 in sympy/sets/conditionset.py
+-            return ConditionSet(new, Contains(new, base), base)
++            return base
+```
+
+**Result:** When `cond is S.true` after substitution, the method now correctly returns the base set directly instead of creating a malformed ConditionSet with a non-symbol dummy variable.
+
+**Test results:**
+- ✅ FAIL_TO_PASS test now passes: `test_subs_CondSet`
+- ✅ All 8 PASS_TO_PASS tests remain passing
+- ✅ Zero regressions introduced
+
+The fix aligns with the existing logic in `__new__` (lines 146-147) where `condition is S.true` returns `base_set`, maintaining consistency across the class.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,8 @@
+**RESOLVED**
+
+The fix has been successfully applied and verified:
+- Changed line 246 in `sympy/sets/conditionset.py` to return `base` directly when `cond is S.true`
+- This aligns with the `__new__` method's handling of true conditions
+- Gate passes: `test_subs_CondSet` now passes along with all other tests
+
+---STDERR---
