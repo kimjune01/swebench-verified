@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 auth_tests.test_auth_backends
+
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_tests_custompermissionsuser"."id", "auth_tests_custompermissionsuser"."password", "auth_tests_custompermissionsuser"."last_login", "auth_tests_custompermissionsuser"."is_superuser", "auth_tests_custompermissionsuser"."email", "auth_tests_custompermissionsuser"."date_of_birth" FROM "auth_tests_custompermissionsuser" WHERE "auth_tests_custompermissionsuser"."email" IS NULL LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ExtensionUserModelBackendTest) (credentials={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_tests_extensionuser"."id", "auth_tests_extensionuser"."password", "auth_tests_extensionuser"."last_login", "auth_tests_extensionuser"."is_superuser", "auth_tests_extensionuser"."username", "auth_tests_extensionuser"."first_name", "auth_tests_extensionuser"."last_name", "auth_tests_extensionuser"."email", "auth_tests_extensionuser"."is_staff", "auth_tests_extensionuser"."is_active", "auth_tests_extensionuser"."date_joined", "auth_tests_extensionuser"."date_of_birth" FROM "auth_tests_extensionuser" WHERE "auth_tests_extensionuser"."username" IS NULL LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ExtensionUserModelBackendTest) (credentials={'username': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_tests_extensionuser"."id", "auth_tests_extensionuser"."password", "auth_tests_extensionuser"."last_login", "auth_tests_extensionuser"."is_superuser", "auth_tests_extensionuser"."username", "auth_tests_extensionuser"."first_name", "auth_tests_extensionuser"."last_name", "auth_tests_extensionuser"."email", "auth_tests_extensionuser"."is_staff", "auth_tests_extensionuser"."is_active", "auth_tests_extensionuser"."date_joined", "auth_tests_extensionuser"."date_of_birth" FROM "auth_tests_extensionuser" WHERE "auth_tests_extensionuser"."username" = 'test' LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ExtensionUserModelBackendTest) (credentials={'password': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_tests_extensionuser"."id", "auth_tests_extensionuser"."password", "auth_tests_extensionuser"."last_login", "auth_tests_extensionuser"."is_superuser", "auth_tests_extensionuser"."username", "auth_tests_extensionuser"."first_name", "auth_tests_extensionuser"."last_name", "auth_tests_extensionuser"."email", "auth_tests_extensionuser"."is_staff", "auth_tests_extensionuser"."is_active", "auth_tests_extensionuser"."date_joined", "auth_tests_extensionuser"."date_of_birth" FROM "auth_tests_extensionuser" WHERE "auth_tests_extensionuser"."username" IS NULL LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ModelBackendTest) (credentials={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."username" IS NULL LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ModelBackendTest) (credentials={'username': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."username" = 'test' LIMIT 21
+
+======================================================================
+FAIL: test_authentication_without_credentials (auth_tests.test_auth_backends.ModelBackendTest) (credentials={'password': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/auth_tests/test_auth_backends.py", line 239, in test_authentication_without_credentials
+    authenticate(**credentials)
+  File "/testbed/django/test/testcases.py", line 85, in __exit__
+    '%d. %s' % (i, query['sql']) for i, query in enumerate(self.captured_queries, start=1)
+AssertionError: 1 != 0 : 1 queries executed, 0 expected
+Captured queries were:
+1. SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."username" IS NULL LIMIT 21
+
+----------------------------------------------------------------------
+Ran 57 tests in 0.127s
+
+FAILED (failures=9)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application auth_tests
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, auth_tests, contenttypes, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table auth_tests_customuser
+    Creating table auth_tests_customuserwithoutisactivefield
+    Creating table auth_tests_extensionuser
+    Creating table auth_tests_custompermissionsuser
+    Creating table auth_tests_customusernonuniqueusername
+    Creating table auth_tests_isactivetestuser1
+    Creating table auth_tests_minimaluser
+    Creating table auth_tests_nopassworduser
+    Creating table auth_tests_concrete
+    Creating table auth_tests_uuiduser
+    Creating table auth_tests_email
+    Creating table auth_tests_customuserwithfk
+    Creating table auth_tests_integerusernameuser
+    Creating table auth_tests_userwithdisabledlastloginfield
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

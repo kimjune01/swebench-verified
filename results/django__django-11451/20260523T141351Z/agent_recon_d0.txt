@@ -1,0 +1,15 @@
+Perfect! My diagnosis is complete. The issue is clear:
+
+**Summary:** `ModelBackend.authenticate()` makes unnecessary database queries and runs expensive password hashers when called with incomplete credentials (missing username or password). This happens because the method doesn't validate that both credentials are present before attempting database access.
+
+**Root cause:** The method at `django/contrib/auth/backends.py:39-50` needs an early return check after extracting username from kwargs (line 41) to prevent the database query at line 43 when either `username is None or password is None`.
+
+**Fix:** Add two lines after line 41:
+```python
+if username is None or password is None:
+    return
+```
+
+This will make the failing tests pass by ensuring 0 database queries and 0 password hasher calls when credentials are incomplete, allowing other authentication backends to try instead.
+
+---STDERR---

@@ -1,0 +1,11 @@
+## RESOLVED
+
+The fix has been successfully applied and verified. All 6 FAIL_TO_PASS tests now pass, along with all other existing tests (57 total tests passed).
+
+**Fix applied:** Added early return check in `ModelBackend.authenticate()` to prevent unnecessary database queries and password hashing when credentials are incomplete.
+
+**Changed file:** `django/contrib/auth/backends.py` (lines 42-43 added)
+
+The fix ensures that when `authenticate()` is called without a username or password, it returns `None` immediately instead of making expensive database queries and running password hashers, allowing other authentication backends to try instead.
+
+---STDERR---
