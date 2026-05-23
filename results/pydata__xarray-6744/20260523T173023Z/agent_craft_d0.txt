@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes all FAIL_TO_PASS tests pass. The `DataArrayRolling.__iter__` method now correctly handles `center=True` by computing centered windows instead of always using left-aligned windows, matching the behavior of rolling reduction methods like `.mean()`.
+
+---STDERR---

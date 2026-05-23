@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-6744
+
+## FAIL_TO_PASS
+- xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]: PASS
+- xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]: PASS
+- xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]: PASS
+
+## PASS_TO_PASS regressions
+None — all 1818 tests passed with no failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the 32 skipped tests and 4 xpassed tests match the baseline.
+
+## Summary
+The craft patch successfully fixed the rolling iterator's center parameter handling. All three FAIL_TO_PASS tests now pass, and the full gate shows zero regressions across all 1818 tests. The fix added conditional logic to `__iter__` that computes centered window offsets when `self.center[0]` is True, matching the behavior of rolling reduction methods.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

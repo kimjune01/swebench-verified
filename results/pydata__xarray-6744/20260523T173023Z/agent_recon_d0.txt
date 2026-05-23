@@ -1,0 +1,68 @@
+Now I'll write the complete diagnosis to stdout:
+
+# Recon: pydata__xarray-6744
+
+## Failure summary
+
+The tests verify that manually iterating over a `DataArrayRolling` object produces windows equivalent to what the `.mean()` reduction uses internally. When `center=True`, the test expects centered windows where edge positions return NaN (due to insufficient data to meet `min_periods`). However, the `__iter__` method always produces left-aligned windows, causing a systematic offset: iteration returns actual values where `.mean()` returns NaN at edges, and returns shifted means for interior positions.
+
+The failures occur with window sizes 3 and 7 when `center=True` and `min_periods` defaults to the window size. Test assertion on line 45 of `xarray/tests/test_rolling.py` compares `rolling_obj_mean.isel(time=i)` against `window_da.mean("time")` and finds mismatches in both NaN placement and computed values.
+
+## Suspect set
+
+- `xarray/core/rolling.py` lines 270-283: `DataArrayRolling.__iter__()` method - computes window slice indices without checking the `center` parameter
+- `xarray/core/rolling.py` line 110: `self.center` is initialized and stored as instance variable
+- `xarray/core/rolling.py` lines 515-536: Rolling reduce methods correctly handle `center` by padding and shifting
+
+## Root cause
+
+The `__iter__` method in `DataArrayRolling` (lines 270-283) computes window boundaries using a fixed left-aligned formula that ignores `self.center[0]`. Lines 273-275 compute:
+
+```python
+stops = np.arange(1, len(self.window_labels) + 1)
+starts = stops - int(self.window[0])
+starts[: int(self.window[0])] = 0
+```
+
+This produces windows where position i always includes data from `[max(0, i+1-w), i+1)` — a left-aligned window ending at position i+1.
+
+When `center=True`, windows should be centered at position i, spanning approximately `[i-w//2, i+w-w//2)`. For window size 3 at position i=1, this should be `[0, 3)` (indices 0, 1, 2), but the current code produces `[0, 2)` (indices 0, 1).
+
+The `.mean()` reduction correctly handles `center` via padding logic in lines 515-526 (`_bottleneck_reduce`), shifting windows appropriately. The iterator has no equivalent logic.
+
+**Confidence: Deduction — 95%** (traced code execution path, verified window indices match failure symptoms, confirmed center parameter exists but is unused in `__iter__`)
+
+**Supporting evidence:**
+- `xarray/core/rolling.py:270-283` — no reference to `self.center` in `__iter__` implementation
+- Test output shows systematic offset: expected `[nan, 1., 2., 3., nan]`, got `[nan, nan, 1., 2., 3.]` for center=True, window=3
+- `xarray/core/rolling.py:515` — `if self.center[0]:` shows center is used correctly in reduce methods
+
+## Edit sites
+
+- `xarray/core/rolling.py` lines 273-275: Replace unconditional left-aligned window calculation with conditional logic:
+  - When `self.center[0]` is False: keep existing logic
+  - When `self.center[0]` is True: compute centered windows using offset `= self.window[0] // 2`, then `starts = max(0, i - offset)` and `stops = i + window - offset` for each position i
+
+Specifically, modify the start/stop calculation to:
+```python
+if self.center[0]:
+    offset = self.window[0] // 2
+    indices = np.arange(len(self.window_labels))
+    starts = indices - offset
+    stops = indices + (self.window[0] - offset)
+    starts = np.maximum(starts, 0)
+else:
+    stops = np.arange(1, len(self.window_labels) + 1)
+    starts = stops - int(self.window[0])
+    starts[: int(self.window[0])] = 0
+```
+
+## Rejected hypotheses
+
+None — this is the first diagnosis. No prior audit kill.
+
+## Open questions
+
+None — the fix is localized to a single method with clear semantics matching existing `center` handling elsewhere in the module.
+
+---STDERR---
