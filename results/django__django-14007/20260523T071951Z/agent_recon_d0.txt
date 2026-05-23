@@ -1,0 +1,49 @@
+# Recon: django__django-14007
+
+## Failure summary
+
+The test `test_auto_field_subclass_create` creates a `CustomAutoFieldModel` with a `MyAutoField` primary key (subclass of `BigAutoField`). The field defines `from_db_value` to wrap database integers in a `MyWrapper` class. After `objects.create()`, the test expects `obj.id` to be a `MyWrapper` instance, but it's a plain integer `1`. The assertion fails: `AssertionError: 1 is not an instance of <class 'custom_pk.fields.MyWrapper'>`. The same issue affects `bulk_create` on backends supporting `can_return_rows_from_bulk_insert`.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 1403-1421: `SQLInsertCompiler.execute_sql()` returns raw database values without applying field converters
+- `django/db/models/base.py` lines 871-875: `_save_table()` receives and directly sets unconverted values from insert
+- `django/db/models/query.py` lines 502-521: `bulk_create()` receives and directly sets unconverted values from batched insert
+
+## Root cause
+
+Database converters (specifically `from_db_value`) are not applied to `returning_fields` values after INSERT operations. When `SQLInsertCompiler.execute_sql()` returns auto-generated IDs or other returning fields, it returns raw database values. These bypass the converter pipeline that SELECT queries use (`get_converters` + `apply_converters`). The unconverted values are then directly set as object attributes.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/db/models/sql/compiler.py:1415` — `return self.connection.ops.fetch_returned_insert_rows(cursor)` (bulk insert path, no converters)
+- `django/db/models/sql/compiler.py:1418` — `return [self.connection.ops.fetch_returned_insert_columns(...)]` (single insert with RETURNING, no converters)
+- `django/db/models/sql/compiler.py:1419-1421` — `return [(self.connection.ops.last_insert_id(...),)]` (fallback path, no converters)
+- `django/db/models/base.py:874-875` — `setattr(self, field.attname, value)` directly sets raw value without conversion
+- `django/db/models/sql/compiler.py:1121-1130` — Contrast: SELECT path calls `get_converters(fields)` then `apply_converters(rows, converters)` before returning results
+- `django/db/models/fields/__init__.py:746-749` — `Field.get_db_converters()` returns `[self.from_db_value]` when the method exists
+
+## Edit sites
+
+**Primary**: `django/db/models/sql/compiler.py` lines 1403-1421 — In `SQLInsertCompiler.execute_sql()`, gather converters for `self.returning_fields` (using `field.get_db_converters(self.connection)` plus backend converters from `self.connection.ops.get_db_converters(field)`), then apply those converters to each value in the returned tuples before returning. Follow the pattern from `apply_converters` (line 1110-1119): iterate converters for each field position, apply each converter as `value = converter(value, field, connection)`.
+
+**Secondary (if compiler fix insufficient)**: 
+- `django/db/models/base.py` line 874 — Apply converters to `value` before `setattr`
+- `django/db/models/query.py` lines 507, 521 — Apply converters to `result` before `setattr`
+
+The compiler-level fix is strongly preferred—centralizes conversion, applies to all INSERT code paths automatically, matches the architecture of the SELECT path.
+
+## Competing hypotheses
+
+None. The root cause is directly observable: the INSERT return path omits the converter application step that SELECT queries perform.
+
+## Rejected hypotheses
+
+None considered—the code path is deterministic and the missing converter calls are evident from comparison with the SELECT path.
+
+## Open questions
+
+None. The converter API (`get_db_converters`, `apply_converters`) exists in the same class and is used by SELECT queries. Applying the same pattern to INSERT is straightforward.
+
+---STDERR---

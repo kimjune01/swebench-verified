@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_auto_field_subclass_create` now passes. The fix applies database converters (`from_db_value`) to auto-generated IDs returned from INSERT operations by:
+
+1. Adding a `get_returning_field_converters()` helper method that adapts Field objects to the converter API
+2. Applying converters uniformly across all three INSERT return paths (bulk, RETURNING, fallback)
+3. Preserving the tuple return contract
+
+The working tree contains the complete fix ready for audit.
+
+---STDERR---

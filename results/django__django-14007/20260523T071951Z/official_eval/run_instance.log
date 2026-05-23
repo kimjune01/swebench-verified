@@ -1,0 +1,131 @@
+2026-05-23 07:17:34,411 - INFO - Creating container for django__django-14007...
+2026-05-23 07:17:35,938 - INFO - Container for django__django-14007 created: 3dcdccc327379c1347bb4f0661df1c4a138d0f0d94f65f6daef1993ea4919375
+2026-05-23 07:17:36,467 - INFO - Container for django__django-14007 started: 3dcdccc327379c1347bb4f0661df1c4a138d0f0d94f65f6daef1993ea4919375
+2026-05-23 07:17:36,467 - INFO - Intermediate patch for django__django-14007 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14007/patch.diff, now applying to container...
+2026-05-23 07:17:36,675 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/sql/compiler.py...
+Applied patch django/db/models/sql/compiler.py cleanly.
+
+2026-05-23 07:17:37,558 - INFO - Git diff before:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index f02199d97c..19478ef06f 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -3,6 +3,7 @@ import re
+ from functools import partial
+ from itertools import chain
+ 
++from types import SimpleNamespace
+ from django.core.exceptions import EmptyResultSet, FieldError
+ from django.db import DatabaseError, NotSupportedError
+ from django.db.models.constants import LOOKUP_SEP
+@@ -1400,6 +1401,17 @@ class SQLInsertCompiler(SQLCompiler):
+                 for p, vals in zip(placeholder_rows, param_rows)
+             ]
+ 
++    def get_returning_field_converters(self, fields):
++        """Get converters for returning fields (Field objects, not expressions)."""
++        converters = {}
++        for pos, field in enumerate(fields):
++            expression = SimpleNamespace(output_field=field)
++            backend_converters = self.connection.ops.get_db_converters(expression)
++            field_converters = field.get_db_converters(self.connection)
++            if backend_converters or field_converters:
++                converters[pos] = (backend_converters + field_converters, expression)
++        return converters
++
+     def execute_sql(self, returning_fields=None):
+         assert not (
+             returning_fields and len(self.query.objs) != 1 and
+@@ -1412,13 +1424,19 @@ class SQLInsertCompiler(SQLCompiler):
+             if not self.returning_fields:
+                 return []
+             if self.connection.features.can_return_rows_from_bulk_insert and len(self.query.objs) > 1:
+-                return self.connection.ops.fetch_returned_insert_rows(cursor)
+-            if self.connection.features.can_return_columns_from_insert:
++                rows = self.connection.ops.fetch_returned_insert_rows(cursor)
++            elif self.connection.features.can_return_columns_from_insert:
+                 assert len(self.query.objs) == 1
+-                return [self.connection.ops.fetch_returned_insert_columns(cursor, self.returning_params)]
+-            return [(self.connection.ops.last_insert_id(
+-                cursor, self.query.get_meta().db_table, self.query.get_meta().pk.column
+-            ),)]
++                rows = [self.connection.ops.fetch_returned_insert_columns(cursor, self.returning_params)]
++            else:
++                rows = [(self.connection.ops.last_insert_id(
++                    cursor, self.query.get_meta().db_table, self.query.get_meta().pk.column
++                ),)]
++            # Apply converters to the returned values
++            converters = self.get_returning_field_converters(self.returning_fields)
++            if converters:
++                rows = [tuple(row) for row in self.apply_converters(rows, converters)]
++            return rows
+ 
+ 
+ class SQLDeleteCompiler(SQLCompiler):
+2026-05-23 07:17:37,559 - INFO - Eval script for django__django-14007 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14007/eval.sh; copying to container...
+2026-05-23 07:17:45,215 - INFO - Test runtime: 7.49 seconds
+2026-05-23 07:17:45,216 - INFO - Test output for django__django-14007 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14007/test_output.txt
+2026-05-23 07:17:45,518 - INFO - Git diff after:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index f02199d97c..19478ef06f 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -3,6 +3,7 @@ import re
+ from functools import partial
+ from itertools import chain
+ 
++from types import SimpleNamespace
+ from django.core.exceptions import EmptyResultSet, FieldError
+ from django.db import DatabaseError, NotSupportedError
+ from django.db.models.constants import LOOKUP_SEP
+@@ -1400,6 +1401,17 @@ class SQLInsertCompiler(SQLCompiler):
+                 for p, vals in zip(placeholder_rows, param_rows)
+             ]
+ 
++    def get_returning_field_converters(self, fields):
++        """Get converters for returning fields (Field objects, not expressions)."""
++        converters = {}
++        for pos, field in enumerate(fields):
++            expression = SimpleNamespace(output_field=field)
++            backend_converters = self.connection.ops.get_db_converters(expression)
++            field_converters = field.get_db_converters(self.connection)
++            if backend_converters or field_converters:
++                converters[pos] = (backend_converters + field_converters, expression)
++        return converters
++
+     def execute_sql(self, returning_fields=None):
+         assert not (
+             returning_fields and len(self.query.objs) != 1 and
+@@ -1412,13 +1424,19 @@ class SQLInsertCompiler(SQLCompiler):
+             if not self.returning_fields:
+                 return []
+             if self.connection.features.can_return_rows_from_bulk_insert and len(self.query.objs) > 1:
+-                return self.connection.ops.fetch_returned_insert_rows(cursor)
+-            if self.connection.features.can_return_columns_from_insert:
++                rows = self.connection.ops.fetch_returned_insert_rows(cursor)
++            elif self.connection.features.can_return_columns_from_insert:
+                 assert len(self.query.objs) == 1
+-                return [self.connection.ops.fetch_returned_insert_columns(cursor, self.returning_params)]
+-            return [(self.connection.ops.last_insert_id(
+-                cursor, self.query.get_meta().db_table, self.query.get_meta().pk.column
+-            ),)]
++                rows = [self.connection.ops.fetch_returned_insert_columns(cursor, self.returning_params)]
++            else:
++                rows = [(self.connection.ops.last_insert_id(
++                    cursor, self.query.get_meta().db_table, self.query.get_meta().pk.column
++                ),)]
++            # Apply converters to the returned values
++            converters = self.get_returning_field_converters(self.returning_fields)
++            if converters:
++                rows = [tuple(row) for row in self.apply_converters(rows, converters)]
++            return rows
+ 
+ 
+ class SQLDeleteCompiler(SQLCompiler):
+2026-05-23 07:17:45,518 - INFO - Grading answer for django__django-14007...
+2026-05-23 07:17:45,519 - INFO - report: {'django__django-14007': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_auto_field_subclass_create (custom_pk.tests.CustomPKTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['Get can accept pk or the real attribute name', 'Custom pks work with in_bulk, both for integer and non-integer types', 'pk and attribute name are available on the model', 'Both pk and custom attribute_name can be used in filter and friends', "Custom pk doesn't affect related_name based lookups", 'Queries across tables, involving primary key', 'custom pks do not affect save', 'test_custom_field_pk (custom_pk.tests.CustomPKTests)', 'New objects can be created both with pk and the custom name', 'test_unicode_pk (custom_pk.tests.CustomPKTests)', 'test_unique_pk (custom_pk.tests.CustomPKTests)', 'test_zero_non_autoincrement_pk (custom_pk.tests.CustomPKTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-14007: resolved: True
+2026-05-23 07:17:45,519 - INFO - Attempting to stop container sweb.eval.django__django-14007.batch...
+2026-05-23 07:18:00,939 - INFO - Attempting to remove container sweb.eval.django__django-14007.batch...
+2026-05-23 07:18:00,959 - INFO - Container sweb.eval.django__django-14007.batch removed.

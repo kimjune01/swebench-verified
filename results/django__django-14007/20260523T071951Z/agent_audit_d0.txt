@@ -1,0 +1,20 @@
+# Audit: django__django-14007
+
+## FAIL_TO_PASS
+- test_auto_field_subclass_create (custom_pk.tests.CustomPKTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully fixes the issue. The `test_auto_field_subclass_create` test, which was failing because `obj.id` returned a raw integer instead of a `MyWrapper` instance, now passes. The fix applies field converters (`from_db_value`) to values returned from INSERT operations by adding a `get_returning_field_converters()` helper method in `SQLInsertCompiler.execute_sql()`.
+
+All 12 PASS_TO_PASS tests remain passing with no regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
