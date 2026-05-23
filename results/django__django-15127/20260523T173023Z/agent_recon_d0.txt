@@ -1,0 +1,55 @@
+# Recon: django__django-15127
+
+## Failure summary
+
+The test `test_override_settings_level_tags` verifies that when `@override_settings(MESSAGE_TAGS={...})` decorates a test, the module-level `LEVEL_TAGS` dictionary in `django/contrib/messages/storage/base.py` should reflect the overridden message tags. The test fails because `LEVEL_TAGS` retains the default values `{10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}` instead of updating to the custom tags `{20: 'info', 10: '', 30: '', 40: 'bad', 25: '', 12: 'custom'}`.
+
+## Suspect set
+
+- `django/contrib/messages/storage/base.py` line 4: `LEVEL_TAGS = utils.get_level_tags()` - module-level assignment happens once at import
+- `django/contrib/messages/storage/base.py` line 41: `return LEVEL_TAGS.get(self.level, '')` - uses stale cached value
+- `django/contrib/messages/utils.py` lines 5-11: `get_level_tags()` function that merges default and custom tags
+
+## Root cause
+
+`LEVEL_TAGS` is assigned once at module import time by calling `utils.get_level_tags()`, which reads `settings.MESSAGE_TAGS` and merges it with default tags. When `@override_settings` changes `MESSAGE_TAGS`, the settings object is updated, but the module-level `LEVEL_TAGS` variable retains its original value. The `Message.level_tag` property at line 41 uses this stale `LEVEL_TAGS` dictionary, causing messages to use default tags even when custom tags are configured.
+
+**Confidence:** abduction — 85%
+
+**Supporting evidence:**
+- `django/contrib/messages/storage/base.py:4` — `LEVEL_TAGS = utils.get_level_tags()` executes once at module load
+- `django/contrib/messages/utils.py:10` — `**getattr(settings, 'MESSAGE_TAGS', {})` reads from settings but result is cached at module level
+- Test failure output shows `LEVEL_TAGS` unchanged despite `@override_settings` decorator
+- Confirmed `test_custom_tags` in `base.py:357` also fails with same root cause (expects custom tags 'bad' and 'custom' but gets default tags 'error' and 'debug')
+
+## Edit sites
+
+**Primary fix:** Add a `setting_changed` signal receiver to update `LEVEL_TAGS` when `MESSAGE_TAGS` changes, following the Django standard pattern used in `django/contrib/auth/hashers.py:104-108`.
+
+- `django/contrib/messages/storage/base.py` lines 1-4:
+  - Add imports: `from django.core.signals import setting_changed` and `from django.dispatch import receiver`
+  - Keep existing `LEVEL_TAGS = utils.get_level_tags()` assignment
+  
+- `django/contrib/messages/storage/base.py` after line 4:
+  - Add receiver function:
+    ```python
+    @receiver(setting_changed)
+    def reset_level_tags(**kwargs):
+        if kwargs['setting'] == 'MESSAGE_TAGS':
+            global LEVEL_TAGS
+            LEVEL_TAGS = utils.get_level_tags()
+    ```
+
+## Rejected hypotheses
+
+- **H₁:** The `utils.get_level_tags()` function doesn't read settings correctly — killed by observing that `utils.py:10` correctly uses `getattr(settings, 'MESSAGE_TAGS', {})` and initial import gets default values as expected.
+
+- **H₂:** The `@override_settings` decorator doesn't update `settings.MESSAGE_TAGS` — killed by Django's standard override_settings implementation which sends `setting_changed` signals (verified in `django/test/utils.py:477`).
+
+- **H₃:** The test expectation is wrong — killed by tracing through `get_level_tags()` logic which merges `DEFAULT_TAGS` with `MESSAGE_TAGS`, and when all default keys are overridden, the result equals the override dict exactly.
+
+## Open questions
+
+None — the root cause is clear and the fix follows established Django patterns for handling settings that affect module-level cached state.
+
+---STDERR---

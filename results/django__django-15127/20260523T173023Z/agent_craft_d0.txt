@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed on the first gate iteration. Added a `setting_changed` signal receiver to `django/contrib/messages/storage/base.py` that updates `LEVEL_TAGS` when `MESSAGE_TAGS` setting changes, using in-place mutation to preserve direct imports.
+
+---STDERR---

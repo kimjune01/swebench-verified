@@ -1,0 +1,18 @@
+# Audit: django__django-15127
+
+## FAIL_TO_PASS
+- test_override_settings_level_tags (messages_tests.tests.TestLevelTags): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves the issue by adding a `setting_changed` signal handler in `django/contrib/messages/storage/base.py` that resets `LEVEL_TAGS` when `MESSAGE_TAGS` is modified. The handler clears and repopulates `LEVEL_TAGS` using `utils.get_level_tags()`, ensuring test isolation when using `override_settings`. Both required tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

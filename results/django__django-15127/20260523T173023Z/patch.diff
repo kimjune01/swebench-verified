@@ -1,0 +1,23 @@
+diff --git a/django/contrib/messages/storage/base.py b/django/contrib/messages/storage/base.py
+index 01422066a6..5e30e3edbf 100644
+--- a/django/contrib/messages/storage/base.py
++++ b/django/contrib/messages/storage/base.py
+@@ -1,9 +1,18 @@
+ from django.conf import settings
+ from django.contrib.messages import constants, utils
++from django.core.signals import setting_changed
++from django.dispatch import receiver
+ 
+ LEVEL_TAGS = utils.get_level_tags()
+ 
+ 
++@receiver(setting_changed, dispatch_uid='django.contrib.messages.storage.base.reset_level_tags')
++def reset_level_tags(setting, **kwargs):
++    if setting == 'MESSAGE_TAGS':
++        LEVEL_TAGS.clear()
++        LEVEL_TAGS.update(utils.get_level_tags())
++
++
+ class Message:
+     """
+     Represent an actual message that can be stored in any of the supported
