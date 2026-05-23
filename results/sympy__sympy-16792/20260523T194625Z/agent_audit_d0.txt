@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-16792
+
+## FAIL_TO_PASS
+- `test_ccode_unused_array_arg`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 55 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None.
+
+## Gate output
+```
+================== tests finished: 56 passed, in 1.01 seconds ==================
+```
+
+All tests pass. The craft patch successfully resolved the issue without introducing any regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

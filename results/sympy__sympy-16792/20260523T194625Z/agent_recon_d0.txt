@@ -1,0 +1,45 @@
+# Recon: sympy__sympy-16792
+
+## Failure summary
+
+The test `test_ccode_unused_array_arg` verifies that when a MatrixSymbol is passed as an argument but doesn't appear in the expression being wrapped, the generated C function signature should still declare it as an array pointer (`double *x`) rather than a scalar (`double x`). The test creates a MatrixSymbol `x` of shape (2,1), generates code for the constant expression `1.0` with `x` in the argument sequence, and expects `double test(double *x)` but receives `double test(double x)`.
+
+Error: AssertionError - the generated C signature uses `double x` instead of `double *x`.
+
+## Suspect set
+
+- `sympy/utilities/codegen.py` lines 719-742: The `routine` method's `argument_sequence` processing block where arguments not appearing in the expression are handled
+- `sympy/utilities/codegen.py` lines 906-913: The `get_prototype` method in `CCodeGen` that decides pointer vs scalar based on `arg.dimensions`
+
+## Root cause
+
+In the `CodeGen.routine` method at line 741, when processing `argument_sequence`, symbols that don't appear in the expression are created as `InputArgument(symbol)` without dimension metadata. The code builds an `array_symbols` dictionary (lines 701-704) only from symbols appearing in the expression. When a symbol from `argument_sequence` is not found in the pre-built `name_arg_dict`, it falls through to the `except KeyError:` block which creates a bare `InputArgument(symbol)` with no dimensions.
+
+This causes `arg.dimensions` to be `None`, which makes `CCodeGen.get_prototype` (line 909) take the `else` branch and generate a scalar parameter instead of a pointer.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/utilities/codegen.py:701-704` — `array_symbols` built only from `expressions.atoms(MatrixSymbol)`, excluding unused symbols
+- `sympy/utilities/codegen.py:706-713` — Dimensions metadata added only for symbols in `array_symbols`
+- `sympy/utilities/codegen.py:741` — `new_args.append(InputArgument(symbol))` creates argument without checking if symbol is MatrixSymbol/IndexedBase
+- `sympy/utilities/codegen.py:909` — `if arg.dimensions or isinstance(arg, ResultBase):` decides pointer vs scalar
+- Verified via test: `InputArgument` for MatrixSymbol `x` has `dimensions=None` when `x` doesn't appear in expression
+
+## Edit sites
+
+- `sympy/utilities/codegen.py` lines 739-741: In the `except KeyError:` block, replace the bare `InputArgument(symbol)` creation with logic that checks if `symbol` is a `MatrixSymbol` or `IndexedBase` and adds appropriate dimensions metadata. The pattern should match lines 707-713 where dimensions are created as `[(S.Zero, dim - 1) for dim in array.shape]` for MatrixSymbol, and similar for Indexed (using `symbol.base.label` to get the underlying array).
+
+## Competing hypotheses
+
+None — the code path is deterministic and the fix location is clear from tracing.
+
+## Rejected hypotheses
+
+- H₁: The bug is in `get_prototype` — killed because `get_prototype` correctly checks `arg.dimensions`; the issue is that dimensions are never set on the InputArgument in the first place.
+
+## Open questions
+
+None — the fix is straightforward and localized.
+
+---STDERR---

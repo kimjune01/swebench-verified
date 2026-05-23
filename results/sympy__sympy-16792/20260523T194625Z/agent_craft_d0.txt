@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes the failing test `test_ccode_unused_array_arg` pass. The minimal change checks if an unused argument from `argument_sequence` is a MatrixSymbol and adds appropriate dimension metadata, causing the C code generator to emit `double *x` (pointer) instead of `double x` (scalar) for array parameters.
+
+Gate result: All 56 tests pass, including the target test. No regressions.
+
+---STDERR---
