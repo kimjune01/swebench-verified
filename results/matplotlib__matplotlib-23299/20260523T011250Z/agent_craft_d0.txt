@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `test_no_backend_reset_rccontext` now passes. The fix excludes 'backend' from the rcParams snapshot during `rc_context()` construction, allowing backend changes to persist across context manager boundaries.
+
+Final change in `lib/matplotlib/__init__.py` line 1090:
+```python
+orig = {k: rcParams[k] for k in rcParams if k != "backend"}
+```
+
+The other 2 test failures (`test_rcparams_update`, `test_rcparams_init`) are pre-existing baseline failures, verified by running the gate without the fix - they are not regressions caused by this change.
+
+---STDERR---

@@ -1,0 +1,36 @@
+# Recon: matplotlib__matplotlib-23299
+
+## Failure summary
+The test `test_no_backend_reset_rccontext` verifies that backend changes made inside `rc_context()` should persist after the context exits. Currently, the test fails because `rc_context` restores ALL rcParams when exiting, including the 'backend' parameter. This restoration can revert the backend to the auto-backend sentinel, which triggers `switch_backend()` on the next access, destroying all figures via `close("all")`.
+
+## Suspect set
+- `lib/matplotlib/__init__.py` lines 1058-1096: `rc_context()` function, specifically the finally block at line 1096
+- `lib/matplotlib/__init__.py` lines 665-669: `RcParams.__getitem__()` method's backend auto-resolution logic
+- `lib/matplotlib/style/core.py` lines 40-43: STYLE_BLACKLIST definition
+- `lib/matplotlib/pyplot.py` line 225: `switch_backend()` calling `close("all")`
+
+## Root cause
+The `rc_context()` function's finally block unconditionally restores ALL rcParams to their original values using `dict.update(rcParams, orig)`. This includes the 'backend' parameter, which is listed in `STYLE_BLACKLIST` as a parameter that should not be temporarily modified and restored.
+
+When the backend is restored to the auto-backend sentinel (the original value before rc_context), any subsequent access to `rcParams['backend']` triggers the `__getitem__` method's special handling for the auto sentinel. This causes `switch_backend(_auto_backend_sentinel)` to be called, which executes `close("all")` on line 225 of pyplot.py, destroying all figures.
+
+The 'backend' parameter is intentionally blacklisted from style changes because backend switching has persistent side effects (loading backend modules, GUI event loops, etc.) and should not be temporarily changed within a context manager.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `lib/matplotlib/__init__.py:1096` — `dict.update(rcParams, orig)  # Revert to the original rcs.`
+- `lib/matplotlib/style/core.py:41` — `STYLE_BLACKLIST = {'interactive', 'backend', 'webagg.port', ...`
+- `lib/matplotlib/__init__.py:665-669` — Auto-backend resolution in `__getitem__` triggers switch_backend
+- `lib/matplotlib/pyplot.py:225` — `close("all")` called by switch_backend
+
+## Edit sites
+- `lib/matplotlib/__init__.py` line 1096: Change the finally block in `rc_context()` to exclude STYLE_BLACKLIST parameters when restoring. The restoration should filter out parameters listed in `STYLE_BLACKLIST` (which includes 'backend') so they persist across rc_context boundaries. Import STYLE_BLACKLIST from `matplotlib.style.core` and modify the dict.update call to: `dict.update(rcParams, {k: v for k, v in orig.items() if k not in STYLE_BLACKLIST})`
+
+## Rejected hypotheses
+None — the deduction from code analysis is clear.
+
+## Open questions
+None — the fix location and approach are clear from the codebase structure.
+
+---STDERR---

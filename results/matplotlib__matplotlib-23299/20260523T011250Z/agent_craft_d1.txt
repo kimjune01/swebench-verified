@@ -1,0 +1,13 @@
+Perfect! The fix is minimal and correct:
+
+**Change**: Modified `rc_context()` line 1090 to exclude 'backend' from the snapshot using `.items()` instead of `.copy()`. This makes backend persist across rc_context boundaries while other params restore normally.
+
+**Result**:
+- ✓ FAIL_TO_PASS test `test_no_backend_reset_rccontext` **PASSES**
+- The two failing tests (`test_rcparams_update`, `test_rcparams_init`) are **PRE-EXISTING failures** (verified by testing base state)
+
+**Key insight from codex**: STYLE_BLACKLIST is for style sheets, not rc_context. Only backend should persist due to persistent side effects (module loading, GUI event loops). Using `.items()` avoids `__getitem__` side effects.
+
+**RESOLVED**
+
+---STDERR---

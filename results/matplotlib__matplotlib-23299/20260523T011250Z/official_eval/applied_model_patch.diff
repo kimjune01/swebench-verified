@@ -1,0 +1,13 @@
+diff --git a/lib/matplotlib/__init__.py b/lib/matplotlib/__init__.py
+index c268a56724..dff50bcf26 100644
+--- a/lib/matplotlib/__init__.py
++++ b/lib/matplotlib/__init__.py
+@@ -1087,7 +1087,7 @@ def rc_context(rc=None, fname=None):
+              plt.plot(x, y)  # uses 'print.rc'
+ 
+     """
+-    orig = rcParams.copy()
++    orig = {k: v for k, v in rcParams.items() if k != "backend"}
+     try:
+         if fname:
+             rc_file(fname)

@@ -1,0 +1,8 @@
+{"instance": "matplotlib__matplotlib-23299", "stage": "start"}
+{"instance": "matplotlib__matplotlib-23299", "stage": "recon", "depth": 0, "wall_s": 161, "fixed_point": false}
+{"instance": "matplotlib__matplotlib-23299", "stage": "craft", "depth": 0, "wall_s": 384, "claim": true, "wants_rediagnose": false}
+{"instance": "matplotlib__matplotlib-23299", "stage": "audit", "depth": 0, "wall_s": 204, "verdict": "NOT_RESOLVED", "route": "craft"}
+{"instance": "matplotlib__matplotlib-23299", "stage": "craft", "depth": 1, "wall_s": 399, "claim": true, "wants_rediagnose": false}
+{"instance": "matplotlib__matplotlib-23299", "stage": "audit", "depth": 1, "wall_s": 103, "verdict": "RESOLVED", "route": "none"}
+{"instance": "matplotlib__matplotlib-23299", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_matplotlib__matplotlib-23299.txt"}
+{"instance": "matplotlib__matplotlib-23299", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 440, "patch_file": "/tmp/swebench-abduction/r4_patch_matplotlib__matplotlib-23299.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_matplotlib__matplotlib-23299.md"}

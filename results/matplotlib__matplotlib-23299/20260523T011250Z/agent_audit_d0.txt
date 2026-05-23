@@ -1,0 +1,39 @@
+# Audit: matplotlib__matplotlib-23299
+
+## FAIL_TO_PASS
+- test_no_backend_reset_rccontext: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+- **test_rcparams_update**: Failed - DID NOT WARN. Expected UserWarning with "validate" message during validation failure, but no warnings emitted. Error at lib/matplotlib/__init__.py:651 - ValueError raised but UserWarning not emitted as expected by test.
+- **test_rcparams_init**: Failed - DID NOT WARN. Expected UserWarning with "validate" message during validation failure, but no warnings emitted. Same issue as test_rcparams_update.
+
+## Pre-existing (not counted, confirmed against base capture)
+- none
+
+## Kill report
+
+**Regressions identified**: Two PASS_TO_PASS tests are now failing after the patch.
+
+**Which tests regressed**:
+- `lib/matplotlib/tests/test_rcparams.py::test_rcparams_update`
+- `lib/matplotlib/tests/test_rcparams.py::test_rcparams_init`
+
+**Error signature**: Both tests expect `pytest.warns(UserWarning, match="validate")` to catch a warning during RcParams validation failure. The ValueError is correctly raised, but no UserWarning is emitted, causing the test assertion `Failed: DID NOT WARN` to fail.
+
+**Patch analysis**: The patch modified line 1090 in `lib/matplotlib/__init__.py`:
+```python
+-    orig = rcParams.copy()
++    orig = {k: rcParams[k] for k in rcParams if k != "backend"}
+```
+
+**Likely cause**: This change should not directly affect `RcParams.__setitem__` validation behavior (which these tests exercise), as they don't use `rc_context()`. The regression suggests either:
+1. An unexpected side effect during module initialization
+2. The dict comprehension `{k: rcParams[k] for k in rcParams if k != "backend"}` iterating over rcParams triggers some state change that affects warning emission
+3. These may be pre-existing failures (craft's hypothesis graph claims they verified this), but the provided base capture is truncated and doesn't show them as failures
+
+**Recommendation**: Investigate why iterating `rcParams` in the dict comprehension affects warning behavior, or verify if these are actually pre-existing failures that should not be counted.
+
+VERDICT: NOT_RESOLVED — regressions
+RE-ENTER: craft
+
+---STDERR---

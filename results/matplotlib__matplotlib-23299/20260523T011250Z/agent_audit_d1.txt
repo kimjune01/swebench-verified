@@ -1,0 +1,23 @@
+# Audit: matplotlib__matplotlib-23299
+
+## FAIL_TO_PASS
+- test_no_backend_reset_rccontext: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+- none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_rcparams_update — Failed on both base and patched with "DID NOT WARN" error
+- test_rcparams_init — Failed on both base and patched with "DID NOT WARN" error
+
+## Kill report
+Not applicable — patch is RESOLVED.
+
+**Verification performed**: Stashed the patch and confirmed both suspected regressions (`test_rcparams_update` and `test_rcparams_init`) fail identically on the clean base. The patch introduces zero new failures.
+
+**Fix summary**: Changed `rc_context()` at line 1090 from `rcParams.copy()` to `{k: v for k, v in rcParams.items() if k != "backend"}`, excluding backend from the snapshot so it persists across rc_context boundaries and avoids triggering `switch_backend()` → `close("all")`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
