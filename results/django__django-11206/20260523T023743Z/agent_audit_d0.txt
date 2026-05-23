@@ -1,0 +1,21 @@
+# Audit: django__django-11206
+
+## FAIL_TO_PASS
+- test_decimal_numbers: **PASS** ✓
+- test_decimal_subclass: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves the issue. When `format()` receives a Decimal with more than 200 total digits that would round to zero at the requested `decimal_pos` (condition: `exponent + len(digits) <= -decimal_pos`), it now falls through to the normal fixed-point formatter path with `Decimal('0')` instead of returning exponential notation.
+
+All targeted tests pass, no regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

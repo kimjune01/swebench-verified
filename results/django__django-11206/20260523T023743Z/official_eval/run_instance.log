@@ -1,0 +1,93 @@
+2026-05-23 02:35:37,568 - INFO - Creating container for django__django-11206...
+2026-05-23 02:35:56,446 - INFO - Container for django__django-11206 created: 421d5168c4d1a4953f4884eb6c5b763d989f9e7ea676fb7ad8743211d515445b
+2026-05-23 02:35:56,854 - INFO - Container for django__django-11206 started: 421d5168c4d1a4953f4884eb6c5b763d989f9e7ea676fb7ad8743211d515445b
+2026-05-23 02:35:56,855 - INFO - Intermediate patch for django__django-11206 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11206/patch.diff, now applying to container...
+2026-05-23 02:35:56,968 - INFO - >>>>> Applied Patch:
+Checking patch django/utils/numberformat.py...
+Applied patch django/utils/numberformat.py cleanly.
+
+2026-05-23 02:35:57,548 - INFO - Git diff before:
+diff --git a/django/utils/numberformat.py b/django/utils/numberformat.py
+index 88b35fc435..9eb7aaf3b2 100644
+--- a/django/utils/numberformat.py
++++ b/django/utils/numberformat.py
+@@ -29,16 +29,23 @@ def format(number, decimal_sep, decimal_pos=None, grouping=0, thousand_sep='',
+     if isinstance(number, Decimal):
+         # Format values with more than 200 digits (an arbitrary cutoff) using
+         # scientific notation to avoid high memory usage in {:f}'.format().
+-        _, digits, exponent = number.as_tuple()
++        sign_bit, digits, exponent = number.as_tuple()
+         if abs(exponent) + len(digits) > 200:
+-            number = '{:e}'.format(number)
+-            coefficient, exponent = number.split('e')
+-            # Format the coefficient.
+-            coefficient = format(
+-                coefficient, decimal_sep, decimal_pos, grouping,
+-                thousand_sep, force_grouping, use_l10n,
+-            )
+-            return '{}e{}'.format(coefficient, exponent)
++            # Check if the number has no significant digits at this precision
++            if decimal_pos is not None and exponent + len(digits) <= -decimal_pos:
++                # Fall through to normal fixed-point path with zero
++                number = Decimal('0')
++                str_number = '{:f}'.format(number)
++            else:
++                # Use exponential notation
++                number = '{:e}'.format(number)
++                coefficient, exponent = number.split('e')
++                # Format the coefficient.
++                coefficient = format(
++                    coefficient, decimal_sep, decimal_pos, grouping,
++                    thousand_sep, force_grouping, use_l10n,
++                )
++                return '{}e{}'.format(coefficient, exponent)
+         else:
+             str_number = '{:f}'.format(number)
+     else:
+2026-05-23 02:35:57,548 - INFO - Eval script for django__django-11206 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11206/eval.sh; copying to container...
+2026-05-23 02:36:03,227 - INFO - Test runtime: 5.57 seconds
+2026-05-23 02:36:03,227 - INFO - Test output for django__django-11206 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11206/test_output.txt
+2026-05-23 02:36:03,311 - INFO - Git diff after:
+diff --git a/django/utils/numberformat.py b/django/utils/numberformat.py
+index 88b35fc435..9eb7aaf3b2 100644
+--- a/django/utils/numberformat.py
++++ b/django/utils/numberformat.py
+@@ -29,16 +29,23 @@ def format(number, decimal_sep, decimal_pos=None, grouping=0, thousand_sep='',
+     if isinstance(number, Decimal):
+         # Format values with more than 200 digits (an arbitrary cutoff) using
+         # scientific notation to avoid high memory usage in {:f}'.format().
+-        _, digits, exponent = number.as_tuple()
++        sign_bit, digits, exponent = number.as_tuple()
+         if abs(exponent) + len(digits) > 200:
+-            number = '{:e}'.format(number)
+-            coefficient, exponent = number.split('e')
+-            # Format the coefficient.
+-            coefficient = format(
+-                coefficient, decimal_sep, decimal_pos, grouping,
+-                thousand_sep, force_grouping, use_l10n,
+-            )
+-            return '{}e{}'.format(coefficient, exponent)
++            # Check if the number has no significant digits at this precision
++            if decimal_pos is not None and exponent + len(digits) <= -decimal_pos:
++                # Fall through to normal fixed-point path with zero
++                number = Decimal('0')
++                str_number = '{:f}'.format(number)
++            else:
++                # Use exponential notation
++                number = '{:e}'.format(number)
++                coefficient, exponent = number.split('e')
++                # Format the coefficient.
++                coefficient = format(
++                    coefficient, decimal_sep, decimal_pos, grouping,
++                    thousand_sep, force_grouping, use_l10n,
++                )
++                return '{}e{}'.format(coefficient, exponent)
+         else:
+             str_number = '{:f}'.format(number)
+     else:
+2026-05-23 02:36:03,311 - INFO - Grading answer for django__django-11206...
+2026-05-23 02:36:03,312 - INFO - report: {'django__django-11206': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_decimal_numbers (utils_tests.test_numberformat.TestNumberFormat)', 'test_decimal_subclass (utils_tests.test_numberformat.TestNumberFormat)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_float_numbers (utils_tests.test_numberformat.TestNumberFormat)', 'test_format_number (utils_tests.test_numberformat.TestNumberFormat)', 'test_format_string (utils_tests.test_numberformat.TestNumberFormat)', 'test_large_number (utils_tests.test_numberformat.TestNumberFormat)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-11206: resolved: True
+2026-05-23 02:36:03,312 - INFO - Attempting to stop container sweb.eval.django__django-11206.batch...
+2026-05-23 02:36:18,946 - INFO - Attempting to remove container sweb.eval.django__django-11206.batch...
+2026-05-23 02:36:18,965 - INFO - Container sweb.eval.django__django-11206.batch removed.

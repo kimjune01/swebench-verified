@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass:
+- ✅ test_decimal_numbers now correctly returns `'0.000'` for `Decimal('0.' + '0'*299 + '1234')` with `decimal_pos=3`
+- ✅ test_decimal_subclass continues to work (doesn't hit the modified branch)
+
+The implementation detects when a large-exponent Decimal would have no significant digits at the requested precision (`exponent + len(digits) <= -decimal_pos`), then falls through to the normal fixed-point formatter path with `Decimal('0')` instead of using exponential notation. This ensures consistent behavior with the rest of the formatter.
+
+---STDERR---

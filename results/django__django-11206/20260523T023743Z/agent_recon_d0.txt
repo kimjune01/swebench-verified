@@ -1,0 +1,44 @@
+Now let me output the diagnosis:
+
+```markdown
+# Recon: django__django-11206
+
+## Failure summary
+The test `test_decimal_numbers` checks that `numberformat.format()` correctly formats very small Decimal numbers when `decimal_pos` is specified. The test fails for `Decimal('0.' + '0'*299 + '1234')` (approximately `1.234e-300`) with `decimal_pos=3`, which returns `'1.234e-300'` instead of the expected `'0.000'`. The function incorrectly uses exponential notation even though the number should round to zero at the requested precision.
+
+## Suspect set
+- `django/utils/numberformat.py` lines 32-42: Decimal handling with 200-digit cutoff for exponential notation
+- `django/utils/numberformat.py` line 33: Unpacks `as_tuple()` but discards the sign bit (uses `_`)
+
+## Root cause
+When formatting Decimals with more than 200 total digits (`abs(exponent) + len(digits) > 200`), the code switches to exponential notation to avoid memory exhaustion (CVE-2019-6975 fix). However, it doesn't check whether the number would round to zero at the requested `decimal_pos` before applying exponential notation.
+
+For the failing test case `Decimal('0.' + '0'*299 + '1234')`:
+- `as_tuple()` returns `(0, (1,2,3,4), -303)` meaning the value is `1234 * 10^-303 ≈ 1.234e-300`
+- `abs(exponent) + len(digits) = 307 > 200` triggers exponential notation path
+- With `decimal_pos=3`, the number should be rounded to 3 decimal places (precision `10^-3`)
+- Since the most significant digit is at position `exponent + len(digits) - 1 = -300`, which is far less than `-decimal_pos = -3`, the number rounds to zero
+- The condition for rounding to zero is: `exponent + len(digits) <= -decimal_pos`
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/utils/numberformat.py:33-34` — `_, digits, exponent = number.as_tuple()` then `if abs(exponent) + len(digits) > 200:`
+- `django/utils/numberformat.py:35-42` — exponential notation path that doesn't check for zero-rounding
+- Git commit `402c0caa85` — introduced the 200-digit cutoff for CVE-2019-6975 (memory exhaustion)
+
+## Edit sites
+- `django/utils/numberformat.py` line 33: Change `_, digits, exponent = number.as_tuple()` to `sign_bit, digits, exponent = number.as_tuple()` to capture the sign for zero-rounding case
+- `django/utils/numberformat.py` lines 34-35: After the `if abs(exponent) + len(digits) > 200:` check, add a nested check for zero-rounding before the exponential notation logic:
+  - If `decimal_pos is not None` and `exponent + len(digits) <= -decimal_pos`
+  - Return the zero representation: `('-' if sign_bit else '') + '0' + decimal_sep + '0' * decimal_pos`
+  - This should be an early return before the exponential notation formatting
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and the 200-digit cutoff is explicitly documented in the CVE fix.
+
+## Open questions
+- Should `mark_safe()` be called on the zero return value? The existing exponential notation path (line 42) doesn't call it, but the normal path (line 82) does. For consistency with the exponential notation path, I'll omit `mark_safe()`, but this may be a pre-existing issue.
+```
+
+---STDERR---
