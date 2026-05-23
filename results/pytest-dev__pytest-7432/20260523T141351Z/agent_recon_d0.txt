@@ -1,0 +1,35 @@
+# Recon: pytest-dev__pytest-7432
+
+## Failure summary
+
+The test `test_xfail_run_with_skip_mark[test_input1-expected1]` verifies that `@pytest.mark.skip` reports the skip location at the test definition. It tests two scenarios: with `-rs` only, and with `-rs --runxfail`. The test fails in the second case because the skip location is incorrectly reported as `src/_pytest/skipping.py:239: unconditional skip` instead of `test_sample.py:2: unconditional skip`.
+
+## Suspect set
+
+- `src/_pytest/skipping.py` lines 261-303: `pytest_runtest_makereport` hook - contains faulty conditional logic that blocks skip location fixing when `--runxfail` is used
+
+## Root cause
+
+The `pytest_runtest_makereport` hook has an if/elif chain where branch #2 (`elif item.config.option.runxfail: pass` at line 272-273) blocks execution of branch #5 (skip location fix at lines 295-303). The `--runxfail` option is meant to affect only xfail test behavior, not skip marks. When `--runxfail` is set, the code hits the `elif runxfail: pass` branch and returns, never reaching the skip location fix that would replace the internal exception location (`skipping.py:239`) with the test definition location (`test_sample.py:2`).
+
+**Confidence:** deduction — 98%
+
+**Supporting evidence:**
+- `src/_pytest/skipping.py:239` — `skip(skipped.reason)` where Skip exception is raised internally
+- `src/_pytest/skipping.py:272-273` — `elif item.config.option.runxfail: pass` that blocks subsequent elif branches
+- `src/_pytest/skipping.py:295-303` — skip location fix that never executes when runxfail is True
+- Test output shows exact line 239 being reported: `SKIPPED [1] ../../../../testbed/src/_pytest/skipping.py:239`
+
+## Edit sites
+
+- `src/_pytest/skipping.py` line 295: Change `elif (` to `if (` to make the skip location fix independent of the preceding if/elif chain. This allows the skip location fix to run regardless of whether `--runxfail` is set, while preserving the intent that `--runxfail` skips xfail-specific processing (branches at lines 274-293).
+
+## Rejected hypotheses
+
+None. The root cause is directly observable in the code structure.
+
+## Open questions
+
+None. The fix is straightforward: convert the final elif to an independent if statement.
+
+---STDERR---

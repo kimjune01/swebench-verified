@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. Changed `src/_pytest/skipping.py:294` from `elif (` to `if (` to allow the skip location fix to run independently of the `--runxfail` branch. The `skipped_by_mark_key` guard ensures the location rewrite only applies to decorator-based skips, not imperative calls.
+
+---STDERR---

@@ -1,0 +1,20 @@
+# Audit: pytest-dev__pytest-7432
+
+## FAIL_TO_PASS
+- `testing/test_skipping.py::TestXFail::test_xfail_run_with_skip_mark[test_input1-expected1]`: **PASS**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch (changing `elif` to `if` on line 294 of src/_pytest/skipping.py) successfully resolves the issue. The skip location fix now runs independently of the `--runxfail` branch, allowing `@pytest.mark.skip` to report correct source locations even when `--runxfail` is used.
+
+Gate result: 79 passed in 1.56s, 0 failures, 0 regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
