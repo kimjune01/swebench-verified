@@ -1,0 +1,3 @@
+Diagnosis complete. The bug is a simple oversight where `Engine.render_to_string()` creates a `Context` without passing the engine's `autoescape` setting, causing it to always default to `True`. The fix requires adding one parameter to the Context constructor call at line 163 of `django/template/engine.py`.
+
+---STDERR---
