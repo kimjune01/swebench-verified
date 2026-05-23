@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix adds `allow_distinct = True` to the `Avg` and `Sum` classes, following the same pattern as `Count`. The recon diagnosis was correct — the infrastructure for DISTINCT support already existed in the base `Aggregate` class; these two classes simply needed to opt in by setting the attribute.
+
+---STDERR---

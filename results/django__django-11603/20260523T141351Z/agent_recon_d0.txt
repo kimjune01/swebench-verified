@@ -1,0 +1,75 @@
+Now I'll emit the diagnosis handoff:
+
+# Recon: django__django-11603
+
+## Failure summary
+
+The `test_distinct_on_aggregate` test creates aggregate queries with `distinct=True` for Avg, Count, and Sum aggregates on the Book.rating field. The test expects:
+- `Avg('rating', distinct=True)` → 4.125 (average of distinct values: 3.0, 4.0, 4.5, 5.0)
+- `Count('rating', distinct=True)` → 4 (count of distinct values)
+- `Sum('rating', distinct=True)` → 16.5 (sum of distinct values)
+
+Count works correctly, but Avg and Sum fail with:
+```
+TypeError: Avg does not allow distinct.
+TypeError: Sum does not allow distinct.
+```
+
+The error is raised from `django/db/models/aggregates.py:26` in the base `Aggregate.__init__` method.
+
+## Suspect set
+
+- `django/db/models/aggregates.py` lines 15-30: Base `Aggregate` class `__init__` method that validates `allow_distinct`
+- `django/db/models/aggregates.py` lines 99-101: `Avg` class definition (missing `allow_distinct = True`)
+- `django/db/models/aggregates.py` lines 103-119: `Count` class definition (has `allow_distinct = True` - the working example)
+- `django/db/models/aggregates.py` lines 147-149: `Sum` class definition (missing `allow_distinct = True`)
+
+## Root cause
+
+The infrastructure for DISTINCT support was added in commit bc05547cd8 (Fixed #28658), which:
+1. Added the `allow_distinct` attribute to base `Aggregate` class (defaults to `False`)
+2. Added validation in `__init__` that raises `TypeError` if `distinct=True` is passed but `allow_distinct=False`
+3. Updated `Count` class to set `allow_distinct = True`
+
+However, the `Avg` and `Sum` classes were not updated. They inherit the default `allow_distinct = False` from the base class. When the test calls `Avg('rating', distinct=True)`, the base `Aggregate.__init__` executes:
+
+```python
+if distinct and not self.allow_distinct:  # True and not False → True
+    raise TypeError("%s does not allow distinct." % self.__class__.__name__)
+```
+
+This immediately raises the TypeError before any SQL is generated.
+
+**Confidence: Deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/aggregates.py:21` — `allow_distinct = False` (default)
+- `django/db/models/aggregates.py:23-26` — `if distinct and not self.allow_distinct: raise TypeError(...)`
+- `django/db/models/aggregates.py:106` — `Count` has `allow_distinct = True` (works correctly)
+- `django/db/models/aggregates.py:99-101` — `Avg` class has no `allow_distinct` attribute
+- `django/db/models/aggregates.py:147-149` — `Sum` class has no `allow_distinct` attribute
+
+## Edit sites
+
+1. **`django/db/models/aggregates.py` lines 99-101** (Avg class): Add `allow_distinct = True` as a class attribute after line 101, following the same pattern as Count (line 106)
+
+2. **`django/db/models/aggregates.py` lines 147-149** (Sum class): Add `allow_distinct = True` as a class attribute after line 149, following the same pattern as Count (line 106)
+
+The pattern from Count:
+```python
+class Count(Aggregate):
+    function = 'COUNT'
+    name = 'Count'
+    output_field = IntegerField()
+    allow_distinct = True  # ← Add this line to Avg and Sum
+```
+
+## Rejected hypotheses
+
+None. The failure mode is deterministic and the code path is clear.
+
+## Open questions
+
+None. The problem statement mentions that Min and Max "could also be applied" with DISTINCT support "although pointless" (since MIN(DISTINCT x) = MIN(x)). However, these are not in the FAIL_TO_PASS list and not tested, so they should not be modified unless explicitly requested.
+
+---STDERR---
