@@ -1,0 +1,23 @@
+# Audit: astropy__astropy-14508
+
+## FAIL_TO_PASS
+- `astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_floating_point_string_representation_card`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 175 tests in test_header.py passed without regression.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. Base capture showed all tests passing before the patch.
+
+## Summary
+The craft patch successfully resolved the issue by modifying `_format_float()` in `astropy/io/fits/card.py`:
+- Changed primary float formatting from `.16G` to `str(value)` for shorter representations
+- Fallback to `.16G` only when `str()` exceeds 20 characters
+- Added uppercase normalization for scientific notation
+- Target test now passes without VerifyWarning about truncated comments
+- Clean gate: 175/175 tests passing
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

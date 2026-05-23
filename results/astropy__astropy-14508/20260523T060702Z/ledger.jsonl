@@ -1,0 +1,6 @@
+{"instance": "astropy__astropy-14508", "stage": "start"}
+{"instance": "astropy__astropy-14508", "stage": "recon", "depth": 0, "wall_s": 267, "fixed_point": false}
+{"instance": "astropy__astropy-14508", "stage": "craft", "depth": 0, "wall_s": 314, "claim": true, "wants_rediagnose": false}
+{"instance": "astropy__astropy-14508", "stage": "audit", "depth": 0, "wall_s": 50, "verdict": "RESOLVED", "route": "none"}
+{"instance": "astropy__astropy-14508", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_astropy__astropy-14508.txt"}
+{"instance": "astropy__astropy-14508", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 53027, "patch_file": "/tmp/swebench-abduction/r4_patch_astropy__astropy-14508.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_astropy__astropy-14508.md"}

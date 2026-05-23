@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is in the `_format_float()` function which always formats floats with 16 significant digits using `.16G`, producing unnecessarily long representations. The fix is to try `str(value)` first and only use `.16G` as a fallback when the shorter representation exceeds 20 characters.
+
+---STDERR---
