@@ -1,0 +1,18 @@
+# Audit: django__django-12193
+
+## FAIL_TO_PASS
+- `test_get_context_does_not_mutate_attrs`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolved the issue. The CheckboxInput.get_context() method now creates a copy of the attrs dict before modifying it, preventing mutation of the caller's parameter. All 12 checkbox tests pass, including the previously failing test_get_context_does_not_mutate_attrs. No regressions were introduced.
+
+**VERDICT: RESOLVED**
+**RE-ENTER: none**
+
+---STDERR---

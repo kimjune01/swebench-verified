@@ -1,0 +1,45 @@
+2026-05-23 23:50:57,422 - INFO - Creating container for django__django-12193...
+2026-05-23 23:51:03,996 - INFO - Container for django__django-12193 created: 04aaafc2511005d5fd6aab5ab774eedaf13c87b4b338f9c23badd5d5944e1a0e
+2026-05-23 23:51:04,526 - INFO - Container for django__django-12193 started: 04aaafc2511005d5fd6aab5ab774eedaf13c87b4b338f9c23badd5d5944e1a0e
+2026-05-23 23:51:04,526 - INFO - Intermediate patch for django__django-12193 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12193/patch.diff, now applying to container...
+2026-05-23 23:51:04,633 - INFO - >>>>> Applied Patch:
+Checking patch django/forms/widgets.py...
+Applied patch django/forms/widgets.py cleanly.
+
+2026-05-23 23:51:05,254 - INFO - Git diff before:
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 6fe220bea7..9ae9fc89e4 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -522,8 +522,7 @@ class CheckboxInput(Input):
+ 
+     def get_context(self, name, value, attrs):
+         if self.check_test(value):
+-            if attrs is None:
+-                attrs = {}
++            attrs = attrs.copy() if attrs is not None else {}
+             attrs['checked'] = True
+         return super().get_context(name, value, attrs)
+2026-05-23 23:51:05,254 - INFO - Eval script for django__django-12193 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12193/eval.sh; copying to container...
+2026-05-23 23:51:09,508 - INFO - Test runtime: 4.18 seconds
+2026-05-23 23:51:09,508 - INFO - Test output for django__django-12193 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12193/test_output.txt
+2026-05-23 23:51:09,616 - INFO - Git diff after:
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 6fe220bea7..9ae9fc89e4 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -522,8 +522,7 @@ class CheckboxInput(Input):
+ 
+     def get_context(self, name, value, attrs):
+         if self.check_test(value):
+-            if attrs is None:
+-                attrs = {}
++            attrs = attrs.copy() if attrs is not None else {}
+             attrs['checked'] = True
+         return super().get_context(name, value, attrs)
+2026-05-23 23:51:09,616 - INFO - Grading answer for django__django-12193...
+2026-05-23 23:51:09,618 - INFO - report: {'django__django-12193': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_get_context_does_not_mutate_attrs (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_render_check_exception (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_check_test (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_empty (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_false (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_none (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_true (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_render_value (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_value_from_datadict (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_value_from_datadict_string_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)', 'test_value_omitted_from_data (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-12193: resolved: True
+2026-05-23 23:51:09,618 - INFO - Attempting to stop container sweb.eval.django__django-12193.batch...
+2026-05-23 23:51:25,043 - INFO - Attempting to remove container sweb.eval.django__django-12193.batch...
+2026-05-23 23:51:25,058 - INFO - Container sweb.eval.django__django-12193.batch removed.

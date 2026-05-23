@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The mutation bug in CheckboxInput.get_context() has been fixed. The method now creates a copy of the attrs dict before modifying it, preventing mutation of the caller's dictionary. The FAIL_TO_PASS test passes on first gate iteration.
+
+---STDERR---

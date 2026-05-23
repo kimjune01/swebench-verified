@@ -1,0 +1,34 @@
+# Recon: django__django-12193
+
+## Failure summary
+The test `test_get_context_does_not_mutate_attrs` verifies that CheckboxInput.get_context() does not mutate the attrs dict passed to it. The test creates `attrs = {'checked': False}`, calls `widget.get_context('name', True, attrs)`, and expects `attrs['checked']` to remain False. However, the test fails with `AssertionError: True is not False`, indicating the attrs dict was mutated.
+
+This mutation causes a severe bug in SplitArrayWidget with BooleanField: after the first True value in an array, all subsequent checkboxes are rendered as checked, regardless of their actual values.
+
+## Suspect set
+- `django/forms/widgets.py` lines 523-527: CheckboxInput.get_context() method that mutates attrs
+- `django/contrib/postgres/forms/array.py` lines 137-149: SplitArrayWidget.get_context() loop that reuses final_attrs
+
+## Root cause
+CheckboxInput.get_context() directly mutates the attrs parameter by setting `attrs['checked'] = True` (line 527). This violates the immutability contract expected of widget methods — input parameters should not be modified. When value is True, the method modifies the attrs dict in-place before passing it to super().get_context().
+
+In SplitArrayWidget, the get_context() method builds `final_attrs` once before the loop (line 137), then reuses this same dict object across all iterations when rendering subwidgets (lines 144-148). When CheckboxInput.get_context() mutates this shared dict, all subsequent widgets inherit the mutation.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `django/forms/widgets.py:527` — `attrs['checked'] = True` directly modifies the input parameter
+- `django/forms/widgets.py:350` — Other widgets use the safe pattern: `widget_attrs = final_attrs.copy()`
+- `django/forms/widgets.py:249` — Base Widget.build_attrs() creates new dicts: `return {**base_attrs, **(extra_attrs or {})}`
+- Test failure shows attrs['checked'] mutated from False to True after calling get_context()
+
+## Edit sites
+- `django/forms/widgets.py` lines 523-527: Modify CheckboxInput.get_context() to copy attrs before modifying it. The fix should follow the pattern used by other widgets: create a copy of attrs (or build a new dict) before setting 'checked', then pass the new dict to super().get_context().
+
+## Rejected hypotheses
+None — the mutation is directly observable in the code and test failure.
+
+## Open questions
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
