@@ -1,0 +1,20 @@
+# Audit: django__django-16493
+
+## FAIL_TO_PASS
+- test_deconstruction_storage_callable_default (implied from "A callable that returns default_storage is not omitted when"): **PASS**
+
+## PASS_TO_PASS regressions
+None. All 149 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The base capture showed all tests passing except for the FAIL_TO_PASS test.
+
+## Kill report
+Not applicable — all requirements met.
+
+The patch correctly solves the issue: when `FileField.deconstruct()` evaluates a callable storage that returns `default_storage`, the condition now checks for `_storage_callable` first, ensuring the callable is preserved in kwargs even when the evaluated result matches `default_storage`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

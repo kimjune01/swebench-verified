@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 file_storage.models file_storage.tests
+
+Test behavior when file.chunks() is raising an error ... ok
+test_file_get_accessed_time (file_storage.tests.FileStorageTests.test_file_get_accessed_time)
+File storage returns a Datetime object for the last accessed time of ... ok
+test_file_get_accessed_time_timezone (file_storage.tests.FileStorageTests.test_file_get_accessed_time_timezone) ... ok
+test_file_get_created_time (file_storage.tests.FileStorageTests.test_file_get_created_time)
+File storage returns a datetime for the creation time of a file. ... ok
+test_file_get_created_time_timezone (file_storage.tests.FileStorageTests.test_file_get_created_time_timezone) ... ok
+test_file_get_modified_time (file_storage.tests.FileStorageTests.test_file_get_modified_time)
+File storage returns a datetime for the last modified time of a file. ... ok
+test_file_get_modified_time_timezone (file_storage.tests.FileStorageTests.test_file_get_modified_time_timezone) ... ok
+test_file_methods_pathlib_path (file_storage.tests.FileStorageTests.test_file_methods_pathlib_path) ... ok
+test_file_path (file_storage.tests.FileStorageTests.test_file_path)
+File storage returns the full path of a file ... ok
+test_file_save_abs_path (file_storage.tests.FileStorageTests.test_file_save_abs_path) ... ok
+test_file_save_broken_symlink (file_storage.tests.FileStorageTests.test_file_save_broken_symlink)
+A new path is created on save when a broken symlink is supplied. ... ok
+test_file_save_with_path (file_storage.tests.FileStorageTests.test_file_save_with_path)
+Saving a pathname should create intermediate directories as necessary. ... ok
+test_file_save_without_name (file_storage.tests.FileStorageTests.test_file_save_without_name)
+File storage extracts the filename from the content object if no ... ok
+test_file_storage_preserves_filename_case (file_storage.tests.FileStorageTests.test_file_storage_preserves_filename_case)
+The storage backend should preserve case of filenames. ... ok
+test_file_storage_prevents_directory_traversal (file_storage.tests.FileStorageTests.test_file_storage_prevents_directory_traversal)
+File storage prevents directory traversal (files can only be accessed if ... ok
+test_file_url (file_storage.tests.FileStorageTests.test_file_url)
+File storage returns a url to access a given file from the web. ... ok
+test_listdir (file_storage.tests.FileStorageTests.test_listdir)
+File storage returns a tuple containing directories and files. ... ok
+test_makedirs_race_handling (file_storage.tests.FileStorageTests.test_makedirs_race_handling)
+File storage should be robust against directory creation race conditions. ... ok
+test_remove_race_handling (file_storage.tests.FileStorageTests.test_remove_race_handling)
+File storage should be robust against file removal race conditions. ... ok
+test_save_doesnt_close (file_storage.tests.FileStorageTests.test_save_doesnt_close) ... ok
+test_setting_changed (file_storage.tests.FileStorageTests.test_setting_changed)
+Properties using settings values as defaults should be updated on ... ok
+test_deprecation_warning (file_storage.tests.GetStorageClassTests.test_deprecation_warning) ... ok
+test_get_filesystem_storage (file_storage.tests.GetStorageClassTests.test_get_filesystem_storage)
+get_storage_class returns the class for a storage backend name/path. ... ok
+test_get_invalid_storage_module (file_storage.tests.GetStorageClassTests.test_get_invalid_storage_module)
+get_storage_class raises an error if the requested import don't exist. ... ok
+test_get_nonexistent_storage_class (file_storage.tests.GetStorageClassTests.test_get_nonexistent_storage_class)
+get_storage_class raises an error if the requested class don't exist. ... ok
+test_get_nonexistent_storage_module (file_storage.tests.GetStorageClassTests.test_get_nonexistent_storage_module)
+get_storage_class raises an error if the requested module don't exist. ... ok
+test_base_url (file_storage.tests.OverwritingStorageTests.test_base_url)
+File storage returns a url even when its base_url is unset or modified. ... ok
+test_delete_deletes_directories (file_storage.tests.OverwritingStorageTests.test_delete_deletes_directories) ... ok
+test_delete_no_name (file_storage.tests.OverwritingStorageTests.test_delete_no_name)
+Calling delete with an empty name should not try to remove the base ... ok
+test_empty_location (file_storage.tests.OverwritingStorageTests.test_empty_location)
+Makes sure an exception is raised if the location is empty ... ok
+test_file_access_options (file_storage.tests.OverwritingStorageTests.test_file_access_options)
+Standard file access options are available, and work as expected. ... ok
+test_file_chunks_error (file_storage.tests.OverwritingStorageTests.test_file_chunks_error)
+Test behavior when file.chunks() is raising an error ... ok
+test_file_get_accessed_time (file_storage.tests.OverwritingStorageTests.test_file_get_accessed_time)
+File storage returns a Datetime object for the last accessed time of ... ok
+test_file_get_accessed_time_timezone (file_storage.tests.OverwritingStorageTests.test_file_get_accessed_time_timezone) ... ok
+test_file_get_created_time (file_storage.tests.OverwritingStorageTests.test_file_get_created_time)
+File storage returns a datetime for the creation time of a file. ... ok
+test_file_get_created_time_timezone (file_storage.tests.OverwritingStorageTests.test_file_get_created_time_timezone) ... ok
+test_file_get_modified_time (file_storage.tests.OverwritingStorageTests.test_file_get_modified_time)
+File storage returns a datetime for the last modified time of a file. ... ok
+test_file_get_modified_time_timezone (file_storage.tests.OverwritingStorageTests.test_file_get_modified_time_timezone) ... ok
+test_file_methods_pathlib_path (file_storage.tests.OverwritingStorageTests.test_file_methods_pathlib_path) ... ok
+test_file_path (file_storage.tests.OverwritingStorageTests.test_file_path)
+File storage returns the full path of a file ... ok
+test_file_save_abs_path (file_storage.tests.OverwritingStorageTests.test_file_save_abs_path) ... ok
+test_file_save_broken_symlink (file_storage.tests.OverwritingStorageTests.test_file_save_broken_symlink)
+A new path is created on save when a broken symlink is supplied. ... ok
+test_file_save_with_path (file_storage.tests.OverwritingStorageTests.test_file_save_with_path)
+Saving a pathname should create intermediate directories as necessary. ... ok
+test_file_save_without_name (file_storage.tests.OverwritingStorageTests.test_file_save_without_name)
+File storage extracts the filename from the content object if no ... ok
+test_file_storage_preserves_filename_case (file_storage.tests.OverwritingStorageTests.test_file_storage_preserves_filename_case)
+The storage backend should preserve case of filenames. ... ok
+test_file_storage_prevents_directory_traversal (file_storage.tests.OverwritingStorageTests.test_file_storage_prevents_directory_traversal)
+File storage prevents directory traversal (files can only be accessed if ... ok
+test_file_url (file_storage.tests.OverwritingStorageTests.test_file_url)
+File storage returns a url to access a given file from the web. ... ok
+test_listdir (file_storage.tests.OverwritingStorageTests.test_listdir)
+File storage returns a tuple containing directories and files. ... ok
+test_makedirs_race_handling (file_storage.tests.OverwritingStorageTests.test_makedirs_race_handling)
+File storage should be robust against directory creation race conditions. ... ok
+test_remove_race_handling (file_storage.tests.OverwritingStorageTests.test_remove_race_handling)
+File storage should be robust against file removal race conditions. ... ok
+test_save_doesnt_close (file_storage.tests.OverwritingStorageTests.test_save_doesnt_close) ... ok
+test_save_overwrite_behavior (file_storage.tests.OverwritingStorageTests.test_save_overwrite_behavior)
+Saving to same file name twice overwrites the first file. ... ok
+test_setting_changed (file_storage.tests.OverwritingStorageTests.test_setting_changed)
+Properties using settings values as defaults should be updated on ... ok
+test_defaults (file_storage.tests.StorageHandlerTests.test_defaults) ... ok
+test_nonexistent_alias (file_storage.tests.StorageHandlerTests.test_nonexistent_alias) ... ok
+test_nonexistent_backend (file_storage.tests.StorageHandlerTests.test_nonexistent_backend) ... ok
+test_same_instance (file_storage.tests.StorageHandlerTests.test_same_instance) ... ok
+test_content_saving (file_storage.tests.ContentFileStorageTestCase.test_content_saving)
+ContentFile can be saved correctly with the filesystem storage, ... ok
+test_file_upload_default_permissions (file_storage.tests.FileStoragePermissions.test_file_upload_default_permissions) ... ok
+test_file_upload_directory_default_permissions (file_storage.tests.FileStoragePermissions.test_file_upload_directory_default_permissions) ... ok
+test_file_upload_directory_permissions (file_storage.tests.FileStoragePermissions.test_file_upload_directory_permissions) ... ok
+test_file_upload_permissions (file_storage.tests.FileStoragePermissions.test_file_upload_permissions) ... ok
+test_deconstruction (file_storage.tests.FileSystemStorageTests.test_deconstruction) ... ok
+test_lazy_base_url_init (file_storage.tests.FileSystemStorageTests.test_lazy_base_url_init)
+FileSystemStorage.__init__() shouldn't evaluate base_url. ... ok
+
+======================================================================
+ERROR: test_deconstruction_storage_callable_default (file_storage.tests.FieldCallableFileStorageTests.test_deconstruction_storage_callable_default)
+A callable that returns default_storage is not omitted when
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/file_storage/tests.py", line 1034, in test_deconstruction_storage_callable_default
+    self.assertIs(kwargs["storage"], callable_default_storage)
+                  ~~~~~~^^^^^^^^^^^
+KeyError: 'storage'
+
+----------------------------------------------------------------------
+Ran 149 tests in 1.572s
+
+FAILED (errors=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

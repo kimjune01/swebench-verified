@@ -1,0 +1,3 @@
+**RESOLVED** — The FAIL_TO_PASS test now passes. The fix ensures that when a FileField receives a callable storage parameter (even one that returns `default_storage`), the callable is preserved during deconstruction by checking for the presence of `_storage_callable` attribute.
+
+---STDERR---

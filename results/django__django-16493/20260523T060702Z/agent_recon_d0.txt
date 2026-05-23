@@ -1,0 +1,51 @@
+# Recon: django__django-16493
+
+## Failure summary
+The test `test_deconstruction_storage_callable_default` creates a FileField with `storage=callable_default_storage`, where `callable_default_storage` is a function that returns `default_storage`. The test expects that when deconstructing the field, the `storage` kwarg should contain a reference to the callable function. However, `deconstruct()` omits the storage kwarg entirely, causing `KeyError: 'storage'` at `tests/file_storage/tests.py:1034`.
+
+## Suspect set
+- `django/db/models/fields/files.py` lines 293-300: The `FileField.deconstruct()` method, specifically the condition at line 298 that determines whether to include storage in the deconstructed kwargs
+
+## Root cause
+The `deconstruct()` method uses `if self.storage is not default_storage:` (line 298) to decide whether to include the storage kwarg. This condition was introduced before the fix for #31941, which added support for preserving callable storage references.
+
+When `FileField.__init__` receives a callable storage (line 244-253):
+1. It stores the callable in `self._storage_callable` (line 245)
+2. It evaluates the callable: `self.storage = self.storage()` (line 246)
+3. So `self.storage` becomes the result of calling the function
+
+For `callable_default_storage`, step 2 evaluates to `default_storage`, making `self.storage is default_storage` True (identity match). Therefore, the condition `self.storage is not default_storage` evaluates to False, and the storage kwarg is never added to the deconstructed form.
+
+The fix for #31941 (commit 2d42e23b6d) correctly stored `_storage_callable` and used `getattr(self, "_storage_callable", self.storage)` on line 299, but did not update the condition on line 298 to account for callables that return `default_storage`.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/fields/files.py:245` — `self._storage_callable = self.storage` stores the callable before evaluation
+- `django/db/models/fields/files.py:246` — `self.storage = self.storage()` evaluates the callable to `default_storage`
+- `django/db/models/fields/files.py:298` — condition only checks evaluated storage, not whether a callable was provided
+- `tests/file_storage/models.py:29-30` — `callable_default_storage` returns `default_storage`
+- `tests/file_storage/tests.py:1018-1025` — existing test for callable storage works because `callable_storage` returns non-default storage
+
+## Edit sites
+- `django/db/models/fields/files.py` line 298: Change the condition from:
+  ```python
+  if self.storage is not default_storage:
+  ```
+  to:
+  ```python
+  if hasattr(self, "_storage_callable") or self.storage is not default_storage:
+  ```
+
+This ensures:
+1. When a callable is provided (regardless of its return value), `_storage_callable` exists and the storage kwarg is included
+2. When non-callable, non-default storage is provided, the storage instance is included (existing behavior)
+3. When no storage argument is provided (defaults to `default_storage`), no `_storage_callable` exists and the storage kwarg is omitted (existing behavior)
+
+## Rejected hypotheses
+None — the code path is straightforward and the bug matches the problem description precisely.
+
+## Open questions
+None — single edit site with clear logic fix.
+
+---STDERR---
