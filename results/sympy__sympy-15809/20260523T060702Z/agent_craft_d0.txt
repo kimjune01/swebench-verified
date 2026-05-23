@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Removed the early guard in `MinMaxBase.__new__` that blocked zero-argument calls to `Min()` and `Max()`. The existing identity-return logic now correctly returns `S.Infinity` for `Min()` and `S.NegativeInfinity` for `Max()`. All 13 tests pass with no regressions.
+
+---STDERR---

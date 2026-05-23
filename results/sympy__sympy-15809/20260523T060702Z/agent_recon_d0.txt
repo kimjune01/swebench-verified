@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-15809
+
+## Failure summary
+The tests `test_Min` and `test_Max` check that zero-argument calls `Min()` and `Max()` return their identity elements (`S.Infinity` and `S.NegativeInfinity`, respectively). Both tests fail with `ValueError: The Max/Min functions must have arguments.` raised at line 343 in `sympy/functions/elementary/miscellaneous.py`.
+
+## Suspect set
+- `sympy/functions/elementary/miscellaneous.py` lines 340-370: `MinMaxBase.__new__` method — contains the guard that raises ValueError and the downstream identity-return logic
+
+## Root cause
+The `MinMaxBase.__new__` method at lines 342-343 explicitly checks `if not args:` and raises `ValueError("The Max/Min functions must have arguments.")` before any argument processing occurs. This guard prevents the natural flow where zero arguments would propagate through the filtering steps and trigger the identity-return logic at line 361.
+
+The code already has the infrastructure to handle zero arguments correctly:
+- Line 361: `if not args: return cls.identity` 
+- `Min.identity = S.Infinity` (line 793)
+- `Max.identity = S.NegativeInfinity` (line 743)
+
+The identity element pattern is mathematically sound: `Min()` over an empty set is the identity for the min operation (infinity), and `Max()` over an empty set is the identity for the max operation (negative infinity). The existing code at line 361 implements this pattern for cases where arguments become empty after filtering; the early guard at 342-343 simply blocks this same pattern from handling the zero-argument case at initialization.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `miscellaneous.py:343` — `raise ValueError("The Max/Min functions must have arguments.")`
+- `miscellaneous.py:361` — `if not args: return cls.identity`
+- `miscellaneous.py:793` — `class Min: identity = S.Infinity`
+- `miscellaneous.py:743` — `class Max: identity = S.NegativeInfinity`
+- Test expectation: `assert Min() == S.Infinity` and `assert Max() == S.NegativeInfinity`
+
+## Edit sites
+- `sympy/functions/elementary/miscellaneous.py` lines 342-343: Remove the `if not args:` guard and its `raise ValueError(...)` statement. The subsequent code flow already handles empty arguments correctly via the identity-return at line 361.
+
+## Rejected hypotheses
+None — the code path is deterministic and the root cause is directly observable.
+
+## Open questions
+None — the fix is localized and the existing test suite validates that no other code depends on the ValueError being raised for zero arguments (other ValueError tests in the file are for complex number arguments, not zero arguments).
+
+---STDERR---

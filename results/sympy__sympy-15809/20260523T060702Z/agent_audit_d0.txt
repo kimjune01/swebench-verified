@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-15809
+
+## FAIL_TO_PASS
+- test_Min: **PASS** ✓
+- test_Max: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 10 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None.
+
+## Summary
+The craft patch successfully removed the premature ValueError guard at lines 342-343 in `sympy/functions/elementary/miscellaneous.py`, allowing the existing identity-return logic to handle zero-argument cases:
+- `Min()` now correctly returns `S.Infinity` (identity element for minimum)
+- `Max()` now correctly returns `S.NegativeInfinity` (identity element for maximum)
+
+All 13 tests passed with no regressions. The fix is minimal (3-line deletion), mathematically sound, and leverages the existing identity element pattern already present in the codebase.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,47 @@
+2026-05-23 06:05:23,652 - INFO - Creating container for sympy__sympy-15809...
+2026-05-23 06:05:31,508 - INFO - Container for sympy__sympy-15809 created: 5b0fabe7bad452ea4044a18fe2a267c154624f10b3a4fcebf12a4b06e39483b0
+2026-05-23 06:05:31,804 - INFO - Container for sympy__sympy-15809 started: 5b0fabe7bad452ea4044a18fe2a267c154624f10b3a4fcebf12a4b06e39483b0
+2026-05-23 06:05:31,804 - INFO - Intermediate patch for sympy__sympy-15809 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15809/patch.diff, now applying to container...
+2026-05-23 06:05:31,919 - INFO - >>>>> Applied Patch:
+Checking patch sympy/functions/elementary/miscellaneous.py...
+Applied patch sympy/functions/elementary/miscellaneous.py cleanly.
+
+2026-05-23 06:05:32,160 - INFO - Git diff before:
+diff --git a/sympy/functions/elementary/miscellaneous.py b/sympy/functions/elementary/miscellaneous.py
+index 5f9fe73c5..7f71a3d1b 100644
+--- a/sympy/functions/elementary/miscellaneous.py
++++ b/sympy/functions/elementary/miscellaneous.py
+@@ -339,9 +339,6 @@ def real_root(arg, n=None, evaluate=None):
+ 
+ class MinMaxBase(Expr, LatticeOp):
+     def __new__(cls, *args, **assumptions):
+-        if not args:
+-            raise ValueError("The Max/Min functions must have arguments.")
+-
+         args = (sympify(arg) for arg in args)
+ 
+         # first standard filter, for cls.zero and cls.identity
+2026-05-23 06:05:32,160 - INFO - Eval script for sympy__sympy-15809 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15809/eval.sh; copying to container...
+2026-05-23 06:05:41,505 - INFO - Test runtime: 9.22 seconds
+2026-05-23 06:05:41,505 - INFO - Test output for sympy__sympy-15809 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15809/test_output.txt
+2026-05-23 06:05:41,605 - INFO - Git diff after:
+diff --git a/sympy/functions/elementary/miscellaneous.py b/sympy/functions/elementary/miscellaneous.py
+index 5f9fe73c5..7f71a3d1b 100644
+--- a/sympy/functions/elementary/miscellaneous.py
++++ b/sympy/functions/elementary/miscellaneous.py
+@@ -339,9 +339,6 @@ def real_root(arg, n=None, evaluate=None):
+ 
+ class MinMaxBase(Expr, LatticeOp):
+     def __new__(cls, *args, **assumptions):
+-        if not args:
+-            raise ValueError("The Max/Min functions must have arguments.")
+-
+         args = (sympify(arg) for arg in args)
+ 
+         # first standard filter, for cls.zero and cls.identity
+2026-05-23 06:05:41,605 - INFO - Grading answer for sympy__sympy-15809...
+2026-05-23 06:05:41,605 - INFO - report: {'sympy__sympy-15809': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_Min', 'test_Max'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_minmax_assumptions', 'test_issue_8413', 'test_root', 'test_real_root', 'test_rewrite_MaxMin_as_Heaviside', 'test_rewrite_MaxMin_as_Piecewise', 'test_issue_11099', 'test_issue_12638', 'test_instantiation_evaluation', 'test_rewrite_as_Abs'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-15809: resolved: True
+2026-05-23 06:05:41,605 - INFO - Attempting to stop container sweb.eval.sympy__sympy-15809.batch...
+2026-05-23 06:05:56,981 - INFO - Attempting to remove container sweb.eval.sympy__sympy-15809.batch...
+2026-05-23 06:05:56,992 - INFO - Container sweb.eval.sympy__sympy-15809.batch removed.

@@ -1,0 +1,47 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/functions/elementary/tests/test_miscellaneous.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        81132284
+hash randomization: on (PYTHONHASHSEED=191303911)
+
+sympy/functions/elementary/tests/test_miscellaneous.py[14] 
+test_Min E
+test_Max E
+test_minmax_assumptions ok
+test_issue_8413 ok
+test_root ok
+test_real_root ok
+test_issue_11463 numpy not installed. s
+test_rewrite_MaxMin_as_Heaviside ok
+test_rewrite_MaxMin_as_Piecewise ok
+test_issue_11099 ok
+test_issue_12638 ok
+test_instantiation_evaluation ok
+test_rewrite_as_Abs ok
+test_issue_14000 ok                                                       [FAIL]
+
+
+________________________________________________________________________________
+_______ sympy/functions/elementary/tests/test_miscellaneous.py:test_Min ________
+Traceback (most recent call last):
+  File "/testbed/sympy/functions/elementary/tests/test_miscellaneous.py", line 88, in test_Min
+    assert Min() == S.Infinity
+  File "/testbed/sympy/functions/elementary/miscellaneous.py", line 343, in __new__
+    raise ValueError("The Max/Min functions must have arguments.")
+ValueError: The Max/Min functions must have arguments.
+________________________________________________________________________________
+_______ sympy/functions/elementary/tests/test_miscellaneous.py:test_Max ________
+Traceback (most recent call last):
+  File "/testbed/sympy/functions/elementary/tests/test_miscellaneous.py", line 160, in test_Max
+    assert Max() == S.NegativeInfinity
+  File "/testbed/sympy/functions/elementary/miscellaneous.py", line 343, in __new__
+    raise ValueError("The Max/Min functions must have arguments.")
+ValueError: The Max/Min functions must have arguments.
+
+===== tests finished: 11 passed, 1 skipped, 2 exceptions, in 5.74 seconds ======
+DO *NOT* COMMIT!
