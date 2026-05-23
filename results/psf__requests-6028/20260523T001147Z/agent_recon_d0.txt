@@ -1,0 +1,73 @@
+Now let me print the handoff document to stdout:
+
+```markdown
+# Recon: psf__requests-6028
+
+## Failure summary
+
+The test `test_prepend_scheme_if_needed` checks that URLs are properly normalized by prepending a scheme when missing, while preserving URLs that already have a scheme. Two test cases fail for URLs containing authentication credentials (user:pass@ or user@). When the function receives `http://user:pass@example.com/path?query`, it strips the authentication part and returns `http://example.com/path?query`. Similarly, `http://user@example.com/path?query` becomes `http://example.com/path?query`.
+
+The error message shows:
+```
+AssertionError: assert 'http://example.com/path?query' == 'http://user:pass@example.com/path?query'
+```
+
+## Suspect set
+
+- `requests/utils.py` lines 960-982: The `prepend_scheme_if_needed` function that incorrectly handles URLs with authentication credentials
+- `requests/utils.py` line 966: Call to `parse_url(url)` which separates auth from netloc
+- `requests/utils.py` lines 967-973: Extraction and processing of parsed components
+- `requests/utils.py` line 982: The `urlunparse` call that reconstructs the URL without the auth component
+
+## Root cause
+
+In commit `ef59aa02` (August 2021), the `prepend_scheme_if_needed` function was refactored from using Python's standard library `urlparse` to urllib3's `parse_url`. This change introduced a regression:
+
+**Before**: `urlparse` returned a `netloc` that included authentication credentials (e.g., `user:pass@example.com`)
+
+**After**: `parse_url` separates the auth into a distinct field. It returns `netloc='example.com'` and `auth='user:pass'` separately.
+
+The bug is that the code extracts the `auth` value from the parsed result but never uses it when reconstructing the URL. On line 967, the function unpacks `scheme, auth, host, port, path, query, fragment = parsed`, extracting the auth, but then on line 971 it only uses `netloc = parsed.netloc` (which is just the hostname without auth). When `urlunparse` is called on line 982, it receives a netloc without authentication credentials, causing them to be lost.
+
+The correct pattern for reconstructing netloc with auth is demonstrated in `requests/models.py:410-415`:
+```python
+netloc = auth or ''
+if netloc:
+    netloc += '@'
+netloc += host
+```
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `requests/utils.py:967` — Code extracts `auth` but never uses it: `scheme, auth, host, port, path, query, fragment = parsed`
+- `requests/utils.py:971` — Uses only `parsed.netloc` which excludes auth: `netloc = parsed.netloc`
+- `requests/utils.py:982` — Reconstructs URL without auth: `return urlunparse((scheme, netloc, path, '', query, fragment))`
+- Manual verification: `parse_url('http://user:pass@example.com/path?query').netloc` returns `'example.com'` (no auth)
+- Manual verification: `parse_url('http://user:pass@example.com/path?query').auth` returns `'user:pass'` (separated)
+- Git commit `ef59aa02` shows the regression was introduced when switching from `urlparse` to `parse_url`
+
+## Edit sites
+
+- `requests/utils.py` lines 973-974: After the netloc swap logic (lines 972-973) and before the scheme check (line 975), insert code to prepend auth to netloc if auth exists. The fix should be:
+  ```python
+  if auth:
+      netloc = f'{auth}@{netloc}'
+  ```
+  This reconstructs the netloc with authentication credentials before passing it to `urlunparse`.
+
+## Competing hypotheses
+
+None. The root cause is clear from code inspection and git history.
+
+## Rejected hypotheses
+
+- H₁: The bug is in urllib3's `parse_url` — Rejected because `parse_url` is working as designed by separating auth from netloc. The bug is in requests' code for not reassembling them.
+- H₂: The bug is in `urlunparse` — Rejected because `urlunparse` correctly processes the netloc it receives. The bug is that we're not including auth in the netloc we pass to it.
+
+## Open questions
+
+None. The fix is straightforward and well-understood. The existing test suite confirms that URLs without auth work correctly, and manual testing confirms the fix resolves URLs with auth.
+```
+
+---STDERR---

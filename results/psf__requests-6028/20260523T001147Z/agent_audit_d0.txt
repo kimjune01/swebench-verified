@@ -1,0 +1,31 @@
+# Audit: psf__requests-6028
+
+## FAIL_TO_PASS
+- `test_prepend_scheme_if_needed[http://user:pass@example.com/path?query-http://user:pass@example.com/path?query]` - **PASS** ✅
+- `test_prepend_scheme_if_needed[http://user@example.com/path?query-http://user@example.com/path?query]` - **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 195 tests in PASS_TO_PASS contract continue to pass
+
+## Pre-existing (not counted, confirmed against base capture)
+The following 8 tests ERROR due to missing `pytest-mock` fixture (test environment issue, not caused by patch):
+- `test_should_bypass_proxies_pass_only_hostname[http://172.16.1.1/-172.16.1.1]`
+- `test_should_bypass_proxies_pass_only_hostname[http://172.16.1.1:5000/-172.16.1.1]`
+- `test_should_bypass_proxies_pass_only_hostname[http://user:pass@172.16.1.1-172.16.1.1]`
+- `test_should_bypass_proxies_pass_only_hostname[http://user:pass@172.16.1.1:5000-172.16.1.1]`
+- `test_should_bypass_proxies_pass_only_hostname[http://hostname/-hostname]`
+- `test_should_bypass_proxies_pass_only_hostname[http://hostname:5000/-hostname]`
+- `test_should_bypass_proxies_pass_only_hostname[http://user:pass@hostname-hostname]`
+- `test_should_bypass_proxies_pass_only_hostname[http://user:pass@hostname:5000-hostname]`
+
+These tests are NOT in the PASS_TO_PASS contract and fail at fixture setup before any code executes.
+
+## Summary
+The patch successfully resolves the authentication credential loss in `prepend_scheme_if_needed` by reconstructing netloc with auth after extraction. Both FAIL_TO_PASS tests now pass. Zero PASS_TO_PASS regressions introduced.
+
+**Gate result**: 195 passed, 11 skipped, 8 errors (pre-existing)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

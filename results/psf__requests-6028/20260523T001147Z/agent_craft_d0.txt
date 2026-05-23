@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully resolves the authentication credentials bug in `prepend_scheme_if_needed`. Both FAIL_TO_PASS tests now pass. The root cause was correctly identified: `parse_url` separates auth from netloc, but the code wasn't reassembling them. The fix prepends auth back to netloc before passing it to `urlunparse`.
+
+---STDERR---
