@@ -1,0 +1,48 @@
+# Recon: django__django-16255
+
+## Failure summary
+
+The test `test_callable_sitemod_no_items` checks that a sitemap with no items but a callable `lastmod` method can be rendered without errors and without a `Last-Modified` header. The test fails with `ValueError: max() arg is an empty sequence` raised at `django/contrib/sitemaps/__init__.py:170` when `get_latest_lastmod()` attempts to call `max()` on an empty list.
+
+**Error trace**:
+```
+File "/testbed/django/contrib/sitemaps/views.py", line 76, in index
+    site_lastmod = site.get_latest_lastmod()
+File "/testbed/django/contrib/sitemaps/__init__.py", line 170, in get_latest_lastmod
+    return max([self.lastmod(item) for item in self.items()])
+ValueError: max() arg is an empty sequence
+```
+
+## Suspect set
+
+- `django/contrib/sitemaps/__init__.py` lines 165-174: `Sitemap.get_latest_lastmod()` method that calls `max()` on potentially empty list
+
+## Root cause
+
+When a sitemap has a callable `lastmod` method and `items()` returns an empty list, `get_latest_lastmod()` executes `max([self.lastmod(item) for item in self.items()])` which becomes `max([])`, raising `ValueError: max() arg is an empty sequence`. The exception handler only catches `TypeError` (for non-comparable items) but not `ValueError` (for empty sequences).
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/contrib/sitemaps/__init__.py:170` — `return max([self.lastmod(item) for item in self.items()])`
+- `django/contrib/sitemaps/__init__.py:171` — `except TypeError:` (does not catch ValueError)
+- `tests/sitemaps_tests/urls/http.py:120-121` — test sitemap's `items()` returns `[]`
+- `tests/sitemaps_tests/urls/http.py:123-124` — test sitemap has callable `lastmod`
+
+The Python built-in `max()` raises `ValueError` when called on an empty sequence, which is not caught by the current exception handler. The code was added in commit 480191244d (Fixed #25916) and has had this issue since inception.
+
+## Edit sites
+
+- `django/contrib/sitemaps/__init__.py` line 171: Change `except TypeError:` to `except (TypeError, ValueError):` to handle both non-comparable items and empty item lists
+
+This is the only location that needs to be changed. The `GenericSitemap` subclass has its own `get_latest_lastmod()` implementation (line 251) that uses Django ORM's `order_by().first()` which returns `None` for empty querysets and doesn't have this issue.
+
+## Rejected hypotheses
+
+None — the root cause is immediately clear from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward and matches the solution proposed in the problem description.
+
+---STDERR---

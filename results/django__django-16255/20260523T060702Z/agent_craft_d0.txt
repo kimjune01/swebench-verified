@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes all tests. The issue was that `get_latest_lastmod()` called `max()` on an empty list when a sitemap had a callable `lastmod` but no items. Instead of broadening exception catching (which could mask real bugs), the fix explicitly checks if the list is empty before calling `max()`, returning `None` for empty lists as expected.
+
+---STDERR---

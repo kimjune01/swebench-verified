@@ -1,0 +1,18 @@
+# Audit: django__django-16255
+
+## FAIL_TO_PASS
+- `test_callable_sitemod_no_items (sitemaps_tests.test_http.HTTPSitemapTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 40 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None applicable.
+
+## Summary
+The craft patch successfully fixes the `ValueError: max() arg is an empty sequence` issue by checking if the `lastmods` list is empty before calling `max()`. The fix is minimal, targeted, and introduces no regressions. All 40 tests in the suite pass.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
