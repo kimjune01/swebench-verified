@@ -1,0 +1,25 @@
+# Audit: sympy__sympy-12419
+
+## FAIL_TO_PASS
+- test_Identity: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+
+The patch successfully resolves the issue. The Identity matrix's `_entry` method now returns `KroneckerDelta(i, j)` instead of using Python's `==` operator, which correctly handles symbolic indices.
+
+**Before:** `if i == j: return S.One else: return S.Zero` failed for symbolic indices because Python `==` on distinct Symbol objects evaluates to False.
+
+**After:** `return KroneckerDelta(i, j)` correctly evaluates to 1 when i=j and 0 when i≠j, handling both concrete and symbolic indices.
+
+All 27 tests passed with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

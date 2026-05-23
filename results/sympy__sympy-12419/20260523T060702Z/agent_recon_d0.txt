@@ -1,0 +1,44 @@
+# Recon: sympy__sympy-12419
+
+## Failure summary
+The test `test_Identity` checks that `Identity(n)[i, j]` (where `i, j` are symbolic) returns a non-zero expression and that the sum of all elements equals `n`. The test fails at `assert In[i, j] != 0` because `In[i, j]` incorrectly evaluates to `0` instead of a symbolic expression like `KroneckerDelta(i, j)`.
+
+The original issue demonstrates that `Sum(Sum(e[i, j], (i, 0, n-1)), (j, 0, n-1)).doit()` returns `0` instead of `n` when `e` is an identity matrix, confirming the bug.
+
+## Suspect set
+- `sympy/matrices/expressions/matexpr.py` lines 485-489: The `Identity._entry` method that determines matrix element values
+
+## Root cause
+The `Identity._entry(i, j)` method uses Python's `==` operator to check if indices are equal: `if i == j: return S.One else: return S.Zero`. When `i` and `j` are different Symbol objects (even if they might represent the same value symbolically), the Python `==` operator returns `False` because it checks object identity, not symbolic equality. This causes the method to incorrectly return `S.Zero` for all symbolic index pairs.
+
+The correct behavior is to return `KroneckerDelta(i, j)`, which:
+- Evaluates to `1` when arguments are provably equal (concrete indices like `[0,0]` or same symbol object `[i,i]`)
+- Evaluates to `0` when arguments are provably unequal (concrete indices like `[0,1]`)
+- Remains symbolic when equality is unknown (different symbol objects like `[i,j]`)
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sympy/matrices/expressions/matexpr.py:485-489` — Current implementation uses `if i == j`
+- Experimental verification: `Identity(n)[i,j]` returns `0`, should be `KroneckerDelta(i,j)`
+- Experimental verification: `KroneckerDelta(i,j) != 0` returns `True`, making test pass
+- Experimental verification: `Sum(KroneckerDelta(i,j), (i,0,n-1), (j,0,n-1)).subs(n,3).doit()` returns `3`
+
+## Edit sites
+- `sympy/matrices/expressions/matexpr.py` lines 485-489: Replace the `_entry` method in the `Identity` class. Change from:
+  ```python
+  def _entry(self, i, j):
+      if i == j:
+          return S.One
+      else:
+          return S.Zero
+  ```
+  To use `KroneckerDelta(i, j)` which returns the Kronecker delta function. This requires importing `KroneckerDelta` (though it's already imported elsewhere in the file at line 378).
+
+## Rejected hypotheses
+None — the root cause is clear from direct code inspection and experimental verification.
+
+## Open questions
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---
