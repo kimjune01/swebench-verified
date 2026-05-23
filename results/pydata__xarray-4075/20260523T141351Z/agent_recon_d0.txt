@@ -1,0 +1,34 @@
+# Recon: pydata__xarray-4075
+
+## Failure summary
+
+Two tests fail when boolean arrays are used as weights: `test_weighted_sum_of_weights_bool` expects sum_of_weights=2 but gets 1.0, and `test_weighted_mean_bool` expects mean=1 but gets 2.0. The root cause is that `xr.dot()` called with two boolean arrays returns a boolean scalar (True) instead of a numeric sum (2), breaking the weighted mean calculation where sum_of_weights is used as the denominator.
+
+## Suspect set
+
+- `xarray/core/weighted.py` lines 113-135: `Weighted._reduce()` method - calls `dot(da, weights, dims=dim)` without ensuring inputs are numeric
+
+## Root cause
+
+The `_reduce` method at line 135 calls `dot(da, weights, dims=dim)`. When boolean weights are passed to `DataArray.weighted()`, and `_sum_of_weights` computes `mask = da.notnull()` (also boolean), the dot product of two boolean arrays returns a boolean True instead of the numeric sum. This causes sum_of_weights=1.0 instead of 2, making the weighted mean divide by the wrong normalization factor.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `xarray/core/weighted.py:145` — `sum_of_weights = self._reduce(mask, self.weights, dim=dim, skipna=False)` where mask is boolean from `da.notnull()`
+- `xarray/core/weighted.py:135` — `return dot(da, weights, dims=dim)` performs dot product without type conversion
+- Test output shows sum_of_weights returns 1.0 when two True values should sum to 2
+
+## Edit sites
+
+- `xarray/core/weighted.py` lines 132-135: Add boolean-to-int conversion before the `dot()` call. Insert after the skipna/fillna block (line 130) and before the dot call (line 135). Convert both `da` and `weights` if their dtype.kind is 'b' (boolean) using `.astype(int)`. This ensures the dot product returns numeric results for all combinations of boolean/numeric inputs.
+
+## Rejected hypotheses
+
+None — diagnosis is straightforward from the problem description and code trace.
+
+## Open questions
+
+None — the fix location and approach are clear.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass. The boolean-to-int conversion in the `_reduce` method ensures that `xr.dot()` returns numeric sums instead of boolean scalars when operating on boolean arrays.
+
+---STDERR---

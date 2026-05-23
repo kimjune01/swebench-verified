@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-4075
+
+## FAIL_TO_PASS
+- xarray/tests/test_weighted.py::test_weighted_sum_of_weights_bool: ✅ PASSED
+- xarray/tests/test_weighted.py::test_weighted_mean_bool: ✅ PASSED
+
+## PASS_TO_PASS regressions
+None. Gate completed with 960 passed, 0 failed, 2 xfailed (expected failures).
+
+## Pre-existing (not counted, confirmed against base capture)
+- xarray/tests/test_weighted.py::test_weighted_operations_keep_attr_da_in_ds[sum] - XFAIL (known issue GH: 3595)
+- xarray/tests/test_weighted.py::test_weighted_operations_keep_attr_da_in_ds[mean] - XFAIL (known issue GH: 3595)
+
+## Summary
+The craft patch successfully resolves both FAIL_TO_PASS tests by converting boolean arrays to int before the dot product operation in `Weighted._reduce()` (xarray/core/weighted.py:135-140). This ensures numeric sums are returned instead of boolean scalars. Full gate passed with 960 tests, zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
