@@ -1,0 +1,33 @@
+# Audit: django__django-13741
+
+## FAIL_TO_PASS
+- test_readonly_field_has_changed (auth_tests.test_forms.ReadOnlyPasswordHashTest): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 83 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - all tests passed.
+
+## Patch applied
+```diff
+diff --git a/django/contrib/auth/forms.py b/django/contrib/auth/forms.py
+index b9eb33329f..9a6614a809 100644
+--- a/django/contrib/auth/forms.py
++++ b/django/contrib/auth/forms.py
+@@ -56,6 +56,7 @@ class ReadOnlyPasswordHashField(forms.Field):
+ 
+     def __init__(self, *args, **kwargs):
+         kwargs.setdefault("required", False)
++        kwargs.setdefault("disabled", True)
+         super().__init__(*args, **kwargs)
+ 
+     def bound_data(self, data, initial):
+```
+
+The fix adds `disabled=True` by default to `ReadOnlyPasswordHashField`, ensuring `has_changed()` always returns False for disabled fields per Django's form field contract.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

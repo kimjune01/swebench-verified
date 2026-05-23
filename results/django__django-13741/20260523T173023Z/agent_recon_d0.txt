@@ -1,0 +1,49 @@
+# Recon: django__django-13741
+
+## Failure summary
+
+The test `test_readonly_field_has_changed` in `auth_tests.test_forms.ReadOnlyPasswordHashTest` verifies that `ReadOnlyPasswordHashField` has `disabled=True` by default and that `has_changed()` returns `False`. The test fails with `AssertionError: False is not True` on the assertion `self.assertIs(field.disabled, True)`, indicating the field's `disabled` attribute is currently `False` instead of the expected `True`.
+
+## Suspect set
+
+- `django/contrib/auth/forms.py` lines 54-67: `ReadOnlyPasswordHashField` class definition — the `__init__` method does not set `disabled=True` by default
+
+## Root cause
+
+The `ReadOnlyPasswordHashField.__init__` method (lines 57-59) only sets `kwargs.setdefault("required", False)` but does not set `disabled=True`. The base `forms.Field` class defaults `disabled=False` (django/forms/fields.py:59), so instances of `ReadOnlyPasswordHashField` inherit this default value.
+
+According to the problem description, the `disabled` attribute on form fields prevents user edits and ignores tampered values in favor of initial data — exactly the behavior needed for a read-only password hash field. Setting `disabled=True` by default eliminates the need for the `clean_password` workaround currently used in `UserChangeForm`.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/contrib/auth/forms.py:57-59` — current `__init__` only sets `required`, not `disabled`:
+  ```python
+  def __init__(self, *args, **kwargs):
+      kwargs.setdefault("required", False)
+      super().__init__(*args, **kwargs)
+  ```
+- `django/forms/fields.py:59` — base Field defaults `disabled=False` in signature
+- `tests/auth_tests/test_forms.py:1024-1026` — test expects `field.disabled` to be `True`
+
+## Edit sites
+
+- `django/contrib/auth/forms.py` line 58: Add `kwargs.setdefault("disabled", True)` immediately after the existing `kwargs.setdefault("required", False)` line, before the `super().__init__()` call
+
+The change should look like:
+```python
+def __init__(self, *args, **kwargs):
+    kwargs.setdefault("required", False)
+    kwargs.setdefault("disabled", True)  # <-- ADD THIS LINE
+    super().__init__(*args, **kwargs)
+```
+
+## Rejected hypotheses
+
+None — the failure mode directly points to the missing default, and the code path is straightforward with no competing explanations.
+
+## Open questions
+
+None — the fix is localized to a single line addition with no dependencies on other components.
+
+---STDERR---
