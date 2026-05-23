@@ -1,0 +1,49 @@
+# Recon: django__django-14351
+
+## Failure summary
+
+The test `test_having_subquery_select` creates a Book queryset annotated with `Count('authors')`, then filters it with `Q(authors__in=authors) | Q(authors__count__gt=2)` where `authors` is a simple queryset. The test expects to return books that either have an author from the `authors` queryset OR have more than 2 authors total. However, the query fails with `sqlite3.OperationalError: sub-select returns 3 columns - expected 1`. The subquery for the `__in` lookup is selecting all 3 Author columns (id, name, age) instead of just the primary key, violating SQL's requirement that an IN clause subquery returns only one column.
+
+## Suspect set
+
+- `django/db/models/lookups.py` lines 404-406: `In.process_rhs` method where it checks `has_select_fields`
+- `django/db/models/fields/related_lookups.py` lines 89-101: `RelatedIn.as_sql` method where it checks `has_select_fields`
+- `django/db/models/sql/query.py` line 244: `has_select_fields` property definition
+- `django/db/models/query.py` lines 1379-1387: `QuerySet.resolve_expression` method
+
+## Root cause
+
+The `In.process_rhs` (line 404 in `lookups.py`) and `RelatedIn.as_sql` (line 89 in `related_lookups.py`) methods both check `getattr(self.rhs, 'has_select_fields', True)` to determine whether they should clear the select clause and add only the pk field for subquery optimization. However, `has_select_fields` is defined as a property on the `Query` class (`query.py:244`), **not** on the `QuerySet` class.
+
+When `self.rhs` is a QuerySet (the typical case when passing a queryset to a filter), the `getattr(self.rhs, 'has_select_fields', True)` call returns the default value `True` because the attribute doesn't exist on QuerySet. This makes the condition `not True` evaluate to `False`, preventing the code from clearing the select clause and adding only the pk field. As a result, the subquery uses all default columns instead of just the primary key, causing the SQL error.
+
+Confidence: **Deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/lookups.py:404` — `if not getattr(self.rhs, 'has_select_fields', True):` assumes `self.rhs` has this attribute
+- `django/db/models/sql/query.py:244-245` — `@property def has_select_fields(self): return bool(self.select or self.annotation_select_mask or self.extra_select_mask)` only exists on Query
+- Git blame shows commit eb4724a0632 changed from `isinstance(self.rhs, Query)` check to `getattr`, which broke the assumption
+- Error message confirms 3 columns selected: Author model has exactly 3 fields (id, name, age) per `models.py:8-11`
+
+## Edit sites
+
+**Primary fix:**
+- `django/db/models/lookups.py` lines 404-406: In `In.process_rhs`, change the check to access `self.rhs.query.has_select_fields` when `self.rhs` is a QuerySet, or add an `isinstance` check like the `Exact` lookup does
+- `django/db/models/fields/related_lookups.py` lines 89-91: In `RelatedIn.as_sql`, change the check to access `self.rhs.query.has_select_fields` when `self.rhs` is a QuerySet
+
+**Specific change needed:**
+Replace `getattr(self.rhs, 'has_select_fields', True)` with a check that correctly handles both Query and QuerySet objects, such as:
+- `getattr(self.rhs, 'has_select_fields', None) or getattr(getattr(self.rhs, 'query', None), 'has_select_fields', True)`
+- OR: `(hasattr(self.rhs, 'query') and not self.rhs.query.has_select_fields) or (not hasattr(self.rhs, 'query') and not getattr(self.rhs, 'has_select_fields', True))`
+- OR: Add `isinstance(self.rhs, Query)` check before accessing `has_select_fields`
+
+## Rejected hypotheses
+
+None — first pass diagnosis.
+
+## Open questions
+
+1. Why does the `Exact` lookup (lines 295-299 in `lookups.py`) explicitly check `isinstance(self.rhs, Query)` before accessing `has_select_fields`, but `In` and `RelatedIn` do not?
+2. Should QuerySet have a `has_select_fields` property that delegates to `self.query.has_select_fields` to prevent this class of bugs?
+
+---STDERR---

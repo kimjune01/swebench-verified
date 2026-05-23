@@ -1,0 +1,171 @@
+2026-05-23 23:51:06,172 - INFO - Creating container for django__django-14351...
+2026-05-23 23:51:06,445 - INFO - Container for django__django-14351 created: d0d0cba96da6478bc360d8d938c63e81e55cef766758d20c35b68fd066d3e800
+2026-05-23 23:51:06,704 - INFO - Container for django__django-14351 started: d0d0cba96da6478bc360d8d938c63e81e55cef766758d20c35b68fd066d3e800
+2026-05-23 23:51:06,705 - INFO - Intermediate patch for django__django-14351 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14351/patch.diff, now applying to container...
+2026-05-23 23:51:06,826 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/lookups.py...
+Checking patch django/db/models/sql/query.py...
+Checking patch django/db/models/sql/where.py...
+Applied patch django/db/models/lookups.py cleanly.
+Applied patch django/db/models/sql/query.py cleanly.
+Applied patch django/db/models/sql/where.py cleanly.
+
+2026-05-23 23:51:07,343 - INFO - Git diff before:
+diff --git a/django/db/models/lookups.py b/django/db/models/lookups.py
+index 5089737034..0fa47e192c 100644
+--- a/django/db/models/lookups.py
++++ b/django/db/models/lookups.py
+@@ -85,6 +85,8 @@ class Lookup:
+         return compiler.compile(lhs)
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         value = self.rhs
+         if self.bilateral_transforms:
+             if self.rhs_is_direct_value():
+@@ -246,6 +248,8 @@ class FieldGetDbPrepValueIterableMixin(FieldGetDbPrepValueMixin):
+         return prepared_values
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         if self.rhs_is_direct_value():
+             # rhs should be an iterable of values. Use batch_process_rhs()
+             # to prepare/transform those values.
+@@ -291,6 +295,8 @@ class Exact(FieldGetDbPrepValueMixin, BuiltinLookup):
+     lookup_name = 'exact'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         from django.db.models.sql.query import Query
+         if isinstance(self.rhs, Query):
+             if self.rhs.has_limit_one():
+@@ -377,6 +383,8 @@ class In(FieldGetDbPrepValueIterableMixin, BuiltinLookup):
+     lookup_name = 'in'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         db_rhs = getattr(self.rhs, '_db', None)
+         if db_rhs is not None and db_rhs != connection.alias:
+             raise ValueError(
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 6629a1fd51..adb2d471b4 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -2162,12 +2162,12 @@ class Query(BaseExpression):
+             field_names = []
+             extra_names = []
+             annotation_names = []
++            self.default_cols = False
+             if not self.extra and not self.annotations:
+                 # Shortcut - if there are no extra or annotations, then
+                 # the values() clause must be just field names.
+                 field_names = list(fields)
+             else:
+-                self.default_cols = False
+                 for f in fields:
+                     if f in self.extra_select:
+                         extra_names.append(f)
+diff --git a/django/db/models/sql/where.py b/django/db/models/sql/where.py
+index 795eff8395..11f32721f5 100644
+--- a/django/db/models/sql/where.py
++++ b/django/db/models/sql/where.py
+@@ -240,9 +240,10 @@ class SubqueryConstraint:
+         self.columns = columns
+         self.targets = targets
+         self.query_object = query_object
++        # Set values immediately to prevent default_cols from being used
++        self.query_object.set_values(targets)
+ 
+     def as_sql(self, compiler, connection):
+         query = self.query_object
+-        query.set_values(self.targets)
+         query_compiler = query.get_compiler(connection=connection)
+         return query_compiler.as_subquery_condition(self.alias, self.columns, compiler)
+2026-05-23 23:51:07,344 - INFO - Eval script for django__django-14351 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14351/eval.sh; copying to container...
+2026-05-23 23:51:12,294 - INFO - Test runtime: 4.83 seconds
+2026-05-23 23:51:12,294 - INFO - Test output for django__django-14351 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14351/test_output.txt
+2026-05-23 23:51:12,421 - INFO - Git diff after:
+diff --git a/django/db/models/lookups.py b/django/db/models/lookups.py
+index 5089737034..0fa47e192c 100644
+--- a/django/db/models/lookups.py
++++ b/django/db/models/lookups.py
+@@ -85,6 +85,8 @@ class Lookup:
+         return compiler.compile(lhs)
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         value = self.rhs
+         if self.bilateral_transforms:
+             if self.rhs_is_direct_value():
+@@ -246,6 +248,8 @@ class FieldGetDbPrepValueIterableMixin(FieldGetDbPrepValueMixin):
+         return prepared_values
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         if self.rhs_is_direct_value():
+             # rhs should be an iterable of values. Use batch_process_rhs()
+             # to prepare/transform those values.
+@@ -291,6 +295,8 @@ class Exact(FieldGetDbPrepValueMixin, BuiltinLookup):
+     lookup_name = 'exact'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         from django.db.models.sql.query import Query
+         if isinstance(self.rhs, Query):
+             if self.rhs.has_limit_one():
+@@ -377,6 +383,8 @@ class In(FieldGetDbPrepValueIterableMixin, BuiltinLookup):
+     lookup_name = 'in'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         db_rhs = getattr(self.rhs, '_db', None)
+         if db_rhs is not None and db_rhs != connection.alias:
+             raise ValueError(
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 6629a1fd51..adb2d471b4 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -2162,12 +2162,12 @@ class Query(BaseExpression):
+             field_names = []
+             extra_names = []
+             annotation_names = []
++            self.default_cols = False
+             if not self.extra and not self.annotations:
+                 # Shortcut - if there are no extra or annotations, then
+                 # the values() clause must be just field names.
+                 field_names = list(fields)
+             else:
+-                self.default_cols = False
+                 for f in fields:
+                     if f in self.extra_select:
+                         extra_names.append(f)
+diff --git a/django/db/models/sql/where.py b/django/db/models/sql/where.py
+index 795eff8395..11f32721f5 100644
+--- a/django/db/models/sql/where.py
++++ b/django/db/models/sql/where.py
+@@ -240,9 +240,10 @@ class SubqueryConstraint:
+         self.columns = columns
+         self.targets = targets
+         self.query_object = query_object
++        # Set values immediately to prevent default_cols from being used
++        self.query_object.set_values(targets)
+ 
+     def as_sql(self, compiler, connection):
+         query = self.query_object
+-        query.set_values(self.targets)
+         query_compiler = query.get_compiler(connection=connection)
+         return query_compiler.as_subquery_condition(self.alias, self.columns, compiler)
+2026-05-23 23:51:12,421 - INFO - Grading answer for django__django-14351...
+2026-05-23 23:51:12,423 - INFO - report: {'django__django-14351': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': False, 'tests_status': {'FAIL_TO_PASS': {'success': [], 'failure': ['test_having_subquery_select (aggregation_regress.tests.AggregationTests)']}, 'PASS_TO_PASS': {'success': ['test_ticket_24748 (aggregation_regress.tests.SelfReferentialFKTests)', 'test_existing_join_not_promoted (aggregation_regress.tests.JoinPromotionTests)', 'test_non_nullable_fk_not_promoted (aggregation_regress.tests.JoinPromotionTests)', 'test_ticket_21150 (aggregation_regress.tests.JoinPromotionTests)', 'test_aggregate (aggregation_regress.tests.AggregationTests)', 'test_aggregate_annotation (aggregation_regress.tests.AggregationTests)', 'test_aggregate_fexpr (aggregation_regress.tests.AggregationTests)', 'test_aggregate_on_relation (aggregation_regress.tests.AggregationTests)', 'Regression test for #12822: DatabaseError: aggregates not allowed in', 'Regression test for #10870:  Aggregates with joins ignore extra', 'test_allow_distinct (aggregation_regress.tests.AggregationTests)', 'test_annotate_and_join (aggregation_regress.tests.AggregationTests)', 'test_annotate_distinct_aggregate (aggregation_regress.tests.AggregationTests)', "The base table's join isn't promoted to LOUTER. This could", 'test_annotate_on_relation (aggregation_regress.tests.AggregationTests)', 'Regression #18333 - Ensure annotated column name is properly quoted.', 'Find ages that are shared by at least two authors.', 'Regression test for #11916: Extra params + aggregation creates', 'test_annotated_conditional_aggregate (aggregation_regress.tests.AggregationTests)', 'test_annotation (aggregation_regress.tests.AggregationTests)', 'test_annotation_disjunction (aggregation_regress.tests.AggregationTests)', 'test_annotation_with_value (aggregation_regress.tests.AggregationTests)', 'test_boolean_conversion (aggregation_regress.tests.AggregationTests)', 'test_conditional_aggregate (aggregation_regress.tests.AggregationTests)', 'test_conditional_aggregate_on_complex_condition (aggregation_regress.tests.AggregationTests)', 'test_db_col_table (aggregation_regress.tests.AggregationTests)', 'Filtering on an aggregate annotation with Decimal values should work.', 'test_distinct_conditional_aggregate (aggregation_regress.tests.AggregationTests)', 'test_duplicate_alias (aggregation_regress.tests.AggregationTests)', 'test_empty (aggregation_regress.tests.AggregationTests)', 'test_empty_filter_aggregate (aggregation_regress.tests.AggregationTests)', 'test_empty_filter_count (aggregation_regress.tests.AggregationTests)', 'test_f_expression_annotation (aggregation_regress.tests.AggregationTests)', 'test_field_error (aggregation_regress.tests.AggregationTests)', 'test_field_name_conflict (aggregation_regress.tests.AggregationTests)', 'test_filtering_by_annotation_name (aggregation_regress.tests.AggregationTests)', 'test_fk_attname_conflict (aggregation_regress.tests.AggregationTests)', 'An F() object referring to related column works correctly in group by.', 'test_having_group_by (aggregation_regress.tests.AggregationTests)', 'test_m2m_name_conflict (aggregation_regress.tests.AggregationTests)', 'test_more (aggregation_regress.tests.AggregationTests)', 'test_more_more (aggregation_regress.tests.AggregationTests)', 'test_more_more_more (aggregation_regress.tests.AggregationTests)', 'test_name_expressions (aggregation_regress.tests.AggregationTests)', 'test_name_filters (aggregation_regress.tests.AggregationTests)', 'test_negated_aggregation (aggregation_regress.tests.AggregationTests)', 'test_none_call_before_aggregate (aggregation_regress.tests.AggregationTests)', 'test_pickle (aggregation_regress.tests.AggregationTests)', 'test_quoting_aggregate_order_by (aggregation_regress.tests.AggregationTests)', 'test_reverse_join_trimming (aggregation_regress.tests.AggregationTests)', 'test_reverse_relation_name_conflict (aggregation_regress.tests.AggregationTests)', 'test_sliced_conditional_aggregate (aggregation_regress.tests.AggregationTests)', 'test_stddev (aggregation_regress.tests.AggregationTests)', 'test_ticket_11293 (aggregation_regress.tests.AggregationTests)', "Splitting a q object to parts for where/having doesn't alter", 'test_values_annotate_values (aggregation_regress.tests.AggregationTests)', 'Annotate *args ordering should be preserved in values_list results.', 'test_values_queryset_non_conflict (aggregation_regress.tests.AggregationTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-14351: resolved: False
+2026-05-23 23:51:12,423 - INFO - Attempting to stop container sweb.eval.django__django-14351.batch...
+2026-05-23 23:51:27,886 - INFO - Attempting to remove container sweb.eval.django__django-14351.batch...
+2026-05-23 23:51:27,906 - INFO - Container sweb.eval.django__django-14351.batch removed.

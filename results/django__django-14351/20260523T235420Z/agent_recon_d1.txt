@@ -1,0 +1,74 @@
+# Recon: django__django-14351
+
+## Failure summary
+
+The test `test_having_subquery_select` creates a query using `Q(authors__in=authors) | Q(authors__count__gt=2)` where `authors` is a QuerySet. The test fails with `OperationalError: sub-select returns 3 columns - expected 1`. The subquery should select only the primary key (id), but instead selects all 3 Author columns (id, name, age).
+
+## Suspect set
+
+- `django/db/models/fields/related_lookups.py` lines 93-105: RelatedIn.as_sql() method contains a conditional that determines whether to clear and limit the subquery select clause
+- `django/db/models/sql/query.py` lines 244-246: has_select_fields property that checks if explicit select fields are set (but doesn't check default_cols)
+- `django/db/models/sql/compiler.py` lines 227-229: Compiler logic that uses default_cols to call get_default_columns()
+
+## Root cause
+
+The condition in `django/db/models/fields/related_lookups.py:93-94` incorrectly skips clearing the subquery select clause when the target field is a primary key:
+
+```python
+if (not getattr(self.rhs, 'has_select_fields', True) and
+        not getattr(self.lhs.field.target_field, 'primary_key', False)):
+    self.rhs.clear_select_clause()
+    ...
+```
+
+For the failing test `Q(authors__in=authors)` where `authors` is a ManyToManyField to Author:
+1. The `authors` QuerySet is converted to a Query via `QuerySet.resolve_expression()` → `Query.resolve_expression()`
+2. The Query clone has `default_cols=True` (from initialization) and `select=[]` (empty list)
+3. `has_select_fields` returns `False` because it only checks `select/annotation_select_mask/extra_select_mask` (not `default_cols`)
+4. The target field is Author's implicit `id` field with `primary_key=True`  
+5. Condition evaluates: `(not False) and (not True)` → `True and False` → `False`
+6. Block doesn't execute, so `clear_select_clause()` and `add_fields()` are never called
+7. Query compiles with `default_cols=True`, causing compiler to call `get_default_columns()` which selects all 3 fields
+
+The second part of the AND condition (`not getattr(self.lhs.field.target_field, 'primary_key', False)`) was added in commit d66378a8b2d to fix #28175 (parent model FK lookups), but it introduced this regression for standard ManyToMany and ForeignKey lookups where the target is a primary key.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/sql/query.py:244` — `has_select_fields` checks only `self.select or self.annotation_select_mask or self.extra_select_mask`, ignoring `default_cols`
+- `django/db/models/sql/query.py:164` — `default_cols` initialized to `True`
+- `django/db/models/sql/compiler.py:228` — If `default_cols=True`, calls `get_default_columns()` selecting all fields
+- `git blame` shows line 94 added in d66378a8b2d for #28175
+
+## Edit sites
+
+- `django/db/models/fields/related_lookups.py` lines 93-94: Remove the second condition `and not getattr(self.lhs.field.target_field, 'primary_key', False)` so the block executes whenever `has_select_fields` is False, regardless of whether the target is a primary key
+
+The fix is to change:
+```python
+if (not getattr(self.rhs, 'has_select_fields', True) and
+        not getattr(self.lhs.field.target_field, 'primary_key', False)):
+```
+
+To:
+```python
+if not getattr(self.rhs, 'has_select_fields', True):
+```
+
+This ensures that when a Query has no explicit select fields (but has `default_cols=True`), the code will clear the clause and add only the specific target field needed for the IN lookup.
+
+## Competing hypotheses
+
+None — the root cause is clear from code path analysis. The only risk is whether removing the condition breaks the #28175 test case (`Supplier.objects.filter(restaurant__in=Place.objects.all())` where Restaurant inherits from Place). That test should be verified during implementation.
+
+## Rejected hypotheses
+
+- H₀ (from AUDIT KILL): `self.rhs` being a Query object is not the issue — it's expected to be a Query after `resolve_expression()`
+- The property access on Query objects works correctly
+- The issue is not about when/how Query gets select fields set, but about the conditional logic that decides whether to override them
+
+## Open questions
+
+Will removing the second condition break the #28175 test? The test `model_inheritance_regress.tests.ModelInheritanceTest.test_filter_with_parent_fk` currently passes, but we need to verify it still passes after the fix. If it fails, a more nuanced solution may be needed that distinguishes between parent-model inheritance cases and standard FK/M2M cases.
+
+---STDERR---

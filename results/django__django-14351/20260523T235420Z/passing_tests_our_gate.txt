@@ -1,0 +1,302 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 aggregation_regress.tests
+
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=list
+System check identified no issues (0 silenced).
+test_aggregate (aggregation_regress.tests.AggregationTests) ... ok
+test_aggregate_annotation (aggregation_regress.tests.AggregationTests) ... ok
+test_aggregate_duplicate_columns (aggregation_regress.tests.AggregationTests) ... skipped "Database doesn't support any of the feature(s): allows_group_by_pk, allows_group_by_selected_pks"
+test_aggregate_duplicate_columns_only (aggregation_regress.tests.AggregationTests) ... skipped "Database doesn't support any of the feature(s): allows_group_by_pk, allows_group_by_selected_pks"
+test_aggregate_duplicate_columns_select_related (aggregation_regress.tests.AggregationTests) ... skipped "Database doesn't support any of the feature(s): allows_group_by_pk, allows_group_by_selected_pks"
+test_aggregate_fexpr (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=CombinedExpression
+In.process_rhs: type(self.rhs)=CombinedExpression
+In.process_rhs: type(self.rhs)=CombinedExpression
+In.process_rhs: type(self.rhs)=CombinedExpression
+ok
+test_aggregate_on_relation (aggregation_regress.tests.AggregationTests) ... ok
+test_aggregate_unmanaged_model_as_tables (aggregation_regress.tests.AggregationTests) ... skipped "Database doesn't support feature(s): allows_group_by_selected_pks"
+test_aggregate_unmanaged_model_columns (aggregation_regress.tests.AggregationTests)
+Unmanaged models are sometimes used to represent database views which ... skipped "Database doesn't support feature(s): allows_group_by_selected_pks"
+test_aggregates_in_where_clause (aggregation_regress.tests.AggregationTests)
+Regression test for #12822: DatabaseError: aggregates not allowed in ... In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=list
+ok
+test_aggregates_in_where_clause_pre_eval (aggregation_regress.tests.AggregationTests)
+Regression test for #12822: DatabaseError: aggregates not allowed in ... In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=list
+ok
+test_aggregation_with_generic_reverse_relation (aggregation_regress.tests.AggregationTests)
+Regression test for #10870:  Aggregates with joins ignore extra ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_allow_distinct (aggregation_regress.tests.AggregationTests) ... ok
+test_annotate_and_join (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=Col
+In.process_rhs: type(self.rhs)=Col
+ok
+test_annotate_distinct_aggregate (aggregation_regress.tests.AggregationTests) ... ok
+test_annotate_joins (aggregation_regress.tests.AggregationTests)
+The base table's join isn't promoted to LOUTER. This could ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_annotate_on_relation (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_annotate_reserved_word (aggregation_regress.tests.AggregationTests)
+Regression #18333 - Ensure annotated column name is properly quoted. ... ok
+test_annotate_values_list_flat (aggregation_regress.tests.AggregationTests)
+Find ages that are shared by at least two authors. ... In.process_rhs: type(self.rhs)=int
+ok
+test_annotate_with_extra (aggregation_regress.tests.AggregationTests)
+Regression test for #11916: Extra params + aggregation creates ... ok
+test_annotated_conditional_aggregate (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+ok
+test_annotation (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_annotation_disjunction (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=float
+In.process_rhs: type(self.rhs)=Count
+ok
+test_annotation_with_value (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+ok
+test_boolean_conversion (aggregation_regress.tests.AggregationTests) ... ok
+test_conditional_aggregate (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+ok
+test_conditional_aggregate_on_complex_condition (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Decimal
+In.process_rhs: type(self.rhs)=Decimal
+ok
+test_db_col_table (aggregation_regress.tests.AggregationTests) ... ok
+test_decimal_aggregate_annotation_filter (aggregation_regress.tests.AggregationTests)
+Filtering on an aggregate annotation with Decimal values should work. ... In.process_rhs: type(self.rhs)=Decimal
+In.process_rhs: type(self.rhs)=Decimal
+ok
+test_distinct_conditional_aggregate (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Decimal
+In.process_rhs: type(self.rhs)=Decimal
+ok
+test_duplicate_alias (aggregation_regress.tests.AggregationTests) ... ok
+test_empty (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=list
+In.process_rhs: type(self.rhs)=list
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+ok
+test_empty_filter_aggregate (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=list
+ok
+test_empty_filter_count (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=list
+ok
+test_f_expression_annotation (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=CombinedExpression
+ok
+test_field_error (aggregation_regress.tests.AggregationTests) ... ok
+test_field_name_conflict (aggregation_regress.tests.AggregationTests) ... ok
+test_filtering_by_annotation_name (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_fk_attname_conflict (aggregation_regress.tests.AggregationTests) ... ok
+test_fobj_group_by (aggregation_regress.tests.AggregationTests)
+An F() object referring to related column works correctly in group by. ... In.process_rhs: type(self.rhs)=Col
+In.process_rhs: type(self.rhs)=Col
+ok
+test_having_group_by (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Count
+ok
+test_having_subquery_select (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ERROR
+test_m2m_name_conflict (aggregation_regress.tests.AggregationTests) ... ok
+test_more (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_more_more (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=float
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_more_more_more (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=list
+In.process_rhs: type(self.rhs)=list
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=list
+ok
+test_name_expressions (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=CombinedExpression
+In.process_rhs: type(self.rhs)=CombinedExpression
+ok
+test_name_filters (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+ok
+test_negated_aggregation (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=Query
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_none_call_before_aggregate (aggregation_regress.tests.AggregationTests) ... ok
+test_pickle (aggregation_regress.tests.AggregationTests) ... ok
+test_quoting_aggregate_order_by (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=str
+In.process_rhs: type(self.rhs)=str
+ok
+test_reverse_join_trimming (aggregation_regress.tests.AggregationTests) ... ok
+test_reverse_relation_name_conflict (aggregation_regress.tests.AggregationTests) ... ok
+test_sliced_conditional_aggregate (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=int
+ok
+test_stddev (aggregation_regress.tests.AggregationTests) ... ok
+test_ticket_11293 (aggregation_regress.tests.AggregationTests) ... In.process_rhs: type(self.rhs)=Decimal
+In.process_rhs: type(self.rhs)=int
+ok
+test_ticket_11293_q_immutable (aggregation_regress.tests.AggregationTests)
+Splitting a q object to parts for where/having doesn't alter ... ok
+test_values_annotate_values (aggregation_regress.tests.AggregationTests) ... ok
+test_values_list_annotation_args_ordering (aggregation_regress.tests.AggregationTests)
+Annotate *args ordering should be preserved in values_list results. ... ok
+test_values_queryset_non_conflict (aggregation_regress.tests.AggregationTests) ... ok
+test_existing_join_not_promoted (aggregation_regress.tests.JoinPromotionTests) ... ok
+test_non_nullable_fk_not_promoted (aggregation_regress.tests.JoinPromotionTests) ... ok
+test_ticket_21150 (aggregation_regress.tests.JoinPromotionTests) ... In.process_rhs: type(self.rhs)=int
+In.process_rhs: type(self.rhs)=int
+ok
+test_ticket_24748 (aggregation_regress.tests.SelfReferentialFKTests) ... ok
+
+======================================================================
+ERROR: test_having_subquery_select (aggregation_regress.tests.AggregationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 416, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.OperationalError: sub-select returns 3 columns - expected 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/testbed/django/test/testcases.py", line 1342, in skip_wrapper
+    return test_func(*args, **kwargs)
+  File "/testbed/tests/aggregation_regress/tests.py", line 1534, in test_having_subquery_select
+    self.assertEqual(set(books), {self.b1, self.b4})
+  File "/testbed/django/db/models/query.py", line 280, in __iter__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1343, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 51, in __iter__
+    results = compiler.execute_sql(chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size)
+  File "/testbed/django/db/models/sql/compiler.py", line 1188, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 66, in execute
+    return self._execute_with_wrappers(sql, params, many=False, executor=self._execute)
+  File "/testbed/django/db/backends/utils.py", line 75, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 90, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 416, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.OperationalError: sub-select returns 3 columns - expected 1
+
+----------------------------------------------------------------------
+Ran 65 tests in 0.089s
+
+FAILED (errors=1, skipped=5)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

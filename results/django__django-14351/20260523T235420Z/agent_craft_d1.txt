@@ -1,0 +1,9 @@
+**NOT-RESOLVED — re-diagnose**
+
+The fix in `RelatedIn.as_sql()` doesn't resolve the issue after 3 iterations. Debug shows the code is correctly entering the if block and calling the Query modification methods (`clear_select_clause()`, `add_fields()`, and `set_values()`), but the SQL still has 3 columns.
+
+The issue may be that `test_having_subquery_select` uses the subquery in a HAVING clause context, which might take a different code path than regular WHERE clauses. The recon diagnosis focused on `RelatedIn.as_sql()` which handles WHERE clause subqueries, but HAVING clause processing may bypass this entirely or process the Query at a different stage.
+
+Evidence suggests the actual code path generating the failing SQL is not the one identified in the recon diagnosis.
+
+---STDERR---

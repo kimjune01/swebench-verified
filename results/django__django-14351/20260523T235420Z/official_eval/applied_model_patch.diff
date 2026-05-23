@@ -1,0 +1,74 @@
+diff --git a/django/db/models/lookups.py b/django/db/models/lookups.py
+index 5089737034..0fa47e192c 100644
+--- a/django/db/models/lookups.py
++++ b/django/db/models/lookups.py
+@@ -85,6 +85,8 @@ class Lookup:
+         return compiler.compile(lhs)
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         value = self.rhs
+         if self.bilateral_transforms:
+             if self.rhs_is_direct_value():
+@@ -246,6 +248,8 @@ class FieldGetDbPrepValueIterableMixin(FieldGetDbPrepValueMixin):
+         return prepared_values
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         if self.rhs_is_direct_value():
+             # rhs should be an iterable of values. Use batch_process_rhs()
+             # to prepare/transform those values.
+@@ -291,6 +295,8 @@ class Exact(FieldGetDbPrepValueMixin, BuiltinLookup):
+     lookup_name = 'exact'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         from django.db.models.sql.query import Query
+         if isinstance(self.rhs, Query):
+             if self.rhs.has_limit_one():
+@@ -377,6 +383,8 @@ class In(FieldGetDbPrepValueIterableMixin, BuiltinLookup):
+     lookup_name = 'in'
+ 
+     def process_rhs(self, compiler, connection):
++        import sys
++        print(f"In.process_rhs: type(self.rhs)={type(self.rhs).__name__}", file=sys.stderr)
+         db_rhs = getattr(self.rhs, '_db', None)
+         if db_rhs is not None and db_rhs != connection.alias:
+             raise ValueError(
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 6629a1fd51..adb2d471b4 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -2162,12 +2162,12 @@ class Query(BaseExpression):
+             field_names = []
+             extra_names = []
+             annotation_names = []
++            self.default_cols = False
+             if not self.extra and not self.annotations:
+                 # Shortcut - if there are no extra or annotations, then
+                 # the values() clause must be just field names.
+                 field_names = list(fields)
+             else:
+-                self.default_cols = False
+                 for f in fields:
+                     if f in self.extra_select:
+                         extra_names.append(f)
+diff --git a/django/db/models/sql/where.py b/django/db/models/sql/where.py
+index 795eff8395..11f32721f5 100644
+--- a/django/db/models/sql/where.py
++++ b/django/db/models/sql/where.py
+@@ -240,9 +240,10 @@ class SubqueryConstraint:
+         self.columns = columns
+         self.targets = targets
+         self.query_object = query_object
++        # Set values immediately to prevent default_cols from being used
++        self.query_object.set_values(targets)
+ 
+     def as_sql(self, compiler, connection):
+         query = self.query_object
+-        query.set_values(self.targets)
+         query_compiler = query.get_compiler(connection=connection)
+         return query_compiler.as_subquery_condition(self.alias, self.columns, compiler)

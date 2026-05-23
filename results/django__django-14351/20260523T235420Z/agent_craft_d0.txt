@@ -1,0 +1,5 @@
+NOT-RESOLVED — re-diagnose
+
+The recon assumption that `self.rhs` is a QuerySet was partially incorrect. Debug shows `self.rhs` is already a Query object (not QuerySet) by the time `process_rhs` is called, meaning QuerySet.resolve_expression has already converted it. The property access should work correctly on Query objects, yet the test still fails. The root cause requires re-examination of when/how the Query object gets its select fields set, or whether a different code path entirely is generating the failing SQL.
+
+---STDERR---

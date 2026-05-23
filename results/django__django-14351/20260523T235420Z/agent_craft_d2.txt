@@ -1,0 +1,5 @@
+**NOT-RESOLVED — re-diagnose**
+
+The recon diagnosis appears incorrect. After 6 iterations with the same error, the issue is not in the identified code paths (`set_values()`, `RelatedIn.as_sql()`, `SubqueryConstraint`). Debug evidence shows `set_values()` is being called correctly but on a different query object than the one being compiled. The test involves aggregations and HAVING clauses, not simple WHERE subqueries - this suggests a different compilation path that the diagnosis didn't account for.
+
+---STDERR---

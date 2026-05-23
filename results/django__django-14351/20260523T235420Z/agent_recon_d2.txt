@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is likely that Query cloning in `resolve_expression()` happens before lookup modifications, and the clone inherits `default_cols=True`. Even when lookups later call `clear_select_clause()` or `set_values()`, the compiler's `get_select()` still uses `get_default_columns()` when `default_cols=True`, selecting all 3 fields instead of just the primary key. The fix should be in the Query cloning/resolution phase, not in the lookup processing phase where previous attempts failed.
+
+---STDERR---

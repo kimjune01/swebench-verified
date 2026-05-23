@@ -1,0 +1,32 @@
+# Audit: django__django-14351
+
+## FAIL_TO_PASS
+- test_having_subquery_select (aggregation_regress.tests.AggregationTests): **FAIL**
+  - Error: `sqlite3.OperationalError: sub-select returns 3 columns - expected 1`
+
+## PASS_TO_PASS regressions
+None - all PASS_TO_PASS tests passed successfully.
+
+## Pre-existing (not counted, confirmed against base capture)
+- 5 tests skipped (same as baseline): aggregate_duplicate_columns, aggregate_duplicate_columns_only, aggregate_duplicate_columns_select_related, aggregate_unmanaged_model_as_tables, aggregate_unmanaged_model_columns
+
+## Kill report
+
+**FAIL_TO_PASS ineffective** - The target test is still failing after craft edits.
+
+**Test**: test_having_subquery_select (aggregation_regress.tests.AggregationTests)
+
+**Error**: `sqlite3.OperationalError: sub-select returns 3 columns - expected 1`
+
+**Analysis**: The subquery in the HAVING clause still selects all 3 Author columns (id, name, age) instead of just the primary key. Multiple craft iterations attempted fixes at In.process_rhs, RelatedIn.as_sql, Query.resolve_expression, and Query.set_values - all ineffective.
+
+**Code path implicated**: The test uses `annotate(Count('authors')).filter(Exists(Subquery(...)))` with a HAVING clause. The hypothesis graph notes that "test_having_subquery_select uses aggregations with HAVING clauses, which may resolve queries through a different compilation path" than standard WHERE clause subqueries where all fixes were attempted.
+
+**Root cause hypothesis invalidated**: All previous diagnoses (H1-H3) targeted lookup processing and query resolution for WHERE clauses. The HAVING clause compilation path appears to bypass these locations entirely.
+
+**Re-entry guidance**: Investigate HAVING/GROUP BY query compilation specifically - likely in `django/db/models/sql/compiler.py` where HAVING clauses are compiled, or in the aggregation annotation resolution path that feeds into HAVING clause generation.
+
+VERDICT: NOT_RESOLVED
+RE-ENTER: recon
+
+---STDERR---
