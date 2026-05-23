@@ -1,0 +1,37 @@
+# Recon: django__django-12663
+
+## Failure summary
+Test `test_subquery_filter_by_lazy` creates a SimpleLazyObject wrapping a Manager instance and uses it to filter a queryset with a Subquery annotation (`Company.objects.annotate(ceo_manager=Subquery(...)).filter(ceo_manager=max_manager)`). The test fails with `TypeError: int() argument must be a string, a bytes-like object or a number, not 'SimpleLazyObject'` when Django's IntegerField tries to prepare the SimpleLazyObject value for database comparison by calling `int()` directly on the proxy object instead of the wrapped value.
+
+## Suspect set
+- `django/db/models/fields/__init__.py` lines 803-806: Field.get_prep_value - only unwraps Promise, not SimpleLazyObject
+- `django/db/models/fields/__init__.py` line 1772: IntegerField.get_prep_value - calls int(value) on unwrapped SimpleLazyObject
+- `django/db/models/lookups.py` line 74: Lookup.get_prep_lookup - calls get_prep_value with rhs containing SimpleLazyObject
+
+## Root cause
+`Field.get_prep_value` in `django/db/models/fields/__init__.py` (lines 803-806) only unwraps `Promise` objects (lazy translation strings) but doesn't handle `SimpleLazyObject` or other `LazyObject` subclasses. When a SimpleLazyObject is passed as a filter value, it flows through to field-specific get_prep_value methods (like IntegerField's) which try to convert the proxy object directly, causing a TypeError. The method should unwrap LazyObject instances by accessing their `_wrapped` attribute after ensuring initialization via `_setup()`.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/fields/__init__.py:803-806` — Field.get_prep_value only checks `isinstance(value, Promise)` and unwraps via `value._proxy____cast()`, then returns. SimpleLazyObject is not a Promise subclass.
+- `django/db/models/fields/__init__.py:1772` — IntegerField.get_prep_value calls `int(value)` expecting an unwrapped value, but receives SimpleLazyObject
+- `django/utils/functional.py:356` — SimpleLazyObject extends LazyObject and stores wrapped value in `_wrapped` attribute
+- `django/utils/functional.py:234` — `empty` sentinel object indicates uninitialized LazyObject (`_wrapped is empty`)
+
+## Edit sites
+1. **django/db/models/fields/__init__.py line 24**: Add imports `LazyObject` and `empty` to the existing import from `django.utils.functional` (currently imports `Promise, cached_property`)
+
+2. **django/db/models/fields/__init__.py lines 803-806**: Extend Field.get_prep_value to unwrap LazyObject instances:
+   - After checking for Promise, add check for `isinstance(value, LazyObject)`
+   - If true and `value._wrapped is empty`, call `value._setup()` to initialize
+   - Set `value = value._wrapped` to unwrap
+   - Return the unwrapped value
+
+## Rejected hypotheses
+None — code trace from error site directly to root cause is deterministic.
+
+## Open questions
+None — the fix is localized to Field.get_prep_value's unwrapping logic.
+
+---STDERR---

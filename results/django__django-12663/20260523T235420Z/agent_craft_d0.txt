@@ -1,0 +1,20 @@
+Perfect! The implementation is complete. All FAIL_TO_PASS tests now pass.
+
+**RESOLVED**
+
+## Summary
+
+The fix successfully handles `SimpleLazyObject` wrapping model instances in filter values by:
+
+1. **Primary fix in `Lookup.get_prep_lookup()`** (`django/db/models/lookups.py`):
+   - Unwraps `LazyObject` instances before field prep
+   - Converts `Model` instances to their primary key
+   - This handles the generic lookup path used by annotated fields
+
+2. **Defense-in-depth in `get_normalized_value()`** (`django/db/models/fields/related_lookups.py`):
+   - Unwraps `LazyObject` instances before model-to-PK conversion
+   - This handles the relation lookup path used by ForeignKey fields
+
+The solution addresses both the immediate failure (annotated IntegerField from Subquery) and provides consistent handling across all lookup types.
+
+---STDERR---

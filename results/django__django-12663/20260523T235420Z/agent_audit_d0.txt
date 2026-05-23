@@ -1,0 +1,18 @@
+# Audit: django__django-12663
+
+## FAIL_TO_PASS
+- `test_subquery_filter_by_lazy (expressions.tests.BasicExpressionsTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Kill report
+N/A — patch resolves the issue with no regressions. The fix correctly unwraps SimpleLazyObject instances in `Lookup.get_prep_lookup()` before field preparation, enabling filters with lazy-wrapped model instances to work correctly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
