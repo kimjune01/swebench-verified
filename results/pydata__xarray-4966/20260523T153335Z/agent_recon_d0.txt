@@ -1,0 +1,48 @@
+# Recon: pydata__xarray-4966
+
+## Failure summary
+
+The tests `test_decode_signed_from_unsigned[1/2/4/8]` verify that `UnsignedIntegerCoder.decode()` can convert unsigned integer data with `_Unsigned="false"` attribute back to signed integers. This is the symmetric case to the existing functionality that converts signed integers with `_Unsigned="true"` to unsigned. All four tests fail with `AssertionError: assert dtype('uintX') == dtype('intX')` - the data remains unsigned instead of being converted to signed. A warning appears: `SerializationWarning: variable None has _Unsigned attribute but is not of integer type`, which is incorrect because unsigned integers ARE integer types.
+
+## Suspect set
+
+- `xarray/coding/variables.py` lines 311-327: `UnsignedIntegerCoder.decode()` method - contains the logic that handles `_Unsigned` attribute but only implements signed→unsigned conversion, not the reverse
+
+## Root cause
+
+The `UnsignedIntegerCoder.decode()` method only handles the case where signed integer data (`dtype.kind == "i"`) has `_Unsigned="true"`, converting it to unsigned. When data is unsigned (`dtype.kind == "u"`) with `_Unsigned="false"`, it falls through to the `else` branch (line 321) which incorrectly warns that the variable is "not of integer type" and ignores the attribute. The symmetric conversion from unsigned to signed is completely missing.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `xarray/coding/variables.py:311-321` — Current logic checks only `if data.dtype.kind == "i"` then handles `unsigned == "true"`, otherwise warns
+  ```python
+  if data.dtype.kind == "i":
+      if unsigned == "true":
+          unsigned_dtype = np.dtype("u%s" % data.dtype.itemsize)
+          # ... convert signed to unsigned ...
+  else:
+      warnings.warn(
+          "variable %r has _Unsigned attribute but is not "
+          "of integer type. Ignoring attribute." % name,
+          SerializationWarning,
+          stacklevel=3,
+      )
+  ```
+- When `data.dtype.kind == "u"`, it's treated as "not of integer type" which is wrong
+- The passing test `test_decode_unsigned_from_signed` confirms signed→unsigned works
+- The failing tests confirm unsigned→signed is missing
+
+## Edit sites
+
+- `xarray/coding/variables.py` lines 311-327: Add `elif data.dtype.kind == "u":` branch after line 320 to handle unsigned data with `_Unsigned="false"`. Convert unsigned dtype to signed dtype using `np.dtype("i%s" % data.dtype.itemsize)`, apply the transform via `lazy_elemwise_func`, and update `_FillValue` if present (symmetric to the existing signed→unsigned logic at lines 313-320). The existing `else` warning branch should remain to catch non-integer types like floats.
+
+## Rejected hypotheses
+
+None - the root cause is unambiguous from the code structure and test failures.
+
+## Open questions
+
+None - the fix is a straightforward symmetric extension of existing functionality.
+
+---STDERR---

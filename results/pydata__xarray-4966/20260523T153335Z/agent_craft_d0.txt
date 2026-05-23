@@ -1,0 +1,5 @@
+**RESOLVED**
+
+All four FAIL_TO_PASS tests now pass. The fix adds the symmetric unsigned→signed conversion to `UnsignedIntegerCoder.decode()` by inserting an `elif data.dtype.kind == "u":` branch that handles unsigned integers with `_Unsigned="false"`, converting them back to signed integers. The implementation mirrors the existing signed→unsigned logic and passed all 25 tests on the first gate iteration.
+
+---STDERR---

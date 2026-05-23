@@ -1,0 +1,122 @@
+$ pytest -rA xarray/tests/test_coding.py
+
+    def test_decode_signed_from_unsigned(bits):
+        unsigned_dtype = np.dtype(f"u{bits}")
+        signed_dtype = np.dtype(f"i{bits}")
+        original_values = np.array([-1], dtype=signed_dtype)
+        encoded = xr.Variable(
+            ("x",), original_values.astype(unsigned_dtype), attrs={"_Unsigned": "false"}
+        )
+        coder = variables.UnsignedIntegerCoder()
+        decoded = coder.decode(encoded)
+>       assert decoded.dtype == signed_dtype
+E       AssertionError: assert dtype('uint16') == dtype('int16')
+E        +  where dtype('uint16') = <xarray.Variable (x: 1)>\narray([65535], dtype=uint16).dtype
+
+/testbed/xarray/tests/test_coding.py:146: AssertionError
+_____________________ test_decode_signed_from_unsigned[4] ______________________
+
+bits = 4
+
+    @pytest.mark.parametrize("bits", [1, 2, 4, 8])
+    def test_decode_signed_from_unsigned(bits):
+        unsigned_dtype = np.dtype(f"u{bits}")
+        signed_dtype = np.dtype(f"i{bits}")
+        original_values = np.array([-1], dtype=signed_dtype)
+        encoded = xr.Variable(
+            ("x",), original_values.astype(unsigned_dtype), attrs={"_Unsigned": "false"}
+        )
+        coder = variables.UnsignedIntegerCoder()
+        decoded = coder.decode(encoded)
+>       assert decoded.dtype == signed_dtype
+E       AssertionError: assert dtype('uint32') == dtype('int32')
+E        +  where dtype('uint32') = <xarray.Variable (x: 1)>\narray([4294967295], dtype=uint32).dtype
+
+/testbed/xarray/tests/test_coding.py:146: AssertionError
+_____________________ test_decode_signed_from_unsigned[8] ______________________
+
+bits = 8
+
+    @pytest.mark.parametrize("bits", [1, 2, 4, 8])
+    def test_decode_signed_from_unsigned(bits):
+        unsigned_dtype = np.dtype(f"u{bits}")
+        signed_dtype = np.dtype(f"i{bits}")
+        original_values = np.array([-1], dtype=signed_dtype)
+        encoded = xr.Variable(
+            ("x",), original_values.astype(unsigned_dtype), attrs={"_Unsigned": "false"}
+        )
+        coder = variables.UnsignedIntegerCoder()
+        decoded = coder.decode(encoded)
+>       assert decoded.dtype == signed_dtype
+E       AssertionError: assert dtype('uint64') == dtype('int64')
+E        +  where dtype('uint64') = <xarray.Variable (x: 1)>\narray([18446744073709551615], dtype=uint64).dtype
+
+/testbed/xarray/tests/test_coding.py:146: AssertionError
+=============================== warnings summary ===============================
+xarray/__init__.py:1
+  /testbed/xarray/__init__.py:1: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+xarray/core/dask_array_compat.py:61
+xarray/core/dask_array_compat.py:61
+  /testbed/xarray/core/dask_array_compat.py:61: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(dask_version) > LooseVersion("2.9.0"):
+
+xarray/core/pdcompat.py:45
+  /testbed/xarray/core/pdcompat.py:45: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(pd.__version__) < "0.25.0":
+
+../opt/miniconda3/envs/testbed/lib/python3.10/site-packages/setuptools/_distutils/version.py:345
+xarray/tests/test_coding.py::test_CFMaskCoder_encode_missing_fill_values_conflict[times-with-dtype]
+  /opt/miniconda3/envs/testbed/lib/python3.10/site-packages/setuptools/_distutils/version.py:345: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    other = LooseVersion(other)
+
+xarray/tests/__init__.py:59
+xarray/tests/__init__.py:59
+xarray/tests/__init__.py:59
+xarray/tests/__init__.py:59
+xarray/tests/__init__.py:59
+xarray/tests/__init__.py:59
+  /testbed/xarray/tests/__init__.py:59: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    return version.LooseVersion(vstring)
+
+xarray/tests/test_coding.py::test_CFMaskCoder_encode_missing_fill_values_conflict[times-with-dtype]
+  /testbed/xarray/coding/times.py:265: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(pd.__version__) < "0.25.0":
+
+xarray/tests/test_coding.py::test_decode_signed_from_unsigned[1]
+xarray/tests/test_coding.py::test_decode_signed_from_unsigned[2]
+xarray/tests/test_coding.py::test_decode_signed_from_unsigned[4]
+xarray/tests/test_coding.py::test_decode_signed_from_unsigned[8]
+  /opt/miniconda3/envs/testbed/lib/python3.10/site-packages/_pytest/python.py:194: SerializationWarning: variable None has _Unsigned attribute but is not of integer type. Ignoring attribute.
+    result = testfunction(**testargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_decode
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_encode_missing_fill_values_conflict[numeric-with-dtype]
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_encode_missing_fill_values_conflict[numeric-without-dtype]
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_encode_missing_fill_values_conflict[times-with-dtype]
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_missing_value
+PASSED xarray/tests/test_coding.py::test_CFMaskCoder_decode_dask
+PASSED xarray/tests/test_coding.py::test_coder_roundtrip
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[u1]
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[u2]
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[i1]
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[i2]
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[f2]
+PASSED xarray/tests/test_coding.py::test_scaling_converts_to_float32[f4]
+PASSED xarray/tests/test_coding.py::test_scaling_offset_as_list[0.1-10]
+PASSED xarray/tests/test_coding.py::test_scaling_offset_as_list[0.1-scale_factor1]
+PASSED xarray/tests/test_coding.py::test_scaling_offset_as_list[add_offset1-10]
+PASSED xarray/tests/test_coding.py::test_scaling_offset_as_list[add_offset1-scale_factor1]
+PASSED xarray/tests/test_coding.py::test_decode_unsigned_from_signed[1]
+PASSED xarray/tests/test_coding.py::test_decode_unsigned_from_signed[2]
+PASSED xarray/tests/test_coding.py::test_decode_unsigned_from_signed[4]
+PASSED xarray/tests/test_coding.py::test_decode_unsigned_from_signed[8]
+FAILED xarray/tests/test_coding.py::test_decode_signed_from_unsigned[1] - Ass...
+FAILED xarray/tests/test_coding.py::test_decode_signed_from_unsigned[2] - Ass...
+FAILED xarray/tests/test_coding.py::test_decode_signed_from_unsigned[4] - Ass...
+FAILED xarray/tests/test_coding.py::test_decode_signed_from_unsigned[8] - Ass...
+================== 4 failed, 21 passed, 17 warnings in 2.21s ===================

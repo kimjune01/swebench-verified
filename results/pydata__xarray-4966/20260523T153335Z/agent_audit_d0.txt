@@ -1,0 +1,24 @@
+# Audit: pydata__xarray-4966
+
+## FAIL_TO_PASS
+- test_decode_signed_from_unsigned[1]: PASS ✓
+- test_decode_signed_from_unsigned[2]: PASS ✓
+- test_decode_signed_from_unsigned[4]: PASS ✓
+- test_decode_signed_from_unsigned[8]: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Patch summary
+The fix added an `elif` branch to `UnsignedIntegerCoder.decode()` to handle the inverse case: when `_Unsigned: "false"` is set on unsigned data (u1/u2/u4/u8), convert to the corresponding signed dtype (i1/i2/i4/i8). This mirrors the existing logic for `_Unsigned: "true"` on signed data. The transform updates both the data array and the `_FillValue` attribute.
+
+## Gate result
+25/25 tests passed. All FAIL_TO_PASS converted to PASS. All PASS_TO_PASS remain passing. Zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
