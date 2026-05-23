@@ -1,0 +1,38 @@
+diff --git a/pylint/checkers/variables.py b/pylint/checkers/variables.py
+index 3ddafd59..42ce0ee6 100644
+--- a/pylint/checkers/variables.py
++++ b/pylint/checkers/variables.py
+@@ -1826,6 +1826,13 @@ class VariablesChecker(BaseChecker):
+             self._type_annotation_names.append(type_annotation.name)
+             return
+ 
++        if isinstance(type_annotation, astroid.Attribute):
++            self._type_annotation_names.extend(
++                annotation.name
++                for annotation in type_annotation.nodes_of_class(astroid.Name)
++            )
++            return
++
+         if not isinstance(type_annotation, astroid.Subscript):
+             return
+ 
+diff --git a/pylint/constants.py b/pylint/constants.py
+index b95d701c..71e21d05 100644
+--- a/pylint/constants.py
++++ b/pylint/constants.py
+@@ -2,6 +2,7 @@
+ # For details: https://github.com/PyCQA/pylint/blob/master/LICENSE
+ 
+ import sys
++import platform
+ 
+ import astroid
+ 
+@@ -10,6 +11,7 @@ from pylint.__pkginfo__ import __version__
+ PY38_PLUS = sys.version_info[:2] >= (3, 8)
+ PY39_PLUS = sys.version_info[:2] >= (3, 9)
+ PY310_PLUS = sys.version_info[:2] >= (3, 10)
++IS_PYPY = platform.python_implementation() == "PyPy"
+ 
+ 
+ PY_EXTS = (".py", ".pyc", ".pyo", ".pyw", ".so", ".dll")

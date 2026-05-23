@@ -1,0 +1,47 @@
+# Recon: pylint-dev__pylint-4604
+
+## Failure summary
+
+The issue reports that pylint falsely emits `unused-import` warnings for modules used in type comments with attribute access, such as `import abc` followed by `# type: abc.ABC`. A test was added (`test_attribute_in_type_comment`) to reproduce this, but the test suite currently fails to even collect tests due to a missing constant `IS_PYPY` that the test file tries to import from `pylint.constants`.
+
+## Suspect set
+
+- `pylint/constants.py` lines 1-15: Missing `IS_PYPY` constant definition prevents test collection
+- `pylint/checkers/variables.py` lines 1823-1843: The `_store_type_annotation_node` method fails to handle `astroid.Attribute` nodes in type comments, causing the false positive
+
+## Root cause
+
+The `_store_type_annotation_node` method in `pylint/checkers/variables.py` only handles `Name` and `Subscript` AST nodes. When a type comment contains an attribute access like `# type: foo.Bar`, astroid parses this as an `Attribute` node, which the method doesn't handle—it returns early at line 1830 without extracting any names. Consequently, `foo` is never added to `self._type_annotation_names`, and later when checking for unused imports (line 2034), the import is incorrectly flagged as unused.
+
+In contrast, subscripted attributes like `# type: foo.Bar[int]` work correctly because they create `Subscript` nodes, which the method does handle by extracting all Name nodes at lines 1840-1843.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `pylint/checkers/variables.py:1830` — Early return: `if not isinstance(type_annotation, astroid.Subscript): return`
+- Verified with astroid: `# type: foo.Bar` produces an Attribute node, not handled by current code
+- Verified with astroid: `# type: foo.Bar[int]` produces a Subscript node, correctly handled
+- Lines 2034-2035 check `_type_annotation_names` to determine if an import is used in type annotations
+
+## Edit sites
+
+1. **`pylint/constants.py`** (add after line 11):
+   - Import `platform` module at the top
+   - Add constant: `IS_PYPY = platform.python_implementation() == "PyPy"`
+   - This enables the test to skip on PyPy where type comments aren't parsed
+
+2. **`pylint/checkers/variables.py`** lines 1823-1843 (method `_store_type_annotation_node`):
+   - Add a check for `isinstance(type_annotation, astroid.Attribute)` after the Name check (after line 1827)
+   - For Attribute nodes, extract all Name nodes recursively using `type_annotation.nodes_of_class(astroid.Name)`
+   - This will correctly handle `foo.Bar`, `Bar.Baz`, and any nested attribute access in type comments
+   - The logic should be similar to the Subscript fallback at lines 1840-1843
+
+## Rejected hypotheses
+
+None—the root cause is clear from code inspection and AST structure verification.
+
+## Open questions
+
+None—the fix is straightforward and follows the existing pattern used for Subscript nodes.
+
+---STDERR---

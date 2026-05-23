@@ -1,0 +1,97 @@
+2026-05-23 00:09:54,838 - INFO - Creating container for pylint-dev__pylint-4604...
+2026-05-23 00:10:09,360 - INFO - Container for pylint-dev__pylint-4604 created: 8246159e5ab95b91d70dd766066dfaba92c322ee0ca9022611621b111b4ffa6e
+2026-05-23 00:10:09,846 - INFO - Container for pylint-dev__pylint-4604 started: 8246159e5ab95b91d70dd766066dfaba92c322ee0ca9022611621b111b4ffa6e
+2026-05-23 00:10:09,846 - INFO - Intermediate patch for pylint-dev__pylint-4604 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4604/patch.diff, now applying to container...
+2026-05-23 00:10:09,960 - INFO - >>>>> Applied Patch:
+Checking patch pylint/checkers/variables.py...
+Checking patch pylint/constants.py...
+Applied patch pylint/checkers/variables.py cleanly.
+Applied patch pylint/constants.py cleanly.
+
+2026-05-23 00:10:10,068 - INFO - Git diff before:
+diff --git a/pylint/checkers/variables.py b/pylint/checkers/variables.py
+index 3ddafd59..42ce0ee6 100644
+--- a/pylint/checkers/variables.py
++++ b/pylint/checkers/variables.py
+@@ -1826,6 +1826,13 @@ class VariablesChecker(BaseChecker):
+             self._type_annotation_names.append(type_annotation.name)
+             return
+ 
++        if isinstance(type_annotation, astroid.Attribute):
++            self._type_annotation_names.extend(
++                annotation.name
++                for annotation in type_annotation.nodes_of_class(astroid.Name)
++            )
++            return
++
+         if not isinstance(type_annotation, astroid.Subscript):
+             return
+ 
+diff --git a/pylint/constants.py b/pylint/constants.py
+index b95d701c..71e21d05 100644
+--- a/pylint/constants.py
++++ b/pylint/constants.py
+@@ -2,6 +2,7 @@
+ # For details: https://github.com/PyCQA/pylint/blob/master/LICENSE
+ 
+ import sys
++import platform
+ 
+ import astroid
+ 
+@@ -10,6 +11,7 @@ from pylint.__pkginfo__ import __version__
+ PY38_PLUS = sys.version_info[:2] >= (3, 8)
+ PY39_PLUS = sys.version_info[:2] >= (3, 9)
+ PY310_PLUS = sys.version_info[:2] >= (3, 10)
++IS_PYPY = platform.python_implementation() == "PyPy"
+ 
+ 
+ PY_EXTS = (".py", ".pyc", ".pyo", ".pyw", ".so", ".dll")
+2026-05-23 00:10:10,068 - INFO - Eval script for pylint-dev__pylint-4604 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4604/eval.sh; copying to container...
+2026-05-23 00:10:13,296 - INFO - Test runtime: 3.15 seconds
+2026-05-23 00:10:13,297 - INFO - Test output for pylint-dev__pylint-4604 written to logs/run_evaluation/batch/recon-craft-audit/pylint-dev__pylint-4604/test_output.txt
+2026-05-23 00:10:13,396 - INFO - Git diff after:
+diff --git a/pylint/checkers/variables.py b/pylint/checkers/variables.py
+index 3ddafd59..42ce0ee6 100644
+--- a/pylint/checkers/variables.py
++++ b/pylint/checkers/variables.py
+@@ -1826,6 +1826,13 @@ class VariablesChecker(BaseChecker):
+             self._type_annotation_names.append(type_annotation.name)
+             return
+ 
++        if isinstance(type_annotation, astroid.Attribute):
++            self._type_annotation_names.extend(
++                annotation.name
++                for annotation in type_annotation.nodes_of_class(astroid.Name)
++            )
++            return
++
+         if not isinstance(type_annotation, astroid.Subscript):
+             return
+ 
+diff --git a/pylint/constants.py b/pylint/constants.py
+index b95d701c..71e21d05 100644
+--- a/pylint/constants.py
++++ b/pylint/constants.py
+@@ -2,6 +2,7 @@
+ # For details: https://github.com/PyCQA/pylint/blob/master/LICENSE
+ 
+ import sys
++import platform
+ 
+ import astroid
+ 
+@@ -10,6 +11,7 @@ from pylint.__pkginfo__ import __version__
+ PY38_PLUS = sys.version_info[:2] >= (3, 8)
+ PY39_PLUS = sys.version_info[:2] >= (3, 9)
+ PY310_PLUS = sys.version_info[:2] >= (3, 10)
++IS_PYPY = platform.python_implementation() == "PyPy"
+ 
+ 
+ PY_EXTS = (".py", ".pyc", ".pyo", ".pyw", ".so", ".dll")
+2026-05-23 00:10:13,396 - INFO - Grading answer for pylint-dev__pylint-4604...
+2026-05-23 00:10:13,398 - INFO - report: {'pylint-dev__pylint-4604': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['tests/checkers/unittest_variables.py::TestVariablesChecker::test_bitbucket_issue_78', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_no_name_in_module_skipped', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_all_elements_without_parent', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_ignored', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_custom_modules', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_modname_not_ignored', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_in_function', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_unassigned_global', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_listcomp_in_decorator', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_listcomp_in_ancestors', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_return_type_annotation', 'tests/checkers/unittest_variables.py::TestVariablesChecker::test_attribute_in_type_comment', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_custom_callback_string', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_redefined_builtin_modname_not_ignored', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_redefined_builtin_in_function', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_import_as_underscore', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_lambda_in_classdef', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_nested_lambda', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_ignored_argument_names_no_message', 'tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_ignored_argument_names_starred_args', 'tests/checkers/unittest_variables.py::TestMissingSubmodule::test_package_all'], 'failure': []}, 'PASS_TO_PASS': {'success': [], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for pylint-dev__pylint-4604: resolved: True
+2026-05-23 00:10:13,398 - INFO - Attempting to stop container sweb.eval.pylint-dev__pylint-4604.batch...
+2026-05-23 00:10:28,881 - INFO - Attempting to remove container sweb.eval.pylint-dev__pylint-4604.batch...
+2026-05-23 00:10:28,889 - INFO - Container sweb.eval.pylint-dev__pylint-4604.batch removed.

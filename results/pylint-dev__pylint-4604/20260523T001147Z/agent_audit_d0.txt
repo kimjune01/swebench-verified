@@ -1,0 +1,45 @@
+Now I'll emit the final verdict:
+
+# Audit: pylint-dev__pylint-4604
+
+## FAIL_TO_PASS
+All 21 tests in `tests/checkers/unittest_variables.py` were FAIL_TO_PASS (baseline: ImportError during collection):
+- test_bitbucket_issue_78: **PASS**
+- test_no_name_in_module_skipped: **PASS**
+- test_all_elements_without_parent: **PASS**
+- test_redefined_builtin_ignored: **PASS**
+- test_redefined_builtin_custom_modules: **PASS**
+- test_redefined_builtin_modname_not_ignored: **PASS**
+- test_redefined_builtin_in_function: **PASS**
+- test_unassigned_global: **PASS**
+- test_listcomp_in_decorator: **PASS**
+- test_listcomp_in_ancestors: **PASS**
+- test_return_type_annotation: **PASS**
+- test_attribute_in_type_comment: **PASS**
+- test_custom_callback_string: **PASS**
+- test_redefined_builtin_modname_not_ignored (WithTearDown): **PASS**
+- test_redefined_builtin_in_function (WithTearDown): **PASS**
+- test_import_as_underscore: **PASS**
+- test_lambda_in_classdef: **PASS**
+- test_nested_lambda: **PASS**
+- test_ignored_argument_names_no_message: **PASS**
+- test_ignored_argument_names_starred_args: **PASS**
+- test_package_all: **PASS**
+
+**Result: 21/21 PASS**
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+Not applicable — all tests pass.
+
+**Fix summary:** Added `IS_PYPY` constant to `pylint/constants.py` by importing `platform` module and defining `IS_PYPY = platform.python_implementation() == "PyPy"`. This resolved the ImportError that prevented test collection on the baseline.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

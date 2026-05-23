@@ -1,0 +1,9 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests passing on first gate run. The fix correctly handles `astroid.Attribute` nodes in type comments by extracting all `Name` nodes, preventing false `unused-import` warnings for modules used as `# type: foo.Bar`.
+
+**Changes:**
+1. Added `IS_PYPY` constant to `pylint/constants.py` (needed by test skip decorator)
+2. Added `Attribute` node handling in `_store_type_annotation_node` method to extract names from type comments like `# type: foo.Bar`
+
+---STDERR---
