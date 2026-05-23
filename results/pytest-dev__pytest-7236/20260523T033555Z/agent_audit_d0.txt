@@ -1,0 +1,23 @@
+# Audit: pytest-dev__pytest-7236
+
+## FAIL_TO_PASS
+- `testing/test_unittest.py::test_pdb_teardown_skipped[@unittest.skip]` → **PASSED** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 52 tests passed, 9 skipped (missing optional dependencies: twisted, asynctest).
+
+## Pre-existing (not counted)
+**None** - The `AsyncArguments.test_something_async_fails` failure within `test_async_support` is an intentional subtest failure (testing pytest's async error handling) and appears identically in the baseline capture. The outer test `test_async_support` passes correctly.
+
+## Verification Summary
+The craft patch successfully:
+1. ✅ Fixed the FAIL_TO_PASS test by detecting `__unittest_skip__` attributes on both test methods and test classes
+2. ✅ Preserved all PASS_TO_PASS test behavior - no regressions  
+3. ✅ Matches unittest semantics: decorator-skipped tests skip tearDown, while body-skipped tests (raising SkipTest) still call tearDown
+
+The fix is minimal, correct, and complete.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

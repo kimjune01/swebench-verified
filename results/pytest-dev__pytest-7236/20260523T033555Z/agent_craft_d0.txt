@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully passes all tests. The implementation checks for the `__unittest_skip__` attribute on both the test method and test class to identify decorator-skipped tests. For these tests, tearDown is not called when using `--pdb`, matching standard unittest behavior. Body-skipped tests (where SkipTest is raised during test execution) still call tearDown as expected.
+
+Key points:
+- Fixed resource leak by clearing `_explicit_tearDown` regardless of skip status
+- Distinguishes decorator skips (no tearDown) from body skips (tearDown called)
+- Passed all 52 tests including both `@unittest.skip` and `@pytest.mark.skip` parametrizations
+
+---STDERR---

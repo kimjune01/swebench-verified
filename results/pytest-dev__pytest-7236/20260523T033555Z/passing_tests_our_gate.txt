@@ -1,0 +1,302 @@
+$ pytest -rA testing/test_unittest.py
+
+
+test_foo.py::MyTestCase::test_one SKIPPED                                [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] test_foo.py:4: skipping due to reasons
+============================== 1 skipped in 0.01s ==============================
+_________________________ test_unittest_skip_issue1169 _________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+rootdir: /tmp/pytest-of-root/pytest-4/test_unittest_skip_issue11690
+collecting ... collected 1 item
+
+test_foo.py::MyTestCase::test_skip SKIPPED                               [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] test_foo.py:4: skipping due to reasons
+============================== 1 skipped in 0.01s ==============================
+_________________ test_class_method_containing_test_issue1558 __________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_class_method_containing_test_issue15580
+collected 1 item
+
+test_foo.py .                                                            [100%]
+
+============================== 1 passed in 0.01s ===============================
+_____________ test_usefixtures_marker_on_unittest[builtins.object] _____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_usefixtures_marker_on_unittest0
+test_usefixtures_marker_on_unittest.py::Tests::test_one
+   Mark(name='usefixtures', args=('fixture1',), kwargs={})
+test_usefixtures_marker_on_unittest.py::Tests::test_two
+   Mark(name='usefixtures', args=('fixture1', 'fixture2'), kwargs={})
+collected 2 items
+
+test_usefixtures_marker_on_unittest.py test_usefixtures_marker_on_unittest.py::Tests::test_one
+   Mark(name='usefixtures', args=('fixture1',), kwargs={})
+.test_usefixtures_marker_on_unittest.py::Tests::test_two
+   Mark(name='usefixtures', args=('fixture1', 'fixture2'), kwargs={})
+.
+
+============================== 2 passed in 0.00s ===============================
+____________ test_usefixtures_marker_on_unittest[unittest.TestCase] ____________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_usefixtures_marker_on_unittest1
+test_usefixtures_marker_on_unittest.py::Tests::test_one
+   Mark(name='usefixtures', args=('fixture1',), kwargs={})
+test_usefixtures_marker_on_unittest.py::Tests::test_two
+   Mark(name='usefixtures', args=('fixture1', 'fixture2'), kwargs={})
+collected 2 items
+
+test_usefixtures_marker_on_unittest.py test_usefixtures_marker_on_unittest.py::Tests::test_one
+   Mark(name='usefixtures', args=('fixture1',), kwargs={})
+.test_usefixtures_marker_on_unittest.py::Tests::test_two
+   Mark(name='usefixtures', args=('fixture1', 'fixture2'), kwargs={})
+.
+
+============================== 2 passed in 0.00s ===============================
+____________________ test_testcase_handles_init_exceptions _____________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_testcase_handles_init_exceptions0
+collected 1 item
+
+test_testcase_handles_init_exceptions.py E                               [100%]
+
+==================================== ERRORS ====================================
+___________________ ERROR at setup of MyTestCase.test_hello ____________________
+
+self = <[AttributeError("'MyTestCase' object has no attribute '_testMethodName'") raised in repr()] MyTestCase object at 0x7f62f242dc10>
+args = ('test_hello',), kwargs = {}
+
+    def __init__(self, *args, **kwargs):
+>       raise Exception("should raise this exception")
+E       Exception: should raise this exception
+
+test_testcase_handles_init_exceptions.py:5: Exception
+=========================== short test summary info ============================
+ERROR test_testcase_handles_init_exceptions.py::MyTestCase::test_hello - Exce...
+=============================== 1 error in 0.01s ===============================
+________________ test_error_message_with_parametrized_fixtures _________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_error_message_with_parametrized_fixtures0
+collected 1 item
+
+test_parametrized_fixture_error_message.py E                             [100%]
+
+==================================== ERRORS ====================================
+_________________ ERROR at setup of TestSomethingElse.test_two _________________
+test_two does not support fixtures, maybe unittest.TestCase subclass?
+Node id: test_parametrized_fixture_error_message.py::TestSomethingElse::test_two
+Function type: TestCaseFunction
+=========================== short test summary info ============================
+ERROR test_parametrized_fixture_error_message.py::TestSomethingElse::test_two
+=============================== 1 error in 0.01s ===============================
+________ test_setup_inheritance_skipping[test_setup_skip.py-1 skipped] _________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_setup_inheritance_skipping0
+collected 1 item
+
+test_setup_skip.py s                                                     [100%]
+
+============================== 1 skipped in 0.01s ==============================
+_____ test_setup_inheritance_skipping[test_setup_skip_class.py-1 skipped] ______
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_setup_inheritance_skipping1
+collected 1 item
+
+test_setup_skip_class.py s                                               [100%]
+
+============================== 1 skipped in 0.01s ==============================
+______ test_setup_inheritance_skipping[test_setup_skip_module.py-1 error] ______
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_setup_inheritance_skipping2
+collected 1 item
+
+test_setup_skip_module.py E                                              [100%]
+
+==================================== ERRORS ====================================
+_________________________ ERROR at setup of Base.test __________________________
+
+    def setUpModule():
+>       assert 0
+E       assert 0
+
+test_setup_skip_module.py:6: AssertionError
+=========================== short test summary info ============================
+ERROR test_setup_skip_module.py::Base::test - assert 0
+=============================== 1 error in 0.01s ===============================
+_________________________________ test_BdbQuit _________________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_BdbQuit0
+collected 2 items
+
+test_foo.py F.                                                           [100%]
+
+=================================== FAILURES ===================================
+___________________________ MyTestCase.test_bdbquit ____________________________
+
+self = <test_foo.MyTestCase testMethod=test_bdbquit>
+
+    def test_bdbquit(self):
+        import bdb
+>       raise bdb.BdbQuit()
+E       bdb.BdbQuit
+
+test_foo.py:6: BdbQuit
+=========================== short test summary info ============================
+FAILED test_foo.py::MyTestCase::test_bdbquit - bdb.BdbQuit
+========================= 1 failed, 1 passed in 0.01s ==========================
+______________________________ test_exit_outcome _______________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_exit_outcome0
+collected 2 items
+
+test_foo.py 
+
+!!!!!!!!!!!!!!!!!! _pytest.outcomes.Exit: pytest_exit called !!!!!!!!!!!!!!!!!!!
+============================ no tests ran in 0.07s =============================
+__________________________________ test_trace __________________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_trace0
+collected 1 item
+
+test_trace.py .                                                          [100%]
+
+============================== 1 passed in 0.01s ===============================
+___________________________ test_pdb_teardown_called ___________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_pdb_teardown_called0
+collected 2 items
+
+test_pdb_teardown_called.py ..                                           [100%]
+
+============================== 2 passed in 0.01s ===============================
+__________________ test_pdb_teardown_skipped[@unittest.skip] ___________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_pdb_teardown_skipped0
+collected 1 item
+
+test_pdb_teardown_skipped.py s                                           [100%]
+
+============================== 1 skipped in 0.01s ==============================
+_________________ test_pdb_teardown_skipped[@pytest.mark.skip] _________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_pdb_teardown_skipped1
+collected 1 item
+
+test_pdb_teardown_skipped.py s                                           [100%]
+
+============================== 1 skipped in 0.01s ==============================
+______________________________ test_async_support ______________________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-5.4.1.dev338+gc98bc4cd3, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-4/test_async_support0
+collected 3 items
+
+test_unittest_asyncio.py .F.                                             [100%]
+
+=================================== FAILURES ===================================
+__________________ AsyncArguments.test_something_async_fails ___________________
+
+self = <test_unittest_asyncio.AsyncArguments testMethod=test_something_async_fails>
+
+    async def test_something_async_fails(self):
+        async def addition(x, y):
+            return x + y
+    
+>       self.assertEqual(await addition(2, 2), 3)
+E       AssertionError: 4 != 3
+
+test_unittest_asyncio.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED test_unittest_asyncio.py::AsyncArguments::test_something_async_fails
+========================= 1 failed, 2 passed in 0.02s ==========================
+=========================== short test summary info ============================
+PASSED testing/test_unittest.py::test_simple_unittest
+PASSED testing/test_unittest.py::test_runTest_method
+PASSED testing/test_unittest.py::test_isclasscheck_issue53
+PASSED testing/test_unittest.py::test_setup
+PASSED testing/test_unittest.py::test_setUpModule
+PASSED testing/test_unittest.py::test_setUpModule_failing_no_teardown
+PASSED testing/test_unittest.py::test_new_instances
+PASSED testing/test_unittest.py::test_function_item_obj_is_instance
+PASSED testing/test_unittest.py::test_teardown
+PASSED testing/test_unittest.py::test_teardown_issue1649
+PASSED testing/test_unittest.py::test_unittest_skip_issue148
+PASSED testing/test_unittest.py::test_method_and_teardown_failing_reporting
+PASSED testing/test_unittest.py::test_setup_failure_is_shown
+PASSED testing/test_unittest.py::test_setup_setUpClass
+PASSED testing/test_unittest.py::test_setup_class
+PASSED testing/test_unittest.py::test_testcase_adderrorandfailure_defers[Error]
+PASSED testing/test_unittest.py::test_testcase_adderrorandfailure_defers[Failure]
+PASSED testing/test_unittest.py::test_testcase_custom_exception_info[Error]
+PASSED testing/test_unittest.py::test_testcase_custom_exception_info[Failure]
+PASSED testing/test_unittest.py::test_testcase_totally_incompatible_exception_info
+PASSED testing/test_unittest.py::test_module_level_pytestmark
+PASSED testing/test_unittest.py::test_djangolike_testcase
+PASSED testing/test_unittest.py::test_unittest_not_shown_in_traceback
+PASSED testing/test_unittest.py::test_unorderable_types
+PASSED testing/test_unittest.py::test_unittest_typerror_traceback
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_failing_test_is_xfail[pytest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_failing_test_is_xfail[unittest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_passing_test_is_fail[pytest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_passing_test_is_fail[unittest]
+PASSED testing/test_unittest.py::test_unittest_setup_interaction[fixture-return]
+PASSED testing/test_unittest.py::test_unittest_setup_interaction[yield_fixture-yield]
+PASSED testing/test_unittest.py::test_non_unittest_no_setupclass_support
+PASSED testing/test_unittest.py::test_no_teardown_if_setupclass_failed
+PASSED testing/test_unittest.py::test_cleanup_functions
+PASSED testing/test_unittest.py::test_issue333_result_clearing
+PASSED testing/test_unittest.py::test_unittest_raise_skip_issue748
+PASSED testing/test_unittest.py::test_unittest_skip_issue1169
+PASSED testing/test_unittest.py::test_class_method_containing_test_issue1558
+PASSED testing/test_unittest.py::test_usefixtures_marker_on_unittest[builtins.object]
+PASSED testing/test_unittest.py::test_usefixtures_marker_on_unittest[unittest.TestCase]
+PASSED testing/test_unittest.py::test_testcase_handles_init_exceptions
+PASSED testing/test_unittest.py::test_error_message_with_parametrized_fixtures
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip.py-1 skipped]
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip_class.py-1 skipped]
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip_module.py-1 error]
+PASSED testing/test_unittest.py::test_BdbQuit
+PASSED testing/test_unittest.py::test_exit_outcome
+PASSED testing/test_unittest.py::test_trace
+PASSED testing/test_unittest.py::test_pdb_teardown_called
+PASSED testing/test_unittest.py::test_pdb_teardown_skipped[@unittest.skip]
+PASSED testing/test_unittest.py::test_pdb_teardown_skipped[@pytest.mark.skip]
+PASSED testing/test_unittest.py::test_async_support
+SKIPPED [8] testing/test_unittest.py:416: could not import 'twisted.trial.unittest': No module named 'twisted'
+SKIPPED [1] testing/test_unittest.py:1240: could not import 'asynctest': No module named 'asynctest'
+======================== 52 passed, 9 skipped in 1.27s =========================

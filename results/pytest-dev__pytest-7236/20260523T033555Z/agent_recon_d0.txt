@@ -1,0 +1,46 @@
+# Recon: pytest-dev__pytest-7236
+
+## Failure summary
+
+The test `test_pdb_teardown_skipped[@unittest.skip]` verifies that when a unittest.TestCase test method is decorated with `@unittest.skip` and pytest is run with `--pdb`, neither setUp() nor tearDown() should be called (matching standard unittest behavior). The test creates a TestCase that tracks calls to setUp/tearDown and expects an empty list after running a skipped test with --pdb. The test fails because tearDown is being called even though the test was skipped, resulting in `tracked = ["tearDown:..."]` instead of the expected `tracked = []`.
+
+## Suspect set
+
+- `src/_pytest/unittest.py` lines 207-232: `TestCaseFunction.runtest()` method - unconditionally sets `_explicit_tearDown` when `--pdb` is used
+- `src/_pytest/unittest.py` lines 123-128: `TestCaseFunction.teardown()` method - unconditionally calls `_explicit_tearDown()` if it was set
+- `src/_pytest/unittest.py` lines 177-182: `TestCaseFunction.addSkip()` method - sets `skipped_by_mark_key` flag when tests are skipped
+
+## Root cause
+
+When `--pdb` is used, pytest postpones tearDown() calls to preserve instance state for debugging. The implementation saves the original tearDown method and replaces it with a no-op, then calls the saved tearDown later in the teardown() phase. However, this postponement happens unconditionally for all tests, including those that unittest would normally skip entirely.
+
+For tests decorated with `@unittest.skip`, the unittest framework never calls setUp, the test method, or tearDown—they're skipped before any execution. But pytest's teardown() method unconditionally calls the saved `_explicit_tearDown`, violating unittest's skip semantics.
+
+**Why `@pytest.mark.skip` passes but `@unittest.skip` fails:**
+- `@pytest.mark.skip`: Pytest's skip handling prevents the test from reaching runtest(), so `_explicit_tearDown` is never set
+- `@unittest.skip`: The skip is handled by unittest inside `self._testcase(result=self)`, after pytest has already set `_explicit_tearDown`
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `src/_pytest/unittest.py:223-224` — `self._explicit_tearDown = self._testcase.tearDown; setattr(self._testcase, "tearDown", lambda *args: None)` — saves tearDown whenever `--pdb` is used
+- `src/_pytest/unittest.py:124-126` — `if self._explicit_tearDown is not None: self._explicit_tearDown()` — calls saved tearDown unconditionally
+- `src/_pytest/unittest.py:177-182` — `def addSkip(self, testcase, reason): ... self._store[skipped_by_mark_key] = True` — skip status is tracked
+- Verified unittest behavior: `@unittest.skip` decorated tests never call setUp or tearDown
+- Test output: `@pytest.mark.skip` variant passes, `@unittest.skip` variant fails
+
+## Edit sites
+
+- `src/_pytest/unittest.py` lines 123-128 (TestCaseFunction.teardown method): Add a check for `skipped_by_mark_key` in `self._store` before calling `_explicit_tearDown()`. If the test was skipped, don't call tearDown to match unittest's behavior.
+
+Specific change needed: Before calling `self._explicit_tearDown()`, check if the test was skipped by examining `self._store.get(skipped_by_mark_key, False)`. Only call tearDown if the test was not skipped.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and confirmed by test behavior.
+
+## Open questions
+
+None — the fix is straightforward and localized.
+
+---STDERR---
