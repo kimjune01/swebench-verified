@@ -1,0 +1,33 @@
+# Audit: sympy__sympy-18189
+
+## FAIL_TO_PASS
+- test_diophantine: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Gate Comparison
+
+**Baseline (fail-on-base):**
+```
+tests finished: 42 passed, 1 failed, 1 skipped, 2 expected to fail
+```
+
+**With patch applied:**
+```
+tests finished: 43 passed, 1 skipped, 2 expected to fail
+```
+
+## Analysis
+
+The craft patch successfully resolves the issue. The failing test `test_diophantine` now passes, bringing the total from 42 to 43 passed tests. All PASS_TO_PASS tests remain passing with no regressions introduced.
+
+The fix added `permute=permute` to three recursive `diophantine()` calls (lines 185, 190, 191) to preserve the permutation parameter through recursion, which was the root cause identified by recon.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

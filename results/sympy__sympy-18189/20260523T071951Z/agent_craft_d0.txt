@@ -1,0 +1,14 @@
+**RESOLVED** ✅
+
+The fix has been successfully applied and validated:
+
+**Root Cause:** The `diophantine()` function's recursive calls at lines 185, 190, and 191 were missing the `permute` parameter, causing it to default to `False` when symbol reordering was needed.
+
+**Applied Changes:**
+1. Line 185: Added `permute=permute` to the syms reordering recursive call
+2. Line 190: Added `param, permute=permute` to the denominator recursive call  
+3. Line 191: Added `param, permute=permute` to the numerator recursive call
+
+**Gate Result:** All 43 tests passed on the first iteration, including the previously failing `test_diophantine` that checks `diophantine(y**4 + x**4 - 2**4 - 3**4, syms=(y, x), permute=True)` now correctly returns all 8 sign-permuted solutions.
+
+---STDERR---

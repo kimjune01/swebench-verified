@@ -1,0 +1,60 @@
+Now I'll write the complete recon report to stdout:
+
+# Recon: sympy__sympy-18189
+
+## Failure summary
+
+The test `test_diophantine` checks that `diophantine(y**4 + x**4 - 2**4 - 3**4, syms=(y, x), permute=True)` returns all 8 sign-permuted solutions: `{(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}`. The test fails because when `syms=(y, x)` is passed, only one solution `{(3, 2)}` is returned instead of all 8. When `syms=(x, y)` is passed (alphabetical order), all 8 solutions are correctly returned.
+
+## Suspect set
+
+- `sympy/solvers/diophantine.py` lines 177-185: syms reordering logic that takes early return when `syms != var`
+- `sympy/solvers/diophantine.py` line 185: recursive call missing `permute` parameter
+- `sympy/solvers/diophantine.py` lines 190-191: additional recursive calls that also don't pass `permute` (secondary issue)
+
+## Root cause
+
+When the `syms` parameter is provided and differs from the alphabetically sorted variable list, the function takes an early return at lines 184-185 to reorder the results. This early return recursively calls `diophantine(eq, param)` but fails to pass the `permute` parameter, causing it to default to `False`.
+
+The code path:
+1. Line 176: Variables from equation are extracted and sorted alphabetically as `[x, y]`
+2. Line 177-181: When `syms` is provided, it's validated
+3. Line 182: Check if `syms != var` (i.e., if user-provided order differs from alphabetical)
+4. Line 185: If different, recursively call `diophantine(eq, param)` to get base solutions, then reorder them
+5. **BUG**: The recursive call doesn't include `permute=permute`, so it uses default `permute=False`
+
+When `syms=(x, y)`: matches alphabetical order `[x, y]`, so `syms == var`, continues with `permute=True` → generates all 8 solutions
+
+When `syms=(y, x)`: doesn't match alphabetical order `[x, y]`, so `syms != var`, takes early return with `permute=False` → generates only 1 base solution
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/solvers/diophantine.py:101-102` — function signature: `def diophantine(eq, param=symbols("t", integer=True), syms=None, permute=False):`
+- `sympy/solvers/diophantine.py:175-176` — variables sorted: `var = list(eq.expand(force=True).free_symbols); var.sort(key=default_sort_key)`
+- `sympy/solvers/diophantine.py:182-185` — early return for reordering:
+  ```python
+  if syms != var:
+      dict_sym_index = dict(zip(syms, range(len(syms))))
+      return {tuple([t[dict_sym_index[i]] for i in var])
+                  for t in diophantine(eq, param)}
+  ```
+- `sympy/solvers/diophantine.py:218-290` — permute logic only executes when `permute=True`
+
+## Edit sites
+
+- `sympy/solvers/diophantine.py` line 185: Change `diophantine(eq, param)` to `diophantine(eq, param, permute=permute)` to preserve the permute parameter when recursively calling for symbol reordering
+- `sympy/solvers/diophantine.py` line 190: Change `diophantine(d)` to `diophantine(d, param, permute=permute)` for consistency (handles denominator case)
+- `sympy/solvers/diophantine.py` line 191: Change `diophantine(n)` to `diophantine(n, param, permute=permute)` for consistency (handles numerator case)
+
+The primary fix is line 185, which directly causes the reported bug. Lines 190-191 are a secondary issue for a different code path (rational expressions with non-constant denominators).
+
+## Rejected hypotheses
+
+None. The root cause was immediately apparent from tracing the code path and observing that the recursive call doesn't forward the `permute` parameter.
+
+## Open questions
+
+None. The fix is straightforward: pass `permute=permute` in the recursive calls.
+
+---STDERR---
