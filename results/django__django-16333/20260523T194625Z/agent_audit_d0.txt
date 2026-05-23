@@ -1,0 +1,33 @@
+# Audit: django__django-16333
+
+## FAIL_TO_PASS
+- test_custom_form_saves_many_to_many_field (auth_tests.test_forms.UserCreationFormTest): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 88 tests passed.
+
+## Pre-existing failures (confirmed against base capture)
+None — all tests passed on both base and patched runs.
+
+## Patch Summary
+```diff
++++ b/django/contrib/auth/forms.py
+@@ -141,6 +141,7 @@ class UserCreationForm(forms.ModelForm):
+         user.set_password(self.cleaned_data["password1"])
+         if commit:
+             user.save()
++            self.save_m2m()
+         return user
+```
+
+Single-line addition: `self.save_m2m()` call after `user.save()` in the `if commit:` block of UserCreationForm.save().
+
+## Gate Verification
+Full test suite executed: 88 tests in 0.142s, all passed.
+
+The FAIL_TO_PASS test (`test_custom_form_saves_many_to_many_field`) now correctly persists ManyToMany relationships when UserCreationForm subclasses include m2m fields. No regressions introduced — all existing tests remain green.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

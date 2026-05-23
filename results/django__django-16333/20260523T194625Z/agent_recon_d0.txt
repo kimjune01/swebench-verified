@@ -1,0 +1,3 @@
+Recon complete. The diagnosis is straightforward: UserCreationForm.save() bypasses the normal ModelForm machinery for ManyToMany fields. When it calls `super().save(commit=False)` to intercept and set the password, it must manually call `self.save_m2m()` after saving the instance — but it doesn't. This is a well-established Django pattern (visible in both the base ModelForm implementation and how admin handles forms), and the fix is a single line addition.
+
+---STDERR---
