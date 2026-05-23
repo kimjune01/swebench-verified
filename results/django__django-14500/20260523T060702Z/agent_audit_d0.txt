@@ -1,0 +1,30 @@
+# Audit: django__django-14500
+
+## FAIL_TO_PASS
+- `test_migrate_marks_replacement_unapplied`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+- none
+
+## Pre-existing (not counted, confirmed against base capture)
+- none
+
+## Resolution summary
+
+The craft patch adds the missing inverse logic to `check_replacements()`:
+
+```python
+elif all(m not in applied for m in migration.replaces) and key in applied:
+    self.recorder.record_unapplied(*key)
+```
+
+This creates symmetry with the existing forward logic:
+- **Forward**: If all replaced migrations are applied → mark squashed migration as applied
+- **Backward**: If all replaced migrations are unapplied → mark squashed migration as unapplied
+
+All 22 tests in the suite passed, including the target FAIL_TO_PASS test. No regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

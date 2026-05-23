@@ -1,0 +1,7 @@
+Perfect! I've completed the recon phase. The diagnosis is clear:
+
+**Summary:** The `check_replacements` method in Django's MigrationExecutor has asymmetric logic. It correctly marks squashed migrations as applied when all their replaced migrations are applied, but it lacks the inverse logic to mark squashed migrations as unapplied when their replaced migrations are unapplied. This causes the squashed migration `0001_squashed_0002` to remain in the applied_migrations() set even after migrating backwards to `None`.
+
+The fix is to add 2 lines to `check_replacements` to handle the backward case alongside the existing forward case.
+
+---STDERR---

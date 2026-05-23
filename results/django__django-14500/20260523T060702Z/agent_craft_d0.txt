@@ -1,0 +1,5 @@
+**RESOLVED** ✅
+
+The fix successfully addresses the asymmetric logic in `check_replacements`. Added 2 lines to handle the inverse case: when all replaced migrations are unapplied, the squashed migration is now correctly marked as unapplied. All 22 tests pass, including the previously failing `test_migrate_marks_replacement_unapplied`.
+
+---STDERR---
