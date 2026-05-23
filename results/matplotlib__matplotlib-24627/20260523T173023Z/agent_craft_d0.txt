@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_cla_clears_children_axes_and_fig` pass. The implementation properly clears parent references (`.axes`, `.figure`, `_remove_method`, `stale_callback`) for all deparented children before clearing `self._children`, following the same pattern as `Artist.remove()`.
+
+---STDERR---

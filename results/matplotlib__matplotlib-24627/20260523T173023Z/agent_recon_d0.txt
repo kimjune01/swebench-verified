@@ -1,0 +1,51 @@
+Now let me write the structured recon report:
+
+# Recon: matplotlib__matplotlib-24627
+
+## Failure summary
+
+The test `test_cla_clears_children_axes_and_fig` verifies that after calling `ax.clear()`, all deparented artists (Line2D objects from `plot()` and AxesImage from `imshow()`) should have their `.axes` and `.figure` attributes set to `None`. The test fails because these attributes remain set to their original Axes and Figure objects instead of being cleared. The assertion `assert art.axes is None` fails with `assert <Axes: > is None`.
+
+## Suspect set
+
+- `lib/matplotlib/axes/_base.py` lines 1271-1393: The `__clear()` method that implements the actual clearing logic for `ax.clear()` and `ax.cla()`
+- Specifically line 1310: `self._children = []` — clears the children list without unsetting artist attributes
+
+## Root cause
+
+The `Axes.__clear()` method clears deparented artists by setting `self._children = []` (line 1310) without first iterating through the children to unset their `.axes` and `.figure` attributes. This leaves the artists with stale references to the Axes and Figure they were removed from.
+
+In contrast, the `Artist.remove()` method (lib/matplotlib/artist.py:193-226) demonstrates the correct behavior: before decoupling an artist, it explicitly sets `self.axes = None` (line 220) and `self.figure = None` (line 223).
+
+**Call path:**
+1. Test calls `ax.clear()` → lib/matplotlib/axes/_base.py:1395
+2. `clear()` delegates to `cla()` → lib/matplotlib/axes/_base.py:1404
+3. `cla()` calls `__clear()` → lib/matplotlib/axes/_base.py:1408
+4. `__clear()` sets `self._children = []` → lib/matplotlib/axes/_base.py:1310
+5. Artists remain with stale `.axes` and `.figure` references
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- lib/matplotlib/axes/_base.py:1310 — `self._children = []` clears list without unsetting attributes
+- lib/matplotlib/artist.py:220 — `self.axes = None` shows correct pattern in `remove()`
+- lib/matplotlib/artist.py:223 — `self.figure = None` shows correct pattern in `remove()`
+- Problem statement confirms asymmetry: "Removing an artist from its axes unsets its `.axes` attribute, but clearing the axes does not do so"
+
+## Edit sites
+
+- `lib/matplotlib/axes/_base.py` lines 1308-1313: Before `self._children = []`, iterate through `self._children` and set each child's `.axes` and `.figure` attributes to `None`. The pattern should mirror what `Artist.remove()` does (lib/matplotlib/artist.py:220, 223).
+
+## Competing hypotheses
+
+None — the root cause is clear from reading the code.
+
+## Rejected hypotheses
+
+None — this is the first iteration.
+
+## Open questions
+
+None — the fix location and approach are clear.
+
+---STDERR---

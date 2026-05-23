@@ -1,0 +1,18 @@
+# Audit: matplotlib__matplotlib-24627
+
+## FAIL_TO_PASS
+- `test_cla_clears_children_axes_and_fig`: **PASSED**
+
+## PASS_TO_PASS regressions
+None. All 777 tests passed, 64 skipped, 0 failed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Kill report
+Not applicable — fix is RESOLVED. The patch correctly unsets `.axes` and `.figure` attributes on deparented children before clearing `self._children`, matching the cleanup semantics of `Artist.remove()`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
