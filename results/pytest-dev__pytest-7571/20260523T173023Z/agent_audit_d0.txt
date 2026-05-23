@@ -1,0 +1,23 @@
+# Audit: pytest-dev__pytest-7571
+
+## FAIL_TO_PASS
+- testing/logging/test_fixture.py::test_change_level_undos_handler_level: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- Nested pytester test failures (test_caplog_captures_despite_exception, test_log_report_captures_according_to_config_option_upon_failure) - these are intentional test failures within pytester sub-runs, confirmed identical in fail-on-base capture
+
+## Summary
+The patch successfully resolves the issue. All FAIL_TO_PASS tests now pass, and there are zero regressions in the PASS_TO_PASS suite. The fix adds proper tracking and restoration of handler level in `LogCaptureFixture`, mirroring the pattern already used in the `at_level()` context manager.
+
+**Contract fulfilled:**
+- ✅ All FAIL_TO_PASS pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (0/14)
+- ✅ Full gate: 15/15 tests PASSED
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

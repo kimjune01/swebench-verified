@@ -1,0 +1,3 @@
+**RESOLVED** — `test_change_level_undos_handler_level` passes. The fix tracks and restores handler level alongside logger levels, preventing state leakage across tests.
+
+---STDERR---

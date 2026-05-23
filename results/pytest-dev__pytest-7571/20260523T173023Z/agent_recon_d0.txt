@@ -1,0 +1,38 @@
+# Recon: pytest-dev__pytest-7571
+
+## Failure summary
+
+The test `test_change_level_undos_handler_level` creates three test functions that check `caplog.handler.level`. Test1 sets the level to 41, test2 expects it to be back to 0, and test3 sets it to 43. The test fails because test2 sees level=41 instead of level=0, meaning the handler level is not being restored after test1 completes.
+
+## Suspect set
+
+- `src/_pytest/logging.py` lines 344-359: `LogCaptureFixture.__init__` and `_finalize` - initialization and cleanup
+- `src/_pytest/logging.py` lines 425-437: `LogCaptureFixture.set_level` - sets both logger and handler levels but only saves logger level
+
+## Root cause
+
+The `set_level` method changes both the logger level and the handler level (line 437: `self.handler.setLevel(level)`), but only saves the initial logger level for restoration (line 434: `self._initial_logger_levels.setdefault(logger, logger_obj.level)`). When `_finalize` is called at the end of the test, it only restores logger levels from `_initial_logger_levels` (lines 357-359), leaving the handler level unchanged. Since the handler (`self.caplog_handler`) is shared across all tests (created once in `LoggingPlugin.__init__` at line 526), the modified handler level persists into subsequent tests.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `src/_pytest/logging.py:437` — `self.handler.setLevel(level)` changes handler without saving original
+- `src/_pytest/logging.py:434` — `self._initial_logger_levels.setdefault(logger, logger_obj.level)` only tracks logger
+- `src/_pytest/logging.py:357-359` — `_finalize` only restores from `_initial_logger_levels`
+- `src/_pytest/logging.py:452-458` — `at_level` context manager demonstrates correct pattern: saves `handler_orig_level = self.handler.level` (452), restores `self.handler.setLevel(handler_orig_level)` (458)
+
+## Edit sites
+
+- `src/_pytest/logging.py` lines 344-349: Add `_initial_handler_level` field to `LogCaptureFixture.__init__` to track the initial handler level (similar to `_initial_logger_levels`)
+- `src/_pytest/logging.py` lines 425-437: In `set_level`, save the initial handler level before calling `self.handler.setLevel(level)`
+- `src/_pytest/logging.py` lines 351-359: In `_finalize`, restore the handler level after restoring logger levels
+
+## Rejected hypotheses
+
+- H₁: `catching_logs` context manager not restoring handler level — while catching_logs does set handler level (line 299) without restoring it, this affects all test phases equally. The issue specifically affects `set_level` calls within tests, which is a separate code path.
+
+## Open questions
+
+None - the fix is straightforward: add handler level tracking to match the existing logger level tracking pattern.
+
+---STDERR---
