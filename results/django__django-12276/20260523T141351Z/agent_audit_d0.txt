@@ -1,0 +1,27 @@
+# Audit: django__django-12276
+
+## FAIL_TO_PASS
+- test_use_required_attribute (forms_tests.widget_tests.test_fileinput.FileInputTest): **PASS** ✅
+- test_filefield_with_fileinput_required (forms_tests.tests.test_forms.FormsTestCase): **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 117 PASS_TO_PASS tests remain passing. No regressions introduced.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The fail-on-base capture showed `test_filefield_with_fileinput_required` was failing on base (expected), and it's now passing with the patch.
+
+## Patch summary
+The craft patch added a 3-line `use_required_attribute` method to the FileInput widget class:
+```python
+def use_required_attribute(self, initial):
+    return super().use_required_attribute(initial) and not initial
+```
+
+This correctly prevents the HTML5 `required` attribute from being rendered when a file has already been uploaded (initial data exists), matching the behavior already present in ClearableFileInput.
+
+Gate run: **119/119 tests passed (OK)**
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

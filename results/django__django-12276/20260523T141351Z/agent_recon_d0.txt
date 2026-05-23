@@ -1,0 +1,39 @@
+# Recon: django__django-12276
+
+## Failure summary
+Two tests verify that FileInput widgets should not display the `required` HTML attribute when initial data exists. The tests fail because FileInput renders `required` even when initial data is present. The first test (`test_use_required_attribute`) directly checks that `widget.use_required_attribute('resume.txt')` returns `False`, but it returns `True`. The second test (`test_filefield_with_fileinput_required`) renders a form with initial data and expects no `required` attribute in the HTML output, but it appears.
+
+## Suspect set
+- `django/forms/widgets.py` lines 374-390: FileInput class definition - missing `use_required_attribute` method
+- `django/forms/widgets.py` lines 275-276: Widget.use_required_attribute base implementation - doesn't check for initial data
+- `django/forms/boundfield.py` line 224: Call site where `widget.use_required_attribute(self.initial)` determines if `required` attribute is added
+
+## Root cause
+FileInput class inherits from Input → Widget, and relies on the base Widget.use_required_attribute implementation which returns `not self.is_hidden` without checking whether initial data exists. When a file field has initial data (e.g., an already-uploaded file), the user should be able to leave the input blank to keep the existing file, so the `required` attribute should not be rendered.
+
+ClearableFileInput (which inherits from FileInput) already has the correct implementation at line 454-455:
+```python
+def use_required_attribute(self, initial):
+    return super().use_required_attribute(initial) and not initial
+```
+
+This checks if initial data exists and returns `False` when it does, preventing the `required` attribute from being added. FileInput needs the same logic.
+
+**Confidence:** deduction - 95%
+
+**Supporting evidence:**
+- `django/forms/widgets.py:275` - `def use_required_attribute(self, initial): return not self.is_hidden` (base Widget implementation)
+- `django/forms/widgets.py:374-390` - FileInput class has no `use_required_attribute` override
+- `django/forms/widgets.py:454-455` - `def use_required_attribute(self, initial): return super().use_required_attribute(initial) and not initial` (ClearableFileInput implementation)
+- `django/forms/boundfield.py:224` - `if widget.use_required_attribute(self.initial) and self.field.required and self.form.use_required_attribute:` (call site that determines required attribute)
+
+## Edit sites
+- `django/forms/widgets.py` lines 374-390 (FileInput class): Add `use_required_attribute` method with implementation identical to ClearableFileInput's: `return super().use_required_attribute(initial) and not initial`. This should be inserted after the existing methods (after `value_omitted_from_data` at approximately line 388).
+
+## Rejected hypotheses
+None - the diagnosis is straightforward from reading the code and understanding the inheritance chain.
+
+## Open questions
+None - the fix is clear and localized to a single missing method.
+
+---STDERR---
