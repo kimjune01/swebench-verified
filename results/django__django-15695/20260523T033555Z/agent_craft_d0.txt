@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_rename_index_unnamed_index` pass by adding an idempotency check to `RenameIndex.database_forwards()`. When renaming an unnamed index (via `old_fields`), the operation now detects if the database index already has the target name and returns early, making reapplies a no-op as expected.
+
+---STDERR---

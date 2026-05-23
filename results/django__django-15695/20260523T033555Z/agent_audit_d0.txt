@@ -1,0 +1,25 @@
+# Audit: django__django-15695
+
+## FAIL_TO_PASS
+- test_rename_index_unnamed_index (migrations.test_operations.OperationTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 130 tests passed (1 skipped, consistent with baseline)
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - No failures detected in gate output
+
+## Summary
+
+The patch successfully resolves the issue. The fix adds a minimal idempotency check in `RenameIndex.database_forwards()` that detects when an unnamed index has already been renamed (matching_index_name[0] == self.new_name) and returns early, avoiding the state lookup that would fail on reapplication.
+
+**Contract fulfilled:**
+- ✅ All FAIL_TO_PASS tests now pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (130/130 passing)
+
+**Fix quality:** Minimal, targeted, and correct - addresses the exact failure path without over-broad changes.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 migrations.test_operations
+
+The managers on a model are set. ... ok
+test_create_model_with_boolean_expression_in_check_constraint (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_constraint (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_covering_unique_constraint (migrations.test_operations.OperationTests) ... skipped "Database doesn't support feature(s): supports_covering_indexes"
+test_create_model_with_deferred_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_duplicate_base (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_duplicate_field_name (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_duplicate_manager_name (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_partial_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_create_model_with_unique_after (migrations.test_operations.OperationTests)
+Tests the CreateModel operation directly followed by an ... ok
+test_create_proxy_model (migrations.test_operations.OperationTests)
+CreateModel ignores proxy models. ... ok
+test_create_unmanaged_model (migrations.test_operations.OperationTests)
+CreateModel ignores unmanaged models. ... ok
+test_delete_model (migrations.test_operations.OperationTests)
+Tests the DeleteModel operation. ... ok
+test_delete_mti_model (migrations.test_operations.OperationTests) ... ok
+test_delete_proxy_model (migrations.test_operations.OperationTests)
+Tests the DeleteModel operation ignores proxy models. ... ok
+test_model_with_bigautofield (migrations.test_operations.OperationTests)
+A model with BigAutoField can be created. ... ok
+test_remove_constraint (migrations.test_operations.OperationTests) ... ok
+test_remove_covering_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_remove_deferred_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_remove_field (migrations.test_operations.OperationTests)
+Tests the RemoveField operation. ... ok
+test_remove_field_m2m (migrations.test_operations.OperationTests) ... ok
+test_remove_field_m2m_with_through (migrations.test_operations.OperationTests) ... ok
+test_remove_fk (migrations.test_operations.OperationTests)
+Tests the RemoveField operation on a foreign key. ... ok
+test_remove_func_index (migrations.test_operations.OperationTests) ... ok
+test_remove_func_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_remove_index (migrations.test_operations.OperationTests)
+Test the RemoveIndex operation. ... ok
+test_remove_index_state_forwards (migrations.test_operations.OperationTests) ... ok
+test_remove_partial_unique_constraint (migrations.test_operations.OperationTests) ... ok
+test_rename_field (migrations.test_operations.OperationTests)
+Tests the RenameField operation. ... ok
+test_rename_field_case (migrations.test_operations.OperationTests) ... ok
+test_rename_field_reloads_state_on_fk_target_changes (migrations.test_operations.OperationTests)
+If RenameField doesn't reload state appropriately, the AlterField ... ok
+test_rename_field_with_db_column (migrations.test_operations.OperationTests) ... ok
+test_rename_index (migrations.test_operations.OperationTests) ... ok
+test_rename_index_arguments (migrations.test_operations.OperationTests) ... ok
+test_rename_index_state_forwards (migrations.test_operations.OperationTests) ... ok
+test_rename_index_state_forwards_unnamed_index (migrations.test_operations.OperationTests) ... ok
+test_rename_index_unknown_unnamed_index (migrations.test_operations.OperationTests) ... ok
+test_rename_index_unnamed_index (migrations.test_operations.OperationTests) ... ERROR
+test_rename_m2m_model_after_rename_field (migrations.test_operations.OperationTests)
+RenameModel renames a many-to-many column after a RenameField. ... ok
+test_rename_m2m_target_model (migrations.test_operations.OperationTests) ... ok
+test_rename_m2m_through_model (migrations.test_operations.OperationTests) ... ok
+test_rename_missing_field (migrations.test_operations.OperationTests) ... ok
+test_rename_model (migrations.test_operations.OperationTests)
+Tests the RenameModel operation. ... ok
+test_rename_model_state_forwards (migrations.test_operations.OperationTests)
+RenameModel operations shouldn't trigger the caching of rendered apps ... ok
+test_rename_model_with_db_table_noop (migrations.test_operations.OperationTests) ... ok
+test_rename_model_with_m2m (migrations.test_operations.OperationTests) ... ok
+test_rename_model_with_self_referential_fk (migrations.test_operations.OperationTests)
+Tests the RenameModel operation on model with self referential FK. ... ok
+test_rename_model_with_self_referential_m2m (migrations.test_operations.OperationTests) ... ok
+test_rename_model_with_superclass_fk (migrations.test_operations.OperationTests)
+Tests the RenameModel operation on a model which has a superclass that ... ok
+test_rename_referenced_field_state_forward (migrations.test_operations.OperationTests) ... ok
+test_repoint_field_m2m (migrations.test_operations.OperationTests) ... ok
+test_run_python (migrations.test_operations.OperationTests)
+Tests the RunPython operation ... ok
+test_run_python_atomic (migrations.test_operations.OperationTests)
+Tests the RunPython operation correctly handles the "atomic" keyword ... ok
+test_run_python_noop (migrations.test_operations.OperationTests)
+#24098 - Tests no-op RunPython operations. ... ok
+test_run_python_related_assignment (migrations.test_operations.OperationTests)
+#24282 - Model changes to a FK reverse side update the model ... ok
+test_run_sql (migrations.test_operations.OperationTests)
+Tests the RunSQL operation. ... ok
+test_run_sql_add_missing_semicolon_on_collect_sql (migrations.test_operations.OperationTests) ... ok
+test_run_sql_noop (migrations.test_operations.OperationTests)
+#24098 - Tests no-op RunSQL operations. ... ok
+test_run_sql_params (migrations.test_operations.OperationTests)
+#23426 - RunSQL should accept parameters. ... ok
+test_run_sql_params_invalid (migrations.test_operations.OperationTests)
+#23426 - RunSQL should fail when a list of statements with an incorrect ... ok
+test_separate_database_and_state (migrations.test_operations.OperationTests)
+Tests the SeparateDatabaseAndState operation. ... ok
+test_separate_database_and_state2 (migrations.test_operations.OperationTests)
+A complex SeparateDatabaseAndState operation: Multiple operations both ... ok
+test_smallfield_autofield_foreignfield_growth (migrations.test_operations.OperationTests)
+A field may be migrated from SmallAutoField to AutoField. ... ok
+test_smallfield_bigautofield_foreignfield_growth (migrations.test_operations.OperationTests)
+A field may be migrated from SmallAutoField to BigAutoField. ... ok
+test_add_field_ignore_swapped (migrations.test_operations.SwappableOperationTests)
+Tests the AddField operation. ... ok
+test_create_ignore_swapped (migrations.test_operations.SwappableOperationTests)
+The CreateTable operation ignores swapped models. ... ok
+test_delete_ignore_swapped (migrations.test_operations.SwappableOperationTests)
+Tests the DeleteModel operation ignores swapped models. ... ok
+test_indexes_ignore_swapped (migrations.test_operations.SwappableOperationTests)
+Add/RemoveIndex operations ignore swapped models. ... ok
+test_references_model_mixin (migrations.test_operations.TestCreateModel) ... ok
+
+======================================================================
+ERROR: test_rename_index_unnamed_index (migrations.test_operations.OperationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_operations.py", line 2994, in test_rename_index_unnamed_index
+    operation.database_forwards(app_label, editor, new_state, project_state)
+  File "/testbed/django/db/migrations/operations/models.py", line 965, in database_forwards
+    new_index = to_model_state.get_index_by_name(self.new_name)
+  File "/testbed/django/db/migrations/state.py", line 959, in get_index_by_name
+    raise ValueError("No index named %s on model %s" % (name, self.name))
+ValueError: No index named new_pony_test_idx on model Pony
+
+----------------------------------------------------------------------
+Ran 130 tests in 0.912s
+
+FAILED (errors=1, skipped=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Destroying test database for alias 'other' ('file:memorydb_other?mode=memory&cache=shared')...

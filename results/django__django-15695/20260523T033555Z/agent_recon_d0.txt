@@ -1,0 +1,67 @@
+# Recon: django__django-15695
+
+## Failure summary
+The test `test_rename_index_unnamed_index` checks that `RenameIndex` can rename an unnamed index (created via `index_together`) to a named index, and that the operation is idempotent on reapply. The test renames an unnamed index to "new_pony_test_idx", runs a backward operation (which is a documented no-op for unnamed indexes), then reapplies the forward operation. The reapply crashes with `ValueError: No index named new_pony_test_idx on model Pony` at `django/db/migrations/operations/models.py:965`.
+
+## Suspect set
+- `django/db/migrations/operations/models.py` lines 934-966: `RenameIndex.database_forwards` method
+- `django/db/migrations/operations/models.py` lines 968-978: `RenameIndex.database_backwards` method
+- `django/db/migrations/operations/models.py` lines 914-932: `RenameIndex.state_forwards` method
+
+## Root cause
+When `old_fields` is set (unnamed index case), `database_forwards` queries the actual database to find the current index name via `schema_editor._constraint_names()`, then attempts to look up the target index from the migration state via `to_model_state.get_index_by_name(self.new_name)`. 
+
+The test calls operations with these state arguments:
+1. Forward: `database_forwards(project_state, new_state)` — succeeds
+2. Backward: `database_backwards(new_state, project_state)` — no-op return when `old_fields` is set
+3. Reapply: `database_forwards(new_state, project_state)` — **crashes**
+
+On reapply, `to_state` is `project_state`, which only has `index_together=[["weight", "pink"]]` and no named indexes. Meanwhile, the database still contains the renamed index "new_pony_test_idx" (because backward was a no-op). The code finds "new_pony_test_idx" in the database but fails to find it in `project_state.models[...].get_index_by_name()`.
+
+The operation lacks idempotency: when the index is already renamed to the target name, it should detect this and skip the rename.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `django/db/migrations/operations/models.py:939-958` — when `old_fields` is set, looks up current DB index name, then gets target from state:
+  ```python
+  matching_index_name = schema_editor._constraint_names(
+      from_model, column_names=columns, index=True
+  )
+  # ...
+  old_index = models.Index(fields=self.old_fields, name=matching_index_name[0])
+  # ...
+  to_model_state = to_state.models[app_label, self.model_name_lower]
+  new_index = to_model_state.get_index_by_name(self.new_name)  # ← fails here
+  ```
+- `django/db/migrations/operations/models.py:970-972` — backward is no-op when `old_fields` is set:
+  ```python
+  if self.old_fields:
+      # Backward operation with unnamed index is a no-op.
+      return
+  ```
+- `tests/migrations/test_base.py` — `set_up_test_model(index_together=True)` creates `index_together=[["weight", "pink"]]` without named indexes
+- `django/db/migrations/operations/models.py:916-926` — `state_forwards` with `old_fields` adds named index to state and removes `index_together`:
+  ```python
+  state.add_index(
+      app_label, self.model_name_lower,
+      models.Index(fields=self.old_fields, name=self.new_name),
+  )
+  state.remove_model_options(
+      app_label, self.model_name_lower,
+      AlterIndexTogether.option_name, self.old_fields,
+  )
+  ```
+
+## Edit sites
+- `django/db/migrations/operations/models.py` lines 939-958: After finding `matching_index_name[0]` when `old_fields` is set, add a check: if `matching_index_name[0] == self.new_name`, return early (the rename has already been applied). This makes the operation idempotent.
+
+Specifically, after line 958 where `old_index` is created, check if `old_index.name == self.new_name`. If true, the index is already renamed, so return without calling `schema_editor.rename_index()`.
+
+## Rejected hypotheses
+None — this is the first diagnosis.
+
+## Open questions
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
