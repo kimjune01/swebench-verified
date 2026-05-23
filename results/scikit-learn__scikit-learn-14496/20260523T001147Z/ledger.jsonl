@@ -1,0 +1,6 @@
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "start"}
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "recon", "depth": 0, "wall_s": 135, "fixed_point": false}
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "craft", "depth": 0, "wall_s": 228, "claim": true, "wants_rediagnose": false}
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "audit", "depth": 0, "wall_s": 43, "verdict": "RESOLVED", "route": "none"}
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_scikit-learn__scikit-learn-14496.txt"}
+{"instance": "scikit-learn__scikit-learn-14496", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 1286, "patch_file": "/tmp/swebench-abduction/r4_patch_scikit-learn__scikit-learn-14496.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_scikit-learn__scikit-learn-14496.md"}

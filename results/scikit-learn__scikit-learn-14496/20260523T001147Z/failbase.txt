@@ -1,0 +1,122 @@
+$ pytest -rA sklearn/cluster/tests/test_optics.py
+
+        elif isinstance(X, KDTree):
+            self._fit_X = X.data
+            self._tree = X
+            self._fit_method = 'kd_tree'
+            return self
+    
+        X = check_array(X, accept_sparse='csr')
+    
+        n_samples = X.shape[0]
+        if n_samples == 0:
+            raise ValueError("n_samples must be greater than 0")
+    
+        if issparse(X):
+            if self.algorithm not in ('auto', 'brute'):
+                warnings.warn("cannot use tree with sparse input: "
+                              "using brute force")
+            if self.effective_metric_ not in VALID_METRICS_SPARSE['brute'] \
+                    and not callable(self.effective_metric_):
+                raise ValueError("Metric '%s' not valid for sparse input. "
+                                 "Use sorted(sklearn.neighbors."
+                                 "VALID_METRICS_SPARSE['brute']) "
+                                 "to get valid options. "
+                                 "Metric can also be a callable function."
+                                 % (self.effective_metric_))
+            self._fit_X = X.copy()
+            self._tree = None
+            self._fit_method = 'brute'
+            return self
+    
+        self._fit_method = self.algorithm
+        self._fit_X = X
+    
+        if self._fit_method == 'auto':
+            # A tree approach is better for small number of neighbors,
+            # and KDTree is generally faster when available
+            if ((self.n_neighbors is None or
+                 self.n_neighbors < self._fit_X.shape[0] // 2) and
+                    self.metric != 'precomputed'):
+                if self.effective_metric_ in VALID_METRICS['kd_tree']:
+                    self._fit_method = 'kd_tree'
+                elif (callable(self.effective_metric_) or
+                        self.effective_metric_ in VALID_METRICS['ball_tree']):
+                    self._fit_method = 'ball_tree'
+                else:
+                    self._fit_method = 'brute'
+            else:
+                self._fit_method = 'brute'
+    
+        if self._fit_method == 'ball_tree':
+            self._tree = BallTree(X, self.leaf_size,
+                                  metric=self.effective_metric_,
+                                  **self.effective_metric_params_)
+        elif self._fit_method == 'kd_tree':
+            self._tree = KDTree(X, self.leaf_size,
+                                metric=self.effective_metric_,
+                                **self.effective_metric_params_)
+        elif self._fit_method == 'brute':
+            self._tree = None
+        else:
+            raise ValueError("algorithm = '%s' not recognized"
+                             % self.algorithm)
+    
+        if self.n_neighbors is not None:
+            if self.n_neighbors <= 0:
+                raise ValueError(
+                    "Expected n_neighbors > 0. Got %d" %
+                    self.n_neighbors
+                )
+            else:
+                if not isinstance(self.n_neighbors, numbers.Integral):
+                    raise TypeError(
+                        "n_neighbors does not take %s value, "
+                        "enter integer value" %
+>                       type(self.n_neighbors))
+E                   TypeError: n_neighbors does not take <class 'float'> value, enter integer value
+
+sklearn/neighbors/base.py:276: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_downward[r_plot0-3]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_downward[r_plot1-0]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_downward[r_plot2-4]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_downward[r_plot3-4]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_upward[r_plot0-6]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_upward[r_plot1-0]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_upward[r_plot2-0]
+PASSED sklearn/cluster/tests/test_optics.py::test_extend_upward[r_plot3-2]
+PASSED sklearn/cluster/tests/test_optics.py::test_the_extract_xi_labels[ordering0-clusters0-expected0]
+PASSED sklearn/cluster/tests/test_optics.py::test_the_extract_xi_labels[ordering1-clusters1-expected1]
+PASSED sklearn/cluster/tests/test_optics.py::test_the_extract_xi_labels[ordering2-clusters2-expected2]
+PASSED sklearn/cluster/tests/test_optics.py::test_the_extract_xi_labels[ordering3-clusters3-expected3]
+PASSED sklearn/cluster/tests/test_optics.py::test_cluster_hierarchy_
+PASSED sklearn/cluster/tests/test_optics.py::test_correct_number_of_clusters
+PASSED sklearn/cluster/tests/test_optics.py::test_minimum_number_of_sample_check
+PASSED sklearn/cluster/tests/test_optics.py::test_bad_extract
+PASSED sklearn/cluster/tests/test_optics.py::test_bad_reachability
+PASSED sklearn/cluster/tests/test_optics.py::test_close_extract
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[3-0.1]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[3-0.3]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[3-0.5]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[10-0.1]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[10-0.3]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[10-0.5]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[20-0.1]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[20-0.3]
+PASSED sklearn/cluster/tests/test_optics.py::test_dbscan_optics_parity[20-0.5]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_samples_edge_case
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size[2]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size_invalid[0]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size_invalid[-1]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size_invalid[1.1]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size_invalid[2.2]
+PASSED sklearn/cluster/tests/test_optics.py::test_min_cluster_size_invalid2
+PASSED sklearn/cluster/tests/test_optics.py::test_processing_order
+PASSED sklearn/cluster/tests/test_optics.py::test_compare_to_ELKI
+PASSED sklearn/cluster/tests/test_optics.py::test_wrong_cluster_method
+PASSED sklearn/cluster/tests/test_optics.py::test_extract_dbscan
+PASSED sklearn/cluster/tests/test_optics.py::test_precomputed_dists
+FAILED sklearn/cluster/tests/test_optics.py::test_extract_xi - TypeError: n_n...
+=================== 1 failed, 39 passed, 1 warning in 2.78s ====================

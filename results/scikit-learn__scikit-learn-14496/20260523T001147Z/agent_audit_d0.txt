@@ -1,0 +1,24 @@
+# Audit: scikit-learn__scikit-learn-14496
+
+## FAIL_TO_PASS
+- `sklearn/cluster/tests/test_optics.py::test_extract_xi`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 40 tests passed with no regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the fail-on-base capture showed a pre-existing TypeError in `sklearn/neighbors/base.py:276` unrelated to the OPTICS test suite.
+
+## Summary
+The patch wraps three sites with `int()` to convert fractional `min_samples` and `min_cluster_size` values to integers before passing to `NearestNeighbors`:
+
+1. Line 440: `min_samples = max(2, int(min_samples * n_samples))`
+2. Line 622: `min_samples = max(2, int(min_samples * n_samples))`
+3. Line 627: `min_cluster_size = max(2, int(min_cluster_size * n_samples))`
+
+Gate output: 40 collected, 40 passed, 0 failed in 2.61s.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

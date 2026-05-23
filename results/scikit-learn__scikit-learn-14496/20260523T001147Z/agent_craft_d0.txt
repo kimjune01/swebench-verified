@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix is complete and all tests pass. The issue was that float `min_samples` and `min_cluster_size` values were being converted to absolute counts but not cast to integers before being passed to `NearestNeighbors`. 
+
+The solution: wrap the multiplication with `int()` (not `int(round(...))` as suggested in the issue description — codex correctly caught that `round()` would change behavior and use banker's rounding). Applied at three locations:
+- Line 440: `compute_optics_graph`
+- Line 622: `cluster_optics_xi` for `min_samples`
+- Line 627: `cluster_optics_xi` for `min_cluster_size`
+
+Gate result: ✅ All 40 tests passed, including `test_extract_xi`.
+
+---STDERR---

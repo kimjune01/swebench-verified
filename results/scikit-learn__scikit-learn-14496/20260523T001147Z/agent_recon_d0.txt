@@ -1,0 +1,41 @@
+# Recon: scikit-learn__scikit-learn-14496
+
+## Failure summary
+
+The test `test_extract_xi` checks that OPTICS clustering works with both integer and float values for `min_samples` and `min_cluster_size` parameters. When a float value like 0.1 is passed for `min_samples`, the test fails with `TypeError: n_neighbors does not take <class 'float'> value, enter integer value` at `sklearn/neighbors/base.py:276`. The error occurs because the OPTICS implementation converts the float to an absolute sample count by multiplying by `n_samples`, but forgets to cast the result to an integer before passing it to `NearestNeighbors`.
+
+## Suspect set
+
+- `sklearn/cluster/optics_.py` lines 437-448: `compute_optics_graph()` function where `min_samples` is converted from float to absolute count
+- `sklearn/cluster/optics_.py` lines 619-627: `cluster_optics_xi()` function where both `min_samples` and `min_cluster_size` are converted
+
+## Root cause
+
+When `min_samples <= 1` (indicating a float proportion), line 440 converts it to an absolute count via `min_samples = max(2, min_samples * n_samples)`. This multiplication produces a float (e.g., `0.1 * 31 = 3.1`). Line 448 then passes this float to `NearestNeighbors(n_neighbors=min_samples, ...)`, which validates that `n_neighbors` must be an integer and raises a TypeError.
+
+The same issue exists for `min_cluster_size` at line 627, though it's less immediately fatal since the value is only used in numeric comparisons later, which tolerate floats. However, it should still be an integer for semantic correctness (cluster sizes are discrete).
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sklearn/cluster/optics_.py:440` — `min_samples = max(2, min_samples * n_samples)` produces float
+- `sklearn/cluster/optics_.py:448` — `NearestNeighbors(n_neighbors=min_samples, ...)` receives the float
+- `sklearn/neighbors/base.py:273-276` — validates `isinstance(self.n_neighbors, numbers.Integral)` and raises TypeError otherwise
+
+## Edit sites
+
+1. **`sklearn/cluster/optics_.py` line 440**: After computing `min_samples = max(2, min_samples * n_samples)`, convert to int. The issue description suggests `int(round(...))` for proper rounding, making it `min_samples = int(round(max(2, min_samples * n_samples)))`
+
+2. **`sklearn/cluster/optics_.py` line 622**: Same conversion needed for the first `min_samples` in `cluster_optics_xi()`. Change to `min_samples = int(round(max(2, min_samples * n_samples)))`
+
+3. **`sklearn/cluster/optics_.py` line 627**: Same conversion for `min_cluster_size`. Change to `min_cluster_size = int(round(max(2, min_cluster_size * n_samples)))`
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward: wrap the three conversions with `int(round(...))`.
+
+---STDERR---
