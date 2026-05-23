@@ -1,0 +1,38 @@
+$ pytest -rA tests/unittest_pyreverse_writer.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.2.5, py-1.11.0, pluggy-1.5.0
+benchmark: 3.4.1 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /testbed, configfile: setup.cfg
+plugins: benchmark-3.4.1, cov-2.12.1, forked-1.6.0, profiling-1.7.0, xdist-2.5.0
+collected 18 items
+
+tests/unittest_pyreverse_writer.py ..................                    [100%]
+
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6
+  /opt/miniconda3/envs/testbed/lib/python3.9/site-packages/astroid/interpreter/_import/util.py:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/unittest_pyreverse_writer.py::test_dot_files[packages_No_Name.dot]
+PASSED tests/unittest_pyreverse_writer.py::test_dot_files[classes_No_Name.dot]
+PASSED tests/unittest_pyreverse_writer.py::test_get_visibility[names0-special]
+PASSED tests/unittest_pyreverse_writer.py::test_get_visibility[names1-private]
+PASSED tests/unittest_pyreverse_writer.py::test_get_visibility[names2-public]
+PASSED tests/unittest_pyreverse_writer.py::test_get_visibility[names3-protected]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_annassign[a: str = None-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_annassign[a: str = 'mystr'-str]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_annassign[a: Optional[str] = 'str'-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_annassign[a: Optional[str] = None-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: str):                   self.x = x-str]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: str = 'str'):           self.x = x-str]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: str = None):            self.x = x-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: Optional[str]):         self.x = x-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: Optional[str] = None):  self.x = x-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: Optional[str] = 'str'): self.x = x-Optional[str]]
+PASSED tests/unittest_pyreverse_writer.py::test_infer_node_1
+PASSED tests/unittest_pyreverse_writer.py::test_infer_node_2
+======================== 18 passed, 1 warning in 0.04s =========================

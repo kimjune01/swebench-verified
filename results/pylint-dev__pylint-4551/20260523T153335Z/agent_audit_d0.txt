@@ -1,0 +1,29 @@
+# Audit: pylint-dev__pylint-4551
+
+## FAIL_TO_PASS
+- tests/unittest_pyreverse_writer.py::test_dot_files[packages_No_Name.dot]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_dot_files[classes_No_Name.dot]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_visibility[names0-special]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_visibility[names1-private]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_visibility[names2-public]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_visibility[names3-protected]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_annotation_annassign[a: str = None-Optional[str]]: PASS ✓
+- tests/unittest_pyreverse_writer.py::test_get_annotation_assignattr[def __init__(self, x: str): self.x = x-str]: PASS ✓
+
+All 8 specified FAIL_TO_PASS tests now pass (18 total tests passed in the suite).
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+The baseline showed a complete import failure (`ImportError: cannot import name 'get_annotation'`), preventing all test collection. After the patch, all tests collect and pass.
+
+## Kill report
+Not applicable - all FAIL_TO_PASS tests pass, zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,6 @@
+{"instance": "pylint-dev__pylint-4551", "stage": "start"}
+{"instance": "pylint-dev__pylint-4551", "stage": "recon", "depth": 0, "wall_s": 262, "fixed_point": false}
+{"instance": "pylint-dev__pylint-4551", "stage": "craft", "depth": 0, "wall_s": 775, "claim": true, "wants_rediagnose": false}
+{"instance": "pylint-dev__pylint-4551", "stage": "audit", "depth": 0, "wall_s": 50, "verdict": "RESOLVED", "route": "none"}
+{"instance": "pylint-dev__pylint-4551", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_pylint-dev__pylint-4551.txt"}
+{"instance": "pylint-dev__pylint-4551", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 4378, "patch_file": "/tmp/swebench-abduction/r4_patch_pylint-dev__pylint-4551.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_pylint-dev__pylint-4551.md"}

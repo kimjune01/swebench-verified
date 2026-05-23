@@ -1,0 +1,91 @@
+Now let me emit the full diagnosis:
+
+# Recon: pylint-dev__pylint-4551
+
+## Failure summary
+
+The tests in `tests/unittest_pyreverse_writer.py` attempt to verify that pyreverse correctly extracts and displays Python type hints (PEP 484) in UML diagrams. The tests fail immediately with an `ImportError` because they try to import three functions from `pylint.pyreverse.utils`: `get_annotation`, `get_visibility`, and `infer_node`. Currently, only `get_visibility` exists; the other two functions are missing entirely.
+
+The underlying issue is that pyreverse's type extraction relies solely on type inference from assigned values (`node.infer()`), ignoring type annotations. When a parameter like `def __init__(self, a: str = None)` has a type hint `str` but default value `None`, the current code infers `NoneType` instead of recognizing it should be `Optional[str]`.
+
+**Error message**: `ImportError: cannot import name 'get_annotation' from 'pylint.pyreverse.utils'`
+
+## Suspect set
+
+- `pylint/pyreverse/utils.py` lines 1-253: Missing `get_annotation` and `infer_node` functions that tests expect to import
+- `pylint/pyreverse/inspector.py` lines 233, 221: Uses `node.infer()` directly, needs to use annotation-aware inference
+- `tests/unittest_pyreverse_writer.py` lines 1-177: Test file defines expected behavior for the missing functions
+
+## Root cause
+
+**Pyreverse does not extract or use PEP 484 type annotations when generating UML diagrams.**
+
+The code path for attribute type extraction is:
+1. `inspector.py:175-178` - `visit_classdef` iterates over `node.instance_attrs` and calls `handle_assignattr_type`
+2. `inspector.py:233` - `handle_assignattr_type` calls `values = set(node.infer())` to determine types
+3. `inspector.py:221` - `visit_assignname` similarly calls `values = set(node.infer())` for local attributes  
+4. These inferred values populate `instance_attrs_type` and `locals_type` dictionaries
+5. `diagrams.py:88-93` - `get_attrs` retrieves types from these dictionaries and formats them as "attr : Type"
+
+The problem: `node.infer()` performs **value-based type inference**, not **annotation-based type extraction**. For `self.a = a` where `a` has annotation `str` but value `None`, it infers `NoneType` instead of `Optional[str]`.
+
+The tests specify the required behavior:
+- `get_annotation(node)` must extract annotations from both `AnnAssign` nodes (e.g., `a: str = None`) and `AssignAttr` nodes (e.g., `self.x = x` in `__init__(self, x: str)`)
+- For annotations that aren't already `Optional` but have default value `None`, wrap them as `Optional[type]`
+- Return an object with a `.name` attribute containing the type string
+- `infer_node(node)` must try annotation extraction first, then fall back to `node.infer()`, handling `InferenceError`
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `tests/unittest_pyreverse_writer.py:32` - `from pylint.pyreverse.utils import get_annotation, get_visibility, infer_node`
+- `pylint/pyreverse/utils.py:1-253` - File contains `get_visibility` but not `get_annotation` or `infer_node`
+- `pylint/pyreverse/inspector.py:233` - `values = set(node.infer())` in `handle_assignattr_type`
+- `pylint/pyreverse/inspector.py:221` - `values = set(node.infer())` in `visit_assignname`
+
+## Edit sites
+
+1. **`pylint/pyreverse/utils.py`** (add new functions after line 60, after `get_visibility`):
+   - Add `get_annotation(node)` function that:
+     - Handles `AnnAssign` nodes: check `node.parent` if node is a value, extract `annotation` attribute
+     - Handles `AssignAttr` nodes: trace to parent function, find corresponding argument annotation in `frame.args.annotations`
+     - Detects if annotation is `Optional` (check if `isinstance(annotation, astroid.Subscript)` and `annotation.value.name == 'Optional'`)
+     - Wraps non-Optional annotations with `Optional` when default value is `None`
+     - Returns object with `.name` attribute containing type string (e.g., `"str"` or `"Optional[str]"`)
+   
+   - Add `infer_node(node)` function that:
+     - Calls `get_annotation(node)` first
+     - If annotation exists, returns `set([annotation])`
+     - If no annotation, falls back to `set(node.infer())`
+     - Catches `astroid.InferenceError` and returns `set()` when both annotation and inference fail
+
+2. **`pylint/pyreverse/inspector.py` line 233** (`handle_assignattr_type`):
+   - Replace `values = set(node.infer())` with call to `infer_node(node)`
+   - Import `infer_node` from `utils`
+
+3. **`pylint/pyreverse/inspector.py` line 221** (`visit_assignname`):
+   - Replace `values = set(node.infer())` with call to `infer_node(node)`
+   - Same import needed
+
+## Competing hypotheses
+
+None — the diagnosis is clear from the ImportError and test structure.
+
+## Rejected hypotheses
+
+None — this is the first iteration with obvious failure mode.
+
+## Open questions
+
+1. How should `get_annotation` return an object with `.name` attribute? Options:
+   - Create a simple class/namedtuple wrapper
+   - Return annotation node directly for `Name` nodes (which have `.name`), create wrapper for `Subscript` nodes
+   - Use `as_string()` method and wrap in an object
+
+2. Should the annotation extraction handle all cases (Union, Literal, etc.) or just basic types and Optional?
+   - Tests only verify `str`, `Optional[str]`, so start minimal
+
+3. Do we need to handle `from typing import Optional` imports, or does astroid resolve this automatically?
+   - Astroid appears to resolve imports during parsing based on earlier exploration
+
+---STDERR---

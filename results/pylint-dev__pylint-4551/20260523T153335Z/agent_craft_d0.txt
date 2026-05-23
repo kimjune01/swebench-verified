@@ -1,0 +1,13 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass! The implementation successfully adds PEP 484 type annotation support to pyreverse:
+
+✅ **18/18 tests passing**
+- `get_annotation()` correctly extracts annotations from both `AnnAssign` and `AssignAttr` nodes
+- Properly wraps non-Optional types in `Optional[...]` when default value is `None`
+- `infer_node()` prioritizes annotations over value-based inference
+- UML diagrams now display correct type information from annotations
+
+The fix enables pyreverse to recognize that `def __init__(self, a: str = None)` should display as `a : Optional[str]` rather than inferring `NoneType` from the default value.
+
+---STDERR---
