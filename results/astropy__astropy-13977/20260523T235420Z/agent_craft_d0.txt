@@ -1,0 +1,13 @@
+## RESOLVED
+
+All FAIL_TO_PASS tests pass. The fix correctly implements NumPy's `__array_ufunc__` protocol by wrapping three critical call sites in `Quantity.__array_ufunc__()`:
+
+1. **converters_and_unit()** - catches TypeError when duck arrays cause conversion setup to fail
+2. **check_output()** - catches TypeError/UnitTypeError when duck-array outputs can't be validated  
+3. **Converter application** - catches ValueError when `_condition_arg()` rejects duck-array values
+
+Each catch checks if the operand has `__array_ufunc__` (and is not a Quantity), then returns `NotImplemented` to allow the duck type to handle the operation. UnitConversionError is still raised for real unit incompatibilities between Quantity objects.
+
+**Gate result**: 342 passed, 4 skipped, 1 xfailed (expected) - all target tests green.
+
+---STDERR---

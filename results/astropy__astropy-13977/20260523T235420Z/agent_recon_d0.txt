@@ -1,0 +1,53 @@
+# Recon: astropy__astropy-13977
+
+## Failure summary
+The tests check that `Quantity.__array_ufunc__()` properly returns `NotImplemented` when it encounters duck-typed Quantity objects that implement their own `__array_ufunc__` protocol. When calling ufuncs like `np.add(quantity, duck_quantity)` or `np.less(quantity, duck_quantity)` with incompatible types, the current implementation raises `ValueError: Value not scalar compatible or convertible to an int, float, or complex array` instead of returning `NotImplemented`. This prevents the duck type's `__array_ufunc__` from handling the operation via NumPy's fallback mechanism.
+
+## Suspect set
+- `astropy/units/quantity.py` lines 620-683: `Quantity.__array_ufunc__()` method - raises exceptions instead of returning `NotImplemented`
+- `astropy/units/core.py` lines 2604-2634: `_condition_arg()` function - raises `ValueError` for unrecognized types
+- `astropy/units/core.py` lines 1056-1074: `UnitBase._get_converter()` method - creates converter lambda that calls `_condition_arg`
+- `astropy/units/quantity_helper/converters.py` lines 141-250: `converters_and_unit()` function - can raise `TypeError` for unsupported operands
+
+## Root cause
+`Quantity.__array_ufunc__()` violates NumPy's ufunc protocol by raising exceptions for incompatible inputs instead of returning `NotImplemented`. The call chain is:
+
+1. `Quantity.__array_ufunc__` (quantity.py:644) calls `converters_and_unit(function, method, *inputs)`
+2. For inputs with compatible units (e.g., 1*u.m and DuckQuantity3(1*u.mm)), a unit converter is created
+3. At core.py:1073, the converter is: `lambda val: scale * _condition_arg(val)`
+4. At quantity.py:670, the converter is applied: `arrays.append(converter(input_) if converter else input_)`
+5. When `converter(duck_quantity)` is called, it invokes `_condition_arg(duck_quantity)`
+6. `_condition_arg` (core.py:2629) raises `ValueError` because DuckQuantity3 is not in its allowlist of types
+7. This ValueError propagates up, preventing `__array_ufunc__` from returning `NotImplemented`
+
+According to NumPy's protocol, `__array_ufunc__` should return `NotImplemented` when it cannot handle inputs, allowing other operands to try. The codebase already follows this pattern in `Quantity.__eq__` (~line 1520), which catches exceptions and returns `NotImplemented`.
+
+Confidence: **abduction** — 80%
+
+Supporting evidence:
+- `astropy/units/quantity.py:670` — converter application raises when input is incompatible type
+- `astropy/units/core.py:1073` — converter lambda calls `_condition_arg(val)`  
+- `astropy/units/core.py:2629` — `raise ValueError("Value not scalar compatible or convertible to an int, float, or complex array")`
+- `astropy/units/quantity.py:~1520` — `__eq__` method already uses `except Exception: return NotImplemented` pattern
+- Test traceback shows ValueError raised from `_condition_arg` during converter application
+
+## Edit sites
+- `astropy/units/quantity.py` lines 644-671 (inside `__array_ufunc__` method):
+  - Wrap the `converters_and_unit()` call (line 644) in try-except
+  - Wrap the converter application loop (lines 668-671) in try-except  
+  - Catch `TypeError` (unsupported operand types) and `ValueError` (incompatible values)
+  - Return `NotImplemented` when these exceptions occur, allowing duck types to handle the operation
+  - Keep existing exception propagation for `UnitConversionError` between two Quantity objects (those should still fail)
+
+## Competing hypotheses
+None — the root cause is clearly identified from the traceback and code flow.
+
+## Rejected hypotheses
+- H₁: Modify `_condition_arg` to accept duck types — killed because `_condition_arg` is used throughout the codebase for unit conversion validation; changing its signature would be too invasive and could break other unit conversion paths.
+- H₂: Modify converters to not call `_condition_arg` — killed because converters need to validate and potentially convert values; removing this would break legitimate unit conversions.
+
+## Open questions
+- Should `UnitConversionError` also trigger `NotImplemented`, or only `TypeError` and `ValueError`? The latter indicates incompatible types (duck types), while `UnitConversionError` typically indicates incompatible units between two Quantity objects (which should still raise).
+- Should exceptions from `check_output()` (when `out` parameter is provided) also return `NotImplemented`? Need to verify test behavior with output arrays.
+
+---STDERR---

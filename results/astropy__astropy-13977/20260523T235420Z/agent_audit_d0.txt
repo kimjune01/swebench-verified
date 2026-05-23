@@ -1,0 +1,48 @@
+# Audit: astropy__astropy-13977
+
+## FAIL_TO_PASS
+All 20 tests from `TestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full` - **ALL PASSED**
+
+### out=None tests (8/8 PASSED):
+- test_full[None-duck_quantity0-quantity0-add]: PASS
+- test_full[None-duck_quantity0-quantity0-less]: PASS
+- test_full[None-duck_quantity0-quantity1-add]: PASS
+- test_full[None-duck_quantity0-quantity1-less]: PASS
+- test_full[None-duck_quantity1-quantity0-add]: PASS
+- test_full[None-duck_quantity1-quantity0-less]: PASS
+- test_full[None-duck_quantity1-quantity1-add]: PASS
+- test_full[None-duck_quantity1-quantity1-less]: PASS
+
+### out=empty tests (12/12 PASSED):
+- test_full[empty-duck_quantity0-quantity0-add]: PASS
+- test_full[empty-duck_quantity0-quantity0-multiply]: PASS
+- test_full[empty-duck_quantity0-quantity0-less]: PASS
+- test_full[empty-duck_quantity0-quantity1-add]: PASS
+- test_full[empty-duck_quantity0-quantity1-multiply]: PASS
+- test_full[empty-duck_quantity0-quantity1-less]: PASS
+- test_full[empty-duck_quantity1-quantity0-add]: PASS
+- test_full[empty-duck_quantity1-quantity0-multiply]: PASS
+- test_full[empty-duck_quantity1-quantity0-less]: PASS
+- test_full[empty-duck_quantity1-quantity1-add]: PASS
+- test_full[empty-duck_quantity1-quantity1-multiply]: PASS
+- test_full[empty-duck_quantity1-quantity1-less]: PASS
+
+## PASS_TO_PASS regressions
+**None** - Zero failures in gate output (342 passed, 4 skipped, 1 xfailed).
+
+## Pre-existing (not counted, confirmed against base capture)
+- 4 skipped tests (baseline behavior)
+- 1 xfailed test (baseline behavior)
+
+## Summary
+Full contract satisfied:
+- ✅ All 20 FAIL_TO_PASS tests now PASS
+- ✅ Zero PASS_TO_PASS regressions  
+- ✅ Full suite green: 342/342 tests passed
+
+The patch wraps three call sites in `Quantity.__array_ufunc__` (converters_and_unit, check_output, converter application) with try-except blocks that return `NotImplemented` for duck-typed arrays, correctly implementing NumPy's ufunc protocol.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

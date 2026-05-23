@@ -1,0 +1,60 @@
+diff --git a/astropy/units/quantity.py b/astropy/units/quantity.py
+index b98abfafb..3e9c1e6f6 100644
+--- a/astropy/units/quantity.py
++++ b/astropy/units/quantity.py
+@@ -640,7 +640,14 @@ class Quantity(np.ndarray):
+         # input to that expected (e.g., radian for np.sin), or to get
+         # consistent units between two inputs (e.g., in np.add) --
+         # and the unit of the result (or tuple of units for nout > 1).
+-        converters, unit = converters_and_unit(function, method, *inputs)
++        try:
++            converters, unit = converters_and_unit(function, method, *inputs)
++        except TypeError as e:
++            # If any input is a duck array, defer via NotImplemented
++            if any(hasattr(inp, "__array_ufunc__") and inp.__array_ufunc__ is not None
++                   and not isinstance(inp, Quantity) for inp in inputs):
++                return NotImplemented
++            raise
+ 
+         out = kwargs.get("out", None)
+         # Avoid loop back by turning any Quantity output into array views.
+@@ -649,7 +656,15 @@ class Quantity(np.ndarray):
+             # This also returns array view, to ensure we don't loop back.
+             if function.nout == 1:
+                 out = out[0]
+-            out_array = check_output(out, unit, inputs, function=function)
++            try:
++                out_array = check_output(out, unit, inputs, function=function)
++            except (TypeError, UnitTypeError) as e:
++                # If any input or output is a duck array, defer via NotImplemented
++                out_list = out if isinstance(out, tuple) else (out,)
++                if any(hasattr(o, "__array_ufunc__") and o.__array_ufunc__ is not None
++                       and not isinstance(o, Quantity) for o in out_list):
++                    return NotImplemented
++                raise
+             # Ensure output argument remains a tuple.
+             kwargs["out"] = (out_array,) if function.nout == 1 else out_array
+ 
+@@ -665,9 +680,19 @@ class Quantity(np.ndarray):
+ 
+         # Same for inputs, but here also convert if necessary.
+         arrays = []
+-        for input_, converter in zip(inputs, converters):
+-            input_ = getattr(input_, "value", input_)
+-            arrays.append(converter(input_) if converter else input_)
++        try:
++            for input_, converter in zip(inputs, converters):
++                input_ = getattr(input_, "value", input_)
++                arrays.append(converter(input_) if converter else input_)
++        except (TypeError, ValueError) as e:
++            # Re-raise UnitConversionError (real unit incompatibility)
++            if isinstance(e, UnitConversionError):
++                raise
++            # If any input is a duck array, defer via NotImplemented
++            if any(hasattr(inp, "__array_ufunc__") and inp.__array_ufunc__ is not None
++                   and not isinstance(inp, Quantity) for inp in inputs):
++                return NotImplemented
++            raise
+ 
+         # Call our superclass's __array_ufunc__
+         result = super().__array_ufunc__(function, method, *arrays, **kwargs)

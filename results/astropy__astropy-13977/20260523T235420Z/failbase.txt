@@ -1,0 +1,122 @@
+$ pytest -rA astropy/units/tests/test_quantity.py astropy/units/tests/test_quantity_ufuncs.py
+
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[maximum-0.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[minimum-0.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[nextafter-0.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[remainder-inf0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[remainder-inf1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_one_arbitrary[fmod-inf][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[add][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[subtract][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[hypot][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[maximum][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[minimum][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[nextafter][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[remainder0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[remainder1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInvariantUfuncs::test_invariant_twoarg_invalid_units[fmod][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[greater][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[greater_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[less_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[not_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_valid_units[equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[greater][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[greater_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[less_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[not_equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_comparison_invalid_units[equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_onearg_test_ufuncs[isfinite][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_onearg_test_ufuncs[isinf][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_onearg_test_ufuncs[isnan][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_onearg_test_ufuncs[signbit][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestComparisonUfuncs::test_sign[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_ufunc_inplace[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_ufunc_inplace[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_ufunc_inplace_2[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_ufunc_inplace_2[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_two_output_ufunc_inplace[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_one_argument_two_output_ufunc_inplace[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_ufunc_inplace_1[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_ufunc_inplace_1[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_ufunc_inplace_2[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_ufunc_inplace_2[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_ufunc_inplace_3[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_two_output_ufunc_inplace[1.0][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_two_argument_two_output_ufunc_inplace[value1][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_ufunc_inplace_non_contiguous_data[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_ufunc_inplace_non_standard_dtype[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_comparison_ufuncs_inplace[equal][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_comparison_ufuncs_inplace[greater][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_onearg_test_ufuncs_inplace[isfinite][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_onearg_test_ufuncs_inplace[signbit][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_sign_inplace[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestInplaceUfuncs::test_ndarray_inplace_op_with_quantity[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_simple[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_unitless_parts[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_dimensionless[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_ndarray[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_quantity_inplace[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_ndarray_dimensionless_output[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestClip::test_clip_errors[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncAt::test_one_argument_ufunc_at[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncAt::test_two_argument_ufunc_at[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReduceReduceatAccumulate::test_one_argument_ufunc_reduce_accumulate[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReduceReduceatAccumulate::test_two_argument_ufunc_reduce_accumulate[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncOuter::test_one_argument_ufunc_outer[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncOuter::test_two_argument_ufunc_outer[0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_basic[duck_quantity0-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_basic[duck_quantity0-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_basic[duck_quantity1-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_basic[duck_quantity1-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[None-duck_quantity0-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[None-duck_quantity0-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[None-duck_quantity1-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[None-duck_quantity1-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[empty-duck_quantity0-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[empty-duck_quantity0-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[empty-duck_quantity1-negative][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestUnaryUfuncs::test_full[empty-duck_quantity1-absolute][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity0-add][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity0-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity0-less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity1-add][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity1-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity0-quantity1-less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity0-add][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity0-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity0-less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity1-add][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity1-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_basic[duck_quantity1-quantity1-less][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity0-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity1-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity0-multiply][0m
+[32mPASSED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity1-multiply][0m
+[33mSKIPPED[0m [1] astropy/units/tests/test_quantity_ufuncs.py:25: unconditional skip
+[33mSKIPPED[0m [1] astropy/units/tests/test_quantity_ufuncs.py:36: unconditional skip
+[33mSKIPPED[0m [1] astropy/units/tests/test_quantity_ufuncs.py:44: unconditional skip
+[33mSKIPPED[0m [1] astropy/units/tests/test_quantity_ufuncs.py:92: need --run-slow option to run
+[33mXFAIL[0m astropy/units/tests/test_quantity.py::[1mTestQuantityOperations::test_numeric_converter_to_index_in_practice[0m - list multiplication only works for numpy <=1.10
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity0-add][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity0-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity1-add][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity0-quantity1-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity0-add][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity0-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity1-add][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[None-duck_quantity1-quantity1-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity0-add][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity0-multiply][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity0-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity1-add][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity1-multiply][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity0-quantity1-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity0-add][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity0-multiply][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity0-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity1-add][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity1-multiply][0m - astropy.units.core.UnitTypeError: Cannot store quantity with dimension resu...
+[31mFAILED[0m astropy/units/tests/test_quantity_ufuncs.py::[1mTestUfuncReturnsNotImplemented::TestBinaryUfuncs::test_full[empty-duck_quantity1-quantity1-less][0m - ValueError: Value not scalar compatible or convertible to an int, float, or...
+[31m============= [31m[1m20 failed[0m, [32m322 passed[0m, [33m4 skipped[0m, [33m1 xfailed[0m[31m in 1.73s[0m[31m =============[0m
