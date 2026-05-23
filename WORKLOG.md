@@ -110,6 +110,15 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-23 — batch_010 launched (in flight)
+
+batch_010 (seed=10, 30 disjoint instances: 18 django, 5 sympy, 2 matplotlib, 2 xarray, 1 each astropy/pytest/sklearn; pool=212, excluded=254). Fresh 10 boxes provisioned (180-min watchdogs), prior batch_009 boxes confirmed terminated. Sharded with the two matplotlib instances solo (b_1: matplotlib-20859, b_2: matplotlib-24026); rest packed 3-4 per box.
+
+- **Launched with `CLAUDE_SUBSCRIPTION=1`** — verified the driver pops `ANTHROPIC_API_KEY` (set in this shell) so billing is the Max plan, not the metered API (rung4_driver.py:55-56). Launch bg `b4fbtfpfa`, log `/tmp/launch_b10.log`.
+- **Monitor armed** (zsh-safe `$~LG`, emit-on-change, failure set incl. `TimeoutExpired`). Counter advancing from 0/30.
+- **Watch items:** 5 sympy + 2 matplotlib carry the heavy-suite craft-DNF risk (see sympy-19040 / matplotlib-25311). Honest losses if they trip the 3600s cap, not bugs.
+- **RESUME STATE:** if session drops mid-run — boxes alive (`/tmp/b_*.env`), launch in bg. On completion: `wc -c` sweep → `grade_batch.sh b_1..b_10` → tally by batch_010 ids → `archive_batch.py` → `scoreboard.py` → commit → tear down all 10 + leak-sweep.
+
 ## 2026-05-24 — batch_009 archived: 28/30 (first genuine reasoning loss); session close
 
 batch_009 (seed=9, 30 disjoint: 16 django, 4 matplotlib, 4 sympy, +spread) graded + archived, RUNID 20260523T173023Z. **Official 28/30.** Scoreboard now **221/226 (~98%)**, 230 total runs. Two losses, two *different* kinds:
