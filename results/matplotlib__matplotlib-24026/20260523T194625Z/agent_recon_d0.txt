@@ -1,0 +1,67 @@
+# Recon: matplotlib__matplotlib-24026
+
+## Failure summary
+
+The tests `test_stackplot[png]` and `test_stackplot[pdf]` fail when calling `ax.stackplot("x", "y1", "y2", "y3", data=data, colors=["C0", "C1", "C2"])`. The test checks that stackplot accepts CN color references (like 'C0', 'C1', 'C2') - the same color cycle syntax that works in `ax.plot()` and `matplotlib.patches.Rectangle()`. 
+
+The failure occurs at `lib/matplotlib/rcsetup.py:285` with error: `ValueError: Cannot put cycle reference ('C0') in prop_cycler`. The stack trace shows: `test_stackplot` → `stackplot:73` → `set_prop_cycle` → `cycler` → `validate_color_for_prop_cycle` which explicitly rejects CN references.
+
+## Suspect set
+
+- `lib/matplotlib/stackplot.py` lines 70-74: Sets axes property cycle with user colors (including CN refs)
+- `lib/matplotlib/stackplot.py` lines 118, 124: Gets colors via `axes._get_lines.get_next_color()`
+- `lib/matplotlib/rcsetup.py` lines 282-285: Validates colors for prop_cycle and rejects CN references
+
+## Root cause
+
+The stackplot function permanently modifies the axes property cycle by calling `axes.set_prop_cycle(color=colors)` at line 73, where `colors` may contain CN color references like 'C0', 'C1', 'C2'. 
+
+The validation function `validate_color_for_prop_cycle` (rcsetup.py:282-285) explicitly forbids CN references because they create a circular dependency: CN references are meant to be *resolved from* the color cycle, not put *into* it. The regex `^C[0-9]$` detects them and raises ValueError.
+
+This approach has two problems:
+1. **The bug:** Fails when users provide CN color references
+2. **Design issue:** Permanently changes the axes cycler (violates issue title: "stackplot should not change Axes cycler")
+
+The historical context: stackplot originally used `set_color_cycle()` (2012), then migrated to `set_prop_cycle()` (2015) to fix a deprecation warning, but the fundamental approach of modifying the axes cycler remained.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `lib/matplotlib/stackplot.py:73` — `axes.set_prop_cycle(color=colors)`
+- `lib/matplotlib/rcsetup.py:285` — `raise ValueError(f"Cannot put cycle reference ({s!r}) in prop_cycler")`
+- `lib/matplotlib/colors.py:290-292` — `to_rgba()` resolves CN refs: checks `_is_nth_color(c)`, then looks up from `mpl.rcParams['axes.prop_cycle']`
+- Verified behavior: `to_rgba("C0")` returns `(0.121..., 0.466..., 0.705..., 1.0)` — actual RGBA
+
+## Edit sites
+
+1. **`lib/matplotlib/stackplot.py` lines 9-11** (imports section):
+   - Add `import itertools` 
+   - Add `from matplotlib import colors`
+
+2. **`lib/matplotlib/stackplot.py` lines 70-74** (color handling):
+   - Remove the `axes.set_prop_cycle(color=colors)` call
+   - Instead: resolve CN references in `colors` list using `colors.to_rgba()` for each color
+   - Create a local color iterator using `itertools.cycle()` over the resolved colors
+   - If `colors is None`, get default colors from the axes prop cycle instead
+
+3. **`lib/matplotlib/stackplot.py` line 118** (first fill_between call):
+   - Replace `color = axes._get_lines.get_next_color()` with `color = next(color_iter)`
+
+4. **`lib/matplotlib/stackplot.py` line 124** (loop fill_between calls):
+   - Replace `color = axes._get_lines.get_next_color()` with `color = next(color_iter)`
+
+## Competing hypotheses
+
+None — the code path is deterministic and the fix is clear from reading the validation logic and color resolution mechanism.
+
+## Rejected hypotheses
+
+- **H₁: Modify the validator to accept CN references** — Rejected because CN references genuinely shouldn't go into the prop cycle (circular dependency). The validator is correct; stackplot's usage is wrong.
+
+- **H₂: Pre-validate colors but still use set_prop_cycle** — Rejected because this still modifies the axes cycler permanently, violating the requirement "stackplot should not change Axes cycler" from the issue title.
+
+## Open questions
+
+None — the fix is straightforward: resolve colors locally, use local iterator, don't modify axes cycler.
+
+---STDERR---

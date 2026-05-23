@@ -1,0 +1,14 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests are now passing:
+- `lib/matplotlib/tests/test_axes.py::test_stackplot[png]` ✅ 
+- `lib/matplotlib/tests/test_axes.py::test_stackplot[pdf]` ✅
+
+The fix successfully resolves the issue by:
+1. Creating a local color iterator with `itertools.cycle(colors)` instead of modifying the axes property cycle
+2. Using `next(colors)` when colors are provided, preserving the original `axes._get_lines.get_next_color()` behavior when colors=None
+3. Allowing CN color references (like 'C0', 'C1', 'C2') to pass through to `fill_between`, which already handles them correctly
+
+This minimal change avoids the circular dependency validation error while preserving all existing behavior and not modifying the axes cycler.
+
+---STDERR---

@@ -1,0 +1,42 @@
+# Audit: matplotlib__matplotlib-24026
+
+## Patch verification
+
+```
+ lib/matplotlib/stackplot.py | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+```
+
+Patch is live in the container.
+
+## FAIL_TO_PASS
+
+- `lib/matplotlib/tests/test_axes.py::test_stackplot[png]`: **PASS** ✅
+- `lib/matplotlib/tests/test_axes.py::test_stackplot[pdf]`: **PASS** ✅
+
+Both required tests now pass.
+
+## PASS_TO_PASS regressions
+
+**None.** Gate output shows 767 passed, 64 skipped, 0 failed. All tests that passed on base continue to pass.
+
+## Pre-existing failures (not counted)
+
+**None.** The fail-on-base capture showed all tests passing, and the gate confirms all tests still pass.
+
+## Verdict analysis
+
+✅ **All FAIL_TO_PASS tests pass**: Both `test_stackplot[png]` and `test_stackplot[pdf]` now pass.  
+✅ **Zero PASS_TO_PASS regressions**: Full suite shows 767 passed with no failures.  
+✅ **Contract satisfied**: Fix resolves the CN color reference issue without breaking existing functionality.
+
+The patch successfully:
+1. Fixes the ValueError with CN color references in stackplot
+2. Stops stackplot from modifying the axes property cycle
+3. Preserves default color cycling behavior when colors=None
+4. Introduces zero regressions across the full test suite
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
