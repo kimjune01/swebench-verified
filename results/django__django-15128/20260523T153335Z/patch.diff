@@ -1,0 +1,42 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index aaf35ee37c..f626aedf8e 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -572,6 +572,37 @@ class Query(BaseExpression):
+         if self.distinct_fields != rhs.distinct_fields:
+             raise TypeError('Cannot combine queries with different distinct fields.')
+ 
++        # Clone rhs to avoid mutating the original
++        rhs = rhs.clone()
++
++        # Bump rhs alias prefix if it conflicts with lhs, excluding the base
++        # table to avoid orphaning base table references
++        if self.alias_prefix == rhs.alias_prefix and rhs.alias_map:
++            # Find a non-conflicting prefix by checking against combined subq_aliases
++            from string import ascii_uppercase
++            new_prefix = None
++            for candidate_prefix in ascii_uppercase:
++                if ord(candidate_prefix) > ord(rhs.alias_prefix):
++                    if candidate_prefix not in (self.subq_aliases | rhs.subq_aliases):
++                        new_prefix = candidate_prefix
++                        break
++            
++            if new_prefix:
++                rhs.alias_prefix = new_prefix
++                # Get base table alias (first in alias_map, which is the base table)
++                base_alias = list(rhs.alias_map)[0]
++                # Relabel all non-base aliases
++                change_map_bump = {}
++                for pos, alias in enumerate(rhs.alias_map):
++                    if alias != base_alias:
++                        new_alias = '%s%d' % (rhs.alias_prefix, pos)
++                        if alias != new_alias:
++                            change_map_bump[alias] = new_alias
++                if change_map_bump:
++                    rhs.change_aliases(change_map_bump)
++                rhs.subq_aliases = rhs.subq_aliases.union([rhs.alias_prefix])
++                self.subq_aliases = self.subq_aliases.union(rhs.subq_aliases)
++
+         # Work out how to relabel the rhs aliases, if necessary.
+         change_map = {}
+         conjunction = (connector == AND)

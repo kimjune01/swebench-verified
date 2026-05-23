@@ -1,0 +1,81 @@
+Perfect! I've completed the recon diagnosis. Here's my handoff:
+
+# Recon: django__django-15128
+
+## Failure summary
+
+The test `test_conflicting_aliases_during_combine` creates two querysets that, when combined with the OR operator (`|`), should be commutative (qs1 | qs2 == qs2 | qs1). However, one ordering succeeds while the other raises an AssertionError in `Query.change_aliases()` at line 849:
+
+```
+assert set(change_map).isdisjoint(change_map.values())
+```
+
+This assertion checks that the keys and values of `change_map` don't overlap. The error occurs when `change_map` contains entries like `{'T4': 'T5', 'T5': 'T6'}`, where 'T5' appears as both a key and a value, violating the disjoint requirement.
+
+## Suspect set
+
+- `django/db/models/sql/query.py` lines 595-620: `combine()` method where change_map is constructed
+- `django/db/models/sql/query.py` lines 951-987: `join()` method that creates new aliases
+- `django/db/models/sql/query.py` lines 748-772: `table_alias()` method that generates sequential alias names
+- `django/db/models/sql/query.py` line 849: The assertion that fails
+
+## Root cause
+
+When combining two queries with the OR operator, `Query.combine()` iterates through the right-hand side (rhs) query's aliases and adds them to the left-hand side (lhs) query. For each rhs alias, it calls `self.join()` which may create a new alias via `table_alias()`.
+
+The problem occurs in `table_alias()` at line 764:
+```python
+alias = '%s%d' % (self.alias_prefix, len(self.alias_map) + 1)
+```
+
+New aliases are generated sequentially based on the current length of `self.alias_map`. When:
+1. The lhs query has N aliases (e.g., base_table, T2, T3, so len=3)
+2. The rhs query has sequential aliases including T4, T5, T6
+3. During combine, when processing rhs's first alias (say T2), a new alias T4 is created (len=3+1=4)
+4. The change_map records: `{T2: T4}`
+5. When processing rhs's next alias (T3), a new alias T5 is created
+6. The change_map becomes: `{T2: T4, T3: T5}`
+7. When processing rhs's T4, a new alias T6 must be created (can't reuse T4 as it was just created)
+8. The change_map becomes: `{T2: T4, T3: T5, T4: T6}`
+9. **Now T4 appears as both a key and a value**, violating the assertion
+
+The sequential alias generation in `table_alias()` doesn't account for aliases that exist in rhs but haven't been processed yet. It creates aliases that will later need to be remapped themselves, causing the key-value intersection.
+
+**Confidence: deduction — 95%**
+
+**Supporting evidence:**
+- `django/db/models/sql/query.py:764` — Sequential alias generation: `alias = '%s%d' % (self.alias_prefix, len(self.alias_map) + 1)`
+- `django/db/models/sql/query.py:607` — combine() calls `self.join(join, reuse=reuse)` without awareness of rhs aliases
+- `django/db/models/sql/query.py:616` — change_map populated: `if alias != new_alias: change_map[alias] = new_alias`
+- `django/db/models/sql/query.py:849` — The assertion that catches the conflict
+- Stack trace shows the relabeling fails when processing the where clause: `w.relabel_aliases(change_map)`
+
+## Edit sites
+
+**Primary fix location:**
+
+1. `django/db/models/sql/query.py` lines 748-772: Modify `table_alias()` to accept an optional parameter `aliases_to_avoid` (set of alias names). When creating a new alias (line 764), increment the counter until finding an alias name not in the avoid set or already in `self.alias_map`.
+
+2. `django/db/models/sql/query.py` lines 951-987: Modify `join()` to accept an optional parameter `aliases_to_avoid` and pass it through to the `table_alias()` call at line 983.
+
+3. `django/db/models/sql/query.py` lines 600-620: In `combine()`, before the loop over `rhs_tables`, collect `rhs.alias_map.keys()` into a set. When calling `self.join(join, reuse=reuse)` at line 607, pass this set as the `aliases_to_avoid` parameter.
+
+**Alternative fix (simpler but less clean):**
+
+In `combine()` only: After line 607 where `new_alias = self.join(join, reuse=reuse)` returns, check if `new_alias` exists in the remaining unprocessed rhs aliases. If so, repeatedly call `table_alias()` to generate alternative aliases until finding one that doesn't conflict. Update the alias_map accordingly. This avoids modifying method signatures but adds complexity to combine().
+
+## Rejected hypotheses
+
+- **H₁: The assertion itself is wrong** — Rejected because the assertion enforces a valid invariant: if change_map contains overlapping keys and values, applying it would require multiple passes or careful ordering, which the code doesn't implement. The assertion has existed since 2008 (queryset-refactor merge) and correctly catches an invalid state.
+
+- **H₂: The reuse logic is wrong** — Rejected because the reuse mechanism works correctly for OR operations (all lhs aliases are available for reuse). The problem occurs specifically when no reusable join exists and a new alias must be created with a conflicting name.
+
+- **H₃: The iteration order is wrong** — Rejected because changing the iteration order of `rhs_tables` doesn't eliminate the fundamental problem: sequential alias generation will eventually collide with rhs aliases regardless of order.
+
+## Open questions
+
+- Should the fix avoid ALL aliases in the original `rhs.alias_map`, or only the ones not yet processed? (Analysis: should avoid ALL, because even processed aliases shouldn't be recreated with conflicting names)
+- Are there performance implications of checking against a set on every alias generation? (Likely negligible since the set is small)
+- Do any other methods besides `combine()` call `join()` in contexts where alias conflicts could occur? (Preliminary check: other callers don't have this issue as they don't have an external alias_map to avoid)
+
+---STDERR---

@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 queries.models queries.tests
+
+A ValueError is raised when the incorrect object type is passed to a ... ok
+test_reverse_trimming (queries.tests.ReverseJoinTrimmingTest) ... ok
+test_ticket_21879 (queries.tests.ReverseM2MCustomPkTests) ... ok
+test_tickets_3045_3288 (queries.tests.SelectRelatedTests) ... ok
+test_ticket7778 (queries.tests.SubclassFKTests) ... ok
+test_distinct_ordered_sliced_subquery (queries.tests.SubqueryTests) ... ok
+test_ordered_subselect (queries.tests.SubqueryTests)
+Subselects honor any manual ordering ... ok
+test_related_sliced_subquery (queries.tests.SubqueryTests)
+Related objects constraints can safely contain sliced subqueries. ... ok
+test_slice_subquery_and_query (queries.tests.SubqueryTests)
+Slice a query that has a sliced subquery ... ok
+test_sliced_delete (queries.tests.SubqueryTests)
+Delete queries can safely contain sliced subqueries ... ok
+test_ticket_24278 (queries.tests.TestTicket24279) ... ok
+test_ticket_24605 (queries.tests.TestTicket24605)
+Subquery table names should be quoted. ... ok
+test_ticket_12807 (queries.tests.Ticket12807Tests) ... ok
+test_ticket_14056 (queries.tests.Ticket14056Tests) ... ok
+test_ticket_20101 (queries.tests.Ticket20101Tests)
+Tests QuerySet ORed combining in exclude subquery case. ... ok
+test_ticket_20788 (queries.tests.Ticket20788Tests) ... ok
+test_ticket_20955 (queries.tests.Ticket20955Tests) ... ok
+test_ticket_21203 (queries.tests.Ticket21203Tests) ... ok
+test_ticket_22429 (queries.tests.Ticket22429Tests) ... ok
+test_ticket_23605 (queries.tests.Ticket23605Tests) ... ok
+test_ticket_23622 (queries.tests.Ticket23622Tests)
+Make sure __pk__in and __in work the same for related fields when ... skipped "Database doesn't support feature(s): can_distinct_on_fields"
+test_in_query (queries.tests.ToFieldTests) ... ok
+test_in_subquery (queries.tests.ToFieldTests) ... ok
+test_nested_in_subquery (queries.tests.ToFieldTests) ... ok
+test_recursive_fk (queries.tests.ToFieldTests) ... ok
+test_recursive_fk_reverse (queries.tests.ToFieldTests) ... ok
+test_reverse_in (queries.tests.ToFieldTests) ... ok
+test_single_object (queries.tests.ToFieldTests) ... ok
+test_single_object_reverse (queries.tests.ToFieldTests) ... ok
+test_non_nullable_fk_not_promoted (queries.tests.ValuesJoinPromotionTests) ... ok
+test_ticket_21376 (queries.tests.ValuesJoinPromotionTests) ... ok
+test_values_no_promotion_for_existing (queries.tests.ValuesJoinPromotionTests) ... ok
+test_extra_multiple_select_params_values_order_by (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_select_params_values_order_in_extra (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_values (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_values_list (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_values_order_in_extra (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_values_order_multiple (queries.tests.ValuesQuerysetTests) ... ok
+test_extra_values_order_twice (queries.tests.ValuesQuerysetTests) ... ok
+test_field_error_values_list (queries.tests.ValuesQuerysetTests) ... ok
+test_flat_extra_values_list (queries.tests.ValuesQuerysetTests) ... ok
+test_flat_values_list (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_bad_field_name (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_expression (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_expression_with_default_alias (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_flat (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_with_fields (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_list_without_fields (queries.tests.ValuesQuerysetTests) ... ok
+test_named_values_pickle (queries.tests.ValuesQuerysetTests) ... ok
+test_values_in_subquery (queries.tests.ValuesSubqueryTests) ... ok
+test_empty_resultset_sql (queries.tests.WeirdQuerysetSlicingTests) ... ok
+test_empty_sliced_subquery (queries.tests.WeirdQuerysetSlicingTests) ... ok
+test_empty_sliced_subquery_exclude (queries.tests.WeirdQuerysetSlicingTests) ... ok
+test_tickets_7698_10202 (queries.tests.WeirdQuerysetSlicingTests) ... ok
+test_zero_length_values_slicing (queries.tests.WeirdQuerysetSlicingTests) ... ok
+test_emptyqueryset_values (queries.tests.EmptyQuerySetTests) ... ok
+test_ticket_19151 (queries.tests.EmptyQuerySetTests) ... ok
+test_values_subquery (queries.tests.EmptyQuerySetTests) ... ok
+test_empty_string_promotion (queries.tests.EmptyStringPromotionTests) ... ok
+test_ticket10432 (queries.tests.GeneratorExpressionTests) ... ok
+test_invalid_order_by (queries.tests.QuerySetExceptionTests) ... ok
+test_invalid_order_by_raw_column_alias (queries.tests.QuerySetExceptionTests) ... ok
+test_invalid_queryset_model (queries.tests.QuerySetExceptionTests) ... ok
+test_iter_exceptions (queries.tests.QuerySetExceptionTests) ... ok
+test_invalid_values (queries.tests.TestInvalidValuesRelation) ... ok
+test_ticket_18785 (queries.tests.Ticket18785Tests) ... ok
+test_empty_full_handling_conjunction (queries.tests.WhereNodeTest) ... ok
+test_empty_full_handling_disjunction (queries.tests.WhereNodeTest) ... ok
+test_empty_nodes (queries.tests.WhereNodeTest) ... ok
+test_annotated_default_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_annotated_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_annotated_values_default_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_cleared_default_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_empty_queryset (queries.tests.QuerysetOrderedTests) ... ok
+test_explicit_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_no_default_or_explicit_ordering (queries.tests.QuerysetOrderedTests) ... ok
+test_order_by_extra (queries.tests.QuerysetOrderedTests) ... ok
+test_AB_ACB (queries.tests.UnionTests) ... ok
+test_A_AB (queries.tests.UnionTests) ... ok
+test_A_AB2 (queries.tests.UnionTests) ... ok
+test_BAB_BAC (queries.tests.UnionTests) ... ok
+test_BAB_BACB (queries.tests.UnionTests) ... ok
+test_BA_BCA__BAB_BAC_BCA (queries.tests.UnionTests) ... ok
+
+======================================================================
+FAIL: test_conflicting_aliases_during_combine (queries.tests.QuerySetBitwiseOperationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/tests.py", line 2150, in test_conflicting_aliases_during_combine
+    self.assertCountEqual(qs2 | qs1, qs1 | qs2)
+  File "/testbed/django/db/models/query.py", line 351, in __or__
+    combined.query.combine(other.query, sql.OR)
+  File "/testbed/django/db/models/sql/query.py", line 632, in combine
+    w.relabel_aliases(change_map)
+  File "/testbed/django/db/models/sql/where.py", line 138, in relabel_aliases
+    child.relabel_aliases(change_map)
+  File "/testbed/django/db/models/sql/where.py", line 140, in relabel_aliases
+    self.children[pos] = child.relabeled_clone(change_map)
+  File "/testbed/django/db/models/expressions.py", line 340, in relabeled_clone
+    clone.set_source_expressions([
+  File "/testbed/django/db/models/expressions.py", line 341, in <listcomp>
+    e.relabeled_clone(change_map) if e is not None else None
+  File "/testbed/django/db/models/sql/query.py", line 360, in relabeled_clone
+    clone.change_aliases(change_map)
+  File "/testbed/django/db/models/sql/query.py", line 849, in change_aliases
+    assert set(change_map).isdisjoint(change_map.values())
+AssertionError
+
+----------------------------------------------------------------------
+Ran 295 tests in 0.482s
+
+FAILED (failures=1, skipped=3, expected failures=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

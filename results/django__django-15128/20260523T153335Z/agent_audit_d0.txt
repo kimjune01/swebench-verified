@@ -1,0 +1,18 @@
+# Audit: django__django-15128
+
+## FAIL_TO_PASS
+- test_conflicting_aliases_during_combine (queries.tests.QuerySetBitwiseOperationTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted)
+None relevant to the fix. The 2 expected failures and 3 skipped tests in the gate output are baseline behavior.
+
+## Summary
+The craft patch successfully resolves the issue. The fix bumps rhs query aliases to a non-conflicting prefix when combining queries, preventing the disjoint assertion failure in `change_aliases()`. All 295 tests passed with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

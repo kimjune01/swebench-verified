@@ -1,0 +1,13 @@
+Perfect! The fix is complete and all tests pass.
+
+**RESOLVED**
+
+The fix clones the rhs query and bumps its alias prefix when it conflicts with the lhs prefix, excluding the base table from renumbering to preserve the base table sharing contract. This prevents the `change_map` disjoint assertion failure by ensuring that newly created aliases (like T4, T5, T6) don't collide with rhs aliases that will later become keys in the change_map.
+
+**Final summary:**
+- **FAIL_TO_PASS test**: ✓ `test_conflicting_aliases_during_combine` now passes
+- **Regressions**: None - all 425 queries tests pass
+- **Changes**: 31 lines added to `django/db/models/sql/query.py` in the `combine()` method
+- **Approach**: Clone rhs, find non-conflicting prefix, relabel non-base aliases, update subq_aliases tracking
+
+---STDERR---
