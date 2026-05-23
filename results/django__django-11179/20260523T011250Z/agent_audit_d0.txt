@@ -1,0 +1,23 @@
+# Audit: django__django-11179
+
+## FAIL_TO_PASS
+- `test_fast_delete_instance_set_pk_none (delete.tests.FastDeleteTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+- **none**
+
+## Pre-existing (not counted, confirmed against base capture)
+- **none**
+
+## Summary
+The patch successfully resolves the issue by adding `setattr(instance, model._meta.pk.attname, None)` immediately after the fast delete SQL execution. This ensures the instance PK is cleared in the fast delete path, matching the behavior of the normal deletion path.
+
+**Full contract satisfied:**
+- ✅ All FAIL_TO_PASS tests pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (0 of 41 regressed)
+- ✅ Gate shows 42 tests OK (skipped=1)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

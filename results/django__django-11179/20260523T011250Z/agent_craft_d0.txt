@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_fast_delete_instance_set_pk_none` pass. The fast delete optimization path now clears the instance PK after deletion, matching the behavior of the normal deletion path.
+
+---STDERR---

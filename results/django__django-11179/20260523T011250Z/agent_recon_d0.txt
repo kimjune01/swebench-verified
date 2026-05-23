@@ -1,0 +1,36 @@
+# Recon: django__django-11179
+
+## Failure summary
+
+The test `test_fast_delete_instance_set_pk_none` creates a User instance with no dependencies, verifies it can be fast-deleted, calls `.delete()` on it, and expects the PK to be None afterward. The test fails with `AssertionError: 1 is not None` — the PK remains 1 after deletion instead of being cleared to None.
+
+## Suspect set
+
+- `django/db/models/deletion.py` lines 274-280: Fast delete optimization path that handles single instances with no dependencies. This path returns early without clearing the instance PK.
+
+## Root cause
+
+The `Collector.delete()` method has two execution paths. The normal path (lines 282-327) correctly sets deleted instance PKs to None at line 326. However, the fast delete optimization path (lines 274-280) performs the SQL delete and returns immediately at line 280 without setting the instance PK to None.
+
+When `Model.delete()` is called on an instance with no dependencies and no signal listeners, the collector's `can_fast_delete()` returns True, triggering the fast path. This optimization executes `sql.DeleteQuery(model).delete_batch([instance.pk], self.using)` to delete from the database, but never updates the in-memory instance object to reflect that it's been deleted.
+
+Confidence: **deduction — 98%**
+
+Supporting evidence:
+- `django/db/models/deletion.py:280` — `return count, {model._meta.label: count}` returns immediately after SQL delete
+- `django/db/models/deletion.py:326` — `setattr(instance, model._meta.pk.attname, None)` is only reached in normal path, not fast delete path
+- `django/db/models/base.py:919` — `return collector.delete()` shows the collector's return value becomes the Model.delete() return value, so the instance passed to the collector is the same object whose PK should be cleared
+
+## Edit sites
+
+- `django/db/models/deletion.py` lines 278-280: Before the return statement on line 280, add `setattr(instance, model._meta.pk.attname, None)` to clear the PK of the deleted instance, matching the behavior of the normal deletion path at line 326.
+
+## Rejected hypotheses
+
+None — the root cause is evident from code inspection. The fast delete path is a performance optimization that skips signal sending and relationship handling, but it must still maintain the same postcondition as the normal path: deleted instances have their PK set to None.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single insertion point.
+
+---STDERR---
