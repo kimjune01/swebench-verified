@@ -1,0 +1,3 @@
+**RESOLVED** — the FAIL_TO_PASS test passes. Fixed by swapping `args.extend(parameters)` and the `if dbname` block to ensure command-line options appear before the database name in psql invocations, matching PostgreSQL's syntax requirements.
+
+---STDERR---

@@ -1,0 +1,34 @@
+# Recon: django__django-15851
+
+## Failure summary
+The test `test_parameters` in `tests/dbshell/test_postgresql.py` verifies that additional command-line parameters passed to `./manage.py dbshell` are correctly positioned in the psql invocation. The test fails because parameters are appended **after** the database name (`['psql', 'dbname', '--help']`) instead of **before** it (`['psql', '--help', 'dbname']`). PostgreSQL's `psql` tool requires all options to precede the database name positional argument; options placed after the database name are ignored with "extra command-line argument ignored" warnings.
+
+## Suspect set
+- `django/db/backends/postgresql/client.py` lines 36-40: The `settings_to_cmd_args_env` method constructs the psql command arguments but places the database name before extending parameters.
+
+## Root cause
+In the `DatabaseClient.settings_to_cmd_args_env` class method, the database name is appended to the args list (lines 36-37), and then parameters are extended (line 40). This violates psql's command-line syntax requirement that options must appear before the database name.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/backends/postgresql/client.py:36-40`:
+  ```python
+  if dbname:
+      args += [dbname]
+  args.extend(parameters)
+  ```
+- psql syntax: `psql [OPTION]... [DBNAME [USERNAME]]` — options before dbname
+- Test expectation explicitly checks for `['psql', '--help', 'dbname']` order
+- Git history shows this was introduced in commit `5b884d45ac` (2020) when parameters support was added; the implementation simply appended parameters without considering psql's syntax requirements
+
+## Edit sites
+- `django/db/backends/postgresql/client.py` lines 36-40: Swap the order — call `args.extend(parameters)` **before** conditionally appending the database name. This ensures all command-line options appear before the dbname positional argument in the final psql invocation.
+
+## Rejected hypotheses
+None — the code path is straightforward and the fix is unambiguous.
+
+## Open questions
+None — this is a simple argument ordering fix isolated to PostgreSQL backend. MySQL and SQLite have different command-line syntax and correctly place their database names before parameters (confirmed by examining their passing `test_parameters` tests).
+
+---STDERR---

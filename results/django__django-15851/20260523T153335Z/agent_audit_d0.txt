@@ -1,0 +1,26 @@
+# Audit: django__django-15851
+
+## FAIL_TO_PASS
+- `test_parameters` - **PASS** ✓ (was FAIL on base)
+
+## PASS_TO_PASS regressions
+None - all PASS_TO_PASS tests continue to pass:
+- test_accent - ok ✓
+- test_basic - ok ✓
+- test_column - ok ✓
+- test_crash_password_does_not_leak - ok ✓
+- test_nopass - ok ✓
+- test_passfile - ok ✓
+- test_service - ok ✓
+- test_ssl_certificate - ok ✓
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_sigint_handler - skipped (requires PostgreSQL connection, already skipped on base)
+
+## Kill report
+Not applicable - issue fully resolved with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
