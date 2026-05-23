@@ -1,0 +1,45 @@
+Now I'll output my diagnosis to stdout:
+
+```markdown
+# Recon: matplotlib__matplotlib-24637
+
+## Failure summary
+
+The test `test_annotationbbox_gid` creates an AnnotationBbox with a gid set via `ab.set_gid("a test for issue 20044")`, then saves the figure to SVG format and checks that the SVG output contains `<g id="a test for issue 20044">`. The test fails with an assertion error because this expected string is not found in the SVG output—the gid attribute is not being rendered even though it's set on the AnnotationBbox object.
+
+## Suspect set
+
+- `lib/matplotlib/offsetbox.py` lines 1449-1464: AnnotationBbox.draw() method - does not wrap its rendering with renderer.open_group()/close_group() calls
+
+## Root cause
+
+The AnnotationBbox.draw() method at line 1449 in offsetbox.py does not wrap its drawing operations with `renderer.open_group()` and `renderer.close_group()` calls. This is the standard pattern used across all matplotlib artists to emit gid attributes to SVG output. When an artist's draw method doesn't include these wrapper calls, the gid set via `set_gid()` is stored on the object but never passed to the renderer, so it doesn't appear in the SVG output.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `lib/matplotlib/offsetbox.py:1449-1464` — AnnotationBbox.draw() has no open_group/close_group calls
+- `lib/matplotlib/text.py:749` — Text.draw() uses `renderer.open_group('text', self.get_gid())`
+- `lib/matplotlib/text.py:810` — Text.draw() uses `renderer.close_group('text')`
+- `lib/matplotlib/legend.py:649` — Legend.draw() uses `renderer.open_group('legend', gid=self.get_gid())`
+- `lib/matplotlib/legend.py:669` — Legend.draw() uses `renderer.close_group('legend')`
+- Pattern confirmed across 15+ other artists via grep: axes, axis, collections, figure, lines, patches, table all follow this pattern
+
+## Edit sites
+
+- `lib/matplotlib/offsetbox.py` lines 1449-1464: Modify AnnotationBbox.draw() to wrap drawing operations with renderer group calls:
+  - Add `renderer.open_group('annotation', gid=self.get_gid())` after the visibility/position check at line 1454 (after `self.update_positions(renderer)`)
+  - Add `renderer.close_group('annotation')` before `self.stale = False` at line 1463
+
+The modification should follow the exact pattern used by Legend, Text, and other artists: open the group after early returns but before any drawing, close it after all drawing but before setting stale=False.
+
+## Rejected hypotheses
+
+None—the root cause is clear from code inspection and matches the established pattern across the entire codebase.
+
+## Open questions
+
+None—the fix is straightforward and well-established.
+```
+
+---STDERR---

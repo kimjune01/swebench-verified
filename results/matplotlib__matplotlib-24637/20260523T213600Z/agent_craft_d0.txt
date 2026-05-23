@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. The AnnotationBbox.draw() method now properly emits gid attributes to SVG output by wrapping its drawing operations with `renderer.open_group()` and `renderer.close_group()` calls, matching the pattern used across all other matplotlib artists.
+
+---STDERR---

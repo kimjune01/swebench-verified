@@ -1,0 +1,20 @@
+# Audit: matplotlib__matplotlib-24637
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_backend_svg.py::test_annotationbbox_gid: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Analysis
+The craft patch (2 insertions in lib/matplotlib/offsetbox.py) successfully resolves the issue. The failing test `test_annotationbbox_gid` now passes, and all 30 PASS_TO_PASS tests remain passing with zero regressions. The gate shows 31 passed, 19 skipped (Inkscape/font dependencies, consistent with base).
+
+The fix adds the standard matplotlib open_group/close_group pattern to AnnotationBbox.draw(), allowing gid attributes to emit to SVG output as expected by the test.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

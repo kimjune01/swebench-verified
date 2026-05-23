@@ -1,0 +1,55 @@
+2026-05-23 21:33:32,578 - INFO - Creating container for matplotlib__matplotlib-24637...
+2026-05-23 21:33:43,959 - INFO - Container for matplotlib__matplotlib-24637 created: ceb9ba5097b4a44e6e72126d6b04b9cb50a4d691753eee8b23d14d8dd50004d3
+2026-05-23 21:33:44,274 - INFO - Container for matplotlib__matplotlib-24637 started: ceb9ba5097b4a44e6e72126d6b04b9cb50a4d691753eee8b23d14d8dd50004d3
+2026-05-23 21:33:44,274 - INFO - Intermediate patch for matplotlib__matplotlib-24637 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-24637/patch.diff, now applying to container...
+2026-05-23 21:33:44,382 - INFO - >>>>> Applied Patch:
+Checking patch lib/matplotlib/offsetbox.py...
+Applied patch lib/matplotlib/offsetbox.py cleanly.
+
+2026-05-23 21:33:45,366 - INFO - Git diff before:
+diff --git a/lib/matplotlib/offsetbox.py b/lib/matplotlib/offsetbox.py
+index efa34dd078..c295c42634 100644
+--- a/lib/matplotlib/offsetbox.py
++++ b/lib/matplotlib/offsetbox.py
+@@ -1452,6 +1452,7 @@ or callable, default: value of *xycoords*
+             self._renderer = renderer
+         if not self.get_visible() or not self._check_xy(renderer):
+             return
++        renderer.open_group(self.__class__.__name__, gid=self.get_gid())
+         self.update_positions(renderer)
+         if self.arrow_patch is not None:
+             if self.arrow_patch.figure is None and self.figure is not None:
+@@ -1459,6 +1460,7 @@ or callable, default: value of *xycoords*
+             self.arrow_patch.draw(renderer)
+         self.patch.draw(renderer)
+         self.offsetbox.draw(renderer)
++        renderer.close_group(self.__class__.__name__)
+         self.stale = False
+2026-05-23 21:33:45,367 - INFO - Eval script for matplotlib__matplotlib-24637 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-24637/eval.sh; copying to container...
+2026-05-23 21:34:39,112 - INFO - Test runtime: 53.67 seconds
+2026-05-23 21:34:39,112 - INFO - Test output for matplotlib__matplotlib-24637 written to logs/run_evaluation/batch/recon-craft-audit/matplotlib__matplotlib-24637/test_output.txt
+2026-05-23 21:34:39,196 - INFO - Git diff after:
+diff --git a/lib/matplotlib/offsetbox.py b/lib/matplotlib/offsetbox.py
+index efa34dd078..c295c42634 100644
+--- a/lib/matplotlib/offsetbox.py
++++ b/lib/matplotlib/offsetbox.py
+@@ -1452,6 +1452,7 @@ or callable, default: value of *xycoords*
+             self._renderer = renderer
+         if not self.get_visible() or not self._check_xy(renderer):
+             return
++        renderer.open_group(self.__class__.__name__, gid=self.get_gid())
+         self.update_positions(renderer)
+         if self.arrow_patch is not None:
+             if self.arrow_patch.figure is None and self.figure is not None:
+@@ -1459,6 +1460,7 @@ or callable, default: value of *xycoords*
+             self.arrow_patch.draw(renderer)
+         self.patch.draw(renderer)
+         self.offsetbox.draw(renderer)
++        renderer.close_group(self.__class__.__name__)
+         self.stale = False
+2026-05-23 21:34:39,196 - INFO - Grading answer for matplotlib__matplotlib-24637...
+2026-05-23 21:34:39,196 - INFO - report: {'matplotlib__matplotlib-24637': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['lib/matplotlib/tests/test_backend_svg.py::test_annotationbbox_gid'], 'failure': []}, 'PASS_TO_PASS': {'success': ['lib/matplotlib/tests/test_backend_svg.py::test_visibility', 'lib/matplotlib/tests/test_backend_svg.py::test_noscale[png]', 'lib/matplotlib/tests/test_backend_svg.py::test_noscale[pdf]', 'lib/matplotlib/tests/test_backend_svg.py::test_text_urls', 'lib/matplotlib/tests/test_backend_svg.py::test_rasterized[png]', 'lib/matplotlib/tests/test_backend_svg.py::test_rasterized[pdf]', 'lib/matplotlib/tests/test_backend_svg.py::test_rasterized_ordering[png]', 'lib/matplotlib/tests/test_backend_svg.py::test_rasterized_ordering[pdf]', 'lib/matplotlib/tests/test_backend_svg.py::test_prevent_rasterization[pdf]', 'lib/matplotlib/tests/test_backend_svg.py::test_count_bitmaps', 'lib/matplotlib/tests/test_backend_svg.py::test_svgnone_with_data_coordinates', 'lib/matplotlib/tests/test_backend_svg.py::test_gid', 'lib/matplotlib/tests/test_backend_svg.py::test_savefig_tight', 'lib/matplotlib/tests/test_backend_svg.py::test_url', 'lib/matplotlib/tests/test_backend_svg.py::test_url_tick', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_default_metadata', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_clear_default_metadata', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_clear_all_metadata', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_metadata', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata0-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata1-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata2-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata3-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata4-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata5-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata6-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata7-TypeError-Invalid', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_incorrect_metadata[metadata8-ValueError-Unknown', 'lib/matplotlib/tests/test_backend_svg.py::test_svg_escape'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for matplotlib__matplotlib-24637: resolved: True
+2026-05-23 21:34:39,196 - INFO - Attempting to stop container sweb.eval.matplotlib__matplotlib-24637.batch...
+2026-05-23 21:34:54,656 - INFO - Attempting to remove container sweb.eval.matplotlib__matplotlib-24637.batch...
+2026-05-23 21:34:54,667 - INFO - Container sweb.eval.matplotlib__matplotlib-24637.batch removed.
