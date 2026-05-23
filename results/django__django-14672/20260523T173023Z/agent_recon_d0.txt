@@ -1,0 +1,41 @@
+# Recon: django__django-14672
+
+## Failure summary
+
+The tests fail during Django's model checking phase with `TypeError: unhashable type: 'list'`. The error occurs at `django/db/models/fields/reverse_related.py:139` when the `__hash__` method tries to hash a `ManyToManyRel` object's identity tuple. The failure happens in the `_check_field_name_clashes` method which checks if field objects are in a dictionary (requiring them to be hashable). When a `ManyToManyField` uses `through_fields` parameter with a list value (e.g., `['event', 'invitee']`), the identity tuple contains an unhashable list, causing the hash operation to fail.
+
+## Suspect set
+
+- `django/db/models/fields/reverse_related.py` lines 309-314: `ManyToManyRel.identity` property — adds `self.through_fields` to the identity tuple without making it hashable
+- `django/db/models/fields/reverse_related.py` line 139: `__hash__` method — attempts to hash the identity tuple containing the list
+
+## Root cause
+
+The `ManyToManyRel.identity` property constructs a tuple that includes `self.through_fields` directly (line 313). When `through_fields` is specified as a list (which is the standard way to pass it), this list becomes part of the identity tuple. Since lists are unhashable in Python, calling `hash(self.identity)` raises `TypeError: unhashable type: 'list'`.
+
+The parent class `ForeignObjectRel` already demonstrates the correct pattern: it wraps `self.limit_choices_to` with `make_hashable()` at line 124 to handle potentially unhashable values like dicts. The same treatment is needed for `through_fields`.
+
+The `make_hashable()` utility (in `django/utils/hashable.py`) converts unhashable iterables to tuples recursively, which solves the problem: a list `['event', 'invitee']` becomes the tuple `('event', 'invitee')`.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/fields/reverse_related.py:313` — `self.through_fields,` added to tuple without `make_hashable()`
+- `django/db/models/fields/reverse_related.py:124` — parent class uses `make_hashable(self.limit_choices_to)` 
+- `django/utils/hashable.py:17-18` — `make_hashable()` converts lists to tuples: `return tuple(map(make_hashable, value))`
+- `tests/m2m_through/models.py:91` — actual usage shows `through_fields=['event', 'invitee']` as a list
+- Stack trace confirms error at line 139: `return hash(self.identity)` → `TypeError: unhashable type: 'list'`
+
+## Edit sites
+
+- `django/db/models/fields/reverse_related.py` line 313: Change `self.through_fields,` to `make_hashable(self.through_fields),` in the `ManyToManyRel.identity` property's return tuple
+
+## Rejected hypotheses
+
+None — the root cause is directly visible in the code and stack trace. The error message explicitly identifies the unhashable list, and code inspection confirms `through_fields` is the only list-valued attribute added to the identity tuple without `make_hashable()`.
+
+## Open questions
+
+None — the fix location and required change are unambiguous. The `make_hashable()` import is already present at the top of the file (line 13), so no additional imports are needed.
+
+---STDERR---

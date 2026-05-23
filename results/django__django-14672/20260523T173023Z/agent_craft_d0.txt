@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed line 313 in `django/db/models/fields/reverse_related.py` to wrap `self.through_fields` with `make_hashable()`, preventing `TypeError: unhashable type: 'list'` when `through_fields` is a list. All 178 tests pass.
+
+---STDERR---

@@ -1,0 +1,36 @@
+# Audit: django__django-14672
+
+## FAIL_TO_PASS
+
+All 8 tests now **PASS**:
+
+- ✅ test_multiple_autofields (invalid_models_tests.test_models.MultipleAutoFieldsTests): PASS
+- ✅ test_db_column_clash (invalid_models_tests.test_models.FieldNamesTests): PASS
+- ✅ test_ending_with_underscore (invalid_models_tests.test_models.FieldNamesTests): PASS
+- ✅ test_including_separator (invalid_models_tests.test_models.FieldNamesTests): PASS
+- ✅ test_pk (invalid_models_tests.test_models.FieldNamesTests): PASS
+- ✅ test_check_jsonfield (invalid_models_tests.test_models.JSONFieldTests): PASS
+- ✅ test_check_jsonfield_required_db_features (invalid_models_tests.test_models.JSONFieldTests): PASS
+- ✅ test_ordering_pointing_to_json_field_value (invalid_models_tests.test_models.JSONFieldTests): PASS
+
+## PASS_TO_PASS regressions
+
+**None.** All 178 tests passed with 10 skipped, 0 failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+
+**None.** The fail-on-base capture shows the test suite crashed before running tests due to `TypeError: unhashable type: 'list'`. The fix resolves this root cause.
+
+## Summary
+
+The patch is surgical and correct: wrapping `self.through_fields` with `make_hashable()` on line 313 of `django/db/models/fields/reverse_related.py` fixes the unhashable type error when `through_fields` is a list. This follows the same pattern used by the parent class `ForeignObjectRel` at line 124.
+
+Full contract fulfilled:
+- All 8 FAIL_TO_PASS tests pass
+- Zero regressions
+- 1 line changed
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
