@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The dtype preservation fix for `IndexVariable.copy(deep=True)` passed on the first gate iteration. The single-line change at `xarray/core/variable.py:1950` adds the `dtype=self._data.dtype` parameter when creating the new PandasIndexAdapter, preventing unicode string dtype loss during deep copy.
+
+---STDERR---

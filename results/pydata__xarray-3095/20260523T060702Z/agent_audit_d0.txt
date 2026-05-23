@@ -1,0 +1,29 @@
+# Audit: pydata__xarray-3095
+
+## FAIL_TO_PASS
+- `xarray/tests/test_variable.py::TestIndexVariable::test_copy[str-True]`: **PASSED** ✅
+
+## PASS_TO_PASS regressions
+None — all 254 tests passed with no failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+- 11 xfailed tests (expected failures):
+  - TestVariableWithDask::test_0d_object_array_with_list
+  - TestVariableWithDask::test_array_interface
+  - TestVariableWithDask::test_copy_index
+  - TestVariableWithDask::test_eq_all_dtypes
+  - TestIndexVariable::test_getitem_error
+  - TestIndexVariable::test_getitem_advanced
+  - TestIndexVariable::test_getitem_fancy
+  - TestIndexVariable::test_getitem_uint
+  - TestIndexVariable::test_pad
+  - TestIndexVariable::test_rolling_window
+  - TestIndexVariable::test_coarsen_2d
+
+## Summary
+The craft patch successfully resolves the issue. The fix adds `dtype=self._data.dtype` when creating a PandasIndexAdapter during deep copy, preserving the original unicode dtype. The FAIL_TO_PASS test now passes, and no PASS_TO_PASS regressions were introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

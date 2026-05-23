@@ -1,0 +1,6 @@
+{"instance": "pydata__xarray-3095", "stage": "start"}
+{"instance": "pydata__xarray-3095", "stage": "recon", "depth": 0, "wall_s": 205, "fixed_point": false}
+{"instance": "pydata__xarray-3095", "stage": "craft", "depth": 0, "wall_s": 190, "claim": true, "wants_rediagnose": false}
+{"instance": "pydata__xarray-3095", "stage": "audit", "depth": 0, "wall_s": 82, "verdict": "RESOLVED", "route": "none"}
+{"instance": "pydata__xarray-3095", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_pydata__xarray-3095.txt"}
+{"instance": "pydata__xarray-3095", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 84610, "patch_file": "/tmp/swebench-abduction/r4_patch_pydata__xarray-3095.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_pydata__xarray-3095.md"}

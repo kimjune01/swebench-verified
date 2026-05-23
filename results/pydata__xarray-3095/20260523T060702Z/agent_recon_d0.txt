@@ -1,0 +1,38 @@
+# Recon: pydata__xarray-3095
+
+## Failure summary
+The test `TestIndexVariable::test_copy[str-True]` creates an IndexVariable with unicode string data (dtype='<U32'), calls `copy(deep=True)`, and verifies the dtype is preserved. The test fails because the copied IndexVariable has dtype='object' instead of the original '<U32'.
+
+**Error**: `AssertionError: assert dtype('<U32') == dtype('O')`
+
+## Suspect set
+- `xarray/core/variable.py` lines 1943-1960: IndexVariable.copy() method, specifically line 1950 where new PandasIndexAdapter is created
+
+## Root cause
+In IndexVariable.copy(deep=True), a new PandasIndexAdapter is created without preserving the original dtype. At line 1950:
+
+```python
+data = PandasIndexAdapter(self._data.array.copy(deep=True))
+```
+
+The problem chain:
+1. `self._data.array` is a pandas.Index with unicode strings
+2. pandas.Index automatically converts unicode string dtypes to object dtype
+3. When creating a new PandasIndexAdapter without a dtype parameter, it infers the dtype from the Index (which is now object)
+4. The original PandasIndexAdapter stores the correct dtype separately in `self._data.dtype`
+5. This dtype information is lost when creating the new PandasIndexAdapter
+
+**Confidence**: Deduction — 95%
+
+Supporting evidence:
+- `xarray/core/variable.py:1950` — Creates PandasIndexAdapter without dtype parameter: `data = PandasIndexAdapter(self._data.array.copy(deep=True))`
+- `xarray/core/indexing.py:1231-1242` — PandasIndexAdapter.__init__ infers dtype from Index when not provided, using `array.dtype` at line 1241
+- Verified experimentally: `pd.Index(np.array(['foo'], dtype='<U3')).dtype` returns `dtype('O')`
+
+## Edit sites
+- `xarray/core/variable.py` line 1950: Change `PandasIndexAdapter(self._data.array.copy(deep=True))` to `PandasIndexAdapter(self._data.array.copy(deep=True), dtype=self._data.dtype)` to preserve the original dtype when deep copying
+
+## Open questions
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
