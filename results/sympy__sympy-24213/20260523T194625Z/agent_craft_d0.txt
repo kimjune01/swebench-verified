@@ -1,0 +1,5 @@
+## Summary
+
+Fixed in one iteration. Changed line 178 in `sympy/physics/units/unitsystem.py` from object equality (`!=`) to dimensional equivalence checking (`equivalent_dims()`). Gate green: `test_issue_24211` passes, no regressions.
+
+---STDERR---

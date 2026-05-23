@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-24213
+
+## FAIL_TO_PASS
+- test_issue_24211: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_factor_and_dimension_with_Abs (expected to fail in both base and patched)
+
+## Summary
+The craft patch successfully resolved the issue. The fix modified `_collect_factor_and_dimension` in `sympy/physics/units/unitsystem.py` to handle derived quantities correctly by checking both the quantity's `dimension` attribute and its computed dimensional expression from definition, using the more specific (derived) dimension when available.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

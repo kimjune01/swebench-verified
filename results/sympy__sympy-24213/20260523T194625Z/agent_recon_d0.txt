@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-24213
+
+## Failure summary
+The test `test_issue_24211` creates three quantities (velocity V1, acceleration A1, time T1) and attempts to add `A1*T1 + V1`. This should succeed because `acceleration*time` is dimensionally equivalent to `velocity` (both are length/time), but it fails with `ValueError: Dimension of "V1" is Dimension(velocity), but it should be Dimension(acceleration*time)`. The error is raised in `_collect_factor_and_dimension` when processing the Add expression.
+
+## Suspect set
+- `sympy/physics/units/unitsystem.py` lines 175-183: The `Add` case in `_collect_factor_and_dimension` method
+- Specifically line 177: `if dim != addend_dim:` — the dimension compatibility check
+
+## Root cause
+The `_collect_factor_and_dimension` method uses object equality (`!=`) to check if dimensions match when processing addition expressions. This fails for dimensionally equivalent but structurally different Dimension objects. When computing `A1*T1`, the result has dimension `Dimension(acceleration*time)`, while `V1` has dimension `Dimension(velocity)`. These are different objects, so `dim != addend_dim` evaluates to `True`, triggering the ValueError. However, both represent the same physical dimension (length/time).
+
+The DimensionSystem class provides an `equivalent_dims(dim1, dim2)` method (line 428 in dimensions.py) that compares dimensional dependencies rather than object identity. Testing confirms:
+- `acceleration * time == velocity` → `False` (object inequality)
+- `equivalent_dims(acceleration*time, velocity)` → `True` (dimensional equivalence)
+- Both have identical dependencies: `{Dimension(length): 1, Dimension(time): -1}`
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `sympy/physics/units/unitsystem.py:178` — `if dim != addend_dim:` raises ValueError on object inequality
+- Verified with test: object equality fails but dimensional dependencies are identical
+- `sympy/physics/units/dimensions.py:428-431` — `equivalent_dims` compares `get_dimensional_dependencies` results
+- `sympy/physics/units/unitsystem.py:171` — same method already uses `self.get_dimension_system()` pattern
+
+## Edit sites
+- `sympy/physics/units/unitsystem.py` line 177: Replace `if dim != addend_dim:` with `if not self.get_dimension_system().equivalent_dims(dim, addend_dim):`
+
+This is the only location requiring modification. The method already accesses the dimension system via `self.get_dimension_system()` on line 171, establishing the pattern. The `equivalent_dims` method is already used elsewhere in the codebase (test_dimensions.py:128, si.py:338).
+
+## Rejected hypotheses
+None — the root cause is unambiguous from code trace and experimental verification.
+
+## Open questions
+None — the fix is straightforward and well-supported by existing infrastructure.
+
+---STDERR---
