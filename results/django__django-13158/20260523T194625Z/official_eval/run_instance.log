@@ -1,0 +1,45 @@
+2026-05-23 19:42:27,246 - INFO - Creating container for django__django-13158...
+2026-05-23 19:42:27,652 - INFO - Container for django__django-13158 created: 47d5a8563618d99838c14feb8822422b84158ae36270924199c41f5754f3f91a
+2026-05-23 19:42:27,999 - INFO - Container for django__django-13158 started: 47d5a8563618d99838c14feb8822422b84158ae36270924199c41f5754f3f91a
+2026-05-23 19:42:28,000 - INFO - Intermediate patch for django__django-13158 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13158/patch.diff, now applying to container...
+2026-05-23 19:42:28,095 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/sql/compiler.py...
+Applied patch django/db/models/sql/compiler.py cleanly.
+
+2026-05-23 19:42:28,579 - INFO - Git diff before:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index 686e75c979..f512cc2d00 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -432,6 +432,8 @@ class SQLCompiler:
+ 
+     def get_combinator_sql(self, combinator, all):
+         features = self.connection.features
++        if self.query.is_empty():
++            raise EmptyResultSet
+         compilers = [
+             query.get_compiler(self.using, self.connection)
+             for query in self.query.combined_queries if not query.is_empty()
+2026-05-23 19:42:28,580 - INFO - Eval script for django__django-13158 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13158/eval.sh; copying to container...
+2026-05-23 19:42:33,143 - INFO - Test runtime: 4.44 seconds
+2026-05-23 19:42:33,143 - INFO - Test output for django__django-13158 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13158/test_output.txt
+2026-05-23 19:42:33,253 - INFO - Git diff after:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index 686e75c979..f512cc2d00 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -432,6 +432,8 @@ class SQLCompiler:
+ 
+     def get_combinator_sql(self, combinator, all):
+         features = self.connection.features
++        if self.query.is_empty():
++            raise EmptyResultSet
+         compilers = [
+             query.get_compiler(self.using, self.connection)
+             for query in self.query.combined_queries if not query.is_empty()
+2026-05-23 19:42:33,253 - INFO - Grading answer for django__django-13158...
+2026-05-23 19:42:33,254 - INFO - report: {'django__django-13158': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_union_none (queries.test_qs_combinators.QuerySetSetOperationTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_combining_multiple_models (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_count_difference (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_count_intersection (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_count_union (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_count_union_empty_result (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_difference_with_empty_qs (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_difference_with_values (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_intersection_with_empty_qs (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_intersection_with_values (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_limits (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_order_by_same_type (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_order_raises_on_non_selected_column (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_ordering (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_ordering_by_alias (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_ordering_by_f_expression (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_ordering_by_f_expression_and_alias (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_qs_with_subcompound_qs (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_simple_difference (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_simple_intersection (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_simple_union (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_distinct (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_empty_qs (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_extra_and_values_list (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_two_annotated_values_list (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_values (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_values_list_and_order (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_union_with_values_list_on_annotated_and_unannotated (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_unsupported_operations_on_combined_qs (queries.test_qs_combinators.QuerySetSetOperationTests)', 'test_unsupported_ordering_slicing_raises_db_error (queries.test_qs_combinators.QuerySetSetOperationTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-13158: resolved: True
+2026-05-23 19:42:33,254 - INFO - Attempting to stop container sweb.eval.django__django-13158.batch...
+2026-05-23 19:42:48,696 - INFO - Attempting to remove container sweb.eval.django__django-13158.batch...
+2026-05-23 19:42:48,707 - INFO - Container sweb.eval.django__django-13158.batch removed.

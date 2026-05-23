@@ -1,0 +1,26 @@
+# Audit: django__django-13158
+
+## FAIL_TO_PASS
+- test_union_none: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+
+The patch adds a 2-line check in `get_combinator_sql()` that raises `EmptyResultSet` when the outer combined query is empty. This correctly handles the case where `.none()` is called on a union/intersection/difference query.
+
+Gate ran 32 tests successfully with no failures:
+- The target FAIL_TO_PASS test `test_union_none` now passes
+- All PASS_TO_PASS tests remain passing
+- No regressions introduced
+
+The fix is minimal, surgical, and directly addresses the root cause identified in recon: `get_combinator_sql()` was ignoring the outer query's empty state (set by `.none()` via `NothingNode` in the WHERE clause).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

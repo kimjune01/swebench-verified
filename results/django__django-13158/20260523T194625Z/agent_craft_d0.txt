@@ -1,0 +1,3 @@
+**RESOLVED** — The FAIL_TO_PASS test `test_union_none` now passes. The fix adds an early check in `get_combinator_sql()` to raise `EmptyResultSet` when the outer query is empty, handling the case where `.none()` is called on a combined queryset.
+
+---STDERR---

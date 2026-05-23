@@ -1,0 +1,44 @@
+# Recon: django__django-13158
+
+## Failure summary
+
+The `test_union_none` test creates a union of two querysets (`qs1.union(qs2)`), then calls `.none()` on the result and expects an empty list. However, the test fails because `qs3.none()` returns all 4 matching numbers `[<Number: 0>, <Number: 1>, <Number: 8>, <Number: 9>]` instead of an empty queryset. The issue is that `.none()` doesn't work correctly on combined queries (union/intersection/difference).
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 433-486: `get_combinator_sql()` method - compiles combined queries but doesn't check if outer query is empty
+- `django/db/models/query.py` lines 919-923: `none()` method - calls `set_empty()` on query
+- `django/db/models/sql/query.py` lines 1778-1779: `set_empty()` method - adds NothingNode to WHERE clause
+
+## Root cause
+
+When `.none()` is called on a combined query (created via `union()`, `intersection()`, or `difference()`), it calls `set_empty()` which adds a `NothingNode` to the outer query's WHERE clause. However, the `get_combinator_sql()` method that compiles combined queries never checks if the outer query is empty - it only checks and filters out empty inner queries from `combined_queries`. As a result, the NothingNode in the outer WHERE clause is completely ignored, and all results are returned instead of an empty set.
+
+The execution flow is:
+1. `union()` creates a query with `combined_queries=(qs1.query, qs2.query)` and `combinator='union'`
+2. `none()` adds NothingNode to the outer query's WHERE clause via `set_empty()`
+3. `as_sql()` sees combinator is set, calls `get_combinator_sql()` 
+4. `get_combinator_sql()` compiles only the inner queries, never checking `self.query.is_empty()`
+5. The WHERE NothingNode is ignored, all results returned
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/db/models/sql/compiler.py:437` — only filters inner queries: `for query in self.query.combined_queries if not query.is_empty()`
+- `django/db/models/sql/compiler.py:504-507` — when combinator set, only calls `get_combinator_sql()` and returns
+- `django/db/models/sql/query.py:1778-1779` — `set_empty()` adds NothingNode to self.where
+- `django/db/models/query.py:919-923` — `none()` calls `set_empty()` on cloned query
+
+## Edit sites
+
+- `django/db/models/sql/compiler.py` lines 433-438: In `get_combinator_sql()` method, add a check at the beginning (right after line 434) to test if `self.query.is_empty()`. If the outer query is empty, raise `EmptyResultSet` exception to signal no results should be returned.
+
+## Rejected hypotheses
+
+None - first pass diagnosis.
+
+## Open questions
+
+None - the root cause is clear from code inspection.
+
+---STDERR---
