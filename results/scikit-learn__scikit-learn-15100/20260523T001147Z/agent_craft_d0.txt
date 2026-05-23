@@ -1,0 +1,13 @@
+## RESOLVED
+
+The fix has been successfully applied and verified:
+
+**Root cause confirmed**: The `strip_accents_unicode` function had an early return optimization (lines 132-137) that incorrectly assumed strings already in NFKD form didn't need processing. This prevented filtering of combining diacritical marks from decomposed Unicode strings.
+
+**Fix applied**: Removed the conditional early return, simplifying the function to always filter combining characters after normalization.
+
+**Gate result**: ✅ All 107 tests pass on first iteration, including the previously failing `test_strip_accents`.
+
+The working tree contains the corrected implementation ready for the driver to capture via `git diff`.
+
+---STDERR---

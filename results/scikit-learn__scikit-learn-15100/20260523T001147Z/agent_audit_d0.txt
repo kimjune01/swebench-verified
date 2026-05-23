@@ -1,0 +1,24 @@
+# Audit: scikit-learn__scikit-learn-15100
+
+## FAIL_TO_PASS
+- `sklearn/feature_extraction/tests/test_text.py::test_strip_accents`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — all 106 PASS_TO_PASS tests still pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the baseline showed only `test_strip_accents` failing (AssertionError at line 103), which was the expected FAIL_TO_PASS test.
+
+4 XFAIL tests (HashingVectorizer on PyPy) are expected failures, not regressions.
+
+## Classification
+- ✅ All FAIL_TO_PASS tests now pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (0/106)
+- ✅ Patch is live: `sklearn/feature_extraction/text.py` modified (net -4 lines)
+
+The fix successfully resolved the issue by removing the flawed early return optimization in `strip_accents_unicode` that prevented combining character filtering for already-decomposed NFKD strings. The function now correctly strips accents from all inputs regardless of their initial normalization form.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

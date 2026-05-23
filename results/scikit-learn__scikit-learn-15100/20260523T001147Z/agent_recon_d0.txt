@@ -1,0 +1,57 @@
+# Recon: scikit-learn__scikit-learn-15100
+
+## Failure summary
+
+The test `test_strip_accents` fails with AssertionError at line 103. It tests whether `strip_accents_unicode` correctly handles strings that are already in NFKD (decomposed) Unicode form. The function returns these strings unchanged instead of removing combining diacritical marks.
+
+Three specific failing assertions:
+1. `"ö"` (o + combining diaresis U+0308) should return `"o"` but returns unchanged
+2. `"̀́̂̃"` (combining marks alone) should return `""` but returns unchanged
+3. `"ȫ"` (o + multiple combining marks) should return `"o"` but returns unchanged
+
+## Suspect set
+
+- `sklearn/feature_extraction/text.py` lines 132-137: The `strip_accents_unicode` function contains an early return optimization that skips processing when the input string is already in NFKD form.
+
+## Root cause
+
+Lines 132-137 implement an early return optimization: if `unicodedata.normalize('NFKD', s)` returns the same string (meaning it's already in NFKD form), the function returns the original string unchanged. This optimization incorrectly assumes that strings already in NFKD form don't need accent stripping.
+
+The logic flaw: A string in NFKD form can still contain combining diacritical marks (e.g., "ö" = o + U+0308 combining diaresis). These marks must be filtered out, but the early return prevents this filtering.
+
+This optimization was added in commit 5676ed2b4 (2016) with message "Add a check whether stripping accents is needed (#6805)" to avoid "the costly join operation if not needed." The assumption that NFKD strings don't need processing was incorrect.
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `sklearn/feature_extraction/text.py:132-137` — early return check
+- Manual test confirms: when input is "ö", `normalized == s` evaluates to True, function returns unchanged
+- Fixed version (without early return) passes all test cases
+
+## Edit sites
+
+- `sklearn/feature_extraction/text.py` lines 132-137: Remove the conditional early return. Change from:
+  ```python
+  normalized = unicodedata.normalize('NFKD', s)
+  if normalized == s:
+      return s
+  else:
+      return ''.join([c for c in normalized if not unicodedata.combining(c)])
+  ```
+  To:
+  ```python
+  normalized = unicodedata.normalize('NFKD', s)
+  return ''.join([c for c in normalized if not unicodedata.combining(c)])
+  ```
+
+This reverts to the original implementation before commit 5676ed2b4, which correctly filters combining characters from all strings regardless of their initial form.
+
+## Rejected hypotheses
+
+None — the root cause was identified on first pass through deductive reasoning and confirmed with manual testing.
+
+## Open questions
+
+None — the fix is straightforward and has been verified to pass all test cases.
+
+---STDERR---
