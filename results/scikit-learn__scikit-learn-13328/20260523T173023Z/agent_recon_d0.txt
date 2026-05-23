@@ -1,0 +1,64 @@
+# Recon: scikit-learn__scikit-learn-13328
+
+## Failure summary
+
+The test `test_huber_bool` checks that `HuberRegressor` can handle boolean input arrays (similar to how `LinearRegression` does). The test creates boolean features by thresholding continuous data (`X_bool = X > 0`) and passes them to `HuberRegressor().fit(X_bool, y)`. The fit fails with:
+
+```
+TypeError: The numpy boolean negative, the `-` operator, is not supported, use the `~` operator or the logical_not function instead.
+```
+
+The error occurs at `sklearn/linear_model/huber.py:93` in the `_huber_loss_and_gradient` function during the optimization process.
+
+## Suspect set
+
+- `sklearn/linear_model/huber.py` lines 253-255: Input validation in `HuberRegressor.fit()` - doesn't enforce float dtype
+- `sklearn/linear_model/huber.py` line 93: Unary minus operation on boolean array in `_huber_loss_and_gradient`
+
+## Root cause
+
+The `HuberRegressor.fit()` method calls `check_X_y()` without specifying a dtype parameter that forces float conversion. At line 254:
+
+```python
+X, y = check_X_y(
+    X, y, copy=False, accept_sparse=['csr'], y_numeric=True)
+```
+
+Since `check_X_y` defaults to `dtype="numeric"`, which preserves non-object dtypes, boolean arrays are kept as boolean. This boolean X is then passed to `_huber_loss_and_gradient()`, which at line 93 applies the unary minus operator to slice the data:
+
+```python
+X_non_outliers = -axis0_safe_slice(X, ~outliers_mask, n_non_outliers)
+```
+
+NumPy does not support the `-` operator on boolean arrays (it requires `~` for logical negation), causing the TypeError. The intent here is numerical negation (for gradient computation), not logical negation, so the input must be float.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `sklearn/linear_model/huber.py:254` — check_X_y without dtype enforcement
+- `sklearn/linear_model/huber.py:93` — unary minus fails on boolean
+- `sklearn/linear_model/base.py:126` — LinearRegression uses `dtype=FLOAT_DTYPES` in its validation
+- `sklearn/utils/validation.py:29` — `FLOAT_DTYPES = (np.float64, np.float32, np.float16)`
+
+## Edit sites
+
+1. **`sklearn/linear_model/huber.py` line 10** (imports section): Add `from ..utils.validation import FLOAT_DTYPES`
+
+2. **`sklearn/linear_model/huber.py` lines 253-254**: Modify the `check_X_y` call to include `dtype=FLOAT_DTYPES`:
+   ```python
+   X, y = check_X_y(
+       X, y, copy=False, accept_sparse=['csr'], y_numeric=True,
+       dtype=FLOAT_DTYPES)
+   ```
+
+This matches the pattern used by other sklearn linear models (e.g., `LinearRegression` via `_preprocess_data`) and ensures boolean and other non-float inputs are converted to float before numerical operations.
+
+## Rejected hypotheses
+
+None — the failure is straightforward: boolean input → preserved by validation → unary minus fails. No competing explanations.
+
+## Open questions
+
+None — the fix is well-defined and follows established sklearn patterns.
+
+---STDERR---

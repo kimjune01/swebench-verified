@@ -1,0 +1,122 @@
+$ pytest -rA sklearn/linear_model/tests/test_huber.py
+
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/scipy/optimize/optimize.py:74: in __call__
+    self._compute_if_needed(x, *args)
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/scipy/optimize/optimize.py:68: in _compute_if_needed
+    fg = self.fun(x, *args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+w = array([0., 0.])
+X = array([[False, False],
+       [False,  True],
+       [False,  True],
+       [ True,  True],
+       [False,  True],
+   ...e],
+       [False, False],
+       [ True,  True],
+       [ True, False],
+       [False, False],
+       [False,  True]])
+y = array([-36.74055607,   7.19003131,  44.38901836,  57.01951456,
+       -16.08855418,  -8.57916018, -31.39240867,  19.01...-87.29054611, -31.60922508,  37.50568861,  -2.62204748,
+        56.94948602, -43.52307458, -31.06118393,  34.93490838])
+epsilon = 1.35, alpha = 0.0001
+sample_weight = array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1., 1., 1., 1., 1., ...1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+
+    def _huber_loss_and_gradient(w, X, y, epsilon, alpha, sample_weight=None):
+        """Returns the Huber loss and the gradient.
+    
+        Parameters
+        ----------
+        w : ndarray, shape (n_features + 1,) or (n_features + 2,)
+            Feature vector.
+            w[:n_features] gives the coefficients
+            w[-1] gives the scale factor and if the intercept is fit w[-2]
+            gives the intercept factor.
+    
+        X : ndarray, shape (n_samples, n_features)
+            Input data.
+    
+        y : ndarray, shape (n_samples,)
+            Target vector.
+    
+        epsilon : float
+            Robustness of the Huber estimator.
+    
+        alpha : float
+            Regularization parameter.
+    
+        sample_weight : ndarray, shape (n_samples,), optional
+            Weight assigned to each sample.
+    
+        Returns
+        -------
+        loss : float
+            Huber loss.
+    
+        gradient : ndarray, shape (len(w))
+            Returns the derivative of the Huber loss with respect to each
+            coefficient, intercept and the scale as a vector.
+        """
+        _, n_features = X.shape
+        fit_intercept = (n_features + 2 == w.shape[0])
+        if fit_intercept:
+            intercept = w[-2]
+        sigma = w[-1]
+        w = w[:n_features]
+        n_samples = np.sum(sample_weight)
+    
+        # Calculate the values where |y - X'w -c / sigma| > epsilon
+        # The values above this threshold are outliers.
+        linear_loss = y - safe_sparse_dot(X, w)
+        if fit_intercept:
+            linear_loss -= intercept
+        abs_linear_loss = np.abs(linear_loss)
+        outliers_mask = abs_linear_loss > epsilon * sigma
+    
+        # Calculate the linear loss due to the outliers.
+        # This is equal to (2 * M * |y - X'w -c / sigma| - M**2) * sigma
+        outliers = abs_linear_loss[outliers_mask]
+        num_outliers = np.count_nonzero(outliers_mask)
+        n_non_outliers = X.shape[0] - num_outliers
+    
+        # n_sq_outliers includes the weight give to the outliers while
+        # num_outliers is just the number of outliers.
+        outliers_sw = sample_weight[outliers_mask]
+        n_sw_outliers = np.sum(outliers_sw)
+        outlier_loss = (2. * epsilon * np.sum(outliers_sw * outliers) -
+                        sigma * n_sw_outliers * epsilon ** 2)
+    
+        # Calculate the quadratic loss due to the non-outliers.-
+        # This is equal to |(y - X'w - c)**2 / sigma**2| * sigma
+        non_outliers = linear_loss[~outliers_mask]
+        weighted_non_outliers = sample_weight[~outliers_mask] * non_outliers
+        weighted_loss = np.dot(weighted_non_outliers.T, non_outliers)
+        squared_loss = weighted_loss / sigma
+    
+        if fit_intercept:
+            grad = np.zeros(n_features + 2)
+        else:
+            grad = np.zeros(n_features + 1)
+    
+        # Gradient due to the squared loss.
+>       X_non_outliers = -axis0_safe_slice(X, ~outliers_mask, n_non_outliers)
+E       TypeError: The numpy boolean negative, the `-` operator, is not supported, use the `~` operator or the logical_not function instead.
+
+sklearn/linear_model/huber.py:93: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_equals_lr_for_high_epsilon
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_max_iter
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_gradient
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_sample_weights
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_sparse
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_scaling_invariant
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_and_sgd_same_results
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_warm_start
+PASSED sklearn/linear_model/tests/test_huber.py::test_huber_better_r2_score
+FAILED sklearn/linear_model/tests/test_huber.py::test_huber_bool - TypeError:...
+========================= 1 failed, 9 passed in 0.67s ==========================

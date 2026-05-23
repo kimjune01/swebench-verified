@@ -1,0 +1,63 @@
+2026-05-23 17:27:30,093 - INFO - Creating container for scikit-learn__scikit-learn-13328...
+2026-05-23 17:27:47,104 - INFO - Container for scikit-learn__scikit-learn-13328 created: debeba06593b9ef645e3e0f13dd58ab5bbcf82d1b9986aa5e59d9d3e25acdda7
+2026-05-23 17:27:47,546 - INFO - Container for scikit-learn__scikit-learn-13328 started: debeba06593b9ef645e3e0f13dd58ab5bbcf82d1b9986aa5e59d9d3e25acdda7
+2026-05-23 17:27:47,546 - INFO - Intermediate patch for scikit-learn__scikit-learn-13328 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-13328/patch.diff, now applying to container...
+2026-05-23 17:27:47,690 - INFO - >>>>> Applied Patch:
+Checking patch sklearn/linear_model/huber.py...
+Applied patch sklearn/linear_model/huber.py cleanly.
+
+2026-05-23 17:27:47,911 - INFO - Git diff before:
+diff --git a/sklearn/linear_model/huber.py b/sklearn/linear_model/huber.py
+index 65c686400..1e2f7b9eb 100644
+--- a/sklearn/linear_model/huber.py
++++ b/sklearn/linear_model/huber.py
+@@ -9,6 +9,7 @@ from ..base import BaseEstimator, RegressorMixin
+ from .base import LinearModel
+ from ..utils import check_X_y
+ from ..utils import check_consistent_length
++from ..utils.validation import FLOAT_DTYPES
+ from ..utils import axis0_safe_slice
+ from ..utils.extmath import safe_sparse_dot
+ 
+@@ -251,7 +252,8 @@ class HuberRegressor(LinearModel, RegressorMixin, BaseEstimator):
+         self : object
+         """
+         X, y = check_X_y(
+-            X, y, copy=False, accept_sparse=['csr'], y_numeric=True)
++            X, y, copy=False, accept_sparse=['csr'], y_numeric=True,
++            dtype=FLOAT_DTYPES)
+         if sample_weight is not None:
+             sample_weight = np.array(sample_weight)
+             check_consistent_length(y, sample_weight)
+2026-05-23 17:27:47,911 - INFO - Eval script for scikit-learn__scikit-learn-13328 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-13328/eval.sh; copying to container...
+2026-05-23 17:27:51,123 - INFO - Test runtime: 3.12 seconds
+2026-05-23 17:27:51,123 - INFO - Test output for scikit-learn__scikit-learn-13328 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-13328/test_output.txt
+2026-05-23 17:27:51,245 - INFO - Git diff after:
+diff --git a/sklearn/linear_model/huber.py b/sklearn/linear_model/huber.py
+index 65c686400..1e2f7b9eb 100644
+--- a/sklearn/linear_model/huber.py
++++ b/sklearn/linear_model/huber.py
+@@ -9,6 +9,7 @@ from ..base import BaseEstimator, RegressorMixin
+ from .base import LinearModel
+ from ..utils import check_X_y
+ from ..utils import check_consistent_length
++from ..utils.validation import FLOAT_DTYPES
+ from ..utils import axis0_safe_slice
+ from ..utils.extmath import safe_sparse_dot
+ 
+@@ -251,7 +252,8 @@ class HuberRegressor(LinearModel, RegressorMixin, BaseEstimator):
+         self : object
+         """
+         X, y = check_X_y(
+-            X, y, copy=False, accept_sparse=['csr'], y_numeric=True)
++            X, y, copy=False, accept_sparse=['csr'], y_numeric=True,
++            dtype=FLOAT_DTYPES)
+         if sample_weight is not None:
+             sample_weight = np.array(sample_weight)
+             check_consistent_length(y, sample_weight)
+2026-05-23 17:27:51,245 - INFO - Grading answer for scikit-learn__scikit-learn-13328...
+2026-05-23 17:27:51,246 - INFO - report: {'scikit-learn__scikit-learn-13328': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['sklearn/linear_model/tests/test_huber.py::test_huber_bool'], 'failure': []}, 'PASS_TO_PASS': {'success': ['sklearn/linear_model/tests/test_huber.py::test_huber_equals_lr_for_high_epsilon', 'sklearn/linear_model/tests/test_huber.py::test_huber_max_iter', 'sklearn/linear_model/tests/test_huber.py::test_huber_gradient', 'sklearn/linear_model/tests/test_huber.py::test_huber_sample_weights', 'sklearn/linear_model/tests/test_huber.py::test_huber_sparse', 'sklearn/linear_model/tests/test_huber.py::test_huber_scaling_invariant', 'sklearn/linear_model/tests/test_huber.py::test_huber_and_sgd_same_results', 'sklearn/linear_model/tests/test_huber.py::test_huber_warm_start', 'sklearn/linear_model/tests/test_huber.py::test_huber_better_r2_score'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for scikit-learn__scikit-learn-13328: resolved: True
+2026-05-23 17:27:51,246 - INFO - Attempting to stop container sweb.eval.scikit-learn__scikit-learn-13328.batch...
+2026-05-23 17:28:06,703 - INFO - Attempting to remove container sweb.eval.scikit-learn__scikit-learn-13328.batch...
+2026-05-23 17:28:06,715 - INFO - Container sweb.eval.scikit-learn__scikit-learn-13328.batch removed.

@@ -1,0 +1,18 @@
+# Audit: scikit-learn__scikit-learn-13328
+
+## FAIL_TO_PASS
+- `sklearn/linear_model/tests/test_huber.py::test_huber_bool`: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully resolves the issue by adding `dtype=FLOAT_DTYPES` to the `check_X_y()` call in `HuberRegressor.fit()`. This forces conversion of boolean input arrays to float, preventing the TypeError that occurred when boolean dtype propagated to NumPy operations in the Huber loss function. All FAIL_TO_PASS tests pass, all PASS_TO_PASS tests pass with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

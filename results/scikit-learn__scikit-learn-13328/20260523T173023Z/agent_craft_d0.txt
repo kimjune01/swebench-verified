@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes `HuberRegressor` handle boolean input arrays by:
+1. Importing `FLOAT_DTYPES` from `sklearn.utils.validation`
+2. Adding `dtype=FLOAT_DTYPES` to the `check_X_y()` call in the `fit()` method
+
+This ensures boolean (and integer) arrays are converted to float before reaching `_huber_loss_and_gradient()`, where the unary minus operator requires numeric types. The gate confirms all tests pass, including the previously failing `test_huber_bool`.
+
+---STDERR---
