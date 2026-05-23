@@ -1,0 +1,65 @@
+diff --git a/django/db/models/expressions.py b/django/db/models/expressions.py
+index d913658291..5c0144ea12 100644
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -23,7 +23,7 @@ class SQLiteNumericMixin:
+         try:
+             if self.output_field.get_internal_type() == 'DecimalField':
+                 sql = 'CAST(%s AS NUMERIC)' % sql
+-        except FieldError:
++        except (FieldError, AttributeError):
+             pass
+         return sql, params
+ 
+@@ -280,7 +280,7 @@ class BaseExpression:
+         """
+         try:
+             return self.output_field
+-        except FieldError:
++        except (FieldError, AttributeError):
+             if not self._output_field_resolved_to_none:
+                 raise
+ 
+@@ -445,11 +445,11 @@ class CombinedExpression(SQLiteNumericMixin, Expression):
+     def as_sql(self, compiler, connection):
+         try:
+             lhs_type = self.lhs.output_field.get_internal_type()
+-        except FieldError:
++        except (FieldError, AttributeError):
+             lhs_type = None
+         try:
+             rhs_type = self.rhs.output_field.get_internal_type()
+-        except FieldError:
++        except (FieldError, AttributeError):
+             rhs_type = None
+         if (
+             not connection.features.has_native_duration_field and
+@@ -478,6 +478,19 @@ class CombinedExpression(SQLiteNumericMixin, Expression):
+         c.is_summary = summarize
+         c.lhs = c.lhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
+         c.rhs = c.rhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
++        # Detect temporal subtraction and convert to TemporalSubtraction
++        try:
++            lhs_type = c.lhs.output_field.get_internal_type()
++            rhs_type = c.rhs.output_field.get_internal_type()
++        except (FieldError, AttributeError):
++            pass
++        else:
++            datetime_fields = {'DateField', 'DateTimeField', 'TimeField'}
++            if (c.connector == c.SUB and lhs_type in datetime_fields and
++                lhs_type == rhs_type and not isinstance(c, TemporalSubtraction)):
++                temporal = TemporalSubtraction(c.lhs, c.rhs)
++                temporal.is_summary = summarize
++                return temporal
+         return c
+ 
+ 
+@@ -485,7 +498,7 @@ class DurationExpression(CombinedExpression):
+     def compile(self, side, compiler, connection):
+         try:
+             output = side.output_field
+-        except FieldError:
++        except (FieldError, AttributeError):
+             pass
+         else:
+             if output.get_internal_type() == 'DurationField':

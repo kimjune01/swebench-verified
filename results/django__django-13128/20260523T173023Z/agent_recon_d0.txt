@@ -1,0 +1,40 @@
+# Recon: django__django-13128
+
+## Failure summary
+The tests check temporal subtraction operations (DateField - DateField, DateTimeField - DateTimeField, TimeField - TimeField) without requiring ExpressionWrapper. Currently, these operations fail because the output_field is not automatically inferred as DurationField. When the annotated queryset is evaluated, Django tries to parse the duration result (timedelta) as the original field type (datetime/date/time), causing TypeError: expected string or bytes-like object.
+
+## Suspect set
+- `django/db/models/expressions.py` lines 475-482: `CombinedExpression.resolve_expression()` - needs to detect temporal subtraction and return TemporalSubtraction instance
+- `django/db/models/expressions.py` lines 443-475: `CombinedExpression.as_sql()` - already has temporal subtraction detection logic but runs too late
+
+## Root cause
+The `CombinedExpression` class has logic to detect temporal subtraction (when both sides are the same temporal type and the operator is SUB) and delegate to `TemporalSubtraction`, which has `output_field = fields.DurationField()` set correctly. However, this detection happens in `as_sql()` at SQL compilation time, after the `output_field` property has already been accessed and resolved.
+
+When `output_field` is accessed on a `CombinedExpression` for temporal subtraction, it calls `_resolve_output_field()` which sees two fields of the same type (e.g., DateTimeField, DateTimeField) and returns that type instead of recognizing this should be DurationField. This causes the database adapter to try parsing the duration result as the wrong type.
+
+Confidence: deduction — 98%
+
+Supporting evidence:
+- `django/db/models/expressions.py:462-464` — Existing temporal subtraction detection:
+  ```python
+  datetime_fields = {'DateField', 'DateTimeField', 'TimeField'}
+  if self.connector == self.SUB and lhs_type in datetime_fields and lhs_type == rhs_type:
+      return TemporalSubtraction(self.lhs, self.rhs).as_sql(compiler, connection)
+  ```
+- `django/db/models/expressions.py:510-512` — TemporalSubtraction has correct output_field:
+  ```python
+  class TemporalSubtraction(CombinedExpression):
+      output_field = fields.DurationField()
+  ```
+- `django/db/models/expressions.py:475-482` — CombinedExpression.resolve_expression() just resolves lhs/rhs but doesn't check for temporal subtraction
+- Error traces show converters trying to parse timedelta as string because output_field is DateTimeField/TimeField instead of DurationField
+
+## Edit sites
+- `django/db/models/expressions.py` lines 475-482: In `CombinedExpression.resolve_expression()`, after resolving lhs and rhs, add logic to detect temporal subtraction (connector is SUB, lhs and rhs are both temporal fields of the same type) and return a `TemporalSubtraction` instance with the resolved lhs/rhs instead of continuing as CombinedExpression.
+
+The existing detection logic in `as_sql()` (lines 462-464) can remain as a fallback, but the early conversion in `resolve_expression()` ensures `output_field` is correct when accessed.
+
+## Open questions
+None - the fix location and approach are clear from reading the code path.
+
+---STDERR---

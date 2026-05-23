@@ -1,0 +1,20 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests pass, no regressions. The fix successfully enables temporal subtraction (DateField - DateField, DateTimeField - DateTimeField, TimeField - TimeField) to work without requiring ExpressionWrapper.
+
+## Summary
+
+The fix adds temporal subtraction detection to `CombinedExpression.resolve_expression()` so the conversion to `TemporalSubtraction` (which has the correct `output_field = DurationField()`) happens **before** `output_field` is resolved, not after during SQL compilation.
+
+**Key changes:**
+1. Added detection logic in `resolve_expression()` to identify temporal subtraction operations
+2. Early conversion to `TemporalSubtraction` ensures `output_field` is correctly set to `DurationField`
+3. Preserved `is_summary` state to avoid losing aggregate context
+4. Added guard against double-wrapping `TemporalSubtraction` instances
+5. Fixed exception handling to catch both `FieldError` and `AttributeError` for expressions lacking `output_field`
+
+**Gate iterations:** 2
+- Iteration 1: Introduced regression with `OuterRef` (missing `AttributeError` catch)
+- Iteration 2: GREEN - all 143 tests pass
+
+---STDERR---

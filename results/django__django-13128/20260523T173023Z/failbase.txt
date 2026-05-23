@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 expressions.tests
+
+    match = datetime_re.match(value)
+TypeError: expected string or bytes-like object
+
+======================================================================
+ERROR: test_datetime_subtraction_microseconds (expressions.tests.FTimeDeltaTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/testcases.py", line 1274, in skip_wrapper
+    return test_func(*args, **kwargs)
+  File "/testbed/tests/expressions/tests.py", line 1609, in test_datetime_subtraction_microseconds
+    for e in qs:
+  File "/testbed/django/db/models/query.py", line 287, in __iter__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1305, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 70, in __iter__
+    for row in compiler.results_iter(results):
+  File "/testbed/django/db/models/sql/compiler.py", line 1105, in apply_converters
+    value = converter(value, expression, connection)
+  File "/testbed/django/db/backends/sqlite3/operations.py", line 279, in convert_datetimefield_value
+    value = parse_datetime(value)
+  File "/testbed/django/utils/dateparse.py", line 107, in parse_datetime
+    match = datetime_re.match(value)
+TypeError: expected string or bytes-like object
+
+======================================================================
+ERROR: test_time_subquery_subtraction (expressions.tests.FTimeDeltaTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/testcases.py", line 1274, in skip_wrapper
+    return test_func(*args, **kwargs)
+  File "/testbed/tests/expressions/tests.py", line 1570, in test_time_subquery_subtraction
+    ).filter(difference=datetime.timedelta())
+  File "/testbed/django/db/models/query.py", line 942, in filter
+    return self._filter_or_exclude(False, *args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 962, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, *args, **kwargs)
+  File "/testbed/django/db/models/query.py", line 969, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+  File "/testbed/django/db/models/sql/query.py", line 1359, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+  File "/testbed/django/db/models/sql/query.py", line 1381, in _add_q
+    split_subq=split_subq, check_filterable=check_filterable,
+  File "/testbed/django/db/models/sql/query.py", line 1276, in build_filter
+    condition = self.build_lookup(lookups, reffed_expression, value)
+  File "/testbed/django/db/models/sql/query.py", line 1166, in build_lookup
+    lookup = lookup_class(lhs, rhs)
+  File "/testbed/django/db/models/lookups.py", line 24, in __init__
+    self.rhs = self.get_prep_lookup()
+  File "/testbed/django/db/models/lookups.py", line 74, in get_prep_lookup
+    return self.lhs.output_field.get_prep_value(self.rhs)
+  File "/testbed/django/db/models/fields/__init__.py", line 2193, in get_prep_value
+    return self.to_python(value)
+  File "/testbed/django/db/models/fields/__init__.py", line 2167, in to_python
+    parsed = parse_time(value)
+  File "/testbed/django/utils/dateparse.py", line 90, in parse_time
+    match = time_re.match(value)
+TypeError: expected string or bytes-like object
+
+======================================================================
+ERROR: test_time_subtraction (expressions.tests.FTimeDeltaTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/testcases.py", line 1274, in skip_wrapper
+    return test_func(*args, **kwargs)
+  File "/testbed/tests/expressions/tests.py", line 1549, in test_time_subtraction
+    queryset.get().difference,
+  File "/testbed/django/db/models/query.py", line 425, in get
+    num = len(clone)
+  File "/testbed/django/db/models/query.py", line 269, in __len__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1305, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 70, in __iter__
+    for row in compiler.results_iter(results):
+  File "/testbed/django/db/models/sql/compiler.py", line 1105, in apply_converters
+    value = converter(value, expression, connection)
+  File "/testbed/django/db/backends/sqlite3/operations.py", line 293, in convert_timefield_value
+    value = parse_time(value)
+  File "/testbed/django/utils/dateparse.py", line 90, in parse_time
+    match = time_re.match(value)
+TypeError: expected string or bytes-like object
+
+----------------------------------------------------------------------
+Ran 143 tests in 0.172s
+
+FAILED (errors=7, skipped=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application expressions
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, expressions, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table expressions_manager
+    Creating table expressions_employee
+    Creating table expressions_remoteemployee
+    Creating table expressions_company
+    Creating table expressions_number
+    Creating table expressions_ExPeRiMeNt
+    Creating table expressions_result
+    Creating table expressions_time
+    Creating table expressions_simulationrun
+    Creating table expressions_uuidpk
+    Creating table expressions_uuid
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

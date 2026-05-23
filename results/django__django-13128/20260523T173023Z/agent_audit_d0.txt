@@ -1,0 +1,24 @@
+# Audit: django__django-13128
+
+## FAIL_TO_PASS
+- test_date_case_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_date_subquery_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_date_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_datetime_subquery_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_datetime_subtraction_microseconds (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_time_subquery_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+- test_time_subtraction (expressions.tests.FTimeDeltaTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+All 143 tests passed (2 skipped). The patch successfully resolves temporal subtraction by detecting the pattern in `resolve_expression()` and converting to `TemporalSubtraction` before output_field resolution. The fix handles both standard field expressions and edge cases like `ResolvedOuterRef` via the dual exception catch.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
