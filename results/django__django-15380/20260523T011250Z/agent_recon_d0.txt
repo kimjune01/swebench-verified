@@ -1,0 +1,36 @@
+# Recon: django__django-15380
+
+## Failure summary
+
+The test `test_rename_field_with_renamed_model` verifies that the migration autodetector can handle renaming both a model (Author → RenamedAuthor) and a field (name → renamed_name) in a single migration. The test fails with `KeyError: ('testapp', 'author')` at line 827 of `django/db/migrations/autodetector.py` in the `generate_renamed_fields()` method, which attempts to look up a model using the old model name in the new state.
+
+## Suspect set
+
+- `django/db/migrations/autodetector.py` lines 821-830: The `generate_renamed_fields()` method incorrectly uses `old_model_name` when accessing `to_state.models`, causing a KeyError when the model has been renamed.
+
+## Root cause
+
+When a model and field are renamed simultaneously, `generate_renamed_fields()` retrieves the old model name from `self.renamed_models` and correctly uses it to look up the model in `from_state` (the old state). However, it incorrectly uses the same `old_model_name` to look up the model in `to_state` (the new state), where the model now has the new name. This causes a KeyError because the old model name no longer exists in the new state.
+
+The bug was introduced in commit aa4acc164d during a refactoring from model classes to model states. The pattern throughout the file shows that `from_state.models` should use `old_model_name` and `to_state.models` should use `model_name`.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/db/migrations/autodetector.py:827` — `new_model_state = self.to_state.models[app_label, old_model_name]` (uses wrong name)
+- Grep shows line 827 is the ONLY occurrence where `to_state.models` uses `old_model_name`; all 15 other uses correctly use `model_name`
+- All 14 occurrences of `from_state.models` correctly use `old_model_name`
+
+## Edit sites
+
+- `django/db/migrations/autodetector.py` line 827: Change `new_model_state = self.to_state.models[app_label, old_model_name]` to `new_model_state = self.to_state.models[app_label, model_name]` — use the new model name when accessing the new state
+
+## Rejected hypotheses
+
+None. The root cause is deterministic and visible from code inspection. The consistent pattern of `to_state.models` usage throughout the file (15 other correct uses vs. 1 incorrect use) and the nature of the KeyError leave no ambiguity.
+
+## Open questions
+
+None. The fix is a single-character variable name change with no edge cases or side effects.
+
+---STDERR---
