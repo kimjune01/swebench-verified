@@ -1,0 +1,27 @@
+# Audit: django__django-15525
+
+## FAIL_TO_PASS
+- test_natural_key_dependencies (fixtures_regress.tests.NaturalKeyFixtureOnOtherDatabaseTests): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_pretty_print_xml_empty_strings (skipped on SQLite - expected, database feature check)
+
+## Verification Details
+- Total tests run: 58
+- Status: OK
+- Skipped: 1 (expected SQLite feature skip)
+- Failures: 0
+- The FAIL_TO_PASS test now correctly passes with the patch applied
+- All PASS_TO_PASS tests continue passing
+- No behavioral regressions detected
+
+## Kill report
+Not applicable - all tests passed. The fix successfully resolves the issue by setting `_state.db` on the temporary instance before calling `natural_key()`, ensuring the database router correctly routes queries to the specified database.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

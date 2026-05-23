@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. The FAIL_TO_PASS test now passes, and all other tests remain passing. The minimal change sets `_state.db = db` on the temporary instance used for natural key extraction, ensuring FK lookups during `.natural_key()` use the correct database.
+
+---STDERR---

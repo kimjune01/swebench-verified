@@ -1,0 +1,44 @@
+Now I'll print my handoff to stdout:
+
+# Recon: django__django-15525
+
+## Failure summary
+
+The test `NaturalKeyFixtureOnOtherDatabaseTests.test_natural_key_dependencies` loads fixture data into a non-default database (`other`) using `loaddata --database other`. The fixture contains objects with natural keys that have foreign key dependencies (`NaturalKeyWithFKDependency` has a FK to `Person`). The test fails with `DatabaseOperationForbidden: Database queries to 'default' are not allowed in this test`. The error occurs during deserialization when calling `natural_key()` on a model instance that accesses a ForeignKey field — Django queries the wrong database ('default') instead of the target database ('other').
+
+## Suspect set
+
+- `django/core/serializers/base.py` lines 325-346: `build_instance()` function — creates temporary instances to extract natural keys without setting the database context
+
+## Root cause
+
+When `build_instance()` needs to extract a natural key from an object with no primary key (line 339), it creates a temporary instance via `Model(**data).natural_key()`. This instance is unsaved and has no `_state.db` set. When the `natural_key()` method accesses a ForeignKey field (e.g., `self.author.natural_key()`), Django's ForwardManyToOneDescriptor queries the database to fetch the related object. The database router (`django/db/utils.py` lines 223-227) determines which database to use by checking `hints.get("instance")._state.db`, falling back to `DEFAULT_DB_ALIAS` when the state is None. Since the temporary instance has no `_state.db`, all FK lookups default to the 'default' database regardless of the `db` parameter passed to `build_instance()`.
+
+The same issue exists for the instance returned at line 346.
+
+**Confidence:** 95% (deduction)
+
+**Supporting evidence:**
+- `django/core/serializers/base.py:339` — `natural_key = Model(**data).natural_key()` creates instance without db context
+- `django/db/utils.py:226-227` — router code: `if instance is not None and instance._state.db: return instance._state.db; return DEFAULT_DB_ALIAS`
+- `django/db/models/fields/related_descriptors.py:166-168` — FK descriptor calls `get_queryset(instance=instance)` which triggers router lookup
+- `django/db/models/base.py:601-603` — Django's pattern: `new = cls(*values); new._state.adding = False; new._state.db = db` shows this is the established way to set database context on instances
+- Stack trace confirms query to 'default' when 'other' was specified
+
+## Edit sites
+
+1. **`django/core/serializers/base.py` line 339**: Before calling `.natural_key()`, create the instance and set `_state.db = db` so FK lookups use the correct database
+   
+2. **`django/core/serializers/base.py` line 346**: Set `_state.db = db` on the returned instance so that subsequent operations (including natural key extraction by callers) use the correct database
+
+Both locations create instances via `Model(**data)` and both need the database context set.
+
+## Rejected hypotheses
+
+None — the code path is deterministic and the root cause is confirmed by tracing through the router logic.
+
+## Open questions
+
+None — the fix is straightforward: set `_state.db` on instances created in `build_instance()` before any operations that might trigger database queries.
+
+---STDERR---
