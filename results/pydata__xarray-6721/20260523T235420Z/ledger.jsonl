@@ -1,0 +1,6 @@
+{"instance": "pydata__xarray-6721", "stage": "start"}
+{"instance": "pydata__xarray-6721", "stage": "recon", "depth": 0, "wall_s": 289, "fixed_point": false}
+{"instance": "pydata__xarray-6721", "stage": "craft", "depth": 0, "wall_s": 159, "claim": true, "wants_rediagnose": false}
+{"instance": "pydata__xarray-6721", "stage": "audit", "depth": 0, "wall_s": 116, "verdict": "RESOLVED", "route": "none"}
+{"instance": "pydata__xarray-6721", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_pydata__xarray-6721.txt"}
+{"instance": "pydata__xarray-6721", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": false, "patch_bytes": 484, "patch_file": "/tmp/swebench-abduction/r4_patch_pydata__xarray-6721.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_pydata__xarray-6721.md"}

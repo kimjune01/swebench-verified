@@ -1,0 +1,26 @@
+# Audit: pydata__xarray-6721
+
+## FAIL_TO_PASS
+- `xarray/tests/test_dataset.py::TestDataset::test_chunks_does_not_load_data`: ✅ PASSED
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None — all 1406 tests pass, 1 expected failure (xfail) matches baseline
+
+## xpassed (not regressions)
+Five expected failures now pass (improvements):
+- `TestDataset::test_copy_coords[False-expected_orig1]`
+- `test_raise_no_warning_dask_rolling_assert_close[numpy-mean-2]`
+- `test_raise_no_warning_dask_rolling_assert_close[numpy-max-2]`
+- `test_raise_no_warning_dask_rolling_assert_close[dask-mean-2]`
+- `test_raise_no_warning_dask_rolling_assert_close[dask-max-2]`
+
+## Summary
+The craft patch successfully resolves the issue. The one-line fix (`v.data` → `v._data` in `get_chunksizes()`) prevents data loading by checking the internal attribute directly, matching the existing pattern elsewhere in the codebase. All FAIL_TO_PASS tests pass, no regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

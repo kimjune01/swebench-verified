@@ -1,0 +1,51 @@
+# Recon: pydata__xarray-6721
+
+## Failure summary
+
+The test `test_chunks_does_not_load_data` verifies that accessing the `.chunks` property on a dataset does not trigger loading of the underlying data arrays into memory. The test uses `InaccessibleVariableDataStore` which wraps array data in an `InaccessibleArray` that raises `UnexpectedDataAccess` if data is accessed. The test fails because accessing `ds.chunks` triggers data loading, causing the exception:
+
+```
+UnexpectedDataAccess: Tried accessing data
+```
+
+The stack trace shows the path: `Dataset.chunks` → `get_chunksizes()` → `hasattr(v.data, "chunks")` → `Variable.data` property → `Variable.values` → array loading via `np.asarray()`.
+
+## Suspect set
+
+- `xarray/core/common.py` line 2026: `get_chunksizes()` function checks `hasattr(v.data, "chunks")` which triggers data loading
+
+## Root cause
+
+In `get_chunksizes()` at `xarray/core/common.py:2026`, the code checks `hasattr(v.data, "chunks")` to determine if a variable contains chunked (dask) arrays. Accessing the `.data` property on a Variable triggers the property getter, which calls `self.values` when `self._data` is not a duck array (i.e., lacks `__array_function__` and `__array_ufunc__` attributes).
+
+For zarr-backed arrays, the data is wrapped in `LazilyIndexedArray`, which inherits from `ExplicitlyIndexedNDArrayMixin` and `NDArrayMixin`. These classes provide `ndim`, `shape`, and `dtype` properties but do NOT provide `__array_function__` or `__array_ufunc__`, so `is_duck_array()` returns False. This causes the `Variable.data` property getter to fall back to `self.values`, which calls `np.asarray(self._data)`, triggering full array loading into memory.
+
+The pattern at `xarray/core/variable.py:1017` already correctly uses `self._data` instead of `self.data` when checking for chunks:
+```python
+if hasattr(self._data, "chunks"):  # variable.py:1017 - correct pattern
+```
+
+The bug was introduced in commit 1d94b1eb (PR #5900) when the chunksizes property was added.
+
+**Confidence: deduction — 95%**
+
+Supporting evidence:
+- `xarray/core/common.py:2026` — `if hasattr(v.data, "chunks"): `
+- `xarray/core/variable.py:342` — `return self.values` when not a duck array
+- `xarray/core/variable.py:1017` — `if hasattr(self._data, "chunks"):` (correct pattern used elsewhere)
+- `xarray/core/utils.py:258-268` — `is_duck_array()` checks for `__array_function__` and `__array_ufunc__`
+- `xarray/core/indexing.py:465` — `LazilyIndexedArray` class has no `__array_function__` or `__array_ufunc__`
+
+## Edit sites
+
+- `xarray/core/common.py` line 2026: Change `if hasattr(v.data, "chunks"):` to `if hasattr(v._data, "chunks"):` to check for chunks on the internal data object directly without triggering the property getter that may load data. This follows the same pattern already used in `variable.py:1017`.
+
+## Rejected hypotheses
+
+None — the code path and root cause are directly observable from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward and follows existing patterns in the codebase.
+
+---STDERR---

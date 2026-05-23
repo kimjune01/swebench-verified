@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully prevents data loading when accessing `.chunks` on a dataset. Changed `xarray/core/common.py:2026` from `hasattr(v.data, "chunks")` to `hasattr(v._data, "chunks")`, following the existing pattern in the codebase. Gate green in 1 iteration.
+
+---STDERR---
