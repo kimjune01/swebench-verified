@@ -1,0 +1,122 @@
+$ pytest -rA xarray/tests/test_dataarray.py xarray/tests/test_dataset.py xarray/tests/test_groupby.py
+
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_errors
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_reduce
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_math[True]
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_math[False]
+PASSED xarray/tests/test_groupby.py::test_groupby_math_more
+PASSED xarray/tests/test_groupby.py::test_groupby_bins_math[True]
+PASSED xarray/tests/test_groupby.py::test_groupby_bins_math[False]
+PASSED xarray/tests/test_groupby.py::test_groupby_math_nD_group
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_math_virtual
+PASSED xarray/tests/test_groupby.py::test_groupby_math_dim_order
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_nan
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_order
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_fillna
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_where
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_assign
+PASSED xarray/tests/test_groupby.py::test_groupby_dataset_map_dataarray_func
+PASSED xarray/tests/test_groupby.py::test_groupby_dataarray_map_dataset_func
+PASSED xarray/tests/test_groupby.py::test_groupby_flox_kwargs[kwargs0]
+PASSED xarray/tests/test_groupby.py::test_groupby_flox_kwargs[kwargs1]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_stack_groupby_unsorted_coord
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_iter
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_properties
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-True-x-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-True-y-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-True-y-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-True-abc-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-False-x-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-False-y-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-False-y-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[True-False-abc-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-True-x-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-True-y-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-True-y-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-True-abc-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-False-x-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-False-y-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-False-y-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_identity[False-False-abc-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_sum
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reductions[sum]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reductions[mean]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reductions[median]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_count
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[None-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[None-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[True-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[True-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[False-True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_reduce_keep_attrs[False-False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_keep_attrs[None]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_keep_attrs[True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_keep_attrs[False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_center
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_ndarray
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_map_changes_metadata
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_math_squeeze[True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_math_squeeze[False]
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_math
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_math_not_aligned
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_restore_dim_order
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_restore_coord_dims
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_first_and_last
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_multidim
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_multidim_map
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_bins
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_bins_empty
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_bins_multidim
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_bins_sort
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_assign_coords
+PASSED xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_fillna
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_da_resample_func_args
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample_first
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample_bad_resample_dim
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample_drop_nondim_coords
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample_keep_attrs
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_resample_skipna
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_nd
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_tolerance
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_interpolate
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_interpolate_bug_2197
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_interpolate_regression_1605
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_interpolate_dask[True]
+PASSED xarray/tests/test_groupby.py::TestDataArrayResample::test_upsample_interpolate_dask[False]
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_and_first
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_min_count
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_by_mean_with_keep_attrs
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_loffset
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_by_mean_discarding_attrs
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_by_last_discarding_attrs
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_drop_nondim_coords
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_old_api
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_resample_ds_da_are_the_same
+PASSED xarray/tests/test_groupby.py::TestDatasetResample::test_ds_resample_apply_func_args
+PASSED xarray/tests/test_groupby.py::test_groupby_cumsum
+SKIPPED [1] xarray/tests/test_dataarray.py:6572: requires cupy
+SKIPPED [1] xarray/tests/test_dataset.py:6684: requires cupy
+XFAIL xarray/tests/test_dataarray.py::TestDataArray::test_astype_subok - reason: DataArray cannot be backed yet by a subclasses of np.ndarray
+XFAIL xarray/tests/test_dataarray.py::TestDataArray::test_copy_coords[True-expected_orig0]
+XFAIL xarray/tests/test_dataarray.py::TestReduce1D::test_idxmin[True-datetime] - reason: dask operation 'argmin' breaks when dtype is datetime64 (M)
+XFAIL xarray/tests/test_dataarray.py::TestReduce1D::test_idxmax[True-datetime] - reason: dask operation 'argmax' breaks when dtype is datetime64 (M)
+XFAIL xarray/tests/test_dataarray.py::TestReduce2D::test_idxmin[dask-datetime] - reason: dask operation 'argmin' breaks when dtype is datetime64 (M)
+XFAIL xarray/tests/test_dataarray.py::TestReduce2D::test_idxmax[dask-datetime] - reason: dask operation 'argmax' breaks when dtype is datetime64 (M)
+XFAIL xarray/tests/test_dataset.py::TestDataset::test_copy_coords[True-expected_orig0]
+XPASS xarray/tests/test_dataarray.py::TestDataArray::test_copy_coords[False-expected_orig1] 
+XPASS xarray/tests/test_dataset.py::TestDataset::test_copy_coords[False-expected_orig1] 
+FAILED xarray/tests/test_dataarray.py::TestDataArray::test_reset_index - Asse...
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index - Assertio...
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_dims
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[foo-False-dropped0-converted0-renamed0]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[foo-True-dropped1-converted1-renamed1]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[x-False-dropped2-converted2-renamed2]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[x-True-dropped3-converted3-renamed3]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg4-False-dropped4-converted4-renamed4]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg5-True-dropped5-converted5-renamed5]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg6-False-dropped6-converted6-renamed6]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg7-True-dropped7-converted7-renamed7]
+FAILED xarray/tests/test_groupby.py::test_groupby_drops_nans - AssertionError...
+= 12 failed, 946 passed, 2 skipped, 7 xfailed, 2 xpassed, 7 warnings in 19.43s =

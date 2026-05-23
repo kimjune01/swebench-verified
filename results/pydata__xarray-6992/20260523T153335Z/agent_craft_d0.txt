@@ -1,0 +1,32 @@
+## RESOLVED
+
+All FAIL_TO_PASS tests are now passing. The fix addresses all three bugs identified in the recon phase:
+
+**Changes made to `xarray/core/dataset.py`:**
+
+1. **Fixed drop_variables population:**
+   - When `drop=True`: drop all coords from drop_indexes except those recreated in new_variables
+   - When `drop=False` and resetting MultiIndex dimension: drop the dimension coord
+   - When `drop=False` and resetting non-MultiIndex: keep for conversion to base variable
+
+2. **Added dimension renaming for single-level indexes:**
+   - When MultiIndex reduces to PandasIndex, rename the variable from level name to dimension name
+   - Drop the old level variable that was renamed
+
+3. **Fixed new index creation logic:**
+   - Only create new index variables if the dimension itself is not being explicitly reset
+   - When all levels are reset, mark dimension coord for dropping
+
+4. **Fixed variable conversion:**
+   - Coords in drop_indexes that aren't dropped are converted to base variables
+   - Implemented in the variables dict comprehension
+
+5. **Fixed coord_names update:**
+   - Changed to `(self._coord_names | set(new_variables)) & set(variables)` to ensure only existing variables are included
+
+6. **Changed to _replace_with_new_dims:**
+   - Ensures unused dimensions are properly removed from the dataset
+
+The fix handles all edge cases correctly: resetting MultiIndex dimensions, resetting levels, full reset of all levels, partial reset, and simple indexed coordinates.
+
+---STDERR---

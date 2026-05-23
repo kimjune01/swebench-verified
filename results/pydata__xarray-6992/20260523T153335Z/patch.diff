@@ -1,0 +1,56 @@
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 620f32f8..06b95491 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -4159,27 +4159,47 @@ class Dataset(
+                         for k in level_names
+                         if k not in dims_or_levels
+                     }
+-                    if level_vars:
++                    if level_vars and index.dim not in dims_or_levels:
+                         idx = index.keep_levels(level_vars)
+                         idx_vars = idx.create_variables(level_vars)
++                        # When reduced to single-level PandasIndex, rename to dimension name
++                        if isinstance(idx, PandasIndex):
++                            (idx_var,) = idx_vars.values()
++                            idx_vars = {idx.dim: idx_var}
++                            # Drop the old level variable that was renamed
++                            drop_variables.extend(level_vars.keys())
+                         new_indexes.update({k: idx for k in idx_vars})
+                         new_variables.update(idx_vars)
++                    else:
++                        # When all levels are reset, mark dimension coord for dropping
++                        if not drop:
++                            drop_variables.append(index.dim)
+                 replaced_indexes.append(index)
+ 
+             if drop:
+                 drop_variables.append(name)
++            elif name in self.dims and isinstance(index, PandasMultiIndex):
++                drop_variables.append(name)
++
++        # For drop=True, also drop de-indexed coords that aren't recreated
++        if drop:
++            drop_variables.extend(coord for coord in drop_indexes if coord not in new_variables)
++
++        drop_variables_set = set(drop_variables)
+ 
+         indexes = {k: v for k, v in self._indexes.items() if k not in drop_indexes}
+         indexes.update(new_indexes)
+ 
+         variables = {
+-            k: v for k, v in self._variables.items() if k not in drop_variables
++            k: v.to_base_variable() if k in drop_indexes and k not in new_variables else v
++            for k, v in self._variables.items()
++            if k not in drop_variables_set
+         }
+         variables.update(new_variables)
+ 
+-        coord_names = set(new_variables) | self._coord_names
++        coord_names = (self._coord_names | set(new_variables)) & set(variables)
+ 
+-        return self._replace(variables, coord_names=coord_names, indexes=indexes)
++        return self._replace_with_new_dims(variables, coord_names=coord_names, indexes=indexes)
+ 
+     def reorder_levels(
+         self: T_Dataset,

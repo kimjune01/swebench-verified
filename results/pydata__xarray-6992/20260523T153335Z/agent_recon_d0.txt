@@ -1,0 +1,53 @@
+Perfect! I've completed the recon phase. Here's my diagnosis:
+
+# Recon: pydata__xarray-6992
+
+## Failure summary
+
+The failing tests check `reset_index` behavior for Dataset and DataArray objects. When `reset_index(..., drop=True)` is called, coordinate names are removed from `_variables` but not from `_coord_names`, violating the invariant that `_coord_names` should be a subset of `_variables.keys()`. This causes `DataVariables.__len__()` to compute `len(_variables) - len(_coord_names)`, which returns a negative value, triggering `ValueError: __len__() should return >= 0` when the dataset repr is generated.
+
+Additionally, when resetting a multi-index dimension without `drop=True`, the dimension coordinate variable is not removed (but should be), and indexed coordinates are not converted to base variables (but should be).
+
+## Suspect set
+
+- `xarray/core/dataset.py` lines 4108-4191: `Dataset.reset_index` method - doesn't properly update `_coord_names` or `_variables`
+- `xarray/core/dataset.py` lines 363-368: `DataVariables.__len__` method - assumes `len(_coord_names) <= len(_variables)` but this invariant is broken by `reset_index`
+
+## Root cause
+
+The `reset_index` method has three bugs:
+
+1. **coord_names not updated**: Line 4187 sets `coord_names = set(new_variables) | self._coord_names`, which adds new variables but never removes dropped coordinates. When coordinates are removed from `_variables` via `drop_variables`, they remain in `_coord_names`, breaking the invariant.
+
+2. **Dimension coordinates not dropped**: When resetting a multi-index dimension (not a level) without `drop=True`, the dimension coordinate should be removed from `_variables`, but the current logic doesn't add it to `drop_variables`.
+
+3. **Variables not converted**: When `drop=False`, coordinates that are de-indexed should be converted from `IndexVariable` to `Variable` (base variable), but this conversion never happens.
+
+The expected behavior per test_reset_index_drop_convert:
+- `reset_index("x", drop=False)` where x has levels foo, bar: drop ["x"], convert ["foo", "bar"] to base variables
+- `reset_index("x", drop=True)`: drop ["x", "foo", "bar"] entirely
+- All dropped coords must be removed from `_coord_names`
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `xarray/core/dataset.py:4187` — `coord_names = set(new_variables) | self._coord_names` (never removes dropped coords)
+- `xarray/core/dataset.py:4169` — `if drop: drop_variables.append(name)` (only adds explicitly named variable, not dimension coords or all associated coords)
+- `xarray/core/dataset.py:4183-4186` — variables dict constructed but no conversion from IndexVariable to Variable
+
+## Edit sites
+
+- `xarray/core/dataset.py` lines 4169-4187: In the `reset_index` method, after the loop that builds `drop_indexes`, add logic to:
+  1. Populate `drop_variables` correctly: when `drop=True`, include all coords from `drop_indexes`; when `drop=False`, include dimension coords from `drop_indexes`
+  2. After building the `variables` dict, convert de-indexed coordinates from `IndexVariable` to `Variable` 
+  3. Change the `coord_names` line to: `coord_names = (self._coord_names | set(new_variables)) & variables.keys()` to ensure only existing variables are included
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and test failures.
+
+## Open questions
+
+None — the fix is straightforward.
+
+---STDERR---

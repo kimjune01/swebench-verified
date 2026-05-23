@@ -1,0 +1,33 @@
+# Audit: pydata__xarray-6992
+
+## Patch Status
+✓ Patch is live: xarray/core/dataset.py (24 insertions, 4 deletions)
+
+## FAIL_TO_PASS Results
+All required tests now **PASS**:
+- xarray/tests/test_dataarray.py::TestDataArray::test_reset_index → PASS
+- xarray/tests/test_dataset.py::TestDataset::test_reset_index → PASS  
+- xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_dims → PASS
+- xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert (all 8 parametrized variants) → PASS
+
+## PASS_TO_PASS Regressions
+None.
+
+## Pre-existing Failures
+None. All xfails (7) and skips (2) match the baseline capture.
+
+## Gate Summary
+- **958 passed**, 2 skipped, 7 xfailed, 2 xpassed, 7 warnings
+- Runtime: 15.98s
+- **Zero failures, zero regressions**
+
+The fix correctly handles all edge cases identified during craft:
+- MultiIndex dimension reset with drop=True
+- Partial level reset vs. full reset
+- Dimension renaming when MultiIndex reduces to PandasIndex
+- Proper cleanup of dropped coordinates from _coord_names
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
