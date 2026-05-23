@@ -1,0 +1,56 @@
+Now let me output the diagnosis:
+
+```markdown
+# Recon: sympy__sympy-19040
+
+## Failure summary
+
+The test `test_issue_5786` checks that `factor(expand((x - I*y)*(z - I*t)), extension=[I])` correctly returns the fully factored form. The test fails because `factor` with `extension=[I]` returns only `x - I*y`, dropping the factor `z - I*t`. Similarly, for simpler cases like `(x-1)*(y-1)`, using `extension=[I]` returns only `x-1`, missing the `y-1` factor.
+
+## Suspect set
+
+- `sympy/polys/factortools.py` lines 1138-1165: `dmp_ext_factor` function - factors multivariate polynomials over algebraic number fields
+- `sympy/polys/sqfreetools.py` lines 229-263: `dmp_sqf_part` function - computes square-free part (called by `dmp_ext_factor`)
+
+## Root cause
+
+The `dmp_ext_factor` function directly applies `dmp_sqf_part` to the input polynomial without first separating multivariate content from the primitive part. 
+
+For a polynomial like `f = (x-1)(y-1)`:
+- `dmp_sqf_part` computes `df/dx = y-1`
+- It then computes `gcd(f, df/dx) = gcd((x-1)(y-1), y-1) = y-1`
+- The square-free part is `f / gcd = (x-1)(y-1) / (y-1) = x-1`
+
+The bug: `dmp_sqf_part` treats `y-1` as a "repeated factor" because it appears in both `f` and `df/dx`, but `y-1` appears in `df/dx` not because it's repeated in `f`, but because it's a factor that doesn't depend on `x`.
+
+The correct approach (used by `dmp_zz_factor` at lines 1042-1100) is to first separate the polynomial using `dmp_primitive` into:
+- Content: GCD of coefficients when viewed as univariate in the main variable  
+- Primitive part: the polynomial divided by its content
+
+Then factor each separately and combine the results.
+
+Confidence: **induction** — 90%
+
+Supporting evidence:
+- `sympy/polys/factortools.py:1148` — `f, F = dmp_sqf_part(f, u, K), f` (no content separation)
+- `sympy/polys/factortools.py:1087` — `G, g = dmp_primitive(g, u, K)` (dmp_zz_factor does use content separation)
+- Manual trace confirms `dmp_sqf_part((x-1)(y-1))` returns `x-1`
+- Testing shows `factor((x-1)*(y-1), extension=[I])` returns only `x-1`
+
+## Edit sites
+
+- `sympy/polys/factortools.py` lines 1138-1165 (`dmp_ext_factor` function): Add content/primitive separation before calling `dmp_sqf_part`. Follow the pattern used in `dmp_zz_factor`:
+  1. Separate the monic polynomial into content `cont` and primitive part `prim` using `dmp_primitive`
+  2. Factor the primitive part using the existing sqf_norm approach
+  3. Recursively call `dmp_ext_factor` on the content (which is a polynomial in u-1 variables)
+  4. Combine the factors from both content and primitive parts
+  5. Ensure trial division is done on the original polynomial `F` to recover multiplicities
+
+## Open questions
+
+- Need to verify the correct way to combine the leading coefficient `lc` with the content's leading coefficient
+- Need to handle the edge case where u-1 == 0 (content becomes univariate)
+- Should verify that recursive call on content converges correctly for deeply nested multivariate cases
+```
+
+---STDERR---

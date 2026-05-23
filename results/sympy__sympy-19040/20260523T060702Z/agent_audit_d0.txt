@@ -1,0 +1,27 @@
+# Audit: sympy__sympy-19040
+
+## FAIL_TO_PASS
+- test_issue_5786: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 150 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Gate summary
+```
+================= tests finished: 150 passed, in 8.47 seconds ==================
+```
+
+The craft patch successfully fixed the multivariate square-free computation by taking the gcd with all partial derivatives instead of just the first variable's derivative. This prevents the algorithm from incorrectly treating independent factors as repeated factors.
+
+**Patch verification:**
+- `test_issue_5786` now passes (was failing on base)
+- All 149 PASS_TO_PASS tests remain passing
+- Zero regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

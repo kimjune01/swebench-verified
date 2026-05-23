@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_issue_5786` pass. The bug was in `dmp_sqf_part()` which computed the gcd with only the first variable's derivative, incorrectly treating factors independent of that variable as repeated factors. The fix computes the gcd with all partial derivatives, correctly identifying the square-free part of multivariate polynomials.
+
+---STDERR---
