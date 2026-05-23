@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes all tests. The issue was that `cursor.fetchone()[0]` raised TypeError when the culling SQL returned no rows. The solution stores the fetchone result in a variable and checks for None before indexing, making culling a no-op when the cache table is empty or the offset exceeds the row count.
+
+---STDERR---

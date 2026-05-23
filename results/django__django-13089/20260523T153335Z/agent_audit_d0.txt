@@ -1,0 +1,23 @@
+# Audit: django__django-13089
+
+## FAIL_TO_PASS
+- test_cull_delete_when_store_empty (cache.tests.DBCacheTests): **PASS** ✓
+- test_cull_delete_when_store_empty (cache.tests.DBCacheWithTimeZoneTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. Full gate output: OK (483 tests run, 117 skipped, 0 failures).
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None. The base capture showed the two FAIL_TO_PASS tests failing with TypeError, no other failures.
+
+## Summary
+The craft patch successfully resolves the issue:
+- **Patch applied:** `django/core/cache/backends/db.py` modified (5 insertions, 3 deletions)
+- **Fix:** Changed line 272 from `cursor.fetchone()[0]` to store the result first, then check `if cutoff is not None:` before indexing
+- **Root cause addressed:** Empty cache table caused `cache_key_culling_sql()` to return no rows, making `fetchone()` return None, which raised TypeError when indexed
+- **Gate result:** All 483 tests passed, 117 skipped, 0 failures
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

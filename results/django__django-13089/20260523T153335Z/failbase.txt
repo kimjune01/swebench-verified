@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 cache.tests
+
+get_many returns nothing for the dummy cache backend ... ok
+test_get_many_invalid_key (cache.tests.DummyCacheTests) ... ok
+test_get_or_set (cache.tests.DummyCacheTests) ... ok
+test_get_or_set_callable (cache.tests.DummyCacheTests) ... ok
+test_has_key (cache.tests.DummyCacheTests)
+The has_key method doesn't ever return True for the dummy cache backend ... ok
+test_in (cache.tests.DummyCacheTests)
+The in operator doesn't ever return True for the dummy cache backend ... ok
+test_incr (cache.tests.DummyCacheTests)
+Dummy cache values can't be incremented ... ok
+test_incr_version (cache.tests.DummyCacheTests)
+Dummy cache versions can't be incremented ... ok
+test_non_existent (cache.tests.DummyCacheTests)
+Nonexistent keys aren't found in the dummy cache backend ... ok
+test_set_many (cache.tests.DummyCacheTests)
+set_many does nothing for the dummy cache backend ... ok
+test_set_many_invalid_key (cache.tests.DummyCacheTests) ... ok
+test_simple (cache.tests.DummyCacheTests)
+Dummy cache backend ignores cache set calls ... ok
+test_touch (cache.tests.DummyCacheTests)
+Dummy cache can't do touch(). ... ok
+test_unicode (cache.tests.DummyCacheTests)
+Unicode values are ignored by the dummy cache ... ok
+test_cache_key_i18n_formatting (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_i18n_timezone (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_i18n_translation (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_i18n_translation_accept_language (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_no_i18n (cache.tests.PrefixedCacheI18nTest) ... ok
+test_middleware (cache.tests.PrefixedCacheI18nTest) ... ok
+test_middleware_doesnt_cache_streaming_response (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_varies_by_url (cache.tests.PrefixedCacheUtils) ... ok
+test_get_cache_key (cache.tests.PrefixedCacheUtils) ... ok
+test_get_cache_key_with_query (cache.tests.PrefixedCacheUtils) ... ok
+test_learn_cache_key (cache.tests.PrefixedCacheUtils) ... ok
+test_patch_cache_control (cache.tests.PrefixedCacheUtils) ... ok
+test_patch_vary_headers (cache.tests.PrefixedCacheUtils) ... ok
+test_long_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_proper_escaping (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_ints_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_many_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_one_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_unicode_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_without_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_get_cache_key (cache.tests.TestWithTemplateResponse) ... ok
+test_get_cache_key_with_query (cache.tests.TestWithTemplateResponse) ... ok
+test_patch_vary_headers (cache.tests.TestWithTemplateResponse) ... ok
+
+======================================================================
+ERROR: test_cull_delete_when_store_empty (cache.tests.DBCacheTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/cache/tests.py", line 633, in test_cull_delete_when_store_empty
+    cull_cache.set('force_cull_delete', 'value', 1000)
+  File "/testbed/django/core/cache/backends/db.py", line 100, in set
+    self._base_set('set', key, value, timeout)
+  File "/testbed/django/core/cache/backends/db.py", line 132, in _base_set
+    self._cull(db, cursor, now)
+  File "/testbed/django/core/cache/backends/db.py", line 272, in _cull
+    [cursor.fetchone()[0]])
+TypeError: 'NoneType' object is not subscriptable
+
+======================================================================
+ERROR: test_cull_delete_when_store_empty (cache.tests.DBCacheWithTimeZoneTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/cache/tests.py", line 633, in test_cull_delete_when_store_empty
+    cull_cache.set('force_cull_delete', 'value', 1000)
+  File "/testbed/django/core/cache/backends/db.py", line 100, in set
+    self._base_set('set', key, value, timeout)
+  File "/testbed/django/core/cache/backends/db.py", line 132, in _base_set
+    self._cull(db, cursor, now)
+  File "/testbed/django/core/cache/backends/db.py", line 272, in _cull
+    [cursor.fetchone()[0]])
+TypeError: 'NoneType' object is not subscriptable
+
+----------------------------------------------------------------------
+Ran 483 tests in 71.706s
+
+FAILED (errors=2, skipped=117)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Destroying test database for alias 'other' ('file:memorydb_other?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application cache
+Operations to perform:
+  Synchronize unmigrated apps: auth, cache, contenttypes, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table cache_poll
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+Operations to perform:
+  Synchronize unmigrated apps: auth, cache, contenttypes, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table cache_poll
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

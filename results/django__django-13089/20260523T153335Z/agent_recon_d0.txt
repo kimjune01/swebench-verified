@@ -1,0 +1,39 @@
+# Recon: django__django-13089
+
+## Failure summary
+The tests `test_cull_delete_when_store_empty` verify that the database cache backend handles culling when forcing deletion on an empty cache store. The tests set `_max_entries = -1` to trigger culling on the first cached record insertion into an empty database. The `_cull` method fails with `TypeError: 'NoneType' object is not subscriptable` at line 272 of `django/core/cache/backends/db.py` when `cursor.fetchone()` returns `None` and the code attempts to index it with `[0]`.
+
+## Suspect set
+- `django/core/cache/backends/db.py` lines 255-272: The `_cull` method, specifically lines 267-272 where the culling SQL is executed and the result is used without checking for None
+
+## Root cause
+The `_cull` method executes a SQL query (`cache_key_culling_sql()`) to find the cache key at a specific offset position, which will be used as the cutoff point for deletion. When the cache table is empty or has fewer entries than the calculated offset (`cull_num`), this query returns no rows. The code at line 272 calls `cursor.fetchone()[0]` without checking if `fetchone()` returned `None`, causing a TypeError when trying to subscript None.
+
+The code path:
+1. Test sets `_max_entries = -1` and calls `set()` on empty cache
+2. `_base_set` counts table rows: `num = 0`
+3. Condition `num > self._max_entries` evaluates to `0 > -1` → True
+4. `_cull` is called with empty table
+5. Inside `_cull`, `cull_num = 0 // 3 = 0`
+6. Query `SELECT cache_key FROM table ORDER BY cache_key LIMIT 1 OFFSET 0` returns no rows (empty table)
+7. `cursor.fetchone()` returns `None`
+8. Attempting `None[0]` raises TypeError
+
+**Confidence:** Deduction — 99%
+
+Supporting evidence:
+- `django/db/backends/base/operations.py:85` — culling SQL is `SELECT cache_key FROM %s ORDER BY cache_key LIMIT 1 OFFSET %%s`
+- `django/core/cache/backends/db.py:272` — only location where `fetchone()[0]` is used without None-check
+- `django/core/cache/backends/db.py:121,264` — other `fetchone()[0]` calls follow `SELECT COUNT(*)` which always returns a row
+- `django/core/cache/backends/db.py:152,253` — other `fetchone()` calls check for None before use
+
+## Edit sites
+- `django/core/cache/backends/db.py` lines 267-272: After executing `connection.ops.cache_key_culling_sql()`, store the result of `cursor.fetchone()` in a variable. Check if the result is `None` before attempting to index it with `[0]`. If `None`, skip the DELETE operation since there's nothing to cull (the table is empty or smaller than the offset).
+
+## Rejected hypotheses
+None — the diagnosis is deterministic from the stack trace and code reading.
+
+## Open questions
+None — the fix is straightforward: add a None-check before using the fetchone result.
+
+---STDERR---
