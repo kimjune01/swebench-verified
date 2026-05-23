@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully enables dynamic xfail markers added during test execution. The solution re-evaluates xfail marks in `pytest_runtest_makereport` when `call.when == "call"` and the marker hasn't been evaluated yet, catching markers added via `request.node.add_marker()` during the test function.
+
+Both FAIL_TO_PASS tests now pass:
+- ✓ `test_dynamic_xfail_set_during_runtest_failed` (xfailed=1)
+- ✓ `test_dynamic_xfail_set_during_runtest_passed_strict` (failed=1)
+
+---STDERR---

@@ -1,0 +1,25 @@
+# Audit: pytest-dev__pytest-7490
+
+## FAIL_TO_PASS
+- testing/test_skipping.py::TestXFail::test_dynamic_xfail_set_during_runtest_failed: PASS ✓
+- testing/test_skipping.py::TestXFail::test_dynamic_xfail_set_during_runtest_passed_strict: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Patch Summary
+Added 3 lines to src/_pytest/skipping.py in `pytest_runtest_makereport()`:
+- Re-evaluates xfail marks during the call phase when `xfailed` is None
+- Catches dynamically added xfail markers set during test execution (e.g., via `request.node.add_marker()`)
+- Only applies when `call.when == "call"` and `runxfail` option is not set
+
+## Gate Results
+All 81 tests in testing/test_skipping.py passed. No failures, no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

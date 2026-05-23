@@ -1,0 +1,59 @@
+# Recon: pytest-dev__pytest-7490
+
+## Failure summary
+
+The tests verify that dynamically adding xfail markers during test execution (via `request.node.add_marker(pytest.mark.xfail(...))`) should work like static xfail markers. 
+
+Test 1 (`test_dynamic_xfail_set_during_runtest_failed`): A test that adds an xfail marker and then fails should be treated as "xfailed", not "failed". Currently gets `failed=1` instead of expected `xfailed=1`.
+
+Test 2 (`test_dynamic_xfail_set_during_runtest_passed_strict`): A test that adds a strict xfail marker and then passes should be treated as "failed" (unexpected pass in strict mode), not "passed". Currently gets `passed=1` instead of expected `failed=1`.
+
+The error shows the xfail markers are completely ignored when added dynamically during test execution.
+
+## Suspect set
+
+- `src/_pytest/skipping.py` lines 247-257: `pytest_runtest_call` - re-evaluates xfail marks only BEFORE test runs
+- `src/_pytest/skipping.py` lines 260-306: `pytest_runtest_makereport` - reads xfailed from store without re-evaluating
+- `src/_pytest/skipping.py` lines 234-244: `pytest_runtest_setup` - initial xfail evaluation
+
+## Root cause
+
+Git commit c9737ae91 ("skipping: simplify xfail handling during call phase") removed the post-yield xfail re-evaluation from `pytest_runtest_call`. The old code re-evaluated xfail marks AFTER the test ran (`outcome = yield` then re-evaluate), which would pick up markers added during test execution. The new code only evaluates BEFORE the test runs.
+
+Execution flow for dynamic xfail:
+1. `pytest_runtest_setup` (line 240): Evaluates, finds no marker, stores `None`
+2. `pytest_runtest_call` (line 248-249): Re-evaluates, still no marker, stores `None`  
+3. `pytest_runtest_call` (line 255): `yield` - test function runs, calls `request.node.add_marker(pytest.mark.xfail(...))`
+4. `pytest_runtest_call`: Returns without re-evaluating
+5. `pytest_runtest_makereport` (line 263): Reads `None` from store - marker is ignored
+
+The working test `test_dynamic_xfail_set_during_funcarg_setup` adds markers during fixture setup, which happens before step 3, so the re-evaluation at step 2 finds the marker.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `src/_pytest/skipping.py:263` — `xfailed = item._store.get(xfailed_key, None)` reads from store without re-evaluating
+- `src/_pytest/skipping.py:248-251` — Re-evaluation only happens if `xfailed is None`, but before the test runs
+- Git commit c9737ae91 diff shows the removed post-yield re-evaluation logic
+
+## Edit sites
+
+- `src/_pytest/skipping.py` lines 260-265: In `pytest_runtest_makereport`, add re-evaluation of xfail marks when `call.when == "call"` (during the test execution phase) before reading from store. This ensures markers added during test execution are picked up when creating the test report.
+
+Specific change: Between line 262 (`rep = outcome.get_result()`) and line 263 (`xfailed = item._store.get(xfailed_key, None)`), add:
+```python
+# Re-evaluate xfail marks for call phase to catch dynamically added markers
+if call.when == "call" and not item.config.option.runxfail:
+    item._store[xfailed_key] = evaluate_xfail_marks(item)
+xfailed = item._store.get(xfailed_key, None)
+```
+
+## Rejected hypotheses
+
+None - the root cause is clear from code analysis and git history.
+
+## Open questions
+
+None - the fix is straightforward: re-evaluate xfail marks in `pytest_runtest_makereport` for the "call" phase to catch markers added during test execution.
+
+---STDERR---
