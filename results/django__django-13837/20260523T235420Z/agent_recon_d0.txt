@@ -1,0 +1,61 @@
+# Recon: django__django-13837
+
+## Failure summary
+
+The test `test_run_as_non_django_module` checks that when Python is launched with `-m utils_tests.test_module runserver`, the autoreloader can correctly reconstruct the command-line arguments for restarting the process. Currently, it fails because `get_child_arguments()` returns `[sys.executable, '/testbed/tests/utils_tests/test_module/__main__.py', 'runserver']` instead of the expected `[sys.executable, '-m', 'utils_tests.test_module', 'runserver']`.
+
+The error message shows:
+```
+AssertionError: Lists differ: [..., '/testbed/tests/utils_tests/test_module/__main__.py', 'runserver'] != [..., '-m', 'utils_tests.test_module', 'runserver']
+```
+
+## Suspect set
+
+- `django/utils/autoreload.py` lines 213-248: The `get_child_arguments()` function — specifically lines 219-226 which detect `-m django` usage
+
+## Root cause
+
+The `get_child_arguments()` function only detects when Python was launched with `-m django` by comparing `sys.argv[0]` to Django's `__main__.py` file path (line 223: `if py_script == django_main_path`). This Django-specific approach fails to detect when Python was launched with `-m` for any other package.
+
+According to Python's documentation, the correct way to detect `-m` usage is:
+1. `__main__.__spec__` is not None if and only if Python was launched with `-m` or a directory/zipfile
+2. `__main__.__spec__.parent` is an empty string when launched with a directory/zipfile
+3. Therefore, Python was launched with `-m pkg` if and only if `__main__.__spec__.parent == "pkg"` (non-empty)
+
+The current code path:
+- Line 220: `py_script = Path(sys.argv[0])` — gets the script path
+- Line 223: `if py_script == django_main_path:` — only checks for Django
+- Lines 224-226: Returns `-m django` command
+
+This misses the case where `sys.modules['__main__']` is `utils_tests.test_module.__main__` (or any non-Django module).
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/utils/autoreload.py:223` — `if py_script == django_main_path:` only handles Django
+- Test shows `test_main.__spec__.parent == 'utils_tests.test_module'` exists and is non-empty
+- When running normally (not `-m`), `__main__.__spec__` is `None`, so new check won't break existing behavior
+
+## Edit sites
+
+- `django/utils/autoreload.py` lines 219-226: Replace the Django-specific `-m django` detection with a general check using `__main__.__spec__.parent`:
+  - Remove the import of `django.__main__` and `django_main_path` variable (lines 219-220)
+  - Replace the `if py_script == django_main_path:` check with a check for `__main__.__spec__.parent`
+  - Use `sys.modules['__main__']` to access the main module
+  - Check if `__main__.__spec__` exists, is not None, and has a non-empty `parent` attribute
+  - If so, construct the command with `-m <parent>` where `<parent>` is `__main__.__spec__.parent`
+
+## Competing hypotheses
+
+None — the root cause is clear from the code and test.
+
+## Rejected hypotheses
+
+None.
+
+## Open questions
+
+- Should there be any special handling for edge cases where `__main__.__spec__.parent` exists but is an empty string? (This would indicate directory/zipfile launch, not `-m`)
+  - Answer: Yes, we should check that `parent` is truthy (non-empty) to avoid mishandling directory/zipfile launches
+
+---STDERR---

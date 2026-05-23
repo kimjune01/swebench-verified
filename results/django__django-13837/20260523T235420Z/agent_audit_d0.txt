@@ -1,0 +1,18 @@
+# Audit: django__django-13837
+
+## FAIL_TO_PASS
+- `test_run_as_non_django_module (utils_tests.test_autoreload.TestChildArguments)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The patch successfully generalizes `-m` module detection from Django-specific to any module by inspecting `__main__.__spec__.name` and stripping the `.__main__` suffix. Gate shows 78 tests ran with 58 passing, 20 skipped (watchman). The single FAIL_TO_PASS test now passes, and all PASS_TO_PASS tests remain green.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

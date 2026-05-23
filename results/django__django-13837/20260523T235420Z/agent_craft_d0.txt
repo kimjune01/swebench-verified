@@ -1,0 +1,5 @@
+**RESOLVED** — The FAIL_TO_PASS test now passes. All 78 tests passed including `test_run_as_non_django_module`.
+
+The fix replaced Django-specific `-m django` detection with a general approach using `__main__.__spec__`. The key insight from codex was to use `spec.name` and strip the `.__main__` suffix (using `spec.parent` in that case) rather than using `spec.parent` directly, which handles both package modules like `utils_tests.test_module` and preserves the existing Django behavior.
+
+---STDERR---
