@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 migrations.test_autodetector
+
+test_rename_field_preserved_db_column (migrations.test_autodetector.AutodetectorTests)
+RenameField is used if a field is renamed and db_column equal to the ... ok
+test_rename_foreign_object_fields (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_m2m_through_model (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models that are used in M2M relations as ... ok
+test_rename_model (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models. ... ok
+test_rename_model_case (migrations.test_autodetector.AutodetectorTests)
+Model name is case-insensitive. Changing case doesn't lead to any ... ok
+test_rename_model_reverse_relation_dependencies (migrations.test_autodetector.AutodetectorTests)
+The migration to rename a model pointed to by a foreign key in another ... ok
+test_rename_model_with_fks_in_different_position (migrations.test_autodetector.AutodetectorTests)
+#24537 - The order of fields in a model does not influence ... ok
+test_rename_model_with_renamed_rel_field (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models while simultaneously renaming one ... ok
+test_rename_referenced_primary_key (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_related_field_preserved_db_column (migrations.test_autodetector.AutodetectorTests) ... ok
+test_renamed_referenced_m2m_model_case (migrations.test_autodetector.AutodetectorTests) ... ok
+test_replace_string_with_foreignkey (migrations.test_autodetector.AutodetectorTests)
+#22300 - Adding an FK in the same "spot" as a deleted CharField should ... ok
+test_same_app_circular_fk_dependency (migrations.test_autodetector.AutodetectorTests)
+A migration with a FK between two models of the same app does ... ok
+test_same_app_circular_fk_dependency_with_unique_together_and_indexes (migrations.test_autodetector.AutodetectorTests)
+#22275 - A migration with circular FK dependency does not try ... ok
+test_same_app_no_fk_dependency (migrations.test_autodetector.AutodetectorTests)
+A migration with a FK between two models of the same app ... ok
+test_set_alter_order_with_respect_to (migrations.test_autodetector.AutodetectorTests)
+Setting order_with_respect_to adds a field. ... ok
+test_set_alter_order_with_respect_to_index_constraint_foo_together (migrations.test_autodetector.AutodetectorTests) ... ok
+test_supports_functools_partial (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_changed (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_circular_multi_mti (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_first_inheritance (migrations.test_autodetector.AutodetectorTests)
+Swappable models get their CreateModel first. ... ok
+test_swappable_first_setting (migrations.test_autodetector.AutodetectorTests)
+Swappable models get their CreateModel first. ... ok
+test_swappable_lowercase (migrations.test_autodetector.AutodetectorTests) ... ok
+test_trim_apps (migrations.test_autodetector.AutodetectorTests)
+Trim does not remove dependencies but does remove unwanted apps. ... ok
+test_unmanaged_create (migrations.test_autodetector.AutodetectorTests)
+The autodetector correctly deals with managed models. ... ok
+test_unmanaged_custom_pk (migrations.test_autodetector.AutodetectorTests)
+#23415 - The autodetector must correctly deal with custom FK on ... ok
+test_unmanaged_delete (migrations.test_autodetector.AutodetectorTests) ... ok
+test_unmanaged_to_managed (migrations.test_autodetector.AutodetectorTests) ... ok
+test_auto (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_many_operations_suffix (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_no_operations (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_no_operations_initial (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_none_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_none_name_with_initial_true (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_operation_with_no_suggested_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_single_operation (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_single_operation_long_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_create_models (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_create_models_with_initial_true (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_operations (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+
+======================================================================
+FAIL: test_foo_together_ordering (migrations.test_autodetector.AutodetectorTests)
+index/unique_together also triggers on ordering changes.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_autodetector.py", line 1573, in test_foo_together_ordering
+    self.assertOperationTypes(changes, 'otherapp', 0, [
+  File "/testbed/tests/migrations/test_autodetector.py", line 513, in assertOperationTypes
+    self.fail("Operation type mismatch for %s.%s (expected %s):\n%s" % (
+AssertionError: Operation type mismatch for otherapp.auto_1 (expected ['AlterUniqueTogether', 'AlterIndexTogether']):
+  otherapp:
+    auto_1
+      <AlterUniqueTogether  name='book', unique_together=set()>
+      <AlterIndexTogether  name='book', index_together=set()>
+      <AlterUniqueTogether  name='book', unique_together={('title', 'author')}>
+      <AlterIndexTogether  name='book', index_together={('title', 'author')}>
+
+
+======================================================================
+FAIL: test_remove_field_and_foo_together (migrations.test_autodetector.AutodetectorTests)
+Removed fields will be removed after updating index/unique_together.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_autodetector.py", line 1631, in test_remove_field_and_foo_together
+    self.assertOperationTypes(changes, 'otherapp', 0, [
+  File "/testbed/tests/migrations/test_autodetector.py", line 513, in assertOperationTypes
+    self.fail("Operation type mismatch for %s.%s (expected %s):\n%s" % (
+AssertionError: Operation type mismatch for otherapp.auto_1 (expected ['AlterUniqueTogether', 'AlterIndexTogether', 'RemoveField']):
+  otherapp:
+    auto_1
+      <AlterUniqueTogether  name='book', unique_together=set()>
+      <AlterIndexTogether  name='book', index_together=set()>
+      <AlterUniqueTogether  name='book', unique_together={('author', 'title')}>
+      <AlterIndexTogether  name='book', index_together={('author', 'title')}>
+      <RemoveField  model_name='book', name='newfield'>
+
+
+======================================================================
+FAIL: test_rename_field_and_foo_together (migrations.test_autodetector.AutodetectorTests)
+Fields are renamed before updating index/unique_together.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_autodetector.py", line 1727, in test_rename_field_and_foo_together
+    self.assertOperationTypes(changes, 'otherapp', 0, [
+  File "/testbed/tests/migrations/test_autodetector.py", line 513, in assertOperationTypes
+    self.fail("Operation type mismatch for %s.%s (expected %s):\n%s" % (
+AssertionError: Operation type mismatch for otherapp.auto_1 (expected ['RenameField', 'AlterUniqueTogether', 'AlterIndexTogether']):
+  otherapp:
+    auto_1
+      <RenameField  model_name='book', old_name='newfield', new_name='newfield2'>
+      <AlterUniqueTogether  name='book', unique_together=set()>
+      <AlterIndexTogether  name='book', index_together=set()>
+      <AlterUniqueTogether  name='book', unique_together={('title', 'newfield2')}>
+      <AlterIndexTogether  name='book', index_together={('title', 'newfield2')}>
+
+
+----------------------------------------------------------------------
+Ran 140 tests in 0.076s
+
+FAILED (failures=3)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

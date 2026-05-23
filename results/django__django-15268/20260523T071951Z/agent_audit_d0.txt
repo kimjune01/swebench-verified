@@ -1,0 +1,20 @@
+# Audit: django__django-15268
+
+## FAIL_TO_PASS
+- test_remove_field_and_foo_together: PASS
+- test_rename_field_and_foo_together: PASS
+- test_order_fields_indexes: PASS
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Full gate results
+All 140 tests passed in 0.066s. The patch successfully enables cross-class optimization between AlterUniqueTogether and AlterIndexTogether operations by overriding the `reduce()` method in `AlterTogetherOptionOperation` to return `True` when operations affect the same model but different options (unique_together vs index_together). This allows the optimizer to eliminate redundant clear-then-set operation pairs.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
