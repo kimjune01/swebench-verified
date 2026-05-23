@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully resolved the issue. The FAIL_TO_PASS tests now pass:
+- `testing/test_conftest.py::test_setinitial_conftest_subdirs[test]` ✅
+- `testing/test_conftest.py::test_setinitial_conftest_subdirs[tests]` ✅
+
+The root cause was correctly identified: `_conftestpath2mod` dictionary used `py.path.local` as keys, but lookups were performed with `pathlib.Path` objects. While these types compare equal for the same path, they have different hash values, causing dictionary membership tests to fail.
+
+The fix normalizes all dictionary keys to `pathlib.Path` objects by creating `conftestpath_key = Path(str(conftestpath)).resolve()` and using it consistently for both lookups and storage.
+
+---STDERR---

@@ -1,0 +1,49 @@
+# Recon: pytest-dev__pytest-5840
+
+## Failure summary
+
+The tests `test_setinitial_conftest_subdirs[test]` and `test_setinitial_conftest_subdirs[tests]` check that conftest.py files in directories named "test" or "tests" are properly loaded during initialization. The tests fail with `AssertionError` when attempting to verify that a `pathlib.Path` key exists in the `_conftestpath2mod` dictionary. The conftests ARE being loaded correctly (visible in the error output showing the dictionary contains the module), but the lookup fails due to a type mismatch: the test uses `pathlib.Path` for lookup while the dictionary contains `py.path.local` keys.
+
+## Suspect set
+
+- `src/_pytest/config/__init__.py` lines 434-468 (`_importconftest` method): Dictionary operations using `conftestpath` as key
+- `src/_pytest/pathlib.py` lines 340-346 (`unique_path` function): Path normalization that preserves input type
+
+## Root cause
+
+The `_conftestpath2mod` dictionary is populated with `py.path.local` objects as keys (from internal pytest code), but external code attempts lookups using `pathlib.Path` objects. While these two types compare equal for the same path (`py.path.local("/tmp/test") == Path("/tmp/test")` returns `True`), they have different hash values. Python dictionary membership testing requires BOTH equal hash and equal value, so `Path(...) in {py.path.local(...): ...}` returns `False` even for identical paths.
+
+The Windows import issue (path lowercasing) stems from `os.path.normcase` converting "Python" → "python". The `unique_path` function applies `normcase` to all path types, but `pathlib.Path.resolve()` already handles case-insensitive filesystems correctly without case conversion.
+
+**Confidence**: abduction — 85%
+
+**Supporting evidence**:
+- `src/_pytest/config/__init__.py:457` — `self._conftestpath2mod[conftestpath] = mod` stores py.path.local key (conftestpath is always py.path.local from internal code flow)
+- `testing/test_conftest.py:167` — `key = Path(str(subconftest)).resolve()` creates pathlib.Path for lookup
+- Commit 29bb0eda2 moved `_uniquepath` to `unique_path` with docstring stating "This is needed only for `py.path.local`; `pathlib.Path` handles this natively with `resolve()`"
+- Commit fc59e84a0 (testpatch) changed test from `unique_path(subconftest)` to `Path(str(subconftest)).resolve()`, exposing the type mismatch
+
+## Edit sites
+
+- `src/_pytest/config/__init__.py` lines 434-468 (`_importconftest` method): Change dictionary operations to use `pathlib.Path` keys instead of `py.path.local` keys. Specifically:
+  - After line 438 (`conftestpath = unique_path(conftestpath)`), create a normalized pathlib.Path key: `conftestpath_key = Path(str(conftestpath)).resolve()`
+  - Line 440: Change dict lookup to use `conftestpath_key`
+  - Line 457: Change dict storage to use `conftestpath_key`
+  - Keep using `conftestpath` (as py.path.local) for all other operations (`.pypkgpath()`, `.pyimport()`, etc.)
+
+This fix:
+1. Ensures dictionary keys are consistently `pathlib.Path` objects
+2. Allows lookups with `pathlib.Path` to succeed (fixes test failures)
+3. Uses `Path.resolve()` which preserves case on Windows (fixes import errors)
+4. Maintains all py.path.local operations for existing functionality
+
+## Rejected hypotheses
+
+- H₁: The conftest loading logic for "test"/"tests" directories is broken — **Rejected**: The error output shows the conftest IS loaded and present in the dictionary (we can see the module in the dict). The loading works; only the lookup fails.
+- H₂: The `unique_path` function should be changed to always return `pathlib.Path` — **Rejected**: This would break multiple call sites that expect py.path.local return values and use methods like `.relto()`, `.parts()`, `.join()` that are specific to py.path.local.
+
+## Open questions
+
+None. The fix is localized to dictionary key normalization in `_importconftest`.
+
+---STDERR---

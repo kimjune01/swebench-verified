@@ -1,0 +1,28 @@
+# Audit: pytest-dev__pytest-5840
+
+## FAIL_TO_PASS
+- `testing/test_conftest.py::test_setinitial_conftest_subdirs[test]`: **PASSED** ✅
+- `testing/test_conftest.py::test_setinitial_conftest_subdirs[tests]`: **PASSED** ✅
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Analysis
+The craft patch successfully resolved the issue by normalizing `_conftestpath2mod` dictionary keys to `pathlib.Path` objects at both storage and lookup points. This eliminates the hash mismatch that occurred when `py.path.local` keys were queried with `pathlib.Path` objects.
+
+**Patch summary:**
+- Added `conftestpath_key = Path(str(conftestpath)).resolve()` at line 439
+- Changed dictionary lookup and storage to use the normalized key
+
+**Gate result:** 53 passed, 1 skipped in 1.31s
+- Both FAIL_TO_PASS tests now pass
+- All PASS_TO_PASS tests continue passing
+- No regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
