@@ -1,0 +1,25 @@
+# Audit: django__django-12039
+
+## FAIL_TO_PASS
+- test_descending_columns_list_sql (indexes.tests.SchemaIndexesTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 11 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the gate is clean.
+
+## Patch Summary
+The fix added a space between the column name and suffix (DESC/ASC) in both `Columns.__str__()` and `IndexColumns.__str__()`:
+- Before: `self.quote_name(column) + self.col_suffixes[idx]` → `"headline"DESC`
+- After: `self.quote_name(column) + ' ' + suffix` (when suffix exists) → `"headline" DESC`
+
+The patch correctly handles the case where the suffix may be empty, avoiding spurious trailing spaces.
+
+## Gate Results
+All 24 tests passed (12 skipped as expected for non-applicable databases).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

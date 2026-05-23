@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully makes `test_descending_columns_list_sql` pass. Modified `django/db/backends/ddl_references.py` to add proper spacing between column names and DESC keywords:
+
+1. **Columns.__str__**: Now adds space before suffix only when suffix is non-empty
+2. **IndexColumns.__str__**: Prevents trailing space when suffix is empty
+
+Gate result: All 24 tests passed (including the FAIL_TO_PASS test).
+
+---STDERR---

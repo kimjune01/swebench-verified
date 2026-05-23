@@ -1,0 +1,54 @@
+# Recon: django__django-12039
+
+## Failure summary
+
+The test `test_descending_columns_list_sql` checks that CREATE INDEX statements for descending columns include proper whitespace between the quoted column name and the DESC keyword. Currently, it produces `("headline"DESC)` but expects `("headline" DESC)`. The SQL is functionally valid but lacks aesthetic spacing. A related issue exists in opclass handling where trailing spaces appear when no ordering suffix is present.
+
+## Suspect set
+
+- `django/db/backends/ddl_references.py` lines 85-92: `Columns.__str__` method concatenates suffixes without spacing
+- `django/db/backends/ddl_references.py` lines 110-120: `IndexColumns.__str__` method adds unconditional spacing even for empty suffixes
+- `django/db/models/indexes.py` lines 51-54: generates col_suffixes containing `'DESC'` or `''` (empty string)
+
+## Root cause
+
+The `Columns.__str__` method in `django/db/backends/ddl_references.py` (line ~88) directly concatenates column suffixes without a space:
+
+```python
+return self.quote_name(column) + self.col_suffixes[idx]
+```
+
+When `col_suffixes[idx]` is `'DESC'`, this produces `"headline"DESC"` instead of `"headline" DESC"`. The issue occurs because the code assumes suffixes are either absent (IndexError case) or present, but doesn't account for the need to add spacing when present.
+
+The `Index.create_sql` method passes `col_suffixes = ['DESC']` for descending fields and `col_suffixes = ['']` for ascending fields. The problem statement notes that "it was assumed that the col_suffixes would be empty for ascending order but instead it will contain empty strings" - the code only handles the IndexError case (missing suffix), not the empty string case.
+
+A secondary issue exists in `IndexColumns.__str__` (line ~115) which unconditionally adds a space before the suffix even when it's empty, causing trailing spaces.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/db/backends/ddl_references.py:88` — `return self.quote_name(column) + self.col_suffixes[idx]`
+- `django/db/backends/ddl_references.py:115` — `col = '{} {}'.format(col, self.col_suffixes[idx])`
+- `django/db/models/indexes.py:54` — `col_suffixes = [order[1] for order in self.fields_orders]`
+
+## Edit sites
+
+1. **`django/db/backends/ddl_references.py` lines 86-89** (Columns.col_str inner function):
+   - Change from direct concatenation to conditional spacing
+   - Add space before suffix only if suffix is non-empty
+   - Handle both the IndexError case (suffix not provided) and empty string case
+
+2. **`django/db/backends/ddl_references.py` lines 111-116** (IndexColumns.col_str inner function):
+   - Add conditional check before formatting with suffix
+   - Only append ` {suffix}` if `self.col_suffixes[idx]` is non-empty
+   - Prevents trailing space when opclass is present but no DESC
+
+## Rejected hypotheses
+
+None - the code path is deterministic and the issue is clear from reading the concatenation logic.
+
+## Open questions
+
+None - the fix is straightforward spacing logic.
+
+---STDERR---
