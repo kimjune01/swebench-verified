@@ -1,0 +1,18 @@
+## RESOLVED
+
+Fixed `Mod(3*i, 2)` simplification for integer symbols by modifying the Mul handling block in `sympy/core/mod.py`:
+
+1. **Moved wrapping before condition**: Non-mod terms are now wrapped in `Mod(x, q)` before checking if simplification is possible
+2. **Added `changed` flag**: Detects when wrapping produces actual simplification (at least one term is no longer a Mod instance)
+3. **Updated condition**: Enables distributive simplification when:
+   - Original behavior: Existing Mod terms with matching moduli are present, OR
+   - New behavior: Wrapping simplified at least one term AND all factors are provably integers
+
+The fix required 3 gate iterations to handle edge cases:
+- Iteration 1: codex caught incompatible moduli bug
+- Iteration 2: Discovered regression with non-integer symbols
+- Iteration 3: Final condition balances original and new behaviors
+
+All FAIL_TO_PASS tests now pass without breaking existing tests.
+
+---STDERR---

@@ -1,0 +1,41 @@
+# Recon: sympy__sympy-15599
+
+## Failure summary
+The test `test_Mod` expects `Mod(3*i, 2)` to simplify to `Mod(i, 2)` where `i` is an integer symbol. The modulo operation should distribute the coefficient: since `3*i ≡ i (mod 2)` for any integer `i`, the simplification should occur. However, the current implementation leaves `Mod(3*i, 2)` unchanged, causing the assertion at line 1667 of `sympy/core/tests/test_arit.py` to fail with `AssertionError`.
+
+## Suspect set
+- `sympy/core/mod.py` lines 120-140: The `isinstance(p, Mul)` branch that handles modulo of multiplications. This is where distributive simplification should occur but doesn't trigger for the failing case.
+
+## Root cause
+The Mul simplification block in `sympy/core/mod.py` only activates when the multiplication argument already contains `Mod` terms. At line 126, the condition `if mod_l and all(inner.args[1] == q for inner in mod_l):` requires `mod_l` (the list of Mod terms found in the multiplication) to be non-empty.
+
+For `Mod(3*i, 2)`:
+- The argument `p = 3*i` is a `Mul` with `args = (3, i)`
+- Neither `3` nor `i` is a `Mod`, so after classification: `mod_l = []` and `non_mod_l = [3, i]`
+- The guard condition `if mod_l and ...` evaluates to `False` because `mod_l` is empty
+- The simplification block never executes
+
+The fix should wrap each non-mod term in `Mod(x, q)` first, check if this produces a simplification, and proceed with distributive reduction if either: (1) wrapping changed something, or (2) there were already Mod terms. In this case, `[Mod(3, 2), Mod(i, 2)] = [1, Mod(i, 2)]` which then simplifies to `Mod(i, 2)`.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `sympy/core/mod.py:126` — guard condition requires non-empty `mod_l`
+- Runtime: `Mod(3, 2) = 1`, `Mod(i, 2) = Mod(i, 2)` — transformation would produce change
+- Contrast: `Mod(8*i, 4) = 0` passes because `gcd(8*i, 4) = 4` handles it via GCD extraction (line 145+) before reaching the Mul block
+- For the failing case: `gcd(3*i, 2) = 1` — no GCD extraction, relies on Mul block that doesn't trigger
+
+## Edit sites
+- `sympy/core/mod.py` lines 126-128: Modify the guard condition to trigger when wrapping non-mod terms produces a simplification. The fix:
+  1. Before line 126: Save `was = non_mod_l[:]`
+  2. Before line 126: Apply transformation `non_mod_l = [cls(x, q) for x in non_mod_l]`
+  3. Before line 126: Check `changed = was != non_mod_l`
+  4. At line 126: Change condition from `if mod_l and all(...)` to `if changed or mod_l and all(...)`
+  5. Remove line 128 (now redundant as transformation already applied)
+
+The transformation must happen before the condition check so that `changed` reflects whether any non-mod term simplified when wrapped.
+
+## Open questions
+None. The root cause is deterministic and the fix is localized to the guard condition and transformation order in the Mul handling block.
+
+---STDERR---

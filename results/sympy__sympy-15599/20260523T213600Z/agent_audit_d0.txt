@@ -1,0 +1,19 @@
+# Audit: sympy__sympy-15599
+
+## FAIL_TO_PASS
+- test_Mod: PASS
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_evenness_in_ternary_integer_product_with_odd (expected failure)
+- test_oddness_in_ternary_integer_product_with_odd (expected failure)
+- test_issue_3531 (expected failure)
+
+All three failures were marked as expected ('f') in both the base capture and the current gate output, confirming they are pre-existing issues unrelated to this patch.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

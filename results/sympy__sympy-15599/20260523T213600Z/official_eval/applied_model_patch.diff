@@ -1,0 +1,19 @@
+diff --git a/sympy/core/mod.py b/sympy/core/mod.py
+index eae25630c..5b8f1a16f 100644
+--- a/sympy/core/mod.py
++++ b/sympy/core/mod.py
+@@ -123,9 +123,12 @@ def doit(p, q):
+             for arg in p.args:
+                 both_l[isinstance(arg, cls)].append(arg)
+ 
+-            if mod_l and all(inner.args[1] == q for inner in mod_l):
++            # Try wrapping non-mod terms to check if simplification is possible
++            non_mod_l = [cls(x, q) for x in non_mod_l]
++            changed = any(not isinstance(new, cls) for new in non_mod_l)
++
++            if (mod_l and all(inner.args[1] == q for inner in mod_l)) or (p.is_integer and changed):
+                 # finding distributive term
+-                non_mod_l = [cls(x, q) for x in non_mod_l]
+                 mod = []
+                 non_mod = []
+                 for j in non_mod_l:
