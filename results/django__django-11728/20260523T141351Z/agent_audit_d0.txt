@@ -1,0 +1,21 @@
+# Audit: django__django-11728
+
+## FAIL_TO_PASS
+- `test_simplify_regex (admin_docs.test_views.AdminDocViewFunctionsTests)`: **PASS** ✅
+- `test_app_not_found (admin_docs.test_views.TestModelDetailView)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — all 44 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — fail-on-base baseline showed all tests passing before the patch.
+
+## Summary
+The craft patch successfully fixed both FAIL_TO_PASS tests by moving the bracket-balance check to immediately after decrementing `unmatched_open_brackets` in both `replace_named_groups()` and `replace_unnamed_groups()`. This ensures groups that end at the final character of the pattern are correctly identified and replaced.
+
+Gate ran cleanly with all 46 tests passing in 1.528s. No regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

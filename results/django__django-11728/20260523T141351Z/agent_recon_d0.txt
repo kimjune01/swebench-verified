@@ -1,0 +1,53 @@
+# Recon: django__django-11728
+
+## Failure summary
+
+The test `test_simplify_regex` checks that `simplify_regex()` converts regex URL patterns into human-readable forms by replacing named groups like `(?P<name>\w+)` with `<name>` and unnamed groups like `(\w+)` with `<var>`. Four test cases fail when a regex group (named or unnamed) ends at the final character of the pattern. For example, `r'^(?P<a>\w+)/b/(?P<c>\w+)'` returns `'/<a>/b/(P<c>\w+)'` instead of `'/<a>/b/<c>'` — the trailing `(?P<c>\w+)` group is not replaced.
+
+## Suspect set
+
+- `django/contrib/admindocs/utils.py` lines 169-186: `replace_named_groups()` function, specifically the bracket-matching loop
+- `django/contrib/admindocs/utils.py` lines 206-217: `replace_unnamed_groups()` function, specifically the bracket-matching loop
+
+## Root cause
+
+Both `replace_named_groups()` and `replace_unnamed_groups()` use bracket-matching loops that check `if unmatched_open_brackets == 0` at the **beginning** of each iteration, before processing the current character. When a group's closing `)` is the last character in the pattern substring being scanned:
+
+1. The loop processes the `)` character and decrements `unmatched_open_brackets` to 0
+2. The loop terminates because there are no more characters
+3. The balance-check `if unmatched_open_brackets == 0:` never executes in the next iteration (there is no next iteration)
+4. The group pattern is never appended to the results list
+5. The group never gets replaced
+
+This is an off-by-one error in loop termination. Patterns with trailing characters after the closing `)` work correctly because the next iteration's check succeeds.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/contrib/admindocs/utils.py:173-178` — Balance check happens before processing character:
+  ```python
+  if unmatched_open_brackets == 0:
+      group_pattern_and_name.append((pattern[start:end + idx], group_name))
+      break
+  ```
+- Execution trace for `r'^(?P<c>\w+)'` shows loop decrements to 0 on final `)` but never appends
+
+## Edit sites
+
+1. `django/contrib/admindocs/utils.py` lines 169-186 in `replace_named_groups()`: After the `for idx, val in enumerate(pattern[end:]):` loop completes, add a check: if `unmatched_open_brackets == 0`, append `(pattern[start:end + idx + 1], group_name)` to `group_pattern_and_name`. Note: `idx` will be the last index processed, so the end position is `end + idx + 1`.
+
+2. `django/contrib/admindocs/utils.py` lines 206-217 in `replace_unnamed_groups()`: After the `for idx, val in enumerate(pattern[start + 1:]):` loop completes, add a check: if `unmatched_open_brackets == 0`, append `(start, start + 1 + idx + 1)` to `group_indices`.
+
+## Competing hypotheses
+
+None. The bug is deterministic and directly traced through code execution.
+
+## Rejected hypotheses
+
+None — first diagnosis.
+
+## Open questions
+
+None. The fix is straightforward: handle the edge case where bracket balancing completes on the final character.
+
+---STDERR---
