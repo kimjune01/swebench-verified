@@ -1,0 +1,32 @@
+Now let me output the final recon handoff:
+
+# Recon: scikit-learn__scikit-learn-13124
+
+## Failure summary
+The test `test_shuffle_stratifiedkfold` checks that `StratifiedKFold` with `shuffle=True` produces different fold assignments when given different `random_state` values. The test creates two `StratifiedKFold` objects with `random_state=0` and `random_state=1`, collects their test folds, sorts them, and asserts they should be different. However, both produce identical sorted test sets: `[(0, 5), (1, 6), (2, 7), (3, 8), (4, 9)]`, causing the assertion `test_set1 != test_set2` to fail. The issue is that while fold *order* changes between random states, the fold *composition* (which samples are paired together) remains identical.
+
+## Suspect set
+- `sklearn/model_selection/_split.py` lines 622-658: `StratifiedKFold._make_test_folds()` method, specifically line 623 where `rng = self.random_state` and lines 654-656 where KFold objects are created with that rng.
+
+## Root cause
+The bug is at line 623 of `sklearn/model_selection/_split.py`. When `shuffle=True`, all per-class KFold splitters receive the same integer `random_state` value. Each KFold independently calls `check_random_state(self.random_state)` in its `_iter_test_indices` method, which creates a **fresh** RandomState object from the same integer seed. This causes all classes to use identical shuffle patterns (e.g., if class 0 samples get reordered as `[2,0,1,3,4]`, class 1 samples also get reordered as `[2,0,1,3,4]` relative to their own class). Consequently, sample i from class 0 is always paired with sample i from class 1 in the folds, regardless of `random_state` value.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `_split.py:623` — `rng = self.random_state` assigns integer directly
+- `_split.py:654-656` — Multiple KFold objects created with same `rng`
+- `_split.py:433-434` — `KFold._iter_test_indices` calls `check_random_state(self.random_state).shuffle(indices)`, creating new RandomState from integer each time
+- Simulation confirmed: two KFold objects with integer `random_state=0` produce identical shuffles; two KFold objects sharing a RandomState object produce different shuffles
+- `check_random_state()` creates new RandomState from integers but returns RandomState objects as-is
+
+## Edit sites
+- `sklearn/model_selection/_split.py` line 623: Change `rng = self.random_state` to `rng = check_random_state(self.random_state)`. This converts the integer/None to a RandomState object once. When this object is passed to multiple KFold objects, they share the same stateful RNG, and each shuffle call advances the state, producing different shuffle patterns for each class.
+
+## Rejected hypotheses
+None — the root cause was identified directly by tracing the code path and confirmed via simulation.
+
+## Open questions
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

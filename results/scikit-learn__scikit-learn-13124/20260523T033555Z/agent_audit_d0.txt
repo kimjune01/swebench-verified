@@ -1,0 +1,33 @@
+# Audit: scikit-learn__scikit-learn-13124
+
+## FAIL_TO_PASS
+- `test_shuffle_stratifiedkfold`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None — all 61 tests passed with zero regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the fail-on-base capture showed only `test_shuffle_stratifiedkfold` failing, which now passes.
+
+## Classification Summary
+The craft patch successfully resolved the issue:
+
+**Patch applied:**
+```python
+# sklearn/model_selection/_split.py line 623
+- rng = self.random_state
++ rng = check_random_state(self.random_state) if self.shuffle else self.random_state
+```
+
+**Results:**
+- Target test (`test_shuffle_stratifiedkfold`) that was failing on base: **now PASSES**
+- All 61 tests in the suite: **PASS**
+- Zero regressions introduced
+- Pre-existing failures: none
+
+The fix correctly addresses the root cause by ensuring that when `shuffle=True`, a stateful `RandomState` object is created and shared across per-class KFold splitters. This produces different shuffle patterns for each class with different random_state values. When `shuffle=False`, the original behavior is preserved.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

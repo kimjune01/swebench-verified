@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The fix is complete. Changed line 623 in `sklearn/model_selection/_split.py` from:
+```python
+rng = self.random_state
+```
+to:
+```python
+rng = check_random_state(self.random_state) if self.shuffle else self.random_state
+```
+
+This ensures that when `shuffle=True`, all per-class KFold splitters share a single stateful RandomState object rather than each creating fresh RandomState objects from the same integer seed. Each class now consumes different RNG state, producing truly different fold compositions across different `random_state` values. The conditional preserves existing behavior for non-shuffled splits.
+
+---STDERR---
