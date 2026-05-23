@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Modified `django/contrib/admin/checks.py` to include the field name in the E035 error message. Both FAIL_TO_PASS tests now pass (56/56 tests passing overall).
+
+---STDERR---

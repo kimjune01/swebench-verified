@@ -1,0 +1,39 @@
+# Recon: django__django-16899
+
+## Failure summary
+The tests `test_nonexistent_field` and `test_nonexistent_field_on_inline` check that ModelAdmin readonly_fields validation produces helpful error messages when a field doesn't exist. The tests expect the error message to include `refers to '<field_name>', which` to identify the problematic field by name (e.g., "refers to 'nonexistent', which"), but the current implementation only includes the index position (e.g., "readonly_fields[1]") without naming the field. The tests fail with assertion errors showing the expected vs actual error message formats don't match.
+
+## Suspect set
+- `django/contrib/admin/checks.py` lines 761-785: The `_check_readonly_fields_item` method that generates the admin.E035 error message
+
+## Root cause
+The `_check_readonly_fields_item` method at `django/contrib/admin/checks.py:761-785` generates error message E035 without including the field name, which is inconsistent with other admin check error messages. Lines 773-776 format the error as:
+```python
+"The value of '%s' is not a callable, an attribute of '%s', or an attribute of '%s'." % (label, obj.__class__.__name__, obj.model._meta.label,)
+```
+
+But should include the field name like other checks (lines 570, 906, 962, 1105, 1139) do:
+```python
+"The value of '%s' refers to '%s', which is not a callable..." % (label, field_name, ...)
+```
+
+The method receives `field_name` as a parameter but doesn't include it in the error message string.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/contrib/admin/checks.py:773-776` — error message construction missing field_name
+- `django/contrib/admin/checks.py:570` — example of correct pattern with "refers to '%s'"
+- `tests/admin_checks/tests.py:808` — test expects "refers to 'nonexistent', which"
+- `tests/admin_checks/tests.py:822` — test expects "refers to 'i_dont_exist', which"
+
+## Edit sites
+- `django/contrib/admin/checks.py` lines 773-780: Modify the error message string to add `refers to '%s', which ` after the first placeholder and insert `field_name` as the second parameter in the string formatting tuple. Change from `(label, obj.__class__.__name__, obj.model._meta.label,)` to `(label, field_name, obj.__class__.__name__, obj.model._meta.label,)`.
+
+## Rejected hypotheses
+None — the root cause is unambiguous from code inspection.
+
+## Open questions
+None — the fix is straightforward and follows the established pattern used by other admin checks.
+
+---STDERR---

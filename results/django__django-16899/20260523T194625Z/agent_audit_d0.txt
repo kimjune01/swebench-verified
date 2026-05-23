@@ -1,0 +1,33 @@
+# Audit: django__django-16899
+
+## FAIL_TO_PASS
+- test_nonexistent_field (admin_checks.tests.SystemChecksTestCase.test_nonexistent_field): **PASS** ✓
+- test_nonexistent_field_on_inline (admin_checks.tests.SystemChecksTestCase.test_nonexistent_field_on_inline): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 54 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures
+None — the fail-on-base capture showed all tests passing before the patch.
+
+## Analysis
+The patch modifies `django/contrib/admin/checks.py` lines 773-780 to add the field name to error message E035. The change updates the error format from:
+```
+"The value of '%s' is not a callable, an attribute of '%s', or an attribute of '%s'."
+```
+to:
+```
+"The value of '%s' refers to '%s', which is not a callable, an attribute of '%s', or an attribute of '%s'."
+```
+
+This minimal, surgical change:
+1. Solves both FAIL_TO_PASS tests by including the missing field name in the error message
+2. Introduces zero regressions — all 54 PASS_TO_PASS tests still pass
+3. Aligns the E035 error format with other admin check errors in the same file
+
+Gate output: 56 tests ran in 0.018s, all passed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
