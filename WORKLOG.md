@@ -126,7 +126,7 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 3. Grade: `bash driver/grade_batch.sh b_1 b_2 b_3 b_5 b_6 b_7 b_8 b_9 b_10` (NOT in a subshell with a trailing `&` + echo — that orphans it; let run_in_background hold it). Verify each `/tmp/grade_b_N/report.json`.
 4. `python3 driver/archive_batch.py tasks/batch_012.json /tmp/grade_b_` (ensure only the 9 fresh `/tmp/grade_b_*` dirs are in the glob — stash batch_011's into `/tmp/old_grades/`).
 5. `python3 driver/scoreboard.py`, commit SCOREBOARD.md + this WORKLOG (replace this RESUME block with the batch_012 result entry).
-6. **Teardown (last batch):** terminate the 9 live boxes by IID from `/tmp/b_*.env` (skip the b_4 alias — dedupe by IID), then leak-sweep: `aws ec2 describe-instances --region us-west-2 --filters Name=instance-state-name,Values=running Name=instance-type,Values=m7i.xlarge`. Leave the unrelated `vectorspace-server` + `pageleft` boxes alone.
+6. **No teardown after batch_012** — plan extended to also run batch_013 + batch_014 on these same 9 boxes (watchdogs bumped to ~21:45). Teardown happens only after batch_014: terminate the 9 live boxes by IID from `/tmp/b_*.env` (skip the b_4 alias — dedupe by IID), then leak-sweep `aws ec2 describe-instances --region us-west-2 --filters Name=instance-state-name,Values=running Name=instance-type,Values=m7i.xlarge`. Leave the unrelated `vectorspace-server` + `pageleft` boxes alone.
 
 ## 2026-05-23 — batch_011 archived: 28/30 (2 reasoning losses, 0 DNF, 9-wide)
 
