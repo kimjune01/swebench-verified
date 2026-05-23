@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Fixed the redundant `using` parameter in `execute_sql_flush()`. Both FAIL_TO_PASS tests now pass:
+- ✅ `test_execute_sql_flush_statements`  
+- ✅ `test_sequence_name_length_limits_flush`
+
+The method now uses `self.connection.alias` instead of the redundant parameter, and the call site in `flush.py` was updated accordingly. Gate passed on first run (80/80 tests OK).
+
+---STDERR---

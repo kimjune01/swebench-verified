@@ -1,0 +1,19 @@
+# Audit: django__django-12741
+
+## FAIL_TO_PASS
+- test_execute_sql_flush_statements (backends.base.test_operations.SqlFlushTests): **PASS** ✅
+- test_sequence_name_length_limits_flush (backends.tests.LongNameTest): **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 80 tests passed (11 skipped), no regressions introduced.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The only failure in the base capture was test_execute_sql_flush_statements with ERROR status, which was expected as a FAIL_TO_PASS test and is now resolved.
+
+## Summary
+The craft patch successfully removes the redundant `using` parameter from `execute_sql_flush()` method signature and updates both the method implementation (to use `self.connection.alias` instead) and the single call site in `flush.py`. Both FAIL_TO_PASS tests now pass, and zero regressions were introduced across the entire test suite.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

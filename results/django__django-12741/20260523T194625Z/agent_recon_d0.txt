@@ -1,0 +1,38 @@
+# Recon: django__django-12741
+
+## Failure summary
+
+The tests verify that `execute_sql_flush()` can be called with a simplified signature that omits the `using` parameter. Two tests fail with `TypeError: execute_sql_flush() missing 1 required positional argument: 'sql_list'` when calling `connection.ops.execute_sql_flush(sql_list)` because the current implementation requires two arguments: `execute_sql_flush(self, using, sql_list)`.
+
+## Suspect set
+
+- `django/db/backends/base/operations.py` lines 403-407: The `execute_sql_flush` method definition with redundant `using` parameter
+- `django/core/management/commands/flush.py` line 63: Production call site passing the redundant `database` argument
+
+## Root cause
+
+The `execute_sql_flush` method signature includes a redundant `using` parameter. The method is bound to a specific database connection via `self.connection` (set in `BaseDatabaseOperations.__init__`), and that connection already has an `alias` attribute accessible as `self.connection.alias`. The `using` parameter duplicates information already available to the method.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/backends/base/operations.py:57` — `self.connection = connection` in `__init__` binds the operations object to a connection
+- `django/db/backends/base/base.py:56` — `self.alias = alias` shows connections have an alias attribute
+- `django/db/backends/base/operations.py:404` — `transaction.atomic(using=using, ...)` is the only use of the `using` parameter, which can be replaced with `self.connection.alias`
+- `django/core/management/commands/flush.py:29-63` — Call site shows `database = options['database']`, `connection = connections[database]`, then `connection.ops.execute_sql_flush(database, sql_list)` — passing the same alias used to retrieve the connection
+
+## Edit sites
+
+1. `django/db/backends/base/operations.py` lines 403-404: Remove `using` parameter from method signature and replace its usage in `transaction.atomic(using=using, ...)` with `transaction.atomic(using=self.connection.alias, ...)`
+
+2. `django/core/management/commands/flush.py` line 63: Update call site from `connection.ops.execute_sql_flush(database, sql_list)` to `connection.ops.execute_sql_flush(sql_list)`
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from the error message and code inspection.
+
+## Open questions
+
+None — all call sites enumerated via grep, no subclass overrides found.
+
+---STDERR---
