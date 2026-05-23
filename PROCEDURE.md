@@ -69,6 +69,30 @@ python -m swebench.harness.run_evaluation \
 
 Treat that report, not this repo's `RESOLVED`, as the verdict. (See `LIMITATIONS.md`, item 6.)
 
+## Batch runs (multiple instances, multiple boxes)
+
+For a batch, the tooling parallelizes across boxes and isolates heavy repos:
+
+```bash
+# 1. provision N boxes (each: docker + 180-min self-terminate watchdog)
+for n in b_1 b_2 b_3 b_4 b_5; do bash driver/provision_box.sh $n & done; wait
+
+# 2. shard the batch across boxes — heavy repos (matplotlib) get a solo box,
+#    light ones pack onto the rest (avoids the batch_003 starvation bug)
+python driver/shard_batch.py tasks/batch_NNN.json 5 b   # writes /tmp/b.shard
+
+# 3. run all shards in parallel (each waits for its box's docker)
+bash driver/launch_generic.sh tasks/batch_NNN.json /tmp/b.shard
+
+# 4. official-grade each box's shard, on the box, in parallel
+bash driver/grade_batch.sh b_1 b_2 b_3 b_4 b_5
+
+# 5. archive every run as its own commit (official report included)
+python driver/archive_batch.py tasks/batch_NNN.json /tmp/grade_b_
+```
+
+**Heavy-repo isolation** (`shard_batch.py`): matplotlib images are multi-GB with slow suites; co-located on a shared box they starve other instances into timeouts (observed in batch_003). The sharder gives each heavy instance its own box.
+
 ## 5. Archive into the repo
 
 Copy the run outputs into `results/<instance_id>/` and append a `WORKLOG.md` entry. The committed `results/pallets__flask-5014/` shows the expected shape.

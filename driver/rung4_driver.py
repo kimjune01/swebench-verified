@@ -238,8 +238,12 @@ def audit(inst, box, gate, hgraph, failbase, depth):
 
 def capture_patch(inst, cid, root, tsha):
     iid = inst["instance_id"]; tag = iid.replace("/","_")
+    # Strip agent detritus AND generated test artifacts before diffing, so the captured
+    # model_patch is the fix, not test-run output (matplotlib result_images, pyc, caches,
+    # compiled libs). Without this, `git add -A` swept 100s of KB of artifacts into patches.
     r = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && "
-            f"find . -path ./.git -prune -o \\( -name \"*.bak\" -o -name \"*.bak[0-9]*\" -o -name \"*.orig\" \\) -print -delete >/dev/null 2>&1; "
+            f"find . -path ./.git -prune -o \\( -name \"*.bak\" -o -name \"*.bak[0-9]*\" -o -name \"*.orig\" -o -name \"*.pyc\" -o -name \"*.so\" \\) -print -delete >/dev/null 2>&1; "
+            f"find . -path ./.git -prune -o -type d \\( -name __pycache__ -o -name .pytest_cache -o -name result_images -o -name \"*.egg-info\" \\) -exec rm -rf {{}} + >/dev/null 2>&1; "
             f"git add -A >/dev/null 2>&1; "
             f"git -c core.fileMode=false diff {tsha}'", timeout=120)
     diag = ssh(f"sudo docker exec {cid} bash -lc 'cd {root} && "
