@@ -1,0 +1,38 @@
+# Recon: sympy__sympy-18698
+
+## Failure summary
+The tests check that `sqf_list` (square-free factorization) properly combines factors with equal multiplicities into single polynomial factors. Two tests fail:
+1. `sqf_list(x*(x + y))` returns `(1, [(x, 1), (x + y, 1)])` instead of `(1, [(x**2 + x*y, 1)])`  
+2. `sqf_list((x**2 + 1) * (x - 1)**2 * (x - 2)**3 * (x - 3)**3)` returns `(1, [(x**2 + 1, 1), (x - 1, 2), (x - 3, 3), (x - 2, 3)])` instead of `(1, [(x**2 + 1, 1), (x - 1, 2), (x**2 - 5*x + 6, 3)])`
+
+In both cases, factors with the same multiplicity are kept separate instead of being combined.
+
+## Suspect set
+- `sympy/polys/polytools.py` lines 5898-5965: `_symbolic_factor_list` — processes symbolic expressions by splitting products and calling sqf_list on each factor independently
+- `sympy/polys/polytools.py` lines 5999-6010: in `_generic_factor_list` after `_sorted_factors` — where factors should be combined by multiplicity before returning
+
+## Root cause
+When `sqf_list` is called on a symbolic expression that's already a product (e.g., `x*(x+y)`), the code path goes through `_symbolic_factor_list` which processes each multiplicand separately. For `x*(x+y)`, it processes `x` and `x+y` independently, each getting sqf_list applied to them separately, returning `[(x, 1)]` and `[(x+y, 1)]` respectively. These are then extended into a combined factors list. The problem is that factors with the same multiplicity are never merged into a single polynomial factor.
+
+By contrast, when calling `Poly(x*(x+y), x, y).sqf_list()` directly on a Poly object, the core algorithm `dmp_sqf_list` correctly returns `[(Poly(x**2 + x*y), 1)]` with factors already combined.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/polys/polytools.py:5940-5942` — `factors.extend(_factors)` appends all factors from each multiplicand without checking for equal multiplicities
+- Test output shows `Poly(x*(x+y)).sqf_list()` returns correct combined result `(1, [(Poly(x**2 + x*y), 1)])` while `sqf_list(x*(x+y))` returns separate factors `(1, [(x, 1), (x+y, 1)])`
+
+## Edit sites
+- `sympy/polys/polytools.py` lines 5999-6000: After `fp = _sorted_factors(fp, method)` and `fq = _sorted_factors(fq, method)`, add a combining step when `method == 'sqf'` to merge factors with equal multiplicities by multiplying their polynomials together (Poly supports direct multiplication)
+
+Specific change needed:
+1. Create a helper function `_combine_equal_multiplicities(factors)` that groups factors by multiplicity and multiplies factors in each group together  
+2. Call this helper on `fp` and `fq` when `method == 'sqf'`, after sorting and before converting to expressions
+
+## Rejected hypotheses
+None — first diagnosis
+
+## Open questions
+None — root cause is clear and edit site is well-defined
+
+---STDERR---

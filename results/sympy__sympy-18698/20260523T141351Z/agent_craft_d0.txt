@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. Added a `_combine_equal_multiplicities` helper function that groups factors by multiplicity and multiplies polynomials within each group, called after sorting when `method == 'sqf'`. 
+
+Gate passed on first iteration: 149 tests passed, no regressions.
+
+---STDERR---

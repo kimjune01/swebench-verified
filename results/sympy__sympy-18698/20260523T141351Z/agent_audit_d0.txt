@@ -1,0 +1,20 @@
+# Audit: sympy__sympy-18698
+
+## FAIL_TO_PASS
+- `test_factor_terms`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_issue_8695`: Was failing on base with AssertionError, now passes (bonus fix)
+
+## Summary
+The craft patch successfully resolves the issue. The `test_factor_terms` test now passes after adding the `_combine_equal_multiplicities` helper function that merges factors with equal multiplicities in `sqf_list`. No PASS_TO_PASS regressions were introduced. The patch also fixed `test_issue_8695` as a bonus.
+
+**Gate metrics**: 149 passed, 1 expected failure, 8.20 seconds
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

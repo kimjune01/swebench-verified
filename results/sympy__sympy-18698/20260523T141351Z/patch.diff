@@ -1,0 +1,47 @@
+diff --git a/sympy/polys/polytools.py b/sympy/polys/polytools.py
+index c9e77a901f..43e001460c 100644
+--- a/sympy/polys/polytools.py
++++ b/sympy/polys/polytools.py
+@@ -5874,6 +5874,31 @@ def sqf_part(f, *gens, **args):
+         return result
+ 
+ 
++def _combine_equal_multiplicities(factors):
++    """Combine factors with equal multiplicities by multiplying them together."""
++    from collections import defaultdict
++    
++    # Group factors by multiplicity
++    by_mult = defaultdict(list)
++    for poly, mult in factors:
++        by_mult[mult].append(poly)
++    
++    # Combine factors in each group
++    result = []
++    for mult in sorted(by_mult.keys()):
++        polys = by_mult[mult]
++        if len(polys) == 1:
++            combined = polys[0]
++        else:
++            # Multiply all polynomials with the same multiplicity
++            combined = polys[0]
++            for p in polys[1:]:
++                combined = combined * p
++        result.append((combined, mult))
++    
++    return result
++
++
+ def _sorted_factors(factors, method):
+     """Sort a list of ``(expr, exp)`` pairs. """
+     if method == 'sqf':
+@@ -5998,6 +6023,10 @@ def _generic_factor_list(expr, gens, args, method):
+         fp = _sorted_factors(fp, method)
+         fq = _sorted_factors(fq, method)
+ 
++        if method == 'sqf':
++            fp = _combine_equal_multiplicities(fp)
++            fq = _combine_equal_multiplicities(fq)
++
+         if not opt.polys:
+             fp = [(f.as_expr(), k) for f, k in fp]
+             fq = [(f.as_expr(), k) for f, k in fq]
