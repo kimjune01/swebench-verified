@@ -1,0 +1,22 @@
+# Audit: django__django-14311
+
+## FAIL_TO_PASS
+- `test_run_as_non_django_module_non_package (utils_tests.test_autoreload.TestChildArguments)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Gate result
+All 80 tests ran successfully (20 skipped due to Watchman unavailability). The critical FAIL_TO_PASS test now passes. Zero regressions observed against the PASS_TO_PASS baseline.
+
+**Full contract satisfied:**
+- All FAIL_TO_PASS tests pass ✓
+- Zero PASS_TO_PASS regressions ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix correctly handles both cases:
+- **Package with `__main__.py`**: Uses `spec.parent` (e.g., `django.__main__` → `django`)
+- **Regular module**: Uses `spec.name` (e.g., `utils_tests.test_module.main_module` → `utils_tests.test_module.main_module`)
+
+Gate passed on first iteration with all 80 tests passing.
+
+---STDERR---
