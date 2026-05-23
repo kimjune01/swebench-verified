@@ -1,0 +1,30 @@
+# Audit: django__django-16082
+
+## Patch Summary
+```diff
+django/db/models/expressions.py | 1 +
+Added Combinable.MOD to _connector_combinations
+```
+
+## FAIL_TO_PASS Results
+- `test_resolve_output_field_number`: **PASS** ✓
+- `test_resolve_output_field_with_null`: **PASS** ✓
+
+## PASS_TO_PASS Regressions
+**None** — all PASS_TO_PASS tests remain passing.
+
+## Pre-existing Failures (not counted)
+- `test_mixed_comparisons1`: expected failure (confirmed in base capture)
+
+## Gate Summary
+Ran 175 tests in 0.166s — OK (skipped=1, expected failures=1)
+- 2/2 FAIL_TO_PASS now passing
+- 0 PASS_TO_PASS regressions
+- Clean gate
+
+The one-line fix correctly adds `Combinable.MOD` to the allowed connector combinations, enabling output field resolution for modulo operations without introducing side effects.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

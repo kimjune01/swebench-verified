@@ -1,0 +1,3 @@
+**RESOLVED** — Both FAIL_TO_PASS tests now pass. The fix added `Combinable.MOD` to the mixed-type numeric combinations block at line 535, enabling type resolution for modulo operations with different field types (IntegerField % DecimalField → DecimalField).
+
+---STDERR---

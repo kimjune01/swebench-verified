@@ -1,0 +1,35 @@
+# Recon: django__django-16082
+
+## Failure summary
+The tests check that Django can resolve the output field type when combining numeric expressions with different operators (ADD, SUB, MUL, DIV, MOD) and different field types (IntegerField, DecimalField, FloatField). The tests fail for the MOD operator when mixing field types, raising a FieldError: "Cannot infer type of '%%' expression involving these types: IntegerField, DecimalField. You must set output_field." The error occurs in `django/db/models/expressions.py:659` in `CombinedExpression._resolve_output_field()`.
+
+## Suspect set
+- `django/db/models/expressions.py` lines 523-536: The second block of `_connector_combinations` that defines type resolution rules for numeric operations with different operand types. This block includes ADD, SUB, MUL, and DIV but is missing MOD.
+
+## Root cause
+The `_connector_combinations` list defines how Django resolves output field types when combining expressions with different operators. It has three blocks for numeric operations:
+
+1. **First block (lines 506-522)**: Same-type operands - includes MOD
+2. **Second block (lines 523-536)**: Different-type operands - includes ADD, SUB, MUL, DIV but **missing MOD**
+3. **Third block (lines 546-564)**: NULL handling - includes MOD
+
+The MOD operator is registered for same-type combinations (IntegerField MOD IntegerField → IntegerField) and NULL combinations, but not for mixed-type combinations (IntegerField MOD DecimalField → DecimalField). This causes `_resolve_combined_type()` to return None when the connector is MOD and the operand types differ, triggering the FieldError in line 659.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/models/expressions.py:532-535` — The second block's connector tuple lists only `Combinable.ADD, Combinable.SUB, Combinable.MUL, Combinable.DIV` without `Combinable.MOD`
+- `django/db/models/expressions.py:519` — The first block includes MOD in its connector tuple
+- `django/db/models/expressions.py:562` — The NULL-handling block includes MOD in its connector tuple
+- `tests/expressions/tests.py:2424` — The failing test includes MOD in the connectors to test, expecting it to behave like ADD, SUB, MUL, DIV
+
+## Edit sites
+- `django/db/models/expressions.py` line 535: Add `Combinable.MOD,` to the connector tuple after `Combinable.DIV,` (before the closing parenthesis on line 536). This will register the same type resolution rules for MOD as for ADD, SUB, MUL, and DIV when combining different numeric types.
+
+## Rejected hypotheses
+None - the root cause is unambiguous from code inspection.
+
+## Open questions
+None - the fix is straightforward and localized to a single line.
+
+---STDERR---

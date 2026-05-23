@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 expressions.tests
+
+test_mixed_comparisons2 (expressions.tests.FTimeDeltaTests) ... ok
+test_multiple_query_compilation (expressions.tests.FTimeDeltaTests) ... ok
+test_negative_timedelta_update (expressions.tests.FTimeDeltaTests) ... ok
+test_query_clone (expressions.tests.FTimeDeltaTests) ... ok
+test_time_subquery_subtraction (expressions.tests.FTimeDeltaTests) ... ok
+test_time_subtraction (expressions.tests.FTimeDeltaTests) ... ok
+test_month_aggregation (expressions.tests.FieldTransformTests) ... ok
+test_multiple_transforms_in_values (expressions.tests.FieldTransformTests) ... ok
+test_transform_in_values (expressions.tests.FieldTransformTests) ... ok
+test_expressions_in_lookups_join_choice (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_expressions_not_introduce_sql_injection_via_untrusted_string_inclusion (expressions.tests.IterableLookupInnerExpressionsTests)
+This tests that SQL injection isn't possible using compilation of ... ok
+test_in_lookup_allows_F_expressions_and_expressions_for_datetimes (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_in_lookup_allows_F_expressions_and_expressions_for_integers (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_range_lookup_allows_F_expressions_and_expressions_for_integers (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_range_lookup_namedtuple (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_compile_unresolved (expressions.tests.ValueTests) ... ok
+test_deconstruct (expressions.tests.ValueTests) ... ok
+test_deconstruct_output_field (expressions.tests.ValueTests) ... ok
+test_equal (expressions.tests.ValueTests) ... ok
+test_equal_output_field (expressions.tests.ValueTests) ... ok
+test_hash (expressions.tests.ValueTests) ... ok
+test_output_field_decimalfield (expressions.tests.ValueTests) ... ok
+test_output_field_does_not_create_broken_validators (expressions.tests.ValueTests)
+The output field for a given Value doesn't get cleaned & validated, ... ok
+test_raise_empty_expressionlist (expressions.tests.ValueTests) ... ok
+test_repr (expressions.tests.ValueTests) ... ok
+test_resolve_output_field (expressions.tests.ValueTests) ... ok
+test_resolve_output_field_failure (expressions.tests.ValueTests) ... ok
+test_update_TimeField_using_Value (expressions.tests.ValueTests) ... ok
+test_update_UUIDField_using_Value (expressions.tests.ValueTests) ... ok
+test_and (expressions.tests.CombinableTests) ... ok
+test_negation (expressions.tests.CombinableTests) ... ok
+test_or (expressions.tests.CombinableTests) ... ok
+test_reversed_and (expressions.tests.CombinableTests) ... ok
+test_reversed_or (expressions.tests.CombinableTests) ... ok
+test_reversed_xor (expressions.tests.CombinableTests) ... ok
+test_xor (expressions.tests.CombinableTests) ... ok
+test_mixed_char_date_with_annotate (expressions.tests.CombinedExpressionTests) ... ok
+test_resolve_output_field_dates (expressions.tests.CombinedExpressionTests) ... ok
+test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) ... test_resolve_output_field_with_null (expressions.tests.CombinedExpressionTests) ... ok
+test_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_non_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_deconstruct (expressions.tests.FTests) ... ok
+test_deepcopy (expressions.tests.FTests) ... ok
+test_equal (expressions.tests.FTests) ... ok
+test_hash (expressions.tests.FTests) ... ok
+test_not_equal_Value (expressions.tests.FTests) ... ok
+test_equal (expressions.tests.OrderByTests) ... ok
+test_hash (expressions.tests.OrderByTests) ... ok
+test_nulls_false (expressions.tests.OrderByTests) ... ok
+test_aggregates (expressions.tests.ReprTests) ... ok
+test_distinct_aggregates (expressions.tests.ReprTests) ... ok
+test_expressions (expressions.tests.ReprTests) ... ok
+test_filtered_aggregates (expressions.tests.ReprTests) ... ok
+test_functions (expressions.tests.ReprTests) ... ok
+test_equal (expressions.tests.SimpleExpressionTests) ... ok
+test_hash (expressions.tests.SimpleExpressionTests) ... ok
+
+======================================================================
+ERROR: test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) (lhs=<class 'django.db.models.fields.IntegerField'>, connector='%%', rhs=<class 'django.db.models.fields.DecimalField'>, combined=<class 'django.db.models.fields.DecimalField'>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 2436, in test_resolve_output_field_number
+    self.assertIsInstance(expr.output_field, combined)
+  File "/testbed/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/testbed/django/db/models/expressions.py", line 295, in output_field
+    output_field = self._resolve_output_field()
+  File "/testbed/django/db/models/expressions.py", line 659, in _resolve_output_field
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot infer type of '%%' expression involving these types: IntegerField, DecimalField. You must set output_field.
+
+======================================================================
+ERROR: test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) (lhs=<class 'django.db.models.fields.DecimalField'>, connector='%%', rhs=<class 'django.db.models.fields.IntegerField'>, combined=<class 'django.db.models.fields.DecimalField'>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 2436, in test_resolve_output_field_number
+    self.assertIsInstance(expr.output_field, combined)
+  File "/testbed/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/testbed/django/db/models/expressions.py", line 295, in output_field
+    output_field = self._resolve_output_field()
+  File "/testbed/django/db/models/expressions.py", line 659, in _resolve_output_field
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot infer type of '%%' expression involving these types: DecimalField, IntegerField. You must set output_field.
+
+======================================================================
+ERROR: test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) (lhs=<class 'django.db.models.fields.IntegerField'>, connector='%%', rhs=<class 'django.db.models.fields.FloatField'>, combined=<class 'django.db.models.fields.FloatField'>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 2436, in test_resolve_output_field_number
+    self.assertIsInstance(expr.output_field, combined)
+  File "/testbed/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/testbed/django/db/models/expressions.py", line 295, in output_field
+    output_field = self._resolve_output_field()
+  File "/testbed/django/db/models/expressions.py", line 659, in _resolve_output_field
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot infer type of '%%' expression involving these types: IntegerField, FloatField. You must set output_field.
+
+======================================================================
+ERROR: test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) (lhs=<class 'django.db.models.fields.FloatField'>, connector='%%', rhs=<class 'django.db.models.fields.IntegerField'>, combined=<class 'django.db.models.fields.FloatField'>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 2436, in test_resolve_output_field_number
+    self.assertIsInstance(expr.output_field, combined)
+  File "/testbed/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/testbed/django/db/models/expressions.py", line 295, in output_field
+    output_field = self._resolve_output_field()
+  File "/testbed/django/db/models/expressions.py", line 659, in _resolve_output_field
+    raise FieldError(
+django.core.exceptions.FieldError: Cannot infer type of '%%' expression involving these types: FloatField, IntegerField. You must set output_field.
+
+----------------------------------------------------------------------
+Ran 175 tests in 0.164s
+
+FAILED (errors=4, skipped=1, expected failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
