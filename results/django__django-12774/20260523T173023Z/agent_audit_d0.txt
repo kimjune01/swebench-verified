@@ -1,0 +1,25 @@
+# Audit: django__django-12774
+
+## FAIL_TO_PASS
+- test_in_bulk_meta_constraint: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully resolves the issue. The FAIL_TO_PASS test (`test_in_bulk_meta_constraint`) was failing on base with:
+```
+ValueError: in_bulk()'s field_name must be a unique field but 'year' isn't.
+```
+
+After the craft patch, this test now passes. All 42 tests in the suite pass with no regressions.
+
+The fix correctly handles the case where `field_name` refers to a field that is unique via a Meta constraint (UniqueConstraint or unique_together) rather than just a field-level `unique=True`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

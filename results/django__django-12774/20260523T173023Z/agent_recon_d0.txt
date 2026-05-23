@@ -1,0 +1,40 @@
+Now I'll output my structured handoff to stdout:
+
+```markdown
+# Recon: django__django-12774
+
+## Failure summary
+The test `test_in_bulk_meta_constraint` attempts to call `Season.objects.in_bulk([2011, 2012], field_name='year')` where `year` is a field with a `UniqueConstraint` in the model's Meta (not `unique=True` on the field itself). The test fails with `ValueError: in_bulk()'s field_name must be a unique field but 'year' isn't.` because the current implementation only checks the field's `unique` attribute and doesn't recognize total `UniqueConstraint` declarations.
+
+## Suspect set
+- `django/db/models/query.py` line 693: The uniqueness validation logic that only checks `field.unique`
+- `django/db/models/options.py` lines 832-842: The `total_unique_constraints` property (already exists, provides the data needed)
+
+## Root cause
+The `in_bulk()` method at line 693 in `django/db/models/query.py` validates that the specified field is unique by checking only `self.model._meta.get_field(field_name).unique`. This misses fields that are unique through a `UniqueConstraint` in the model's Meta class.
+
+Django's `total_unique_constraints` property (defined in `options.py:832`) already filters for UniqueConstraints without conditions (i.e., total uniqueness, not partial). The fix needs to check if any of these constraints has `fields == (field_name,)` - meaning it's a single-field constraint on exactly the field being queried.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/query.py:693` — `if field_name != 'pk' and not self.model._meta.get_field(field_name).unique:` (only checks field attribute)
+- `tests/lookup/models.py:68-71` — Season model: `constraints = [models.UniqueConstraint(fields=['year'], name='season_year_unique')]`
+- `django/db/models/options.py:837-842` — `total_unique_constraints` returns `[constraint for constraint in self.constraints if isinstance(constraint, UniqueConstraint) and constraint.condition is None]`
+- `django/db/models/constraints.py:77` — UniqueConstraint stores `self.fields = tuple(fields)` and `self.condition = condition`
+
+## Edit sites
+- `django/db/models/query.py` line 693: Replace the simple `field.unique` check with logic that also checks if there exists a total UniqueConstraint where `constraint.fields == (field_name,)`. The check should:
+  1. First check `field.unique` (existing behavior)
+  2. If not unique via field attribute, check `self.model._meta.total_unique_constraints`
+  3. Look for any constraint where `constraint.fields == (field_name,)` (single-field constraint)
+  4. Raise ValueError only if both checks fail
+
+## Rejected hypotheses
+None - the root cause is straightforward from reading the code path.
+
+## Open questions
+None - the fix is localized to a single validation check.
+```
+
+---STDERR---

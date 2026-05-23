@@ -1,0 +1,7 @@
+## RESOLVED
+
+The fix successfully makes `in_bulk()` recognize fields with `UniqueConstraint` in Meta. The gate passed on the first iteration with all 42 tests passing, including the previously failing `test_in_bulk_meta_constraint`.
+
+**Summary**: Modified the validation logic in `django/db/models/query.py` to check both `field.unique` and single-field `UniqueConstraint` declarations via `total_unique_constraints`.
+
+---STDERR---
