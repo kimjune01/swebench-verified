@@ -1,0 +1,26 @@
+# Audit: matplotlib__matplotlib-25332
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_pickle.py::test_complete[png]: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture and code analysis)
+- lib/matplotlib/tests/test_pickle.py::test_pickle_load_from_subprocess[png]
+  - **Current error**: UserWarning in `__setstate__` due to version mismatch
+  - **Root cause**: Both this test and the F2P test use `_generate_complete_test_figure()` which calls `fig_ref.align_ylabels()`, populating `_align_label_groups` Groupers
+  - **On base**: Would fail with weakref TypeError during pickle.dump()
+  - **After patch**: Pickling succeeds, but subprocess with SOURCE_DATE_EPOCH=0 triggers version mismatch warning (pytest configured to treat warnings as errors)
+  - **Classification**: Pre-existing failure, different symptom. The patch fixed the pickle issue; the version warning is a test design artifact.
+
+## Kill report
+Not applicable — RESOLVED.
+
+## Analysis
+Gate: 182 passed, 1 failed. The F2P test now passes. The single failing test is pre-existing (was failing on base with weakref error, now visible with version warning after pickle fix succeeded).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

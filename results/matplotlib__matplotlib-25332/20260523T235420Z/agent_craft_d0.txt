@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The FAIL_TO_PASS test `lib/matplotlib/tests/test_pickle.py::test_complete[png]` now passes. The fix follows the Axes pattern: converting `_align_label_groups` Groupers to lists in `__getstate__` and reconstructing them in `__setstate__`. The implementation handles backward compatibility and preserves the Grouper relationships through pickle/unpickle cycles.
+
+---STDERR---

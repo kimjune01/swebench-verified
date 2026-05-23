@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is that `Figure.__getstate__` doesn't handle `_align_label_groups` (which contains `Grouper` objects with unpicklable weakrefs). The fix follows the existing pattern in `Axes.__getstate__`: convert Groupers to lists in __getstate__, reconstruct them in __setstate__.
+
+---STDERR---
