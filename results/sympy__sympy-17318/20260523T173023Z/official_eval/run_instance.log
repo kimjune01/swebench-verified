@@ -1,0 +1,77 @@
+2026-05-23 17:28:39,863 - INFO - Creating container for sympy__sympy-17318...
+2026-05-23 17:28:40,117 - INFO - Container for sympy__sympy-17318 created: d97126a734cded01723c6393386984c2a75579c81ecd14c32fbc7e27e55b30e9
+2026-05-23 17:28:40,476 - INFO - Container for sympy__sympy-17318 started: d97126a734cded01723c6393386984c2a75579c81ecd14c32fbc7e27e55b30e9
+2026-05-23 17:28:40,477 - INFO - Intermediate patch for sympy__sympy-17318 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17318/patch.diff, now applying to container...
+2026-05-23 17:28:40,566 - INFO - >>>>> Applied Patch:
+Checking patch sympy/simplify/radsimp.py...
+Checking patch sympy/simplify/sqrtdenest.py...
+Applied patch sympy/simplify/radsimp.py cleanly.
+Applied patch sympy/simplify/sqrtdenest.py cleanly.
+
+2026-05-23 17:28:40,809 - INFO - Git diff before:
+diff --git a/sympy/simplify/radsimp.py b/sympy/simplify/radsimp.py
+index 216ae26204..c941388c23 100644
+--- a/sympy/simplify/radsimp.py
++++ b/sympy/simplify/radsimp.py
+@@ -1113,6 +1113,8 @@ def _split_gcd(*a):
+     >>> _split_gcd(55, 35, 22, 14, 77, 10)
+     (5, [55, 35, 10], [22, 14, 77])
+     """
++    if not a:
++        return (1, [], [])
+     g = a[0]
+     b1 = [g]
+     b2 = []
+diff --git a/sympy/simplify/sqrtdenest.py b/sympy/simplify/sqrtdenest.py
+index f0b7653ea8..ca613100d5 100644
+--- a/sympy/simplify/sqrtdenest.py
++++ b/sympy/simplify/sqrtdenest.py
+@@ -156,7 +156,9 @@ def _sqrt_match(p):
+         res = (p, S.Zero, S.Zero)
+     elif p.is_Add:
+         pargs = sorted(p.args, key=default_sort_key)
+-        if all((x**2).is_Rational for x in pargs):
++        coeff_muls = [x.as_coeff_Mul() for x in pargs]
++        surds = [s for c, s in coeff_muls if s.is_Pow and s.exp == S.Half]
++        if surds and all((x**2).is_Rational for x in pargs):
+             r, b, a = split_surds(p)
+             res = a, b, r
+             return list(res)
+2026-05-23 17:28:40,809 - INFO - Eval script for sympy__sympy-17318 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17318/eval.sh; copying to container...
+2026-05-23 17:28:51,324 - INFO - Test runtime: 10.42 seconds
+2026-05-23 17:28:51,324 - INFO - Test output for sympy__sympy-17318 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-17318/test_output.txt
+2026-05-23 17:28:51,431 - INFO - Git diff after:
+diff --git a/sympy/simplify/radsimp.py b/sympy/simplify/radsimp.py
+index 216ae26204..c941388c23 100644
+--- a/sympy/simplify/radsimp.py
++++ b/sympy/simplify/radsimp.py
+@@ -1113,6 +1113,8 @@ def _split_gcd(*a):
+     >>> _split_gcd(55, 35, 22, 14, 77, 10)
+     (5, [55, 35, 10], [22, 14, 77])
+     """
++    if not a:
++        return (1, [], [])
+     g = a[0]
+     b1 = [g]
+     b2 = []
+diff --git a/sympy/simplify/sqrtdenest.py b/sympy/simplify/sqrtdenest.py
+index f0b7653ea8..ca613100d5 100644
+--- a/sympy/simplify/sqrtdenest.py
++++ b/sympy/simplify/sqrtdenest.py
+@@ -156,7 +156,9 @@ def _sqrt_match(p):
+         res = (p, S.Zero, S.Zero)
+     elif p.is_Add:
+         pargs = sorted(p.args, key=default_sort_key)
+-        if all((x**2).is_Rational for x in pargs):
++        coeff_muls = [x.as_coeff_Mul() for x in pargs]
++        surds = [s for c, s in coeff_muls if s.is_Pow and s.exp == S.Half]
++        if surds and all((x**2).is_Rational for x in pargs):
+             r, b, a = split_surds(p)
+             res = a, b, r
+             return list(res)
+2026-05-23 17:28:51,431 - INFO - Grading answer for sympy__sympy-17318...
+2026-05-23 17:28:51,431 - INFO - report: {'sympy__sympy-17318': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_issue_12420'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_sqrtdenest', 'test_sqrtdenest2', 'test_sqrtdenest_rec', 'test_issue_6241', 'test_sqrtdenest3', 'test_sqrtdenest4', 'test_sqrt_symbolic_denest', 'test_issue_5857', 'test_subsets', 'test_issue_5653'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-17318: resolved: True
+2026-05-23 17:28:51,432 - INFO - Attempting to stop container sweb.eval.sympy__sympy-17318.batch...
+2026-05-23 17:29:06,753 - INFO - Attempting to remove container sweb.eval.sympy__sympy-17318.batch...
+2026-05-23 17:29:06,769 - INFO - Container sweb.eval.sympy__sympy-17318.batch removed.

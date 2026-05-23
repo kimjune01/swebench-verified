@@ -1,0 +1,20 @@
+**RESOLVED**
+
+The fix required two coordinated changes:
+
+1. **radsimp.py** — Added empty-input guard to `_split_gcd`:
+   ```python
+   if not a:
+       return (1, [], [])
+   ```
+
+2. **sqrtdenest.py** — Added surd-existence check in `_sqrt_match` to prevent calling `split_surds` when no square roots are present:
+   ```python
+   coeff_muls = [x.as_coeff_Mul() for x in pargs]
+   surds = [s for c, s in coeff_muls if s.is_Pow and s.exp == S.Half]
+   if surds and all((x**2).is_Rational for x in pargs):
+   ```
+
+Gate result: ✓ `test_issue_12420 ok` — all 12 tests passed.
+
+---STDERR---

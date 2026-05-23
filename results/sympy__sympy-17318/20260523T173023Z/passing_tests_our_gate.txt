@@ -1,0 +1,28 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/simplify/tests/test_sqrtdenest.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        80342367
+hash randomization: on (PYTHONHASHSEED=64016974)
+
+sympy/simplify/tests/test_sqrtdenest.py[13] 
+test_sqrtdenest ok
+test_sqrtdenest2 ok
+test_sqrtdenest_rec ok
+test_issue_6241 ok
+test_sqrtdenest3 ok
+test_sqrtdenest3_slow Slow w
+test_sqrtdenest4 ok
+test_sqrt_symbolic_denest ok
+test_issue_5857 ok
+test_subsets ok
+test_issue_5653 ok
+test_issue_12420 ok
+test_sqrt_ratcomb ok                                                        [OK]
+
+
+============ tests finished: 12 passed, 1 skipped, in 7.81 seconds =============

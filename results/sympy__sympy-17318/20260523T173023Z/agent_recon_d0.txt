@@ -1,0 +1,47 @@
+Now I'll emit the recon handoff to stdout:
+
+```markdown
+# Recon: sympy__sympy-17318
+
+## Failure summary
+Test `test_issue_12420` checks that `sqrtdenest` handles expressions with complex numbers gracefully. When `_sqrt_match(4 + I)` is called, it should return an empty list `[]` indicating no square root pattern was found. Instead, it raises `IndexError: tuple index out of range` at `sympy/simplify/radsimp.py:1116` in the `_split_gcd` function when attempting to access `a[0]` on an empty tuple.
+
+## Suspect set
+- `sympy/simplify/radsimp.py` lines 1103-1124: `_split_gcd` function that fails on empty input
+- `sympy/simplify/radsimp.py` lines 1062-1102: `split_surds` function that calls `_split_gcd` without validating input
+- `sympy/simplify/sqrtdenest.py` lines 155-163: `_sqrt_match` early return path that triggers the failure
+
+## Root cause
+The `_split_gcd(*a)` function at line 1116 unconditionally accesses `a[0]` without checking if the tuple `a` is empty. The failure occurs through this call path:
+
+1. `_sqrt_match(4 + I)` enters the `p.is_Add` branch since `4 + I` is an addition
+2. The condition `all((x**2).is_Rational for x in pargs)` is True because `4**2 = 16` and `I**2 = -1` are both rational numbers
+3. This triggers a call to `split_surds(p)` at line 160, expecting to extract square root patterns
+4. Inside `split_surds`, line 1077 filters for surds: `surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]`
+5. Since neither `4` nor `I` is a `Pow` expression (no square roots present), `surds = []`
+6. Line 1080 calls `_split_gcd(*surds)`, which expands to `_split_gcd()` with zero arguments
+7. Line 1116 attempts `g = a[0]` on the empty tuple `a`, raising `IndexError`
+
+The condition `all((x**2).is_Rational for x in pargs)` was intended to detect expressions containing square roots (where squaring eliminates the radical), but it incorrectly matches expressions like `4 + I` where the terms are already rational/algebraic without any radicals.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/simplify/radsimp.py:1116` — `g = a[0]` with no empty-tuple guard
+- `sympy/simplify/radsimp.py:1077` — `surds` list can be empty when no `Pow` terms exist  
+- `sympy/simplify/tests/test_sqrtdenest.py:187` — test expects `_sqrt_match(4 + I) == []`
+
+## Edit sites
+- `sympy/simplify/radsimp.py` lines 1103-1124: Add empty-input handling at the beginning of `_split_gcd`. When called with no arguments (empty tuple `a`), return `(1, [], [])` representing: gcd=1 (identity), b1=[] (no elements sharing the gcd), b2=[] (no coprime elements).
+
+Alternative (less preferred): Check in `split_surds` at line 1080 whether `surds` is empty before calling `_split_gcd`, but this doesn't protect the second call site at line 1086.
+
+## Rejected hypotheses
+None — the failure is deterministic and the root cause is directly observable in the code.
+
+## Open questions
+- Should the condition `all((x**2).is_Rational for x in pargs)` in `_sqrt_match` be refined to explicitly check for the presence of square roots before taking the `split_surds` path? (This would prevent the issue but might be a larger refactor than needed for the immediate fix.)
+- Are there other callers of `_split_gcd` in the codebase that might pass empty arguments? (Grep shows only two call sites, both in `split_surds`.)
+```
+
+---STDERR---

@@ -1,0 +1,33 @@
+# Audit: sympy__sympy-17318
+
+## FAIL_TO_PASS
+- test_issue_12420: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 10 PASS_TO_PASS tests passed:
+- test_sqrtdenest: ok ✓
+- test_sqrtdenest2: ok ✓
+- test_sqrtdenest_rec: ok ✓
+- test_issue_6241: ok ✓
+- test_sqrtdenest3: ok ✓
+- test_sqrtdenest4: ok ✓
+- test_sqrt_symbolic_denest: ok ✓
+- test_issue_5857: ok ✓
+- test_subsets: ok ✓
+- test_issue_5653: ok ✓
+
+## Pre-existing (not counted)
+**None** — no failures detected in gate output.
+
+## Gate Output Summary
+```
+============ tests finished: 12 passed, 1 skipped, in 7.76 seconds =============
+```
+
+## Classification
+The craft patch successfully fixed the IndexError crash in `test_issue_12420` while introducing zero regressions. Both components of the fix (the `_split_gcd` empty-input guard and the surd-existence check in `_sqrt_match`) are working correctly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
