@@ -1,0 +1,48 @@
+# Recon: django__django-11815
+
+## Failure summary
+
+Two tests fail in `test_serialize_enums` and `test_serialize_class_based_validators`. Both tests verify that enum members are serialized using bracket-notation with the enum's name (e.g., `TextEnum['A']`, `re.RegexFlag['DOTALL']`), but the current implementation serializes them using constructor-call syntax with the enum's value (e.g., `TextEnum('a-value')`, `re.RegexFlag(16)`).
+
+**Error messages**:
+- `test_serialize_enums`: `AssertionError: ("migrations.test_writer.TextEnum('a-value')", ...) != ("migrations.test_writer.TextEnum['A']", ...)`
+- `test_serialize_class_based_validators`: `AssertionError: "...re.RegexFlag(16))" != "...re.RegexFlag['DOTALL'])"`
+
+## Suspect set
+
+- `django/db/migrations/serializer.py` lines 119-125: `EnumSerializer.serialize()` method
+
+## Root cause
+
+The `EnumSerializer` class serializes enum members by their **value** instead of by their **name**. On line 123, it calls `serializer_factory(self.value.value).serialize()` to serialize the enum's value, then on line 125 formats the output as `EnumClass(value)` using constructor-call syntax.
+
+This breaks when enum values are translatable strings (as in the bug report) because the translated value won't match the original enum definition after language changes.
+
+The correct approach is to serialize using the enum's **name** with bracket notation: `EnumClass['name']`. This is stable across translations because the enum member name doesn't change, only its value.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/migrations/serializer.py:123` — `v_string, v_imports = serializer_factory(self.value.value).serialize()` serializes the value
+- `django/db/migrations/serializer.py:125` — `return "%s.%s(%s)" % (module, enum_class.__name__, v_string), imports` uses constructor syntax
+- Enum members have both `.name` (e.g., `'A'`) and `.value` (e.g., `'a-value'`) attributes
+- Python supports `EnumClass['name']` syntax for accessing members by name
+
+## Edit sites
+
+- `django/db/migrations/serializer.py` lines 120-125: Change `EnumSerializer.serialize()` to:
+  1. Remove line 123 (serializing the value) — not needed
+  2. Change line 124 to `imports = {'import %s' % module}` — remove v_imports
+  3. Change line 125 to use bracket notation with the name: `return "%s.%s[%r]" % (module, enum_class.__name__, self.value.name), imports`
+
+The `%r` formatting will include quotes around the name, producing output like `TextEnum['A']`.
+
+## Rejected hypotheses
+
+None — first-pass diagnosis.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---

@@ -1,0 +1,21 @@
+# Audit: django__django-11815
+
+## FAIL_TO_PASS
+- test_serialize_class_based_validators (migrations.test_writer.WriterTests): **PASS** ✓
+- test_serialize_enums (migrations.test_writer.WriterTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 44 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The two FAIL_TO_PASS tests were the only failures on base.
+
+## Verification
+Gate output: All 46 tests passed in 0.020s
+
+The patch successfully fixed enum serialization to use bracket notation with `.name` instead of constructor syntax with `.value`, maintaining all existing test behavior with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
