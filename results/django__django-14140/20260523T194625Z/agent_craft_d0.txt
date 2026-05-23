@@ -1,0 +1,5 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix removed the special case in `Q.deconstruct()` that incorrectly assumed single children are always subscriptable tuples, which failed for boolean expressions like `Exists(...)`. Now all children are placed in args, matching test expectations.
+
+---STDERR---

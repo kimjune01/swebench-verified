@@ -1,0 +1,65 @@
+# Recon: django__django-14140
+
+## Failure summary
+
+The tests check that Q objects can be deconstructed correctly, including when they contain boolean expressions like `Exists(...)` or are combined with empty Q objects. Four tests fail:
+
+1. **test_deconstruct_boolean_expression**: Expects `Q(Exists(tagged))` to deconstruct to `args=(Exists(tagged),), kwargs={}`
+   - Error: `TypeError: 'Exists' object is not subscriptable` at line 90
+
+2. **test_boolean_expression_combined_with_empty_Q**: Tests combining `Q(Exists(...))` with empty Q objects via `&` and `|`
+   - Error: Same TypeError when `_combine()` calls `deconstruct()` at line 48
+
+3. **test_deconstruct**: Expects `Q(price__gt=F(...))` to deconstruct to `args=(('price__gt', F(...)),), kwargs={}`
+   - Failure: Gets `args=(), kwargs={'price__gt': F(...)}` instead
+
+4. **test_deconstruct_negated**: Same as test_deconstruct but with negation
+   - Failure: Same wrong output
+
+## Suspect set
+
+- `django/db/models/query_utils.py` lines 83-98: The `Q.deconstruct()` method
+- Specifically lines 88-90: The special case that assumes single non-Q children are tuples
+
+## Root cause
+
+The `Q.deconstruct()` method contains a special case for single-child Q objects that are not nested Q objects. This special case assumes the child is a 2-tuple from `kwargs.items()` (like `('field_name', value)`) and tries to reconstruct kwargs by subscripting: `kwargs = {child[0]: child[1]}`.
+
+When the child is a boolean expression like `Exists(...)` (which came from positional args, not kwargs), it's not subscriptable, causing `TypeError: 'Exists' object is not subscriptable`.
+
+**Code path**:
+1. `Q(Exists(tagged))` → `children=[Exists(tagged)]` (single non-tuple child)
+2. When combined with empty Q: `Q(Exists(...)) & Q()` → `_combine()` line 48
+3. `_combine()` calls `self.deconstruct()` to clone the non-empty Q
+4. `deconstruct()` line 88: `if len(self.children) == 1 and not isinstance(self.children[0], Q)`
+5. Line 90: `kwargs = {child[0]: child[1]}` → TypeError
+
+**Why it exists**: The special case was added in commit 508b5deb (2016) to make single-field Q objects deconstruct back to kwargs for symmetry. At that time, the only non-Q children were tuples from `kwargs.items()`. Boolean expressions as Q children weren't anticipated.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/query_utils.py:88-90` — The subscripting code that fails
+- `django/db/models/query_utils.py:40` — `__init__` shows children come from `[*args, *sorted(kwargs.items())]`
+- Test expectations show the desired behavior is to put all children in args, not kwargs
+
+## Edit sites
+
+- `django/db/models/query_utils.py` lines 88-90: Remove the special case for single non-Q children
+  - Delete the `if` branch that does `kwargs = {child[0]: child[1]}`
+  - Keep only the `else` branch: `args = tuple(self.children)`
+  - This makes all children (including single ones) go into args, matching test expectations
+
+Alternative (more conservative): Add a type check before subscripting:
+  - Line 88: Add `and isinstance(self.children[0], tuple) and len(self.children[0]) == 2`
+  - But the tests show they want the special case removed entirely
+
+## Rejected hypotheses
+
+None — the error trace directly points to line 90, and reading the code confirms the logic error.
+
+## Open questions
+
+None — the fix is clear from the failing tests and error trace.
+
+---STDERR---

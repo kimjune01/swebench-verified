@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 expressions.tests queries.test_q queryset_pickle.tests
+
+Test intentionally the automatically created through model. ... ok
+test_multipleobjectsreturned_class (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_order_by_model_with_abstract_inheritance_and_meta_ordering (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_boolean_expression_in_Q__queryset (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_exists_kwargs_queryset_not_evaluated (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_exists_queryset_not_evaluated (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_exists_queryset_still_usable (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_filteredrelation (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_filteredrelation_m2m (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_prefetch_queryset_not_evaluated (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_prefetch_queryset_still_usable (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_prefetch_queryset_usable_outside_of_prefetch (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_prefetch_related_idempotence (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_pickle_prefetch_related_with_m2m_and_objects_deletion (queryset_pickle.tests.PickleabilityTestCase)
+#24831 -- Cached properties on ManyToOneRel created in QuerySet.delete() ... ok
+test_pickle_subquery_queryset_not_evaluated (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_related_field (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_reverse_one_to_one_relatedobjectdoesnotexist_class (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_specialized_queryset (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_standalone_method_as_default (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_staticmethod_as_default (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_string_as_default (queryset_pickle.tests.PickleabilityTestCase) ... ok
+test_unsupported_unpickle (queryset_pickle.tests.PickleabilityTestCase)
+#21430 -- Verifies a warning is raised for querysets that are ... ok
+test_and (expressions.tests.CombinableTests) ... ok
+test_negation (expressions.tests.CombinableTests) ... ok
+test_or (expressions.tests.CombinableTests) ... ok
+test_reversed_and (expressions.tests.CombinableTests) ... ok
+test_reversed_or (expressions.tests.CombinableTests) ... ok
+test_resolve_output_field (expressions.tests.CombinedExpressionTests) ... ok
+test_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_non_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_deconstruct (expressions.tests.FTests) ... ok
+test_deepcopy (expressions.tests.FTests) ... ok
+test_equal (expressions.tests.FTests) ... ok
+test_hash (expressions.tests.FTests) ... ok
+test_not_equal_Value (expressions.tests.FTests) ... ok
+test_aggregates (expressions.tests.ReprTests) ... ok
+test_distinct_aggregates (expressions.tests.ReprTests) ... ok
+test_expressions (expressions.tests.ReprTests) ... ok
+test_filtered_aggregates (expressions.tests.ReprTests) ... ok
+test_functions (expressions.tests.ReprTests) ... ok
+test_equal (expressions.tests.SimpleExpressionTests) ... ok
+test_hash (expressions.tests.SimpleExpressionTests) ... ok
+test_combine_and_both_empty (queries.test_q.QTests) ... ok
+test_combine_and_empty (queries.test_q.QTests) ... ok
+test_combine_not_q_object (queries.test_q.QTests) ... ok
+test_combine_or_both_empty (queries.test_q.QTests) ... ok
+test_combine_or_empty (queries.test_q.QTests) ... ok
+test_deconstruct (queries.test_q.QTests) ... FAIL
+test_deconstruct_and (queries.test_q.QTests) ... ok
+test_deconstruct_boolean_expression (queries.test_q.QTests) ... ERROR
+test_deconstruct_multiple_kwargs (queries.test_q.QTests) ... ok
+test_deconstruct_negated (queries.test_q.QTests) ... FAIL
+test_deconstruct_nested (queries.test_q.QTests) ... ok
+test_deconstruct_or (queries.test_q.QTests) ... ok
+test_reconstruct (queries.test_q.QTests) ... ok
+test_reconstruct_and (queries.test_q.QTests) ... ok
+test_reconstruct_negated (queries.test_q.QTests) ... ok
+test_reconstruct_or (queries.test_q.QTests) ... ok
+
+======================================================================
+ERROR: test_boolean_expression_combined_with_empty_Q (expressions.tests.BasicExpressionsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 836, in test_boolean_expression_combined_with_empty_Q
+    Q(Exists(is_poc)) & Q(),
+  File "/testbed/django/db/models/query_utils.py", line 65, in __and__
+    return self._combine(other, self.AND)
+  File "/testbed/django/db/models/query_utils.py", line 48, in _combine
+    _, args, kwargs = self.deconstruct()
+  File "/testbed/django/db/models/query_utils.py", line 90, in deconstruct
+    kwargs = {child[0]: child[1]}
+TypeError: 'Exists' object is not subscriptable
+
+======================================================================
+ERROR: test_deconstruct_boolean_expression (queries.test_q.QTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/test_q.py", line 93, in test_deconstruct_boolean_expression
+    _, args, kwargs = q.deconstruct()
+  File "/testbed/django/db/models/query_utils.py", line 90, in deconstruct
+    kwargs = {child[0]: child[1]}
+TypeError: 'Exists' object is not subscriptable
+
+======================================================================
+FAIL: test_deconstruct (queries.test_q.QTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/test_q.py", line 44, in test_deconstruct
+    self.assertEqual(args, (('price__gt', F('discounted_price')),))
+AssertionError: Tuples differ: () != (('price__gt', F(discounted_price)),)
+
+Second tuple contains 1 additional elements.
+First extra element 0:
+('price__gt', F(discounted_price))
+
+- ()
++ (('price__gt', F(discounted_price)),)
+
+======================================================================
+FAIL: test_deconstruct_negated (queries.test_q.QTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/queries/test_q.py", line 50, in test_deconstruct_negated
+    self.assertEqual(args, (('price__gt', F('discounted_price')),))
+AssertionError: Tuples differ: () != (('price__gt', F(discounted_price)),)
+
+Second tuple contains 1 additional elements.
+First extra element 0:
+('price__gt', F(discounted_price))
+
+- ()
++ (('price__gt', F(discounted_price)),)
+
+----------------------------------------------------------------------
+Ran 207 tests in 0.237s
+
+FAILED (failures=2, errors=2, skipped=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

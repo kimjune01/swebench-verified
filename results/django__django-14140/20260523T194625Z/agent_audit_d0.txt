@@ -1,0 +1,23 @@
+# Audit: django__django-14140
+
+## FAIL_TO_PASS
+- test_deconstruct (queries.test_q.QTests): **PASS**
+- test_deconstruct_boolean_expression (queries.test_q.QTests): **PASS**
+- test_deconstruct_negated (queries.test_q.QTests): **PASS**
+- test_boolean_expression_combined_with_empty_Q (expressions.tests.BasicExpressionsTests): **PASS**
+
+## PASS_TO_PASS regressions
+None. All 207 tests passed (2 skipped).
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The base capture showed all PASS_TO_PASS tests passing on the unpatched repo, and they all still pass with the patch.
+
+## Kill report
+Not applicable - patch RESOLVED the issue.
+
+The patch successfully removed the problematic subscripting assumption in `Q.deconstruct()` at lines 88-90. All four FAIL_TO_PASS tests now pass, and the full test suite (207 tests across expressions.tests, queries.test_q, and queryset_pickle.tests) runs clean with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
