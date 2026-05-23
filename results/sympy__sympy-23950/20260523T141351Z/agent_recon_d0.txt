@@ -1,0 +1,39 @@
+# Recon: sympy__sympy-23950
+
+## Failure summary
+The tests check that `Contains.as_set()` returns the set argument (second parameter of Contains). Three assertions fail:
+- `Contains(x, FiniteSet(y)).as_set()` should return `FiniteSet(y)`
+- `Contains(x, S.Integers).as_set()` should return `S.Integers`
+- `Contains(x, S.Reals).as_set()` should return `S.Reals`
+
+All fail with `NotImplementedError` raised at `sympy/sets/contains.py:48`.
+
+## Suspect set
+- `sympy/sets/contains.py` lines 47-48: The `as_set()` method implementation
+
+## Root cause
+`Contains(element, set)` is a boolean expression testing whether `element` is in `set`. When calling `.as_set()`, the method should return the set being tested (the second argument), not raise an exception. 
+
+The `Contains` class stores its arguments as `self.args[0]` (the element) and `self.args[1]` (the set). Verified via REPL: `Contains(x, S.Integers).args[1]` returns `Integers`.
+
+Currently, line 48 has `raise NotImplementedError()`. This was added in commit `c5fb611eed` (2019) to replace the previous wrong implementation `return self` (from commit `91e958481e` in 2017), but the correct fix was never implemented.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `sympy/sets/contains.py:48` — `raise NotImplementedError()`
+- `sympy/sets/contains.py:29` — `def eval(cls, x, s):` shows Contains takes element `x` and set `s`
+- REPL verification: `Contains(x, S.Integers).args == (x, Integers)`
+
+## Edit sites
+- `sympy/sets/contains.py:48`: Change `raise NotImplementedError()` to `return self.args[1]`
+
+This single-line change will make `as_set()` return the set argument, satisfying all three test assertions.
+
+## Rejected hypotheses
+None. The code path is straightforward: test calls `as_set()` → method raises NotImplementedError → test fails. No competing explanations.
+
+## Open questions
+None. The fix is clear and localized.
+
+---STDERR---

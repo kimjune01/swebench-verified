@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. `Contains.as_set()` now returns the set argument when the element is a Symbol, passing all required tests. The codex-recommended guard prevents semantically incorrect behavior for non-symbol expressions.
+
+---STDERR---

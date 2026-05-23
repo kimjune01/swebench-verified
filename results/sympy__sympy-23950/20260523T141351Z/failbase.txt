@@ -1,0 +1,31 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/sets/tests/test_contains.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        44875662
+hash randomization: on (PYTHONHASHSEED=52058202)
+
+sympy/sets/tests/test_contains.py[6] 
+test_contains_basic ok
+test_issue_6194 ok
+test_issue_10326 ok
+test_binary_symbols ok
+test_as_set E
+test_type_error ok                                                        [FAIL]
+
+
+________________________________________________________________________________
+________________ sympy/sets/tests/test_contains.py:test_as_set _________________
+Traceback (most recent call last):
+  File "/testbed/sympy/sets/tests/test_contains.py", line 44, in test_as_set
+    assert Contains(x, FiniteSet(y)).as_set() == FiniteSet(y)
+  File "/testbed/sympy/sets/contains.py", line 48, in as_set
+    raise NotImplementedError()
+NotImplementedError
+
+=========== tests finished: 5 passed, 1 exceptions, in 0.08 seconds ============
+DO *NOT* COMMIT!
