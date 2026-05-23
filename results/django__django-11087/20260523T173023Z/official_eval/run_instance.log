@@ -1,0 +1,88 @@
+2026-05-23 17:27:22,554 - INFO - Creating container for django__django-11087...
+2026-05-23 17:27:36,235 - INFO - Container for django__django-11087 created: fa0606c399f16c97d545dfa8e22ad8141a2132bfd983e132f3c81f96f4d5c8e0
+2026-05-23 17:27:36,582 - INFO - Container for django__django-11087 started: fa0606c399f16c97d545dfa8e22ad8141a2132bfd983e132f3c81f96f4d5c8e0
+2026-05-23 17:27:36,582 - INFO - Intermediate patch for django__django-11087 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11087/patch.diff, now applying to container...
+2026-05-23 17:27:36,706 - INFO - >>>>> Applied Patch:
+/tmp/patch.diff:13: trailing whitespace.
+        
+/tmp/patch.diff:19: trailing whitespace.
+        
+/tmp/patch.diff:27: trailing whitespace.
+        
+Checking patch django/db/models/deletion.py...
+Applied patch django/db/models/deletion.py cleanly.
+warning: 3 lines add whitespace errors.
+
+2026-05-23 17:27:37,429 - INFO - Git diff before:
+diff --git a/django/db/models/deletion.py b/django/db/models/deletion.py
+index 3a462f1c4c..ebf03a39aa 100644
+--- a/django/db/models/deletion.py
++++ b/django/db/models/deletion.py
+@@ -232,9 +232,25 @@ class Collector:
+         """
+         Get a QuerySet of objects related to `objs` via the relation `related`.
+         """
+-        return related.related_model._base_manager.using(self.using).filter(
++        qs = related.related_model._base_manager.using(self.using).filter(
+             **{"%s__in" % related.field.name: objs}
+         )
++        
++        model = related.related_model
++        # If deletion signals are connected, all fields are needed for signal handlers
++        if (signals.pre_delete.has_listeners(model) or
++                signals.post_delete.has_listeners(model)):
++            return qs
++        
++        # Collect fields that are referenced by foreign keys from other models
++        referenced_fields = {model._meta.pk.name}
++        for relation in get_candidate_relations_to_delete(model._meta):
++            # Include all fields from multi-column foreign keys
++            referenced_fields.update(
++                field.name for field in relation.field.foreign_related_fields
++            )
++        
++        return qs.only(*referenced_fields)
+ 
+     def instances_with_model(self):
+         for model, instances in self.data.items():
+2026-05-23 17:27:37,429 - INFO - Eval script for django__django-11087 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11087/eval.sh; copying to container...
+2026-05-23 17:27:42,689 - INFO - Test runtime: 5.15 seconds
+2026-05-23 17:27:42,690 - INFO - Test output for django__django-11087 written to logs/run_evaluation/batch/recon-craft-audit/django__django-11087/test_output.txt
+2026-05-23 17:27:42,783 - INFO - Git diff after:
+diff --git a/django/db/models/deletion.py b/django/db/models/deletion.py
+index 3a462f1c4c..ebf03a39aa 100644
+--- a/django/db/models/deletion.py
++++ b/django/db/models/deletion.py
+@@ -232,9 +232,25 @@ class Collector:
+         """
+         Get a QuerySet of objects related to `objs` via the relation `related`.
+         """
+-        return related.related_model._base_manager.using(self.using).filter(
++        qs = related.related_model._base_manager.using(self.using).filter(
+             **{"%s__in" % related.field.name: objs}
+         )
++        
++        model = related.related_model
++        # If deletion signals are connected, all fields are needed for signal handlers
++        if (signals.pre_delete.has_listeners(model) or
++                signals.post_delete.has_listeners(model)):
++            return qs
++        
++        # Collect fields that are referenced by foreign keys from other models
++        referenced_fields = {model._meta.pk.name}
++        for relation in get_candidate_relations_to_delete(model._meta):
++            # Include all fields from multi-column foreign keys
++            referenced_fields.update(
++                field.name for field in relation.field.foreign_related_fields
++            )
++        
++        return qs.only(*referenced_fields)
+ 
+     def instances_with_model(self):
+         for model, instances in self.data.items():
+2026-05-23 17:27:42,783 - INFO - Grading answer for django__django-11087...
+2026-05-23 17:27:42,785 - INFO - report: {'django__django-11087': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_only_referenced_fields_selected (delete.tests.DeletionTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_fast_delete_empty_no_update_can_self_select (delete.tests.FastDeleteTests)', 'test_fast_delete_fk (delete.tests.FastDeleteTests)', 'test_fast_delete_inheritance (delete.tests.FastDeleteTests)', 'test_fast_delete_instance_set_pk_none (delete.tests.FastDeleteTests)', 'test_fast_delete_joined_qs (delete.tests.FastDeleteTests)', 'test_fast_delete_large_batch (delete.tests.FastDeleteTests)', 'test_fast_delete_m2m (delete.tests.FastDeleteTests)', 'test_fast_delete_qs (delete.tests.FastDeleteTests)', 'test_fast_delete_revm2m (delete.tests.FastDeleteTests)', 'test_auto (delete.tests.OnDeleteTests)', 'test_auto_nullable (delete.tests.OnDeleteTests)', 'test_cascade (delete.tests.OnDeleteTests)', 'test_cascade_from_child (delete.tests.OnDeleteTests)', 'test_cascade_from_parent (delete.tests.OnDeleteTests)', 'test_cascade_nullable (delete.tests.OnDeleteTests)', 'test_do_nothing (delete.tests.OnDeleteTests)', 'test_do_nothing_qscount (delete.tests.OnDeleteTests)', 'test_inheritance_cascade_down (delete.tests.OnDeleteTests)', 'test_inheritance_cascade_up (delete.tests.OnDeleteTests)', 'test_o2o_setnull (delete.tests.OnDeleteTests)', 'test_protect (delete.tests.OnDeleteTests)', 'test_setdefault (delete.tests.OnDeleteTests)', 'test_setdefault_none (delete.tests.OnDeleteTests)', 'test_setnull (delete.tests.OnDeleteTests)', 'test_setnull_from_child (delete.tests.OnDeleteTests)', 'test_setnull_from_parent (delete.tests.OnDeleteTests)', 'test_setvalue (delete.tests.OnDeleteTests)', 'test_bulk (delete.tests.DeletionTests)', 'test_can_defer_constraint_checks (delete.tests.DeletionTests)', 'test_delete_with_keeping_parents (delete.tests.DeletionTests)', 'test_delete_with_keeping_parents_relationships (delete.tests.DeletionTests)', 'test_deletion_order (delete.tests.DeletionTests)', 'test_hidden_related (delete.tests.DeletionTests)', 'test_instance_update (delete.tests.DeletionTests)', 'test_large_delete (delete.tests.DeletionTests)', 'test_large_delete_related (delete.tests.DeletionTests)', 'test_m2m (delete.tests.DeletionTests)', 'test_model_delete_returns_num_rows (delete.tests.DeletionTests)', 'test_proxied_model_duplicate_queries (delete.tests.DeletionTests)', 'test_queryset_delete_returns_num_rows (delete.tests.DeletionTests)', 'test_relational_post_delete_signals_happen_before_parent_object (delete.tests.DeletionTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-11087: resolved: True
+2026-05-23 17:27:42,785 - INFO - Attempting to stop container sweb.eval.django__django-11087.batch...
+2026-05-23 17:27:58,176 - INFO - Attempting to remove container sweb.eval.django__django-11087.batch...
+2026-05-23 17:27:58,191 - INFO - Container sweb.eval.django__django-11087.batch removed.

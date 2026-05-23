@@ -1,0 +1,50 @@
+# Recon: django__django-11087
+
+## Failure summary
+
+The test `test_only_referenced_fields_selected` verifies that during cascade deletion, Django only selects the fields that are actually referenced by foreign keys from other models, rather than all fields. When deleting an `Origin` object, Django cascades to related `Referrer` objects, which are then checked for references from `SecondReferrer`. The test expects the SELECT query for `Referrer` to include only `id` and `unique_field` (the two fields referenced by `SecondReferrer`), but it currently selects all fields including `origin_id` and `large_field`.
+
+**Error:** AssertionError comparing SQL queries. Expected `SELECT "delete_referrer"."id", "delete_referrer"."unique_field" FROM...` but got `SELECT "delete_referrer"."id", "delete_referrer"."origin_id", "delete_referrer"."unique_field", "delete_referrer"."large_field" FROM...`
+
+The test also verifies that when deletion signals (`pre_delete` or `post_delete`) are connected, ALL fields should be selected (since signal handlers may need access to all fields).
+
+## Suspect set
+
+- `django/db/models/deletion.py` lines 232-236: `Collector.related_objects()` method
+- `django/db/models/deletion.py` lines 138-140: Existing signal listener check (for reference)
+- `django/db/models/deletion.py` line 54-59: `get_candidate_relations_to_delete()` function (helper to determine referenced fields)
+
+## Root cause
+
+The `Collector.related_objects()` method builds a QuerySet to fetch objects related to the ones being deleted, but does not specify which fields to select. Django's ORM defaults to selecting all fields when neither `.only()` nor `.defer()` is applied. This causes unnecessary data transfer from the database, which is particularly problematic with large text fields (like `large_field` in the test).
+
+**Confidence:** Abduction — 85%
+
+**Supporting evidence:**
+- `django/db/models/deletion.py:232-236` — `related_objects()` returns `related.related_model._base_manager.using(self.using).filter(**{"%s__in" % related.field.name: objs})` with no field selection
+- Test models show `SecondReferrer` references `Referrer` via two fields: `id` (from `referrer` FK) and `unique_field` (from `other_referrer` FK with `to_field='unique_field'`)
+- The pk field is always needed for deletion operations (line 264: sorting by pk, line 309: `delete_batch([obj.pk])`)
+- Signal handlers need all fields (lines 287-289, 313-315: `pre_delete`/`post_delete` signals send the full instance)
+
+## Edit sites
+
+**Primary change:**
+- `django/db/models/deletion.py` lines 232-236: Modify the `related_objects()` method to:
+  1. Check if deletion signals are connected to `related.related_model` using `signals.pre_delete.has_listeners()` and `signals.post_delete.has_listeners()`
+  2. If signals are connected, return the queryset as-is (all fields needed)
+  3. Otherwise, iterate through `get_candidate_relations_to_delete(related.related_model._meta)` to find all foreign keys from other models that reference this model
+  4. For each such relation, collect `relation.field.target_field.name` into a set of referenced fields
+  5. Add the primary key field name to the set
+  6. Apply `.only(*referenced_fields)` to the queryset before returning
+
+**No other files require changes** — the logic is entirely contained within the `related_objects()` method.
+
+## Rejected hypotheses
+
+None — the diagnosis converged on the first pass. The failure message directly indicates the issue (wrong fields in SELECT), and the code path from test to root cause is straightforward.
+
+## Open questions
+
+None — the fix is localized and the test clearly specifies the expected behavior.
+
+---STDERR---

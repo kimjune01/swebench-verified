@@ -1,0 +1,18 @@
+# Audit: django__django-11087
+
+## FAIL_TO_PASS
+- test_only_referenced_fields_selected (delete.tests.DeletionTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully fixes the failing test. The deletion collector now correctly identifies only-fields when building the dependency graph, ensuring only referenced fields are selected in the deletion query. All 42 tests pass with 1 expected skip.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

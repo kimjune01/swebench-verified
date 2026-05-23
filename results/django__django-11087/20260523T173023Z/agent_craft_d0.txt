@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully makes `test_only_referenced_fields_selected` pass. The `Collector.related_objects()` method now:
+- Selects only referenced fields (`id` and `unique_field` for Referrer) when no deletion signals are connected
+- Selects all fields when deletion signals are connected (for signal handlers)
+- Supports multi-column foreign keys via `foreign_related_fields`
+
+All 43 tests in the deletion test suite pass.
+
+---STDERR---
