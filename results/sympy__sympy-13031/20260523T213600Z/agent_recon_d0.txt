@@ -1,0 +1,47 @@
+Now let me output the complete diagnosis:
+
+# Recon: sympy__sympy-13031
+
+## Failure summary
+The test `test_sparse_matrix` checks that `SparseMatrix.hstack()` properly stacks zero-row matrices horizontally by summing their widths, and `SparseMatrix.vstack()` properly stacks zero-column matrices vertically by summing their heights. The test creates matrices with shapes (0,0), (0,1), (0,2), (0,3) and expects `hstack` to return shape (0,6) (sum of widths: 0+1+2+3=6). However, it fails with an AssertionError because the actual result is (0,3) instead of (0,6).
+
+## Suspect set
+- `sympy/matrices/sparse.py` line 988: `col_join` method uses incorrect empty-matrix check
+- `sympy/matrices/sparse.py` line 1194: `row_join` method uses incorrect empty-matrix check
+- `sympy/matrices/common.py` lines 364-383: `hstack` classmethod (uses reduce with row_join)
+- `sympy/matrices/common.py` lines 585-604: `vstack` classmethod (uses reduce with col_join)
+
+## Root cause
+The `row_join` and `col_join` methods in `SparseMatrix` (sympy/matrices/sparse.py) check `if not self:` to determine if the matrix is "empty". Since `__len__` returns `rows * cols`, this check evaluates to True for ANY matrix with zero elements, including (0,1), (0,2), etc. When True, the methods return `type(self)(other)`, discarding the dimensions of `self`.
+
+**How it breaks:**
+When `hstack` calls `reduce(row_join, [(0,0), (0,1), (0,2), (0,3)])`:
+1. `(0,0).row_join((0,1))` → `not (0,0)` is True → returns `SparseMatrix((0,1))` = (0,1) ✓
+2. `(0,1).row_join((0,2))` → `not (0,1)` is True (len=0) → returns `SparseMatrix((0,2))` = (0,2) ✗ should be (0,3)
+3. `(0,2).row_join((0,3))` → `not (0,2)` is True (len=0) → returns `SparseMatrix((0,3))` = (0,3) ✗ should be (0,5)
+
+The same issue affects `vstack` via `col_join`.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `sympy/matrices/sparse.py:1194` — row_join: `if not self: return type(self)(other)`
+- `sympy/matrices/sparse.py:988` — col_join: `if not self: return type(self)(other)`
+- `sympy/matrices/matrices.py:1845-1849` — `__len__` returns `self.rows * self.cols`
+- `sympy/matrices/common.py:477-478` — base class row_join correctly checks `if self.cols == 0 and self.rows != other.rows:`
+- `sympy/matrices/common.py:244-245` — base class col_join correctly checks `if self.rows == 0 and self.cols != other.cols:`
+
+## Edit sites
+- `sympy/matrices/sparse.py` line 988: In `col_join`, change `if not self:` to `if self.rows == 0:`
+  - Only treat zero-height matrices as "empty" for vertical stacking, not all zero-element matrices
+  
+- `sympy/matrices/sparse.py` line 1194: In `row_join`, change `if not self:` to `if self.cols == 0:`
+  - Only treat zero-width matrices as "empty" for horizontal stacking, not all zero-element matrices
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and matches the observed failure mode exactly.
+
+## Open questions
+None — the fix is straightforward and localized to two lines.
+
+---STDERR---

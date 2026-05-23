@@ -1,0 +1,25 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/matrices/tests/test_sparse.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+random seed:        62007423
+hash randomization: on (PYTHONHASHSEED=3455367272)
+
+sympy/matrices/tests/test_sparse.py[11] 
+test_sparse_matrix ok
+test_transpose ok
+test_trace ok
+test_CL_RL ok
+test_add ok
+test_errors ok
+test_len ok
+test_sparse_zeros_sparse_eye ok
+test_copyin ok
+test_sparse_solve ok
+test_hermitian ok                                                           [OK]
+
+
+================== tests finished: 11 passed, in 0.40 seconds ==================

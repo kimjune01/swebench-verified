@@ -1,0 +1,15 @@
+**RESOLVED**
+
+Fixed the sparse matrix stacking bug in 2 iterations:
+
+1. **Volleyed with codex** — initial fix was too broad (would skip shape validation); codex caught that `(0, 1).col_join((2, 2))` would silently return wrong dimensions
+2. **Revised and applied** — narrowed fix to treat only `(0, 0)` as identity element
+3. **Gate passed** — all 11 tests pass including `test_sparse_matrix`
+
+**Changes:**
+- `sympy/matrices/sparse.py:988` — `if not self:` → `if self.rows == 0 and self.cols == 0:`
+- `sympy/matrices/sparse.py:1194` — `if not self:` → `if self.rows == 0 and self.cols == 0:`
+
+The fix correctly preserves dimensions when stacking zero-row or zero-column matrices while maintaining shape validation.
+
+---STDERR---

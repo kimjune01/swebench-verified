@@ -1,0 +1,63 @@
+2026-05-23 21:34:02,144 - INFO - Creating container for sympy__sympy-13031...
+2026-05-23 21:34:04,730 - INFO - Container for sympy__sympy-13031 created: da82e01b9e0ae6e448a656bda26aad899ffc75c59b278e18ab248f2369b3ae03
+2026-05-23 21:34:05,011 - INFO - Container for sympy__sympy-13031 started: da82e01b9e0ae6e448a656bda26aad899ffc75c59b278e18ab248f2369b3ae03
+2026-05-23 21:34:05,011 - INFO - Intermediate patch for sympy__sympy-13031 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13031/patch.diff, now applying to container...
+2026-05-23 21:34:05,126 - INFO - >>>>> Applied Patch:
+Checking patch sympy/matrices/sparse.py...
+Applied patch sympy/matrices/sparse.py cleanly.
+
+2026-05-23 21:34:05,362 - INFO - Git diff before:
+diff --git a/sympy/matrices/sparse.py b/sympy/matrices/sparse.py
+index e6f36cdf3..613a63c6d 100644
+--- a/sympy/matrices/sparse.py
++++ b/sympy/matrices/sparse.py
+@@ -985,7 +985,7 @@ def col_join(self, other):
+         >>> C == A.row_insert(A.rows, Matrix(B))
+         True
+         """
+-        if not self:
++        if self.rows == 0 and self.cols == 0:
+             return type(self)(other)
+         A, B = self, other
+         if not A.cols == B.cols:
+@@ -1191,7 +1191,7 @@ def row_join(self, other):
+         >>> C == A.col_insert(A.cols, B)
+         True
+         """
+-        if not self:
++        if self.rows == 0 and self.cols == 0:
+             return type(self)(other)
+         A, B = self, other
+         if not A.rows == B.rows:
+2026-05-23 21:34:05,362 - INFO - Eval script for sympy__sympy-13031 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13031/eval.sh; copying to container...
+2026-05-23 21:34:08,684 - INFO - Test runtime: 3.25 seconds
+2026-05-23 21:34:08,684 - INFO - Test output for sympy__sympy-13031 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13031/test_output.txt
+2026-05-23 21:34:08,769 - INFO - Git diff after:
+diff --git a/sympy/matrices/sparse.py b/sympy/matrices/sparse.py
+index e6f36cdf3..613a63c6d 100644
+--- a/sympy/matrices/sparse.py
++++ b/sympy/matrices/sparse.py
+@@ -985,7 +985,7 @@ def col_join(self, other):
+         >>> C == A.row_insert(A.rows, Matrix(B))
+         True
+         """
+-        if not self:
++        if self.rows == 0 and self.cols == 0:
+             return type(self)(other)
+         A, B = self, other
+         if not A.cols == B.cols:
+@@ -1191,7 +1191,7 @@ def row_join(self, other):
+         >>> C == A.col_insert(A.cols, B)
+         True
+         """
+-        if not self:
++        if self.rows == 0 and self.cols == 0:
+             return type(self)(other)
+         A, B = self, other
+         if not A.rows == B.rows:
+2026-05-23 21:34:08,769 - INFO - Grading answer for sympy__sympy-13031...
+2026-05-23 21:34:08,769 - INFO - report: {'sympy__sympy-13031': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_sparse_matrix'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_transpose', 'test_trace', 'test_CL_RL', 'test_add', 'test_errors', 'test_len', 'test_sparse_zeros_sparse_eye', 'test_copyin', 'test_sparse_solve'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-13031: resolved: True
+2026-05-23 21:34:08,770 - INFO - Attempting to stop container sweb.eval.sympy__sympy-13031.batch...
+2026-05-23 21:34:24,093 - INFO - Attempting to remove container sweb.eval.sympy__sympy-13031.batch...
+2026-05-23 21:34:24,102 - INFO - Container sweb.eval.sympy__sympy-13031.batch removed.

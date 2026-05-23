@@ -1,0 +1,32 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/matrices/tests/test_sparse.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+random seed:        65444531
+hash randomization: on (PYTHONHASHSEED=3608429082)
+
+sympy/matrices/tests/test_sparse.py[11] 
+test_sparse_matrix F
+test_transpose ok
+test_trace ok
+test_CL_RL ok
+test_add ok
+test_errors ok
+test_len ok
+test_sparse_zeros_sparse_eye ok
+test_copyin ok
+test_sparse_solve ok
+test_hermitian ok                                                         [FAIL]
+
+
+________________________________________________________________________________
+____________ sympy/matrices/tests/test_sparse.py:test_sparse_matrix ____________
+  File "/testbed/sympy/matrices/tests/test_sparse.py", line 31, in test_sparse_matrix
+    assert SparseMatrix.hstack(*sparse_matrices) == Matrix(0, 6, [])
+AssertionError
+
+============= tests finished: 10 passed, 1 failed, in 0.21 seconds =============
+DO *NOT* COMMIT!
