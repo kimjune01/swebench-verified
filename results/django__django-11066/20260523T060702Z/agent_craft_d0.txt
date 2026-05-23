@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete and verified. Changed `content_type.save(update_fields={'model'})` to `content_type.save(using=db, update_fields={'model'})` on line 27 of `django/contrib/contenttypes/management/__init__.py`. The FAIL_TO_PASS test now passes, along with all other related tests.
+
+---STDERR---

@@ -1,0 +1,25 @@
+# Audit: django__django-11066
+
+## FAIL_TO_PASS
+- test_existing_content_type_rename_other_database: PASS ✓
+
+## PASS_TO_PASS
+- test_content_type_rename_conflict: PASS ✓
+- test_existing_content_type_rename: PASS ✓
+- test_missing_content_type_rename_ignore: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Classification
+All FAIL_TO_PASS tests now pass. All PASS_TO_PASS tests remain passing. Zero regressions detected.
+
+The patch successfully fixes the multi-database content type rename issue by adding `using=db` to the save call, ensuring the operation targets the correct database instead of being redirected by the router.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

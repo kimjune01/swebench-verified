@@ -1,0 +1,43 @@
+# Recon: django__django-11066
+
+## Failure summary
+
+The test `test_existing_content_type_rename_other_database` verifies that when a model is renamed via migration on a specific database (the 'other' database), the corresponding ContentType record is also renamed on that same database, even when a database router is present that would normally route writes elsewhere. The test creates a ContentType 'foo' on the 'other' database, runs migrations on 'other', and expects 'foo' to be renamed to 'renamedfoo'. 
+
+The test fails with `AssertionError: True is not false` at line 60, meaning the assertion `self.assertFalse(other_content_types.filter(model='foo').exists())` failed - the 'foo' content type still exists after the migration, indicating it was never renamed.
+
+## Suspect set
+
+- `django/contrib/contenttypes/management/__init__.py` lines 14-36: The `RenameContentType._rename()` method that performs the content type rename operation during migrations. Specifically line 27 where the save operation occurs.
+
+## Root cause
+
+The `RenameContentType._rename()` method correctly identifies the target database (`db = schema_editor.connection.alias` on line 15) and fetches the content type from that database using `db_manager(db)` on line 20. However, when saving the modified content type on line 27, the code calls `content_type.save(update_fields={'model'})` without specifying `using=db`. 
+
+Without the explicit `using` parameter, Django's ORM defers to any database routers configured in the project. In the failing test, a `TestRouter` routes all writes to 'default', so even though the migration is running on 'other' and the content type was fetched from 'other', the save operation attempts to write to 'default' instead. Since the content type doesn't exist on 'default', nothing gets updated, and the rename fails silently.
+
+**Confidence**: Deduction — 98%
+
+The code path is deterministic and the behavior is documented: Django model save operations without `using` parameter consult database routers. This is confirmed by comparing the passing test `test_existing_content_type_rename` (which has no router) with the failing test (which has a router that routes writes elsewhere).
+
+**Supporting evidence**:
+- `django/contrib/contenttypes/management/__init__.py:15` — `db = schema_editor.connection.alias` (correct database identified)
+- `django/contrib/contenttypes/management/__init__.py:20` — `ContentType.objects.db_manager(db).get_by_natural_key(self.app_label, old_model)` (fetch uses correct database)
+- `django/contrib/contenttypes/management/__init__.py:27` — `content_type.save(update_fields={'model'})` (save missing `using=db` parameter)
+- `django/contrib/contenttypes/management/__init__.py:26` — `with transaction.atomic(using=db):` (transaction context is correct, but doesn't override model.save() routing)
+
+## Edit sites
+
+- `django/contrib/contenttypes/management/__init__.py` line 27: Change `content_type.save(update_fields={'model'})` to `content_type.save(using=db, update_fields={'model'})` to ensure the save operation writes to the correct database rather than consulting the router.
+
+This is the only location where a ContentType save occurs in this file (verified via grep).
+
+## Rejected hypotheses
+
+None - the root cause is straightforward and confirmed by code inspection.
+
+## Open questions
+
+None - the fix is clear and localized to a single line.
+
+---STDERR---
