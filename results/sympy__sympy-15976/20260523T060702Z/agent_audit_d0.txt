@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-15976
+
+## FAIL_TO_PASS
+- test_presentation_symbol: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 38 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures
+None applicable — the baseline showed only `test_presentation_symbol` failing, which is now fixed.
+
+## Verdict Rationale
+- ✅ All FAIL_TO_PASS tests pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (0/38)
+- ✅ Gate output: 39 passed, 0 failed
+
+The fix successfully resolves the issue without introducing any regressions. The structural MathML elements (msup/msub/msubsup) are now returned directly instead of being wrapped in an `<mi>` container, producing correct MathML output.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

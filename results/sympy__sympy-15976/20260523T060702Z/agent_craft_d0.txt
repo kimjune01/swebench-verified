@@ -1,0 +1,3 @@
+**RESOLVED** — The FAIL_TO_PASS test now passes. The fix ensures that MathML structural elements (`msup`, `msub`, `msubsup`) are returned as root nodes instead of being wrapped in `<mi>` containers, producing valid MathML for symbols with superscripts and subscripts.
+
+---STDERR---

@@ -1,0 +1,97 @@
+2026-05-23 06:05:12,810 - INFO - Creating container for sympy__sympy-15976...
+2026-05-23 06:05:12,838 - INFO - Container for sympy__sympy-15976 created: 01df9b3d708a925c34e2a7bc20d68a7bc1734fe7b8f64f75f54a33551e952fac
+2026-05-23 06:05:13,160 - INFO - Container for sympy__sympy-15976 started: 01df9b3d708a925c34e2a7bc20d68a7bc1734fe7b8f64f75f54a33551e952fac
+2026-05-23 06:05:13,161 - INFO - Intermediate patch for sympy__sympy-15976 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15976/patch.diff, now applying to container...
+2026-05-23 06:05:13,281 - INFO - >>>>> Applied Patch:
+Checking patch sympy/printing/mathml.py...
+Checking patch sympy/printing/mathml.py.bak...
+Applied patch sympy/printing/mathml.py cleanly.
+Applied patch sympy/printing/mathml.py.bak cleanly.
+
+2026-05-23 06:05:13,523 - INFO - Git diff before:
+diff --git a/sympy/printing/mathml.py b/sympy/printing/mathml.py
+index 3f8b8d49e..0458ee8c3 100644
+--- a/sympy/printing/mathml.py
++++ b/sympy/printing/mathml.py
+@@ -779,27 +779,28 @@ def translate(s):
+ 
+         mname = self.dom.createElement('mi')
+         mname.appendChild(self.dom.createTextNode(name))
++        if style == 'bold':
++            mname.setAttribute('mathvariant', 'bold')
+         if len(supers) == 0:
+             if len(subs) == 0:
+-                x.appendChild(self.dom.createTextNode(name))
++                return mname
+             else:
+                 msub = self.dom.createElement('msub')
+                 msub.appendChild(mname)
+                 msub.appendChild(join(subs))
+-                x.appendChild(msub)
++                return msub
+         else:
+             if len(subs) == 0:
+                 msup = self.dom.createElement('msup')
+                 msup.appendChild(mname)
+                 msup.appendChild(join(supers))
+-                x.appendChild(msup)
++                return msup
+             else:
+                 msubsup = self.dom.createElement('msubsup')
+                 msubsup.appendChild(mname)
+                 msubsup.appendChild(join(subs))
+                 msubsup.appendChild(join(supers))
+-                x.appendChild(msubsup)
+-        return x
++                return msubsup
+ 
+     def _print_MatrixSymbol(self, sym):
+         return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+2026-05-23 06:05:13,523 - INFO - Eval script for sympy__sympy-15976 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15976/eval.sh; copying to container...
+2026-05-23 06:05:15,921 - INFO - Test runtime: 2.30 seconds
+2026-05-23 06:05:15,922 - INFO - Test output for sympy__sympy-15976 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-15976/test_output.txt
+2026-05-23 06:05:16,035 - INFO - Git diff after:
+diff --git a/sympy/printing/mathml.py b/sympy/printing/mathml.py
+index 3f8b8d49e..0458ee8c3 100644
+--- a/sympy/printing/mathml.py
++++ b/sympy/printing/mathml.py
+@@ -779,27 +779,28 @@ def translate(s):
+ 
+         mname = self.dom.createElement('mi')
+         mname.appendChild(self.dom.createTextNode(name))
++        if style == 'bold':
++            mname.setAttribute('mathvariant', 'bold')
+         if len(supers) == 0:
+             if len(subs) == 0:
+-                x.appendChild(self.dom.createTextNode(name))
++                return mname
+             else:
+                 msub = self.dom.createElement('msub')
+                 msub.appendChild(mname)
+                 msub.appendChild(join(subs))
+-                x.appendChild(msub)
++                return msub
+         else:
+             if len(subs) == 0:
+                 msup = self.dom.createElement('msup')
+                 msup.appendChild(mname)
+                 msup.appendChild(join(supers))
+-                x.appendChild(msup)
++                return msup
+             else:
+                 msubsup = self.dom.createElement('msubsup')
+                 msubsup.appendChild(mname)
+                 msubsup.appendChild(join(subs))
+                 msubsup.appendChild(join(supers))
+-                x.appendChild(msubsup)
+-        return x
++                return msubsup
+ 
+     def _print_MatrixSymbol(self, sym):
+         return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+2026-05-23 06:05:16,035 - INFO - Grading answer for sympy__sympy-15976...
+2026-05-23 06:05:16,035 - INFO - report: {'sympy__sympy-15976': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_presentation_symbol'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_mathml_printer', 'test_content_printmethod', 'test_content_mathml_core', 'test_content_mathml_functions', 'test_content_mathml_limits', 'test_content_mathml_integrals', 'test_content_mathml_matrices', 'test_content_mathml_sums', 'test_content_mathml_tuples', 'test_content_mathml_add', 'test_content_mathml_Rational', 'test_content_mathml_constants', 'test_content_mathml_trig', 'test_content_mathml_relational', 'test_content_symbol', 'test_content_mathml_greek', 'test_content_mathml_order', 'test_content_settings', 'test_presentation_printmethod', 'test_presentation_mathml_core', 'test_presentation_mathml_functions', 'test_presentation_mathml_limits', 'test_presentation_mathml_integrals', 'test_presentation_mathml_matrices', 'test_presentation_mathml_sums', 'test_presentation_mathml_add', 'test_presentation_mathml_Rational', 'test_presentation_mathml_constants', 'test_presentation_mathml_trig', 'test_presentation_mathml_relational', 'test_presentation_mathml_greek', 'test_presentation_mathml_order', 'test_presentation_settings', 'test_toprettyxml_hooking', 'test_print_basic', 'test_root_notation_print', 'test_print_matrix_symbol'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-15976: resolved: True
+2026-05-23 06:05:16,036 - INFO - Attempting to stop container sweb.eval.sympy__sympy-15976.batch...
+2026-05-23 06:05:31,496 - INFO - Attempting to remove container sweb.eval.sympy__sympy-15976.batch...
+2026-05-23 06:05:31,504 - INFO - Container sweb.eval.sympy__sympy-15976.batch removed.

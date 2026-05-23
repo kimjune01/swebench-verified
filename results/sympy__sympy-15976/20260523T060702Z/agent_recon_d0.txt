@@ -1,0 +1,47 @@
+# Recon: sympy__sympy-15976
+
+## Failure summary
+
+The test `test_presentation_symbol` in `sympy/printing/tests/test_mathml.py` checks that symbols with superscripts and subscripts (using notations like `x^2`, `x_2`, `x__2`, etc.) are correctly rendered as MathML presentation markup. The test fails at the first assertion checking that `Symbol("x^2")` produces an `<msup>` root element. Instead, the code produces an `<mi>` root element containing the `<msup>` element, resulting in malformed MathML: `<mi><msup><mi>x</mi><mi>2</mi></msup></mi>`. This malformation causes symbols ending with numbers (like `x2`) or containing superscript/subscript notation to render invisibly in browsers like Safari.
+
+## Suspect set
+
+- `sympy/printing/mathml.py` lines 745-803: `MathMLPresentationPrinter._print_Symbol` method
+- `sympy/printing/conventions.py` lines 14-65: `split_super_sub` function (parsing logic - verified correct)
+
+## Root cause
+
+The `_print_Symbol` method in `MathMLPresentationPrinter` creates an `<mi>` element at the start (line 746) and always returns it at the end (line 802). When the symbol contains superscripts or subscripts (detected by `split_super_sub`), the method creates the appropriate structural element (`<msup>`, `<msub>`, or `<msubsup>`) but then incorrectly appends it to the `<mi>` wrapper element instead of returning it directly. This produces malformed MathML where structural elements are nested inside text container elements.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `sympy/printing/mathml.py:746` — `x = self.dom.createElement('mi')` creates the wrapper
+- `sympy/printing/mathml.py:786-789` — Creates `msub`, appends to `x`: `x.appendChild(msub)`
+- `sympy/printing/mathml.py:792-795` — Creates `msup`, appends to `x`: `x.appendChild(msup)`
+- `sympy/printing/mathml.py:797-801` — Creates `msubsup`, appends to `x`: `x.appendChild(msubsup)`
+- `sympy/printing/mathml.py:802` — Always returns `x` (the `<mi>` wrapper)
+
+**Verified output**: `Symbol("x^2")` produces `<mi><msup><mi>x</mi><mi>2</mi></msup></mi>` instead of `<msup><mi>x</mi><mi>2</mi></msup>`
+
+## Edit sites
+
+- `sympy/printing/mathml.py` lines 783-802: Replace the conditional logic to return the structural element directly when superscripts or subscripts are present, instead of appending them to the `<mi>` wrapper. The fix should:
+  - When no supers and no subs: return simple `<mi>` with text content (line 784 behavior is correct)
+  - When subs only: return `msub` directly (not wrapped in `<mi>`)
+  - When supers only: return `msup` directly (not wrapped in `<mi>`)
+  - When both: return `msubsup` directly (not wrapped in `<mi>`)
+
+## Competing hypotheses
+
+None. The code path is deterministic and the malformed output is verified.
+
+## Rejected hypotheses
+
+- **H₀ (initial)**: `split_super_sub` incorrectly parsing symbol names — **killed** by verification that `split_super_sub("x^2")` correctly returns `('x', ['2'], [])` and the parsing logic is sound.
+
+## Open questions
+
+None. The root cause is localized and the fix is clear.
+
+---STDERR---
