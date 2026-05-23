@@ -13,23 +13,30 @@ Poll two sources every 60s, **emit only on change**:
 
 Track `done`/`empty`/`err` across iterations; print only on a delta or terminal.
 
+The monitor runs in the user's shell (**zsh**), which — unlike bash — does **not**
+expand a glob stored in a variable when used unquoted. So `LED='…b_*.jsonl'; grep … $LED`
+matches nothing and silently counts 0 (this blinded the batch_005 monitor end to
+end). Pipe `cat <literal-glob>` instead, so zsh expands the glob on the command line:
+
 ```bash
-LOG=/tmp/launch_b2.log; LED='/tmp/swebench-abduction/rung4_results_b_*.jsonl'
+LOG=/tmp/launch_b2.log; LG='/tmp/swebench-abduction/rung4_results_b_*.jsonl'
 pd=-1; pe=0; perr=0
 while true; do
-  done=$(grep -h '"stage": "done"' $LED 2>/dev/null | wc -l|tr -d ' '); done=${done:-0}
-  empty=$(grep -h 'EMPTY patch' $LED 2>/dev/null | wc -l|tr -d ' '); empty=${empty:-0}
-  err=$(grep -hcE "Traceback|Killed|OOM|Connection refused|Permission denied" "$LOG" 2>/dev/null|tr -d ' '); err=${err:-0}
-  [ "$empty" -gt "$pe" ] && { echo "!! EMPTY ($empty):"; grep -h 'EMPTY patch' $LED|tail -n +$((pe+1)); pe=$empty; }
-  [ "$err" -gt "$perr" ] && { echo "!! ERRORS:"; grep -hE "Traceback|Killed|OOM|Connection refused|Permission denied" "$LOG"|tail -3; perr=$err; }
+  done=$(cat $~LG 2>/dev/null | grep -c '"stage": "done"'); done=${done:-0}
+  empty=$(cat $~LG 2>/dev/null | grep -c 'EMPTY patch'); empty=${empty:-0}
+  err=$(grep -cE "Traceback|Killed|OOM|Connection refused|Permission denied" "$LOG" 2>/dev/null); err=${err:-0}
+  [ "$empty" -gt "$pe" ] && { echo "!! EMPTY ($empty):"; cat $~LG 2>/dev/null | grep 'EMPTY patch' | tail -n +$((pe+1)); pe=$empty; }
+  [ "$err" -gt "$perr" ] && { echo "!! ERRORS:"; grep -E "Traceback|Killed|OOM|Connection refused|Permission denied" "$LOG" | tail -3; perr=$err; }
   [ "$done" -ne "$pd" ] && { echo "progress $(date +%H:%M): done=$done/30 empty=$empty err=$err"; pd=$done; }
   grep -q "ALL SHARDS DONE" "$LOG" 2>/dev/null && { echo "TERMINAL: done=$done/30 empty=$empty err=$err"; break; }
   sleep 60
 done
 ```
 
+`$~LG` forces zsh to glob-expand the variable; under bash, plain `$LG` works too.
 Run under the `Monitor` tool (each line = one notification), 60-min timeout; it
-self-exits on `ALL SHARDS DONE`.
+self-exits on `ALL SHARDS DONE`. **Before arming, sanity-check the counter prints
+non-zero once instances finish** — a silently-zero counter is worse than none.
 
 **Principles:** (1) *Emit on change, not on a tick* — volume scales with events,
 not time; a quiet run is quiet. (2) *Silence ≠ success* — the alternation covers
