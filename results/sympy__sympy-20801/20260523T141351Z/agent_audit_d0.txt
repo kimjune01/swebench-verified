@@ -1,0 +1,19 @@
+# Audit: sympy__sympy-20801
+
+## FAIL_TO_PASS
+- `test_zero_not_false`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 98 PASS_TO_PASS tests still passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_mpmath_issues`: expected to fail (f) on both base and patched
+- `test_numpy_to_float`: skipped (s) — numpy not installed
+
+## Summary
+The patch successfully resolved the issue. The FAIL_TO_PASS test now passes, and no regressions were introduced. The fix correctly prevents `S(0.0) == S.false` from returning `True` by reordering the Boolean check to execute before the zero-check and guarding the zero-shortcut to only apply to Number types.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

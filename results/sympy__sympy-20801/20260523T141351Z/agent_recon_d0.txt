@@ -1,0 +1,47 @@
+# Recon: sympy__sympy-20801
+
+## Failure summary
+
+The test `test_zero_not_false` checks that `S(0.0) == S.false` returns `False`, but it currently returns `True`. The asymmetry is that `S.false == S(0.0)` correctly returns `False`, and both `S(0) == S.false` and `S.false == S(0)` also correctly return `False`. The bug is specific to Float(0.0) being compared with BooleanFalse via the `==` operator when Float is on the left side.
+
+**Error**: `AssertionError` at line 588 in `sympy/core/tests/test_numbers.py`:
+```python
+assert (S(0.0) == S.false) is False  # Fails because returns True
+```
+
+## Suspect set
+
+- `sympy/core/numbers.py` lines 1383-1412: `Float.__eq__` method - performs the erroneous comparison
+- `sympy/core/numbers.py` lines 1389-1392: Specific lines with wrong ordering of checks
+
+## Root cause
+
+The `Float.__eq__` method (line 1383) checks `if not self:` (line 1389) BEFORE checking `if isinstance(other, Boolean):` (line 1391). When comparing `S(0.0) == S.false`:
+
+1. Line 1389: `if not self` evaluates to `True` because `S(0.0)` is falsy in Python
+2. Line 1390: Returns `not other` → `not S.false` → `True` in Python
+3. The Boolean check at line 1391 never executes
+
+This differs from `Rational.__eq__` (used by Integer), which has a Number-type check BEFORE the zero-check that catches `S.false` and returns `False` immediately (added in commit dcfcf9d72b "handle Int/BooleanAtom comparison" in 2019).
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `sympy/core/numbers.py:1383-1392` — Float.__eq__ with wrong check ordering
+- `sympy/core/numbers.py:1868-1873` — Rational.__eq__ with correct type-check before zero-check
+- Commit dcfcf9d72b added Boolean protection to Rational but not Float
+- Manual trace: `not S(0.0)` is `True`, `not S.false` is `True` in Python
+
+## Edit sites
+
+- `sympy/core/numbers.py` lines 1389-1392: Move the `isinstance(other, Boolean)` check (lines 1391-1392) to execute BEFORE the `if not self:` check (lines 1389-1390). This ensures that Boolean comparisons are rejected before attempting the zero-equality shortcut that uses Python's `not` operator.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection.
+
+## Open questions
+
+None — the fix is straightforward: reorder two existing checks.
+
+---STDERR---

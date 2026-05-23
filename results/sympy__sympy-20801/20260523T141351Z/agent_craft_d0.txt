@@ -1,0 +1,3 @@
+**RESOLVED** — The FAIL_TO_PASS test `test_zero_not_false` now passes. The fix guards `Float.__eq__` by checking for Boolean types before the zero-shortcut and ensuring the shortcut only applies to Number types.
+
+---STDERR---
