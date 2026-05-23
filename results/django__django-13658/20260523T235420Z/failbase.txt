@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 admin_scripts.tests
+
+Make sure template context variables are rendered with proper values ... ok
+test_custom_project_template_from_tarball_by_path (admin_scripts.tests.StartProject)
+Make sure the startproject management command is able to use a different project template from a tarball ... ok
+test_custom_project_template_from_tarball_by_url (admin_scripts.tests.StartProject) ... ok
+test_custom_project_template_from_tarball_to_alternative_location (admin_scripts.tests.StartProject)
+Startproject can use a project template from a tarball and create it in a specified location ... ok
+test_custom_project_template_with_non_ascii_templates (admin_scripts.tests.StartProject) ... ok
+test_file_without_extension (admin_scripts.tests.StartProject)
+Make sure the startproject management command is able to render custom files ... ok
+test_importable_project_name (admin_scripts.tests.StartProject) ... ok
+test_invalid_project_name (admin_scripts.tests.StartProject)
+Make sure the startproject management command validates a project name ... ok
+test_no_escaping_of_project_variables (admin_scripts.tests.StartProject)
+Make sure template context variables are not html escaped ... ok
+test_project_template_tarball_url (admin_scripts.tests.StartProject)
+Startproject management command handles project template tar/zip balls from non-canonical urls ... ok
+test_simple_project (admin_scripts.tests.StartProject)
+Make sure the startproject management command creates a project ... ok
+test_simple_project_different_directory (admin_scripts.tests.StartProject)
+Make sure the startproject management command creates a project in a specific directory ... ok
+test_template_dir_with_trailing_slash (admin_scripts.tests.StartProject)
+Ticket 17475: Template dir passed has a trailing path separator ... ok
+test_wrong_args (admin_scripts.tests.StartProject)
+Make sure passing the wrong kinds of arguments outputs an error and prints usage ... ok
+
+======================================================================
+ERROR: test_startapp_unicode_name (admin_scripts.tests.DjangoAdminSettingsDirectory)
+startapp creates the correct directory with Unicode characters.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/admin_scripts/tests.py", line 577, in test_startapp_unicode_name
+    out, err = self.run_django_admin(args, 'test_project.settings')
+  File "/testbed/tests/admin_scripts/tests.py", line 128, in run_django_admin
+    return self.run_test(['-m', 'django', *args], settings_file)
+  File "/testbed/tests/admin_scripts/tests.py", line 123, in run_test
+    env=test_environ, universal_newlines=True,
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/subprocess.py", line 423, in run
+    with Popen(*popenargs, **kwargs) as process:
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/subprocess.py", line 729, in __init__
+    restore_signals, start_new_session)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/subprocess.py", line 1295, in _execute_child
+    restore_signals, start_new_session, preexec_fn)
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-4: ordinal not in range(128)
+
+======================================================================
+ERROR: test_program_name_from_argv (admin_scripts.tests.ExecuteFromCommandLine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/admin_scripts/tests.py", line 1880, in test_program_name_from_argv
+    execute_from_command_line(['django-admin'] + args)
+  File "/testbed/django/core/management/__init__.py", line 414, in execute_from_command_line
+    utility.execute()
+  File "/testbed/django/core/management/__init__.py", line 347, in execute
+    parser = CommandParser(usage='%(prog)s subcommand [options] [args]', add_help=False, allow_abbrev=False)
+  File "/testbed/django/core/management/base.py", line 54, in __init__
+    super().__init__(**kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/argparse.py", line 1626, in __init__
+    prog = _os.path.basename(_sys.argv[0])
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/posixpath.py", line 146, in basename
+    p = os.fspath(p)
+TypeError: expected str, bytes or os.PathLike object, not NoneType
+
+======================================================================
+FAIL: test_all (admin_scripts.tests.DiffSettings)
+The all option also shows settings with the default value.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/admin_scripts/tests.py", line 2223, in test_all
+    self.assertNoOutput(err)
+  File "/testbed/tests/admin_scripts/tests.py", line 150, in assertNoOutput
+    self.assertEqual(len(stream), 0, "Stream should be empty: actually contains '%s'" % stream)
+AssertionError: 849 != 0 : Stream should be empty: actually contains 'Traceback (most recent call last):
+  File "./manage.py", line 22, in <module>
+    main()
+  File "./manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "/testbed/django/core/management/__init__.py", line 414, in execute_from_command_line
+    utility.execute()
+  File "/testbed/django/core/management/__init__.py", line 408, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "/testbed/django/core/management/base.py", line 354, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "/testbed/django/core/management/base.py", line 407, in execute
+    self.stdout.write(output)
+  File "/testbed/django/core/management/base.py", line 155, in write
+    self._out.write(style_func(msg))
+UnicodeEncodeError: 'ascii' codec can't encode character '\xe5' in position 4957: ordinal not in range(128)
+'
+
+======================================================================
+FAIL: test_unified_all (admin_scripts.tests.DiffSettings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/admin_scripts/tests.py", line 2257, in test_unified_all
+    self.assertNoOutput(err)
+  File "/testbed/tests/admin_scripts/tests.py", line 150, in assertNoOutput
+    self.assertEqual(len(stream), 0, "Stream should be empty: actually contains '%s'" % stream)
+AssertionError: 849 != 0 : Stream should be empty: actually contains 'Traceback (most recent call last):
+  File "./manage.py", line 22, in <module>
+    main()
+  File "./manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "/testbed/django/core/management/__init__.py", line 414, in execute_from_command_line
+    utility.execute()
+  File "/testbed/django/core/management/__init__.py", line 408, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "/testbed/django/core/management/base.py", line 354, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "/testbed/django/core/management/base.py", line 407, in execute
+    self.stdout.write(output)
+  File "/testbed/django/core/management/base.py", line 155, in write
+    self._out.write(style_func(msg))
+UnicodeEncodeError: 'ascii' codec can't encode character '\xe5' in position 4882: ordinal not in range(128)
+'
+
+----------------------------------------------------------------------
+Ran 196 tests in 26.433s
+
+FAILED (failures=2, errors=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

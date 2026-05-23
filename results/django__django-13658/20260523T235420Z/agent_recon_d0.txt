@@ -1,0 +1,63 @@
+# Recon: django__django-13658
+
+## Failure summary
+
+The test `test_program_name_from_argv` verifies that `execute_from_command_line()` uses the program name from its argv parameter, not from sys.argv. The test patches `sys.argv[0]` to `None` and calls `execute_from_command_line(['django-admin', 'help', 'shell'])`, expecting the output to show "usage: django-admin shell". However, the test fails with a TypeError because `ArgumentParser` attempts to call `os.path.basename(None)` when computing the default program name.
+
+Error message:
+```
+TypeError: expected str, bytes or os.PathLike object, not NoneType
+  File "/testbed/django/core/management/__init__.py", line 347, in execute
+    parser = CommandParser(usage='%(prog)s subcommand [options] [args]', add_help=False, allow_abbrev=False)
+  File "/testbed/django/core/management/base.py", line 54, in __init__
+    super().__init__(**kwargs)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/argparse.py", line 1626, in __init__
+    prog = _os.path.basename(_sys.argv[0])
+```
+
+## Suspect set
+
+- `django/core/management/__init__.py` lines 189-193: ManagementUtility.__init__ computes self.prog_name correctly from argv parameter
+- `django/core/management/__init__.py` line 347: CommandParser instantiation without prog parameter — **primary suspect**
+- `django/core/management/base.py` lines 45-54: CommandParser class definition (passes kwargs to ArgumentParser)
+
+## Root cause
+
+ManagementUtility computes `self.prog_name` from the `argv` parameter it receives (line 191), but when it instantiates CommandParser at line 347, it does not pass `prog=self.prog_name`. This causes CommandParser to inherit ArgumentParser's default behavior of using `sys.argv[0]` to determine the program name. When `sys.argv[0]` is None (as in the test scenario or certain embedded environments), ArgumentParser's __init__ fails when attempting `os.path.basename(sys.argv[0])`.
+
+The code path:
+1. `execute_from_command_line(['django-admin', 'help', 'shell'])` creates ManagementUtility with that argv
+2. ManagementUtility.__init__ correctly computes `self.prog_name = 'django-admin'` from `self.argv[0]`
+3. `utility.execute()` instantiates CommandParser without passing prog
+4. CommandParser.__init__ passes **kwargs to ArgumentParser
+5. ArgumentParser defaults to `prog = os.path.basename(sys.argv[0])` when prog is not in kwargs
+6. Since sys.argv[0] is None, this raises TypeError
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/core/management/__init__.py:191` — `self.prog_name = os.path.basename(self.argv[0])`
+- `django/core/management/__init__.py:347` — `parser = CommandParser(usage='%(prog)s subcommand [options] [args]', add_help=False, allow_abbrev=False)` (no prog parameter)
+- `django/core/management/base.py:54` — `super().__init__(**kwargs)` in CommandParser.__init__
+- Python argparse documentation: ArgumentParser defaults prog to `basename(sys.argv[0])` when not provided
+
+## Edit sites
+
+- `django/core/management/__init__.py` line 347: Add `prog=self.prog_name` as the first parameter to the CommandParser instantiation. The modified line should be:
+  ```python
+  parser = CommandParser(prog=self.prog_name, usage='%(prog)s subcommand [options] [args]', add_help=False, allow_abbrev=False)
+  ```
+
+This is the only location that requires modification. No other CommandParser instantiations in the codebase have this issue:
+- `base.py:280` already passes `prog='%s %s' % (os.path.basename(prog_name), subcommand)`
+- `utils.py:118` does not pass prog but is not affected because it only parses argv[2:] and doesn't access sys.argv[0]
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from code inspection and stack trace analysis.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

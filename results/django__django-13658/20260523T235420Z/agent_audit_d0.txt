@@ -1,0 +1,26 @@
+# Audit: django__django-13658
+
+## FAIL_TO_PASS
+- `test_program_name_from_argv (admin_scripts.tests.ExecuteFromCommandLine)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_startapp_unicode_name` - UnicodeEncodeError (explicitly listed in baseline)
+- `test_all (admin_scripts.tests.DiffSettings)` - UnicodeEncodeError in diffsettings output (Python 3.6 ASCII encoding issue with 'å' in LANGUAGES setting, unrelated to prog parameter change)
+- `test_unified_all (admin_scripts.tests.DiffSettings)` - Same unicode encoding issue as test_all
+
+## Analysis
+
+The patch adds `prog=self.prog_name` to the CommandParser instantiation at line 347. This correctly fixes the FAIL_TO_PASS test by preventing ArgumentParser from defaulting to sys.argv[0].
+
+The DiffSettings test failures are environment encoding issues (Python 3.6 with ASCII default) triggered when outputting settings containing unicode characters (Norwegian Bokmål 'å'). These are unrelated to the patch because:
+1. The `prog` parameter only affects argparse help/error messages, not command output content
+2. The error occurs in diffsettings output writing, not argument parsing
+3. Same error type as confirmed pre-existing test_startapp_unicode_name
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
