@@ -1,0 +1,43 @@
+# Audit: astropy__astropy-14539
+
+## FAIL_TO_PASS
+- `test_identical_tables`: **PASS** ✓
+- `test_different_table_data`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 46 PASS_TO_PASS tests passed successfully.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None
+
+## Patch applied
+```diff
+diff --git a/astropy/io/fits/diff.py b/astropy/io/fits/diff.py
+index 100cdf1b8..d3608ef01 100644
+--- a/astropy/io/fits/diff.py
++++ b/astropy/io/fits/diff.py
+@@ -1449,7 +1449,7 @@ class TableDataDiff(_BaseDiff):
+                 arrb.dtype, np.floating
+             ):
+                 diffs = where_not_allclose(arra, arrb, rtol=self.rtol, atol=self.atol)
+-            elif "P" in col.format:
++            elif "P" in col.format or "Q" in col.format:
+                 diffs = (
+                     [
+                         idx
+```
+
+## Summary
+The patch correctly extends variable-length array handling to include Q format (64-bit) alongside P format (32-bit). This prevents the ValueError when comparing Q format columns, which would otherwise fall through to `np.where(arra != arrb)` where the ambiguous truth value error occurs.
+
+All 48 tests passed:
+- 2 FAIL_TO_PASS tests now pass
+- 46 PASS_TO_PASS tests remain passing  
+- 0 regressions introduced
+
+The fix is minimal, targeted, and resolves the issue without side effects.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

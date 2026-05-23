@@ -1,0 +1,34 @@
+Now I'll output my diagnosis:
+
+# Recon: astropy__astropy-14539
+
+## Failure summary
+The tests `test_identical_tables` and `test_different_table_data` both fail when comparing FITS tables that contain Q-format VLA (variable-length array) columns. The tests check that `TableDataDiff` correctly identifies identical and different table data. Both tests fail with `ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()` at line 1463 of `astropy/io/fits/diff.py` when executing `diffs = np.where(arra != arrb)`.
+
+## Suspect set
+- `astropy/io/fits/diff.py` lines 1445-1475: The table data comparison logic that handles column-by-column diffing, specifically the conditional branching that determines how to compare different column types (floating point, P-format VLAs, and others).
+
+## Root cause
+The code at `astropy/io/fits/diff.py:1452` only checks for "P" in the column format string to identify VLA columns that require special element-wise comparison. However, both "P" (32-bit descriptor VLA) and "Q" (64-bit descriptor VLA) formats produce object-dtype arrays where each element is itself a numpy array. When Q-format VLA columns are encountered, they fall through to the else clause at line 1463 which attempts `diffs = np.where(arra != arrb)`. This operation fails because comparing two object-dtype arrays containing numpy arrays produces an ambiguous truth value error.
+
+The existing P-format handling code (lines 1452-1462) correctly handles VLAs by iterating through indices and using `np.allclose()` for element-wise comparison. This same approach is needed for Q-format VLAs but is currently missing.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `astropy/io/fits/diff.py:1452` — only checks `elif "P" in col.format:` without checking for "Q"
+- `astropy/io/fits/diff.py:1463` — error occurs at `diffs = np.where(arra != arrb)` when Q-format VLAs fall through
+- `astropy/io/fits/column.py:1381` — existing code that already treats P and Q formats together: `if "P" in format or "Q" in format:`
+- `astropy/io/fits/column.py:430,472` — documentation confirms both `_FormatP` and `_FormatQ` classes exist for VLAs
+- Experimental verification: Q-format columns have dtype=object, and `np.where(arra != arrb)` on such arrays raises the observed error
+
+## Edit sites
+- `astropy/io/fits/diff.py` line 1452: Change the condition from `elif "P" in col.format:` to `elif "P" in col.format or "Q" in col.format:` to handle both 32-bit and 64-bit VLA formats with the element-wise comparison logic.
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and confirmed by experimental verification.
+
+## Open questions
+None — the fix is straightforward and follows the existing pattern already used elsewhere in the astropy codebase.
+
+---STDERR---

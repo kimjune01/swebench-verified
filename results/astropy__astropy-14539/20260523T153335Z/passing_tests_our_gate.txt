@@ -1,0 +1,100 @@
+$ pytest -rA astropy/io/fits/tests/test_diff.py
+
+<frozen importlib._bootstrap>:228: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 80 from C header, got 96 from PyObject
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.9.20, pytest-7.4.0, pluggy-1.3.0
+
+Running tests with Astropy version 5.3.dev756+gc0a24c1dc.d20250910.
+Running tests in astropy/io/fits/tests/test_diff.py.
+
+Date: 2026-05-23T15:03:22
+
+Platform: Linux-6.1.170-213.321.amzn2023.x86_64-x86_64-with-glibc2.35
+
+Executable: /opt/miniconda3/envs/testbed/bin/python
+
+Full Python Version: 
+3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+
+encodings: sys: utf-8, locale: UTF-8, filesystem: utf-8
+byteorder: little
+float info: dig: 15, mant_dig: 15
+
+Package versions: 
+Numpy: 1.25.2
+Scipy: not available
+Matplotlib: not available
+h5py: not available
+Pandas: not available
+PyERFA: 2.0.0.3
+Cython: not available
+Scikit-image: not available
+asdf: not available
+pyarrow: not available
+
+Using Astropy options: remote_data: none.
+
+CI: undefined
+ARCH_ON_CI: undefined
+IS_CRON: undefined
+
+rootdir: /testbed
+configfile: setup.cfg
+plugins: hypothesis-6.82.6, arraydiff-0.5.0, astropy-0.10.0, astropy-header-0.2.2, cov-4.1.0, doctestplus-1.0.0, filter-subpackage-0.1.2, mock-3.11.1, openfiles-0.5.0, remotedata-0.4.0, xdist-3.3.1
+collected 48 items
+
+astropy/io/fits/tests/test_diff.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 77%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                              [100%][0m
+
+==================================== PASSES ====================================
+[36m[1m=========================== short test summary info ============================[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_headers[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_slightly_different_headers[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_common_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_count[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_values[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_comments[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_values_with_duplicate[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_asymmetric_duplicate_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_floating_point_rtol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_floating_point_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blanks[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[HeaderDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[HDUDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[FITSDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_hdus[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_keyword_values[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_keyword_comments[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_trivial_identical_images[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_relative_tolerance[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_absolute_tolerance[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_rtol_and_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_not_identical_within_rtol_and_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_comp_image_hdus[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_dimensions[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_pixels[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_tables[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_diff_empty_tables[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_table_fields[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_field_names[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_field_counts[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_rows[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_data[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_files_basic[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files1[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files2[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files3[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_diff_nans[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_from_path_string[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_overwrite_safety[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_overwrite_success[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_nodiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_dimsdiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_bytesdiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_hdu_name[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_no_hdu_name[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_with_names[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_rawdatadiff_diff_with_rtol[0m
+[32m============================== [32m[1m48 passed[0m[32m in 0.20s[0m[32m ==============================[0m

@@ -1,0 +1,122 @@
+$ pytest -rA astropy/io/fits/tests/test_diff.py
+
+                    self.diff_column_names[0].append(col.name)
+    
+        if right_only_columns:
+            for col in self.b.columns:
+                if col.name.lower() in right_only_columns:
+                    self.diff_column_names[1].append(col.name)
+    
+        # If the tables have a different number of rows, we don't compare the
+        # columns right now.
+        # TODO: It might be nice to optionally compare the first n rows where n
+        # is the minimum of the row counts between the two tables.
+        if len(self.a) != len(self.b):
+            self.diff_rows = (len(self.a), len(self.b))
+            return
+    
+        # If the tables contain no rows there's no data to compare, so we're
+        # done at this point. (See ticket #178)
+        if len(self.a) == len(self.b) == 0:
+            return
+    
+        # Like in the old fitsdiff, compare tables on a column by column basis
+        # The difficulty here is that, while FITS column names are meant to be
+        # case-insensitive, Astropy still allows, for the sake of flexibility,
+        # two columns with the same name but different case.  When columns are
+        # accessed in FITS tables, a case-sensitive is tried first, and failing
+        # that a case-insensitive match is made.
+        # It's conceivable that the same column could appear in both tables
+        # being compared, but with different case.
+        # Though it *may* lead to inconsistencies in these rare cases, this
+        # just assumes that there are no duplicated column names in either
+        # table, and that the column names can be treated case-insensitively.
+        for col in self.common_columns:
+            name_lower = col.name.lower()
+            if name_lower in ignore_fields:
+                continue
+    
+            cola = colsa[name_lower]
+            colb = colsb[name_lower]
+    
+            for attr, _ in _COL_ATTRS:
+                vala = getattr(cola, attr, None)
+                valb = getattr(colb, attr, None)
+                if diff_values(vala, valb):
+                    self.diff_column_attributes.append(
+                        ((col.name.upper(), attr), (vala, valb))
+                    )
+    
+            arra = self.a[col.name]
+            arrb = self.b[col.name]
+    
+            if np.issubdtype(arra.dtype, np.floating) and np.issubdtype(
+                arrb.dtype, np.floating
+            ):
+                diffs = where_not_allclose(arra, arrb, rtol=self.rtol, atol=self.atol)
+            elif "P" in col.format:
+                diffs = (
+                    [
+                        idx
+                        for idx in range(len(arra))
+                        if not np.allclose(
+                            arra[idx], arrb[idx], rtol=self.rtol, atol=self.atol
+                        )
+                    ],
+                )
+            else:
+>               diffs = np.where(arra != arrb)
+[1m[31mE               ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()[0m
+
+[1m[31mastropy/io/fits/diff.py[0m:1463: ValueError
+==================================== PASSES ====================================
+[36m[1m=========================== short test summary info ============================[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_headers[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_slightly_different_headers[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_common_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_count[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_values[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_comments[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_keyword_values_with_duplicate[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_asymmetric_duplicate_keywords[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_floating_point_rtol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_floating_point_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blanks[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[HeaderDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[HDUDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_blank_cards[FITSDiff][0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_hdus[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_keyword_values[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_keyword_comments[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_trivial_identical_images[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_relative_tolerance[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_absolute_tolerance[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_within_rtol_and_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_not_identical_within_rtol_and_atol[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_comp_image_hdus[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_dimensions[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_pixels[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_diff_empty_tables[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_ignore_table_fields[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_field_names[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_field_counts[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_rows[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_files_basic[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files1[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files2[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_partially_identical_files3[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_diff_nans[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_from_path_string[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_overwrite_safety[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_file_output_overwrite_success[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_nodiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_dimsdiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_rawdatadiff_bytesdiff[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_hdu_name[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_no_hdu_name[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_fitsdiff_with_names[0m
+[32mPASSED[0m astropy/io/fits/tests/test_diff.py::[1mtest_rawdatadiff_diff_with_rtol[0m
+[31mFAILED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_identical_tables[0m - ValueError: The truth value of an array with more than one element is ambig...
+[31mFAILED[0m astropy/io/fits/tests/test_diff.py::[1mTestDiff::test_different_table_data[0m - ValueError: The truth value of an array with more than one element is ambig...
+[31m========================= [31m[1m2 failed[0m, [32m46 passed[0m[31m in 0.34s[0m[31m =========================[0m
