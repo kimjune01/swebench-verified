@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-6599
+
+## FAIL_TO_PASS
+- test_polyval[timedelta-False]: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully resolved the issue. The target test `test_polyval[timedelta-False]` now passes, and no regressions were introduced. All 265 tests passed with 1 skipped (pre-existing).
+
+The craft patch added timedelta type handling to `_ensure_numeric()` in `xarray/core/computation.py`, which allows polyval to accept timedelta coordinates without raising a TypeError.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

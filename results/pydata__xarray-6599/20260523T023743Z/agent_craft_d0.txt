@@ -1,0 +1,10 @@
+**RESOLVED** ✅
+
+The fix successfully addresses the timedelta64 handling bug in xarray's `polyval` function. The `_ensure_numeric` function now correctly distinguishes between datetime64 (absolute time) and timedelta64 (relative duration), using appropriate offset types for each:
+
+- **datetime64**: `offset=np.datetime64("1970-01-01")` 
+- **timedelta64**: `offset=np.timedelta64(0, "ns")`
+
+Both paths use `datetime_to_numeric` with `datetime_unit="ns"` to ensure proper unit normalization and NaT→nan conversion. Gate passed with all 265 tests passing.
+
+---STDERR---

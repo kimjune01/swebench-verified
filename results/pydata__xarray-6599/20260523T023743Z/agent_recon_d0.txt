@@ -1,0 +1,43 @@
+# Recon: pydata__xarray-6599
+
+## Failure summary
+
+The test `test_polyval[timedelta-False]` evaluates a polynomial with timedelta64 coordinate values. The test creates a timedelta64[ns] array `[1000, 2000, 3000]` and polynomial coefficients `[0, 1]` (representing `y = 0 + 1*x`), expecting float output `[1000.0, 2000.0, 3000.0]`. The test fails with `UFuncBinaryResolutionError: ufunc 'subtract' cannot use operands with types dtype('<m8[ns]') and dtype('<M8[D]')` when attempting to convert the timedelta coordinate to numeric values.
+
+## Suspect set
+
+- `xarray/core/computation.py` lines 1920-1949: `_ensure_numeric` function and its nested `to_floatable` helper
+- `xarray/core/duck_array_ops.py` lines 390-434: `datetime_to_numeric` function (called by `_ensure_numeric`, but not the root cause)
+
+## Root cause
+
+The `_ensure_numeric` function incorrectly treats datetime64 (absolute time) and timedelta64 (relative duration) identically by using a hardcoded `offset=np.datetime64("1970-01-01")` for both types. At `computation.py:1936`, the condition `if x.dtype.kind in "mM"` matches both datetime64 ('M') and timedelta64 ('m'). This offset is correct for datetime64 (converting absolute time to nanoseconds since epoch), but causes a type error for timedelta64 when `datetime_to_numeric` attempts `array - offset` at `duck_array_ops.py:434`, because NumPy cannot subtract a datetime64 (absolute point) from a timedelta64 (relative duration).
+
+The bug was introduced in commit 6fbeb131 which rewrote `polyval` to use Horner's algorithm. The old implementation used `get_clean_interp_index` which handled timedelta by directly casting to float64 (timedelta64.astype(float)), which works because timedelta64 is already a numeric type measured in nanoseconds.
+
+Confidence: Deduction — 98%
+
+Supporting evidence:
+- `xarray/core/computation.py:1936-1942` — treats 'm' and 'M' dtype kinds identically with hardcoded datetime offset
+- `xarray/core/duck_array_ops.py:434` — error occurs at `array - offset` when types mismatch
+- Timedelta64 can be directly cast to float: `np.array([1000, 2000, 3000], dtype='timedelta64[ns]').astype(float)` yields `[1000., 2000., 3000.]`
+
+## Edit sites
+
+- `xarray/core/computation.py` lines 1935-1943: Modify `to_floatable` to distinguish between datetime64 and timedelta64. For datetime64 (kind='M'), keep the current logic using `datetime_to_numeric` with the 1970-01-01 offset. For timedelta64 (kind='m'), skip `datetime_to_numeric` entirely and directly cast to float using `.astype(dtype)`.
+
+Specific change: Replace the condition `if x.dtype.kind in "mM"` with separate handling:
+  - `if x.dtype.kind == "M"`: use current `datetime_to_numeric` with `offset=np.datetime64("1970-01-01")`
+  - `elif x.dtype.kind == "m"`: use `x.copy(data=x.data.astype(float))` to directly convert timedelta to float
+
+## Rejected hypotheses
+
+- H₁: The problem is in `_datetime_nanmin` — Rejected because `_datetime_nanmin` correctly preserves dtype (returns timedelta64 for timedelta64 input). The issue is that `_ensure_numeric` never reaches `_datetime_nanmin` due to the hardcoded offset.
+
+- H₂: Need to fix `datetime_to_numeric` to handle timedelta specially — Rejected because it's cleaner to avoid calling `datetime_to_numeric` for timedelta entirely, since timedelta doesn't need offset-based conversion (it's already a relative value).
+
+## Open questions
+
+None. The fix is straightforward and localized to one function.
+
+---STDERR---
