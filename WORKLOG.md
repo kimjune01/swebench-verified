@@ -28,4 +28,11 @@ Official grading of flask-5014: `run_evaluation` reports resolved (committed und
 - **Routing fix applied:** the driver now escalates a regression that survives one narrow attempt to `recon` (re-diagnose) instead of grinding `craft`. A no-progress guard, not a budget increase (`MAX_OUTER` stays 3: try → narrow once → re-diagnose once). Audit skill documents the harness-enforced escalation.
 - **Open follow-up:** tighten audit's flaky/pre-existing P2P detection so it stops emitting false-negative regressions (the routing escalation reduces wasted compute but doesn't fix the misclassification itself).
 
-**Not yet done** (see `LIMITATIONS.md`): the clean-room ablation that would isolate the method; a larger/representative sample; non-pytest repos (the driver's `verify_gate` parser is pytest-specific).
+## 2026-05-23 — batch_002 closed + non-pytest validated + batch_003 staged
+
+- **batch_002 official: 14/15** (1 craft timeout, `xarray-6599`, no patch). Two driver `verify_gate` false-negatives overturned by the official grader (`astropy-14369`, `pytest-5809`). Running total 30/31. All boxes torn down.
+- **Non-pytest smoke validated:** `django__django-11206` (`runtests.py`) and `sympy__sympy-16766` (`bin/test`) both produced patches the agents drove from raw non-pytest gate output, and both **officially graded RESOLVED**. The pipeline is not pytest-bound.
+- **`verify_gate` hardened:** returns `None` (unknown) on non-pytest output instead of a misleading `False` (the field is advisory; the official grader is authoritative).
+- **batch_003 staged:** random, difficulty-stratified (seed=3), drawn across all repos minus KNOWN_BAD/done/sphinx(tox). Came back representative of Verified's true distribution: 11 Django, 2 sympy, 2 matplotlib (13/15 non-pytest). This is the first batch whose rate would actually estimate something — expect it below the easy batches.
+
+**Not yet done** (see `LIMITATIONS.md`): the clean-room ablation that would isolate the method; a larger random sample beyond 15; sphinx/tox repos (excluded for offline-infra reasons).

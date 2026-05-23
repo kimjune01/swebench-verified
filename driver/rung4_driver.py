@@ -263,8 +263,13 @@ def verify_gate(inst, cid, root):
     tag = inst["instance_id"].replace("/","_")
     out = f"$ {tc}\n\n{r.stdout}{r.stderr}"
     (HERE/f"r4_passgate_{tag}.txt").write_text(out)
-    # independent F2P check: every FAIL_TO_PASS test name must show PASSED in the output
+    # independent F2P check — PYTEST-SPECIFIC. For non-pytest runners (django runtests,
+    # sympy bin/test) the output isn't "PASSED <id>"-shaped, so return None (unknown)
+    # rather than a misleading False. The official grader is the authority regardless.
     f2p = inst.get("FAIL_TO_PASS") or []
+    pytest_shaped = ("PASSED" in r.stdout) or re.search(r"\d+ passed", r.stdout)
+    if not pytest_shaped:
+        return out, None
     def passed(name):
         base = name.split("::")[-1]
         return (f"PASSED {name}" in r.stdout) or (f"{name} PASSED" in r.stdout) or \
