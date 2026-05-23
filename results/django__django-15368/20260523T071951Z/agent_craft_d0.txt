@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_f_expression` pass. Changed the type check in `bulk_update` from `isinstance(attr, Expression)` to `hasattr(attr, 'resolve_expression')` to properly handle `F` objects, which inherit from `Combinable` rather than `Expression`. All 30 tests pass.
+
+---STDERR---

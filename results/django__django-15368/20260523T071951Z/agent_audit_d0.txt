@@ -1,0 +1,32 @@
+# Audit: django__django-15368
+
+## Patch verification
+```
+django/db/models/query.py | 4 ++--
+1 file changed, 2 insertions(+), 2 deletions(-)
+```
+
+Changes:
+- Line 20: Removed unused `Expression` import
+- Line 673: Changed `isinstance(attr, Expression)` → `hasattr(attr, 'resolve_expression')`
+
+## FAIL_TO_PASS
+- `test_f_expression (queries.test_bulk_update.BulkUpdateTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 30 tests passed, including all listed PASS_TO_PASS tests:
+- test_batch_size, test_foreign_keys_do_not_lookup, test_functions, test_multiple_fields
+- test_set_field_to_null, test_set_mixed_fields_to_null, test_simple, test_unsaved_models
+- test_booleanfield, test_custom_db_columns, test_custom_pk, test_datetime_field
+- And 18 additional bulk_update tests (all ok)
+
+## Pre-existing failures
+**None** confirmed against base capture.
+
+## Kill report
+Not applicable — patch is RESOLVED.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

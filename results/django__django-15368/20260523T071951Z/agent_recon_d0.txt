@@ -1,0 +1,40 @@
+# Recon: django__django-15368
+
+## Failure summary
+
+The test `test_f_expression` in `tests/queries/test_bulk_update.py` creates Note objects with `note='test_note'`, assigns `F('note')` to the `misc` field, then calls `bulk_update(notes, ['misc'])`. The test expects that after the update, all notes will have `misc='test_note'` (the value of the `note` field copied via the F() expression). However, the test finds 0 notes matching this criteria, indicating that the F() expression was not resolved to a SQL column reference but instead was converted to its string representation.
+
+## Suspect set
+
+- `django/db/models/query.py` lines 668-678: The `bulk_update` method's logic for processing field values
+- Specifically line 673: The type check that determines whether a value should be treated as an expression
+
+## Root cause
+
+The `bulk_update` method at line 673 uses `isinstance(attr, Expression)` to check if a field value is an expression. However, the `F` class (defined at `django/db/models/expressions.py:582`) inherits from `Combinable`, not `Expression`. The class hierarchy shows that `Expression` inherits from both `BaseExpression` and `Combinable`, but `F` only inherits from `Combinable`.
+
+When a plain `F('note')` object is assigned to a field, it fails the `isinstance(attr, Expression)` check and gets wrapped in `Value(attr, output_field=field)`. The `Value` class then converts the F object to its string representation via the field's `get_db_prep_value` method, resulting in the literal string 'F(note)' in the SQL instead of a column reference.
+
+This explains why `test_field_references` passes: it uses `F('num') + 1`, which creates a `CombinedExpression` object (line 445 in expressions.py), and `CombinedExpression` DOES inherit from `Expression`, so it passes the check.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/db/models/expressions.py:582` — `class F(Combinable):` (F does not inherit from Expression)
+- `django/db/models/expressions.py:89` — `class Expression(BaseExpression, Combinable):` (Expression inherits from both)
+- `django/db/models/expressions.py:445` — `class CombinedExpression(SQLiteNumericMixin, Expression):` (explains why F()+1 works)
+- `django/db/models/query.py:673` — `if not isinstance(attr, Expression):` (the problematic check)
+
+## Edit sites
+
+- `django/db/models/query.py` line 673: Change the type check from `if not isinstance(attr, Expression):` to `if not hasattr(attr, 'resolve_expression'):`. This duck-typing approach is already used throughout Django's codebase (see `django/db/models/expressions.py` lines 59, 186, 1033, 1245 for examples).
+
+## Rejected hypotheses
+
+None — the diagnosis directly follows from tracing the code path and verifying the class hierarchy.
+
+## Open questions
+
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
