@@ -1,0 +1,71 @@
+diff --git a/sympy/core/assumptions.py b/sympy/core/assumptions.py
+index ce4dd30f2..09f5e38f3 100644
+--- a/sympy/core/assumptions.py
++++ b/sympy/core/assumptions.py
+@@ -163,8 +163,12 @@
+ _assume_rules = FactRules([
+ 
+     'integer        ->  rational',
++    'integer        ->  finite',
++    'rational       ->  finite',
++    'irrational     ->  finite',
+     'rational       ->  real',
+     'rational       ->  algebraic',
++    'algebraic      ->  finite',
+     'algebraic      ->  complex',
+     'real           ->  complex',
+     'real           ->  hermitian',
+@@ -176,7 +180,7 @@
+     'even           ==  integer & !odd',
+ 
+     'real           ==  negative | zero | positive',
+-    'transcendental ==  complex & !algebraic',
++    'transcendental ==  complex & !algebraic & finite',
+ 
+     'negative       ==  nonpositive & nonzero',
+     'positive       ==  nonnegative & nonzero',
+@@ -191,7 +195,7 @@
+     'composite      ->  integer & positive & !prime',
+     '!composite     ->  !positive | !even | prime',
+ 
+-    'irrational     ==  real & !rational',
++    'irrational     ==  real & !rational & finite',
+ 
+     'imaginary      ->  !real',
+ 
+diff --git a/sympy/core/numbers.py b/sympy/core/numbers.py
+index aa717b97e..f7d5ce8c0 100644
+--- a/sympy/core/numbers.py
++++ b/sympy/core/numbers.py
+@@ -2659,6 +2659,15 @@ class Infinity(with_metaclass(Singleton, Number)):
+     is_infinite = True
+     is_number = True
+     is_prime = False
++    is_integer = False
++    is_rational = False
++    is_algebraic = False
++    is_transcendental = False
++    is_noninteger = True
++    is_irrational = False
++    is_even = False
++    is_odd = False
++    is_composite = False
+ 
+     __slots__ = []
+ 
+@@ -2882,6 +2891,15 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
+     is_negative = True
+     is_infinite = True
+     is_number = True
++    is_integer = False
++    is_rational = False
++    is_algebraic = False
++    is_transcendental = False
++    is_noninteger = True
++    is_irrational = False
++    is_even = False
++    is_odd = False
++    is_composite = False
+ 
+     __slots__ = []
+ 

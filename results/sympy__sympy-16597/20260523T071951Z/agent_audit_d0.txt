@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-16597
+
+## FAIL_TO_PASS
+- test_infinity: PASS ✓
+- test_neg_infinity: PASS ✓
+- test_other_symbol: PASS ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_neg_symbol_falsenonnegative (expected to fail 'f')
+- test_issue_6275 (expected to fail 'f')
+- test_issue_7993 (expected to fail 'f')
+
+## Summary
+All three FAIL_TO_PASS tests now pass. Zero regressions introduced. Gate output: 79 passed, 1 skipped, 3 expected to fail. The craft patch successfully set `is_integer = False` for Infinity and NegativeInfinity in `sympy/core/numbers.py`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

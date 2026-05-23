@@ -1,0 +1,55 @@
+# Recon: sympy__sympy-16597
+
+## Failure summary
+The tests check that infinity is not an integer/even/odd number, and that certain symbolic assumptions (integer, rational, irrational, even, odd) imply finiteness. Three tests fail:
+- `test_infinity`: `assert oo.is_integer is False` fails because `oo.is_integer` returns `None`
+- `test_neg_infinity`: `assert mm.is_integer is False` fails because `mm.is_integer` returns `None`  
+- `test_other_symbol`: `assert x.is_finite is True` (line 570) fails because `Symbol('x', integer=True).is_finite` returns `None`
+
+## Suspect set
+- `sympy/core/numbers.py` lines 2619-2665: Infinity class — missing explicit assumptions
+- `sympy/core/numbers.py` lines 2869-2915: NegativeInfinity class — missing explicit assumptions
+- `sympy/core/assumptions.py` lines 163-201: _assume_rules — missing finite implication rules
+
+## Root cause
+The Infinity and NegativeInfinity classes only define a minimal set of assumptions (`is_positive`, `is_infinite`, `is_prime`, etc.) but lack explicit False values for number-type properties like `is_integer`, `is_rational`, `is_even`, `is_odd`. When these are queried, the assumptions system returns `None` instead of `False`.
+
+Additionally, the assumption rules lack implications stating that integer/rational/irrational numbers are finite. The rules have `'zero -> even & finite'` and `'infinite -> !finite'` but no `'integer -> finite'`, `'rational -> finite'`, or `'irrational -> finite'`.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sympy/core/numbers.py:2656` — Infinity class defines `is_prime = False` but no other number-type assumptions
+- `sympy/core/numbers.py:2881` — NegativeInfinity class defines `is_number = True` but missing integer/rational/even/odd
+- `sympy/core/assumptions.py:165-188` — _assume_rules contains `'odd == integer & !even'`, `'even == integer & !odd'`, but no rules implying finite from integer/rational/irrational
+- Verified: `python3 -c "from sympy import S; print(S.Infinity.is_integer)"` outputs `None`
+- Verified: `python3 -c "from sympy import Symbol; print(Symbol('x', integer=True).is_finite)"` outputs `None`
+
+## Edit sites
+1. `sympy/core/numbers.py` lines 2656-2660 — Add to Infinity class:
+   - `is_integer = False`
+   - `is_rational = False`
+   - `is_algebraic = False`
+   - `is_noninteger = True`
+   - `is_irrational = False`
+   - `is_even = False`
+   - `is_odd = False`
+   - `is_composite = False`
+   - `is_transcendental = False`
+   - `is_finite = False` (or rely on `is_infinite = True` implying this via rules)
+
+2. `sympy/core/numbers.py` lines 2881-2885 — Add same assumptions to NegativeInfinity class (all the same except `is_prime` may already be implicitly False)
+
+3. `sympy/core/assumptions.py` lines 165-188 — Add to _assume_rules:
+   - `'integer -> finite'`
+   - `'rational -> finite'`
+   - `'irrational -> finite'`
+
+## Rejected hypotheses
+None — first pass.
+
+## Open questions
+- Should `is_finite = False` be explicitly added to Infinity/NegativeInfinity, or is it sufficient that `is_infinite = True` + rule `'infinite -> !finite'` handles this? (The tests check `oo.is_finite is False` which currently passes, so the rule appears to work.)
+- Are there other number properties that should be False for infinity? (transcendental, algebraic, etc.) The tests explicitly check `is_transcendental is False` and `is_algebraic is False`, so yes.
+
+---STDERR---

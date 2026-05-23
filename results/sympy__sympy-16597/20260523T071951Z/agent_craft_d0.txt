@@ -1,0 +1,21 @@
+**RESOLVED**
+
+Fixed all three FAIL_TO_PASS tests by:
+
+1. **Modified assumption rules** to correctly model that transcendental and irrational numbers are finite:
+   - `transcendental == complex & !algebraic & finite` (was: `complex & !algebraic`)
+   - `irrational == real & !rational & finite` (was: `real & !rational`)
+
+2. **Added finite implication rules** so symbolic assumptions propagate correctly:
+   - `integer -> finite`
+   - `rational -> finite`
+   - `irrational -> finite`
+   - `algebraic -> finite`
+
+3. **Added explicit False assumptions** to Infinity and NegativeInfinity classes for: is_integer, is_rational, is_algebraic, is_transcendental, is_irrational, is_even, is_odd, is_composite (plus is_noninteger = True)
+
+The root cause was that infinity needed explicit number-type assumptions (recon was correct), but the original equivalence rules created contradictions by forcing infinite values to be transcendental/irrational. The solution modified the rules to exclude infinite values, correctly modeling mathematical reality that transcendental/irrational numbers are finite.
+
+Gate result: ✅ All 3 FAIL_TO_PASS tests pass (test_infinity, test_neg_infinity, test_other_symbol)
+
+---STDERR---
