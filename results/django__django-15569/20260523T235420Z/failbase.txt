@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 custom_lookups.tests model_fields.test_jsonfield schema.tests
+
+Regression test for #21497. ... ok
+test_func_index (schema.tests.SchemaTests) ... ok
+test_func_index_calc (schema.tests.SchemaTests) ... ok
+test_func_index_cast (schema.tests.SchemaTests) ... ok
+test_func_index_collate (schema.tests.SchemaTests) ... ok
+test_func_index_collate_f_ordered (schema.tests.SchemaTests) ... ok
+test_func_index_f (schema.tests.SchemaTests) ... ok
+test_func_index_f_decimalfield (schema.tests.SchemaTests) ... ok
+test_func_index_invalid_topmost_expressions (schema.tests.SchemaTests) ... ok
+test_func_index_json_key_transform (schema.tests.SchemaTests) ... ok
+test_func_index_json_key_transform_cast (schema.tests.SchemaTests) ... ok
+test_func_index_lookups (schema.tests.SchemaTests) ... ok
+test_func_index_multiple_wrapper_references (schema.tests.SchemaTests) ... ok
+test_func_index_nondeterministic (schema.tests.SchemaTests) ... ok
+test_func_index_nonexistent_field (schema.tests.SchemaTests) ... ok
+test_func_index_unsupported (schema.tests.SchemaTests) ... skipped 'Database has feature(s) supports_expression_indexes'
+test_func_unique_constraint (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_collate (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_covering (schema.tests.SchemaTests) ... skipped "Database doesn't support feature(s): supports_expression_indexes, supports_covering_indexes"
+test_func_unique_constraint_lookups (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_nondeterministic (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_nonexistent_field (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_partial (schema.tests.SchemaTests) ... ok
+test_func_unique_constraint_unsupported (schema.tests.SchemaTests) ... skipped 'Database has feature(s) supports_expression_indexes'
+test_index_together (schema.tests.SchemaTests)
+Tests removing and adding index_together constraints on a model. ... ok
+test_index_together_with_fk (schema.tests.SchemaTests)
+Tests removing and adding index_together constraints that include ... ok
+test_indexes (schema.tests.SchemaTests)
+Tests creation/altering of indexes ... ok
+test_inline_fk (schema.tests.SchemaTests) ... skipped "Database doesn't support feature(s): can_create_inline_fk"
+test_m2m (schema.tests.SchemaTests) ... ok
+test_m2m_create (schema.tests.SchemaTests) ... ok
+test_m2m_create_custom (schema.tests.SchemaTests) ... ok
+test_m2m_create_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_create_through (schema.tests.SchemaTests) ... ok
+test_m2m_create_through_custom (schema.tests.SchemaTests) ... ok
+test_m2m_create_through_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_custom (schema.tests.SchemaTests) ... ok
+test_m2m_db_constraint (schema.tests.SchemaTests) ... ok
+test_m2m_db_constraint_custom (schema.tests.SchemaTests) ... ok
+test_m2m_db_constraint_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_rename_field_in_target_model (schema.tests.SchemaTests) ... ok
+test_m2m_repoint (schema.tests.SchemaTests) ... ok
+test_m2m_repoint_custom (schema.tests.SchemaTests) ... ok
+test_m2m_repoint_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_through_alter (schema.tests.SchemaTests) ... ok
+test_m2m_through_alter_custom (schema.tests.SchemaTests) ... ok
+test_m2m_through_alter_inherited (schema.tests.SchemaTests) ... ok
+test_m2m_through_remove (schema.tests.SchemaTests) ... ok
+test_namespaced_db_table_create_index_name (schema.tests.SchemaTests)
+Table names are stripped of their namespace/schema before being used to ... ok
+test_namespaced_db_table_foreign_key_reference (schema.tests.SchemaTests) ... skipped 'PostgreSQL specific db_table syntax.'
+test_no_db_constraint_added_during_primary_key_change (schema.tests.SchemaTests)
+When a primary key that's pointed to by a ForeignKey with ... ok
+test_order_index (schema.tests.SchemaTests)
+Indexes defined with ordering (ASC/DESC) defined on column ... ok
+test_primary_key (schema.tests.SchemaTests)
+Tests altering of the primary key ... ok
+test_referenced_field_without_constraint_rename_inside_atomic_block (schema.tests.SchemaTests)
+Foreign keys without database level constraint don't prevent the field ... ok
+test_referenced_table_without_constraint_rename_inside_atomic_block (schema.tests.SchemaTests)
+Foreign keys without database level constraint don't prevent the table ... ok
+test_remove_constraints_capital_letters (schema.tests.SchemaTests)
+#23065 - Constraint names must be quoted if they contain capital letters. ... ok
+test_remove_db_index_doesnt_remove_custom_indexes (schema.tests.SchemaTests)
+Changing db_index to False doesn't remove indexes from Meta.indexes. ... ok
+test_remove_field (schema.tests.SchemaTests) ... ok
+test_remove_field_check_does_not_remove_meta_constraints (schema.tests.SchemaTests) ... ok
+test_remove_field_unique_does_not_remove_meta_constraints (schema.tests.SchemaTests) ... ok
+test_remove_index_together_does_not_remove_meta_indexes (schema.tests.SchemaTests) ... ok
+test_remove_unique_together_does_not_remove_meta_constraints (schema.tests.SchemaTests) ... ok
+test_rename (schema.tests.SchemaTests)
+Tests simple altering of fields ... ok
+test_rename_column_renames_deferred_sql_references (schema.tests.SchemaTests) ... skipped 'SQLite naively remakes the table on field alteration.'
+test_rename_keep_null_status (schema.tests.SchemaTests)
+Renaming a field shouldn't affect the not null status. ... ok
+test_rename_referenced_field (schema.tests.SchemaTests) ... ok
+test_rename_table_renames_deferred_sql_references (schema.tests.SchemaTests) ... ok
+test_text_field_with_db_index (schema.tests.SchemaTests) ... ok
+test_text_field_with_db_index_to_fk (schema.tests.SchemaTests) ... ok
+test_unique (schema.tests.SchemaTests)
+Tests removing and adding unique constraints to a single column. ... ok
+test_unique_and_reverse_m2m (schema.tests.SchemaTests)
+AlterField can modify a unique field when there's a reverse M2M ... skipped 'SQLite naively remakes the table on field alteration.'
+test_unique_constraint (schema.tests.SchemaTests) ... ok
+test_unique_constraint_field_and_expression (schema.tests.SchemaTests) ... ok
+test_unique_name_quoting (schema.tests.SchemaTests) ... ok
+test_unique_no_unnecessary_fk_drops (schema.tests.SchemaTests)
+If AlterField isn't selective about dropping foreign key constraints ... skipped 'SQLite naively remakes the table on field alteration.'
+test_unique_together (schema.tests.SchemaTests)
+Tests removing and adding unique_together constraints on a model. ... ok
+test_unique_together_with_fk (schema.tests.SchemaTests)
+Tests removing and adding unique_together constraints that include ... ok
+test_unique_together_with_fk_with_existing_index (schema.tests.SchemaTests)
+Tests removing and adding unique_together constraints that include ... ok
+test_unsupported_transactional_ddl_disallowed (schema.tests.SchemaTests) ... skipped 'Database has feature(s) can_rollback_ddl'
+
+======================================================================
+FAIL: test_lookups_caching (custom_lookups.tests.LookupTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/custom_lookups/tests.py", line 327, in test_lookups_caching
+    self.assertNotIn("exactly", field.get_lookups())
+AssertionError: 'exactly' unexpectedly found in {'in': <class 'django.db.models.fields.related_lookups.RelatedIn'>, 'exact': <class 'django.db.models.fields.related_lookups.RelatedExact'>, 'lt': <class 'django.db.models.fields.related_lookups.RelatedLessThan'>, 'gt': <class 'django.db.models.fields.related_lookups.RelatedGreaterThan'>, 'gte': <class 'django.db.models.fields.related_lookups.RelatedGreaterThanOrEqual'>, 'lte': <class 'django.db.models.fields.related_lookups.RelatedLessThanOrEqual'>, 'isnull': <class 'django.db.models.fields.related_lookups.RelatedIsNull'>, 'exactly': <class 'custom_lookups.tests.Exactly'>}
+
+======================================================================
+FAIL: test_get_transforms (model_fields.test_jsonfield.TestMethods)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_jsonfield.py", line 92, in test_get_transforms
+    self.assertIsInstance(transform, KeyTransformFactory)
+AssertionError: <class 'model_fields.test_jsonfield.TestMethods.test_get_transforms.<locals>.MyTransform'> is not an instance of <class 'django.db.models.fields.json.KeyTransformFactory'>
+
+----------------------------------------------------------------------
+Ran 290 tests in 1.126s
+
+FAILED (failures=2, skipped=40)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

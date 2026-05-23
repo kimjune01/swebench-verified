@@ -1,0 +1,26 @@
+# Audit: django__django-15569
+
+## FAIL_TO_PASS
+- test_lookups_caching (custom_lookups.tests.LookupTests): **PASS**
+- test_get_transforms (model_fields.test_jsonfield.TestMethods): **PASS**
+
+## PASS_TO_PASS regressions
+**None** - All 290 tests passed, no regressions detected.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - Full gate clean, no failures of any kind.
+
+## Summary
+
+The craft patch adds a single line (`cls._clear_cached_lookups()`) at line 220 in `django/db/models/query_utils.py`, mirroring the cache invalidation pattern already present in `register_lookup()`. 
+
+Both FAIL_TO_PASS tests now pass:
+- `test_lookups_caching` confirms unregistered lookups are cleared from the cache
+- `test_get_transforms` confirms unregistered transforms no longer shadow default behavior
+
+The full gate (290 tests) passed with no regressions. The fix is minimal, targeted, and directly addresses the root cause identified in recon.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

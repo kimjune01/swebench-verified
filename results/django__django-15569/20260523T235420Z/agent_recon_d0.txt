@@ -1,0 +1,69 @@
+# Recon: django__django-15569
+
+## Failure summary
+
+Two tests verify that unregistering a lookup should clear the lookup cache, but both fail because the cache is not cleared:
+
+1. **test_lookups_caching** (custom_lookups.tests.LookupTests): Registers a lookup "exactly" on ForeignObject, then unregisters it via context manager exit. Expected: "exactly" not in `field.get_lookups()`. Actual: "exactly" still present in the cached lookup dict.
+
+2. **test_get_transforms** (model_fields.test_jsonfield.TestMethods): Registers a custom transform "my_transform" on JSONField, then unregisters it. Expected: `field.get_transform("my_transform")` returns KeyTransformFactory (default). Actual: still returns MyTransform (the unregistered class).
+
+Error message from test_lookups_caching:
+```
+AssertionError: 'exactly' unexpectedly found in {'in': <class 'django.db.models.fields.related_lookups.RelatedIn'>, ..., 'exactly': <class 'custom_lookups.tests.Exactly'>}
+```
+
+## Suspect set
+
+- `django/db/models/query_utils.py` lines 210-219: The `_unregister_lookup()` method that removes a lookup from `class_lookups` dict but doesn't clear the cache
+- `django/db/models/query_utils.py` lines 166-168: The `get_lookups()` method decorated with `@functools.lru_cache(maxsize=None)`
+- `django/db/models/query_utils.py` lines 195-198: The `_clear_cached_lookups()` helper that clears the cache
+
+## Root cause
+
+The `_unregister_lookup()` method removes a lookup from the `cls.class_lookups` dictionary but fails to invalidate the `@lru_cache` on `get_lookups()`. When `get_lookups()` is called after unregistration, it returns the stale cached value that still contains the removed lookup.
+
+This is an asymmetry with `register_lookup()`: when a lookup is registered, `register_lookup()` calls `cls._clear_cached_lookups()` at line 207 to invalidate the cache. When a lookup is unregistered, `_unregister_lookup()` does not make the corresponding call.
+
+**Historical context** (from git blame): The caching mechanism was introduced in August 2016 (commit 7aeb7390fc) to fix issue #26891. At that time, `register_lookup()` was updated to call `_clear_cached_lookups()`, but `_unregister_lookup()` (which was added earlier in August 2015) was not updated. This is a clear oversight when the caching feature was added.
+
+**Confidence**: Deduction — 98%
+
+Supporting evidence:
+- `django/db/models/query_utils.py:166-168` — `get_lookups()` is cached with `@functools.lru_cache(maxsize=None)`
+- `django/db/models/query_utils.py:207` — `register_lookup()` calls `cls._clear_cached_lookups()`
+- `django/db/models/query_utils.py:210-219` — `_unregister_lookup()` does NOT call `cls._clear_cached_lookups()`
+- `django/test/utils.py:997-1001` — The test helper context manager calls `field._unregister_lookup()` on exit
+- Both test failures directly demonstrate that unregistered lookups remain in `get_lookups()` results
+
+## Edit sites
+
+- `django/db/models/query_utils.py` line 219 (after `del cls.class_lookups[lookup_name]`): Add `cls._clear_cached_lookups()` to mirror the behavior in `register_lookup()`. This is a one-line addition that maintains symmetry between registration and unregistration.
+
+The complete method after the fix:
+```python
+@classmethod
+def _unregister_lookup(cls, lookup, lookup_name=None):
+    """
+    Remove given lookup from cls lookups. For use in tests only as it's
+    not thread-safe.
+    """
+    if lookup_name is None:
+        lookup_name = lookup.lookup_name
+    del cls.class_lookups[lookup_name]
+    cls._clear_cached_lookups()  # ADD THIS LINE
+```
+
+## Competing hypotheses
+
+None — the root cause is unambiguous from code inspection.
+
+## Rejected hypotheses
+
+None — the diagnosis was straightforward.
+
+## Open questions
+
+None — the fix is complete and mirrors the existing pattern in `register_lookup()`.
+
+---STDERR---

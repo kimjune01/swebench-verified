@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `cls._clear_cached_lookups()` to `_unregister_lookup()` at django/db/models/query_utils.py:220, mirroring the cache invalidation pattern from `register_lookup()`. Both FAIL_TO_PASS tests now pass.
+
+---STDERR---
