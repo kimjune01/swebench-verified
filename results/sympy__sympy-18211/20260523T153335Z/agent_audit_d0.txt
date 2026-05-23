@@ -1,0 +1,19 @@
+# Audit: sympy__sympy-18211
+
+## FAIL_TO_PASS
+- test_issue_18188: ✅ PASS
+
+## PASS_TO_PASS regressions
+None - all 55 PASS_TO_PASS tests that passed on base remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_multivariate_relational_as_set: f (expected failure on both base and patched)
+- test_issue_8444_nonworkingtests: f (expected failure on both base and patched)
+
+## Analysis
+The craft patch successfully resolves the issue. The failing test `test_issue_18188` was raising `NotImplementedError` when calling `.as_set()` on an unsolvable equality. The patch adds a ConditionSet fallback in `sympy/solvers/inequalities.py`, handling the case where `solvify` cannot solve the equation by returning `ConditionSet(_gen, condition, _domain)` instead of raising. This matches the pattern used in `solveset.py` and preserves the original behavior for inequalities and relational mode. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

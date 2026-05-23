@@ -1,0 +1,37 @@
+# Recon: sympy__sympy-18211
+
+## Failure summary
+The test `test_issue_18188` verifies that calling `as_set()` on an equality with unsolvable transcendental equations returns a `ConditionSet` instead of raising `NotImplementedError`. The test fails because `Eq(x*cos(x) - 3*sin(x), 0).as_set()` raises `NotImplementedError: The inequality, Eq(x*cos(x) - 3*sin(x), 0), cannot be solved using solve_univariate_inequality.`
+
+The call chain: `Eq.as_set()` → `Eq._eval_as_set()` → `solve_univariate_inequality(self, x, relational=False)` → `solvify()` raises `NotImplementedError` → exception is caught and re-raised.
+
+## Suspect set
+- `sympy/solvers/inequalities.py` lines 528-533: The except block that catches `NotImplementedError` from `solvify` and re-raises it instead of returning a `ConditionSet`.
+- `sympy/solvers/inequalities.py` lines 1-20: Import section where `ConditionSet` needs to be added.
+
+## Root cause
+When `solvify` cannot solve an equation in `solve_univariate_inequality`, it raises `NotImplementedError`. The function catches this exception at lines 528-533 and re-raises a new `NotImplementedError`. However, the expected behavior (based on the test and the pattern in `solveset.py`) is to return a `ConditionSet` as a fallback when the equation cannot be solved.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sympy/solvers/inequalities.py:528-533` — The except block: `except (ValueError, NotImplementedError): raise NotImplementedError(...)`
+- `sympy/solvers/solveset.py:515` — Established pattern: `except NotImplementedError: return ConditionSet(symbol, Eq(f, 0), domain)`
+- `sympy/solvers/solveset.py:566` — Another instance: `return ConditionSet(symbol, Eq(f, 0), domain)`
+- `sympy/core/relational.py:395` — Calls `solve_univariate_inequality(self, x, relational=False)` expecting a Set return value
+
+## Edit sites
+1. `sympy/solvers/inequalities.py` lines 1-20: Add `from sympy.sets.conditionset import ConditionSet` to the imports section.
+
+2. `sympy/solvers/inequalities.py` lines 528-533: Replace the `raise NotImplementedError(...)` with `rv = ConditionSet(_gen, expr, _domain)`. The code should then skip the remaining processing (lines 536-678) and jump directly to the return statement at line 679 which will return `rv`.
+
+## Competing hypotheses
+None — the diagnosis is unambiguous from the stack trace and code comparison with the established pattern in `solveset.py`.
+
+## Rejected hypotheses
+None considered — the root cause is directly evident from the error path.
+
+## Open questions
+None — the fix follows the exact pattern already established in `solveset.py` for handling unsolvable equations.
+
+---STDERR---

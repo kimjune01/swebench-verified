@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix successfully makes `test_issue_18188` pass. The implementation handles unsolvable transcendental equations in `Eq.as_set()` by returning a `ConditionSet` instead of raising `NotImplementedError`, following the established pattern from `solveset.py`. The fix includes:
+
+1. Local import of `ConditionSet` to avoid circular dependency risk
+2. Check for `not relational and expr.rel_op == '=='` to only apply to equalities in set mode
+3. Substitution of dummy symbol back to original using `expr.xreplace({gen: _gen})`
+4. Immediate return to avoid control flow issues
+
+All FAIL_TO_PASS tests now pass (56 passed, 2 expected to fail).
+
+---STDERR---

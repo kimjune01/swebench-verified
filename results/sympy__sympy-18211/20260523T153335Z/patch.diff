@@ -1,0 +1,18 @@
+diff --git a/sympy/solvers/inequalities.py b/sympy/solvers/inequalities.py
+index 9127d217f1..17876402fc 100644
+--- a/sympy/solvers/inequalities.py
++++ b/sympy/solvers/inequalities.py
+@@ -526,8 +526,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
+                     # in which case we raise ValueError
+                     raise ValueError
+             except (ValueError, NotImplementedError):
+-                # replace gen with generic x since it's
+-                # univariate anyway
++                if not relational and isinstance(expr, Relational) and expr.rel_op == '==':
++                    from sympy.sets.conditionset import ConditionSet
++                    condition = expr.xreplace({gen: _gen})
++                    return ConditionSet(_gen, condition, _domain)
++                # For inequalities or relational mode, raise NotImplementedError
+                 raise NotImplementedError(filldedent('''
+                     The inequality, %s, cannot be solved using
+                     solve_univariate_inequality.
