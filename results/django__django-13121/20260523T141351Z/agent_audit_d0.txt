@@ -1,0 +1,42 @@
+# Audit: django__django-13121
+
+## FAIL_TO_PASS
+- test_duration_expressions (expressions.tests.FTimeDeltaTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 173 tests passed with 0 failures, 0 errors.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - Clean gate run with no pre-existing failures.
+
+## Applied Patch
+The craft patch modified `convert_durationfield_value` in `django/db/backends/base/operations.py` to handle string duration values from expression results:
+
+```diff
++from django.utils.dateparse import parse_duration
+
+ def convert_durationfield_value(self, value, expression, connection):
+     if value is not None:
++        if isinstance(value, str):
++            # Try parsing as microseconds first (numeric string storage)
++            try:
++                return datetime.timedelta(0, 0, int(value))
++            except ValueError:
++                # Fall back to parsing duration string from expressions
++                parsed = parse_duration(value)
++                if parsed is not None:
++                    return parsed
+         return datetime.timedelta(0, 0, value)
+```
+
+## Summary
+The patch successfully resolves the issue:
+- The FAIL_TO_PASS test now passes
+- No regressions introduced in the 173-test suite
+- The fix handles both integer microseconds (normal field retrieval) and string durations (expression results)
+- Full gate execution confirms clean integration
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

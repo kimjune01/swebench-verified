@@ -1,0 +1,20 @@
+**RESOLVED**
+
+The fix successfully makes `test_duration_expressions` pass:
+
+**Root cause confirmed**: `convert_durationfield_value` only handled integer microseconds but received string duration representations like `"1 day, 0:00:30.253000"` from SQLite/MySQL expression results.
+
+**Fix applied**:
+1. Added import: `from django.utils.dateparse import parse_duration`
+2. Modified `convert_durationfield_value` to handle string values by:
+   - First trying to parse as `int(value)` for numeric microsecond strings (preserves existing behavior)
+   - Falling back to `parse_duration(value)` for duration expression strings on ValueError
+   - Maintaining error behavior for unparseable values
+
+**Gate result**: ✅ All tests pass (173 tests, 4 skipped)
+- FAIL_TO_PASS test `test_duration_expressions` now passes
+- No regressions introduced
+
+The codex volley caught critical bugs in the naive approach (numeric string corruption, silent None conversion) before the first gate run, enabling first-iteration success.
+
+---STDERR---

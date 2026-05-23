@@ -1,0 +1,42 @@
+# Recon: django__django-13121
+
+## Failure summary
+The test `test_duration_expressions` fails when querying with duration arithmetic expressions (`F('estimated_time') + delta`) on SQLite and MySQL. When iterating over the annotated queryset, the database converter `convert_durationfield_value` receives a string instead of the expected integer microseconds, causing a `TypeError: unsupported type for timedelta microseconds component: str`.
+
+The error occurs at `django/db/backends/base/operations.py:583` during result conversion. Normal DurationField retrieval works because values are stored and returned as bigint microseconds, but duration expressions on SQLite generate SQL calls to `django_format_dtdelta` which returns string representations like `"1 day, 0:00:30.253000"`.
+
+## Suspect set
+- `django/db/backends/base/operations.py` lines 1-11 (imports) and 581-583 (`convert_durationfield_value` method)
+- `django/db/backends/sqlite3/base.py` lines 167-184 (`_sqlite_format_dtdelta` - returns `str(timedelta)`)
+- `django/db/backends/sqlite3/operations.py` lines 339-345 (`combine_duration_expression` - calls `django_format_dtdelta`)
+
+## Root cause
+The `convert_durationfield_value` method in `BaseDatabaseOperations` only handles integer microseconds but receives string duration representations from expression results.
+
+**Code path**:
+1. SQLite/MySQL lack native duration support (`has_native_duration_field = False`)
+2. DurationField stores values as bigint microseconds
+3. For expressions like `F('estimated_time') + delta`, SQLite overrides `combine_duration_expression` to call `django_format_dtdelta` 
+4. `_sqlite_format_dtdelta` (django/db/backends/sqlite3/base.py:184) returns `str(out)` where `out` is a timedelta
+5. Result string like `"1 day, 0:00:30.253000"` is passed to `convert_durationfield_value`
+6. Method tries `datetime.timedelta(0, 0, value)` with string value → TypeError
+
+Confidence: **deduction** — 95%  
+Supporting evidence:
+- `django/db/backends/sqlite3/base.py:184` — `return str(out)` confirms string return
+- `django/db/backends/base/operations.py:583` — `return datetime.timedelta(0, 0, value)` expects integer
+- Stack trace confirms execution through this exact path
+- `django/utils/dateparse.py:28-37` — `standard_duration_re` pattern confirms parse_duration can handle str(timedelta) format
+
+## Edit sites
+1. **django/db/backends/base/operations.py lines 1-11** — Add import: `from django.utils.dateparse import parse_duration`
+
+2. **django/db/backends/base/operations.py lines 581-583** — Modify `convert_durationfield_value` to handle both integer microseconds (existing path) and string durations (expression path). When value is a string, parse it with `parse_duration`. Otherwise, create timedelta from microseconds as before.
+
+## Rejected hypotheses
+None — initial diagnosis
+
+## Open questions
+- MySQL likely has the same issue since it also lacks native duration support, but no override of `combine_duration_expression` was found. The base implementation may produce similar string results, or MySQL's native SQL operations may handle it differently. The fix in the base method will cover both.
+
+---STDERR---

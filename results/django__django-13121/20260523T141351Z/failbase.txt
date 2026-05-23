@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 backends.base.test_operations expressions.tests
+
+test_adapt_timefield_value (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_adapt_timefield_value_none (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_adapt_timefield_value_unaware (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_adapt_unknown_value_date (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_adapt_unknown_value_decimal (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_adapt_unknown_value_time (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_date_extract_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_date_trunc_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_datetime_cast_date_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_datetime_cast_time_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_datetime_extract_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_datetime_trunc_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_deferrable_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_end_transaction_rollback (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_json_cast_text_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_no_limit_value (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_pk_default_value (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_quote_name (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_regex_lookup (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_sequence_reset_by_name_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_set_time_zone_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_sql_flush (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_tablespace_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_time_extract_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_time_trunc_sql (backends.base.test_operations.SimpleDatabaseOperationTests) ... ok
+test_execute_sql_flush_statements (backends.base.test_operations.SqlFlushTests) ... ok
+test_sql_flush_no_tables (backends.base.test_operations.SqlFlushTests) ... ok
+test_and (expressions.tests.CombinableTests) ... ok
+test_negation (expressions.tests.CombinableTests) ... ok
+test_or (expressions.tests.CombinableTests) ... ok
+test_reversed_and (expressions.tests.CombinableTests) ... ok
+test_reversed_or (expressions.tests.CombinableTests) ... ok
+test_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_non_empty_group_by (expressions.tests.ExpressionWrapperTests) ... ok
+test_deconstruct (expressions.tests.FTests) ... ok
+test_deepcopy (expressions.tests.FTests) ... ok
+test_equal (expressions.tests.FTests) ... ok
+test_hash (expressions.tests.FTests) ... ok
+test_not_equal_Value (expressions.tests.FTests) ... ok
+test_aggregates (expressions.tests.ReprTests) ... ok
+test_distinct_aggregates (expressions.tests.ReprTests) ... ok
+test_expressions (expressions.tests.ReprTests) ... ok
+test_filtered_aggregates (expressions.tests.ReprTests) ... ok
+test_functions (expressions.tests.ReprTests) ... ok
+test_equal (expressions.tests.SimpleExpressionTests) ... ok
+test_hash (expressions.tests.SimpleExpressionTests) ... ok
+
+======================================================================
+ERROR: test_duration_expressions (expressions.tests.FTimeDeltaTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 1474, in test_duration_expressions
+    for obj in qs:
+  File "/testbed/django/db/models/query.py", line 287, in __iter__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1305, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 70, in __iter__
+    for row in compiler.results_iter(results):
+  File "/testbed/django/db/models/sql/compiler.py", line 1105, in apply_converters
+    value = converter(value, expression, connection)
+  File "/testbed/django/db/backends/base/operations.py", line 583, in convert_durationfield_value
+    return datetime.timedelta(0, 0, value)
+TypeError: unsupported type for timedelta microseconds component: str
+
+----------------------------------------------------------------------
+Ran 173 tests in 0.210s
+
+FAILED (errors=1, skipped=4)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application backends
+Importing application expressions
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, backends, contenttypes, expressions, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table backends_square
+    Creating table backends_person
+    Creating table backends_schoolclass
+    Creating table backends_verylongmodelnamezzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+    Creating table backends_tag
+    Creating table CaseSensitive_Post
+    Creating table backends_reporter
+    Creating table backends_article
+    Creating table backends_item
+    Creating table backends_object
+    Creating table backends_objectreference
+    Creating table backends_objectselfreference
+    Creating table backends_circulara
+    Creating table backends_circularb
+    Creating table backends_rawdata
+    Creating table backends_author
+    Creating table backends_book
+    Creating table expressions_manager
+    Creating table expressions_employee
+    Creating table expressions_remoteemployee
+    Creating table expressions_company
+    Creating table expressions_number
+    Creating table expressions_ExPeRiMeNt
+    Creating table expressions_result
+    Creating table expressions_time
+    Creating table expressions_simulationrun
+    Creating table expressions_uuidpk
+    Creating table expressions_uuid
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).
