@@ -1,0 +1,46 @@
+# Recon: django__django-11848
+
+## Failure summary
+The `test_parsing_rfc850` test fails when parsing RFC 850 formatted dates with two-digit years. The function `parse_http_date()` uses hardcoded logic to interpret years 0-69 as 2000-2069 and 70-99 as 1970-1999, violating RFC 7231 which requires interpreting timestamps appearing more than 50 years in the future as the most recent past year with the same digits. When parsing "Wednesday, 31-Dec-70 08:49:37 GMT" with current year 2020, it returns 1970 instead of the expected 2070 (which is exactly 50 years ahead, still acceptable).
+
+## Suspect set
+- `django/utils/http.py` lines 178-182: Two-digit year interpretation logic in `parse_http_date()` function
+
+## Root cause
+The `parse_http_date()` function at `django/utils/http.py:178-182` contains hardcoded two-digit year logic that doesn't compare against the current year:
+
+```python
+if year < 100:
+    if year < 70:
+        year += 2000
+    else:
+        year += 1900
+```
+
+Per RFC 7231 section 7.1.1.1: "Recipients of a timestamp value in rfc850-date format, which uses a two-digit year, MUST interpret a timestamp that appears to be more than 50 years in the future as representing the most recent year in the past that had the same last two digits."
+
+The correct algorithm:
+1. Try adding 2000 to the two-digit year
+2. If result is MORE than 50 years in the future from current year, use 1900 + year instead
+3. Otherwise use 2000 + year
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/utils/http.py:178-182` — hardcoded `if year < 70` check ignores current year
+- Test expectations validate RFC-compliant behavior: year "70" should resolve to 2070 when current year is 2020 (exactly 50 years ahead), but to 1970 when current year is 2019 (would be 51 years ahead)
+- Only occurrence of this logic in Django (verified via `grep -rn "year < 70"`)
+
+## Edit sites
+- `django/utils/http.py` lines 178-182: Replace hardcoded year threshold with RFC 7231 compliant logic that:
+  1. Gets current year via `datetime.datetime.utcnow().year`
+  2. Calculates candidate year as `2000 + year`
+  3. Uses `1900 + year` if candidate is more than 50 years in future, otherwise uses candidate
+
+## Rejected hypotheses
+None — the code path is straightforward and the bug matches the problem description exactly.
+
+## Open questions
+None — the fix is deterministic and well-specified by RFC 7231.
+
+---STDERR---

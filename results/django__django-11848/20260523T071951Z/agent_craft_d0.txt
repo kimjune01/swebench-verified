@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix implements RFC 7231 compliant two-digit year parsing by using current-century logic instead of hardcoded 1900/2000 thresholds. Both FAIL_TO_PASS tests now pass along with all 45 existing tests.
+
+---STDERR---

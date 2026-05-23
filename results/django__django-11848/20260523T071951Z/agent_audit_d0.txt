@@ -1,0 +1,30 @@
+# Audit: django__django-11848
+
+## FAIL_TO_PASS
+- `test_parsing_rfc850` - **PASS** ✓
+- `test_parsing_year_less_than_70` - **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - All 43 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The only failure on base was `test_parsing_rfc850`, which is now fixed.
+
+## Gate Summary
+All 45 tests passed cleanly. The patch successfully implements RFC 7231 compliant two-digit year parsing by replacing hardcoded thresholds with dynamic current-year calculation.
+
+**Patch applied:**
+```python
+if year < 100:
+    current_year = datetime.datetime.utcnow().year
+    current_century = current_year - (current_year % 100)
+    if year - (current_year % 100) > 50:
+        year += current_century - 100
+    else:
+        year += current_century
+```
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
