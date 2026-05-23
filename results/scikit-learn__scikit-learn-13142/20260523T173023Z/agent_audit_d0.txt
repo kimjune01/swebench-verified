@@ -1,0 +1,21 @@
+# Audit: scikit-learn__scikit-learn-13142
+
+## FAIL_TO_PASS
+- sklearn/mixture/tests/test_bayesian_mixture.py::test_bayesian_mixture_fit_predict_n_init: **PASS** ✓
+- sklearn/mixture/tests/test_gaussian_mixture.py::test_gaussian_mixture_fit_predict_n_init: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 56 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — no failures observed.
+
+## Patch verification
+The patch moves the final E-step from before `_set_parameters(best_params)` to after it. This ensures `fit_predict` computes labels using the best model parameters when `n_init > 1`, making it consistent with `predict`. The fix is minimal (5 lines moved) and surgical — no regressions.
+
+**Gate result:** 56 passed, 0 failed, 9 warnings in 5.36s
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

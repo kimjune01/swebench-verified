@@ -1,0 +1,47 @@
+Now I'll print the handoff to stdout:
+
+```markdown
+# Recon: scikit-learn__scikit-learn-13142
+
+## Failure summary
+The tests check that `fit_predict(X)` and `predict(X)` return identical labels when `n_init > 1` (multiple random initializations). Both tests fail with ~80-88% label mismatch. When `n_init=1`, the tests pass. The bug affects both GaussianMixture and BayesianGaussianMixture since they inherit the faulty `fit_predict` implementation from BaseMixture.
+
+## Suspect set
+- `sklearn/mixture/base.py` lines 194-274: `fit_predict` method in BaseMixture class
+- `sklearn/mixture/base.py` lines 358-375: `predict` method (for comparison)
+
+## Root cause
+The final E-step in `fit_predict` is executed BEFORE setting the best parameters, causing it to compute labels using the wrong model state. When `n_init > 1`, the method tries multiple random initializations, tracks the best one, but then computes the return labels using the parameters from the LAST initialization instead of the BEST one. Meanwhile, `predict` correctly uses the best parameters that were set, causing the disagreement.
+
+**Execution flow with `n_init=5`:**
+1. Lines 228-259: Loop through 5 initializations, save `best_params` from the one with highest lower_bound
+2. After loop: model state contains parameters from initialization #5 (the last one)
+3. Line 263: `_, log_resp = self._e_step(X)` computes labels using init #5's params
+4. Line 272: `self._set_parameters(best_params)` updates model to best init (say, #3) 
+5. Line 274: Returns labels from step 3 (based on init #5, not #3)
+6. Later `predict(X)` computes labels using init #3's params → mismatch
+
+The ironically-named comment on lines 261-263 claims this ensures consistency, but the implementation does the opposite.
+
+Confidence: deduction — 99%
+
+Supporting evidence:
+- `sklearn/mixture/base.py:263` — `_, log_resp = self._e_step(X)` called before parameter setting
+- `sklearn/mixture/base.py:272` — `self._set_parameters(best_params)` called after E-step
+- `sklearn/mixture/base.py:375` — `predict` uses `self._estimate_weighted_log_prob(X).argmax(axis=1)`, which depends on model parameters
+- Git history: commit `036dfdde2` (Nov 2018) added this final E-step with good intentions but wrong placement
+- Existing test `test_gaussian_mixture_fit_predict` (line 580) doesn't catch this because it doesn't specify `n_init`, defaulting to 1
+
+## Edit sites
+- `sklearn/mixture/base.py` lines 262-264: Move the final E-step computation (the blank line, comment, and `_, log_resp = self._e_step(X)` statement) to AFTER line 273 (after `self._set_parameters(best_params)` and the subsequent attribute assignments)
+
+The fix ensures labels are computed using the best parameters, matching what `predict` uses.
+
+## Rejected hypotheses
+None — root cause identified on first pass via direct code reading and git history analysis.
+
+## Open questions
+None — the fix is straightforward and all evidence points to the same root cause.
+```
+
+---STDERR---

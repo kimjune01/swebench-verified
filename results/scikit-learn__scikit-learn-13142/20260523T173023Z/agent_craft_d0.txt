@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully addresses the bug on the first gate iteration. The E-step now executes after setting the best parameters, ensuring `fit_predict(X)` and `fit(X).predict(X)` return identical labels when `n_init > 1`. Both FAIL_TO_PASS tests pass, with no regressions across the full test suite.
+
+---STDERR---
