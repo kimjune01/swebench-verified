@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix successfully makes `test_no_body_returned_for_head_requests` pass. 
+
+**Summary**: Django's `ServerHandler` now properly handles HEAD requests by:
+1. Overriding `write()` to send headers but skip body data for HEAD requests
+2. Removing Content-Length header for HEAD responses in `cleanup_headers()`
+3. Excluding HEAD from Connection: close logic (HEAD needs no content-length framing since there's no body)
+
+The gate shows all 5 tests passing. The fix went through 4 iterations with codex reviewing each version, catching issues with `_write()` vs `write()`, the Headers API, and the Connection header logic.
+
+---STDERR---

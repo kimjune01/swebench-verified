@@ -1,0 +1,109 @@
+2026-05-23 03:33:47,690 - INFO - Creating container for django__django-16502...
+2026-05-23 03:33:59,143 - INFO - Container for django__django-16502 created: f34a3cf1b69227a121b3af1258bfe5ddd2332dac827ed6e841fe18fb8081cc66
+2026-05-23 03:33:59,766 - INFO - Container for django__django-16502 started: f34a3cf1b69227a121b3af1258bfe5ddd2332dac827ed6e841fe18fb8081cc66
+2026-05-23 03:33:59,766 - INFO - Intermediate patch for django__django-16502 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16502/patch.diff, now applying to container...
+2026-05-23 03:33:59,845 - INFO - >>>>> Applied Patch:
+Checking patch django/core/servers/basehttp.py...
+Applied patch django/core/servers/basehttp.py cleanly.
+
+2026-05-23 03:34:00,501 - INFO - Git diff before:
+diff --git a/django/core/servers/basehttp.py b/django/core/servers/basehttp.py
+index fef5532e58..65a33053d7 100644
+--- a/django/core/servers/basehttp.py
++++ b/django/core/servers/basehttp.py
+@@ -130,19 +130,38 @@ class ServerHandler(simple_server.ServerHandler):
+ 
+     def cleanup_headers(self):
+         super().cleanup_headers()
++        is_head = self.environ.get("REQUEST_METHOD") == "HEAD"
++        # HEAD responses must not include a message body.
++        if is_head:
++            if "Content-Length" in self.headers:
++                del self.headers["Content-Length"]
+         # HTTP/1.1 requires support for persistent connections. Send 'close' if
+         # the content length is unknown to prevent clients from reusing the
+         # connection.
+-        if "Content-Length" not in self.headers:
++        if not is_head and "Content-Length" not in self.headers:
+             self.headers["Connection"] = "close"
+         # Persistent connections require threading server.
+-        elif not isinstance(self.request_handler.server, socketserver.ThreadingMixIn):
++        elif not is_head and not isinstance(self.request_handler.server, socketserver.ThreadingMixIn):
+             self.headers["Connection"] = "close"
+         # Mark the connection for closing if it's set as such above or if the
+         # application sent the header.
+         if self.headers.get("Connection") == "close":
+             self.request_handler.close_connection = True
+ 
++    def write(self, data):
++        assert type(data) is bytes, "write() argument must be a bytes instance"
++        if not self.status:
++            raise AssertionError("write() before start_response()")
++
++        if self.environ.get("REQUEST_METHOD") == "HEAD":
++            if not self.headers_sent:
++                self.bytes_sent = 0
++                self.send_headers()
++                self._flush()
++            return
++
++        super().write(data)
++
+     def close(self):
+         self.get_stdin().read()
+         super().close()
+2026-05-23 03:34:00,501 - INFO - Eval script for django__django-16502 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16502/eval.sh; copying to container...
+2026-05-23 03:34:04,988 - INFO - Test runtime: 4.44 seconds
+2026-05-23 03:34:04,988 - INFO - Test output for django__django-16502 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16502/test_output.txt
+2026-05-23 03:34:05,090 - INFO - Git diff after:
+diff --git a/django/core/servers/basehttp.py b/django/core/servers/basehttp.py
+index fef5532e58..65a33053d7 100644
+--- a/django/core/servers/basehttp.py
++++ b/django/core/servers/basehttp.py
+@@ -130,19 +130,38 @@ class ServerHandler(simple_server.ServerHandler):
+ 
+     def cleanup_headers(self):
+         super().cleanup_headers()
++        is_head = self.environ.get("REQUEST_METHOD") == "HEAD"
++        # HEAD responses must not include a message body.
++        if is_head:
++            if "Content-Length" in self.headers:
++                del self.headers["Content-Length"]
+         # HTTP/1.1 requires support for persistent connections. Send 'close' if
+         # the content length is unknown to prevent clients from reusing the
+         # connection.
+-        if "Content-Length" not in self.headers:
++        if not is_head and "Content-Length" not in self.headers:
+             self.headers["Connection"] = "close"
+         # Persistent connections require threading server.
+-        elif not isinstance(self.request_handler.server, socketserver.ThreadingMixIn):
++        elif not is_head and not isinstance(self.request_handler.server, socketserver.ThreadingMixIn):
+             self.headers["Connection"] = "close"
+         # Mark the connection for closing if it's set as such above or if the
+         # application sent the header.
+         if self.headers.get("Connection") == "close":
+             self.request_handler.close_connection = True
+ 
++    def write(self, data):
++        assert type(data) is bytes, "write() argument must be a bytes instance"
++        if not self.status:
++            raise AssertionError("write() before start_response()")
++
++        if self.environ.get("REQUEST_METHOD") == "HEAD":
++            if not self.headers_sent:
++                self.bytes_sent = 0
++                self.send_headers()
++                self._flush()
++            return
++
++        super().write(data)
++
+     def close(self):
+         self.get_stdin().read()
+         super().close()
+2026-05-23 03:34:05,090 - INFO - Grading answer for django__django-16502...
+2026-05-23 03:34:05,091 - INFO - report: {'django__django-16502': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_no_body_returned_for_head_requests (servers.test_basehttp.WSGIRequestHandlerTestCase.test_no_body_returned_for_head_requests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_https (servers.test_basehttp.WSGIRequestHandlerTestCase.test_https)', 'test_log_message (servers.test_basehttp.WSGIRequestHandlerTestCase.test_log_message)', 'WSGIRequestHandler ignores headers containing underscores.', 'WSGIServer handles broken pipe errors.'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-16502: resolved: True
+2026-05-23 03:34:05,091 - INFO - Attempting to stop container sweb.eval.django__django-16502.batch...
+2026-05-23 03:34:20,567 - INFO - Attempting to remove container sweb.eval.django__django-16502.batch...
+2026-05-23 03:34:20,583 - INFO - Container sweb.eval.django__django-16502.batch removed.

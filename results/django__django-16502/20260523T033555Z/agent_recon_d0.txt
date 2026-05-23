@@ -1,0 +1,45 @@
+# Recon: django__django-16502
+
+## Failure summary
+The test `test_no_body_returned_for_head_requests` verifies RFC 2616 compliance by checking that HEAD requests return no response body (only headers). The test fails because Django's runserver returns the full HTML body (`b'<!DOCTYPE html><html><body>Hello World</body></html>'`) instead of an empty body (`b"\r\n"`), and includes a Content-Length header when it should omit it.
+
+## Suspect set
+- `django/core/servers/basehttp.py` lines 119-147: `ServerHandler` class — extends `wsgiref.simple_server.ServerHandler` but doesn't override behavior for HEAD requests
+
+## Root cause
+In commit bb0b4b705b (Fixed #26052), Django removed `conditional_content_removal()` function that stripped response bodies for HEAD requests at the Django response handler level. The commit assumed that the underlying WSGI server would handle HEAD request body stripping automatically, citing "common servers (gunicorn, mod_wsgi etc) already do so."
+
+However, **this assumption was incorrect for wsgiref-based servers**. I verified that Python's standard library `wsgiref.simple_server.WSGIRequestHandler` does NOT strip bodies for HEAD requests — it writes the full response body just like for GET requests.
+
+Django's `ServerHandler` class must implement HEAD request handling explicitly because:
+1. The WSGI application layer still returns full response body for HEAD requests (as it should per WSGI spec)
+2. The handler layer is responsible for stripping the body before transmission
+3. `wsgiref.handlers.BaseHandler` does not check REQUEST_METHOD in its `write()` or `_write()` methods
+
+**Confidence**: Deduction — 95%
+
+### Supporting evidence
+- `django/core/servers/basehttp.py:119-147` — `ServerHandler` class has no HEAD-specific logic
+- Git commit bb0b4b705b — Removed `conditional_content_removal()` that did `if request.method == 'HEAD': response.content = b''`
+- Standard library verification — Direct test of `wsgiref.simple_server.WSGIRequestHandler` confirms it writes full body for HEAD requests
+- Test output — `AssertionError: b'<!DOCTYPE html>...' != b'\r\n'` shows body is being written
+
+## Edit sites
+
+### Site 1: Override `_write()` method in ServerHandler
+**File**: `django/core/servers/basehttp.py`
+**Location**: Inside `ServerHandler` class (add new method around line 147)
+**Change**: Add `_write()` method override that checks `if self.environ.get('REQUEST_METHOD') == 'HEAD'` and returns early without calling `super()._write(data)` to prevent body transmission.
+
+### Site 2: Modify `cleanup_headers()` to remove Content-Length for HEAD
+**File**: `django/core/servers/basehttp.py`  
+**Location**: Lines 126-140, existing `cleanup_headers()` method
+**Change**: After calling `super().cleanup_headers()`, check `if self.environ.get('REQUEST_METHOD') == 'HEAD'` and delete Content-Length from `self.headers` if present. The test explicitly verifies no Content-Length header should be sent for HEAD requests.
+
+## Rejected hypotheses
+None — the cause is clear from code inspection and git history.
+
+## Open questions
+None — the fix is straightforward: prevent body writes and Content-Length header for HEAD requests in the ServerHandler.
+
+---STDERR---
