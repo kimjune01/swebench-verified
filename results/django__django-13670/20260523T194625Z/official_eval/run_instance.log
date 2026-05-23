@@ -1,0 +1,45 @@
+2026-05-23 19:42:23,952 - INFO - Creating container for django__django-13670...
+2026-05-23 19:42:24,410 - INFO - Container for django__django-13670 created: 0826bfe96766ff6b31f5b7bcff5bfb42d318d398efceb953873b9dfc4c24e982
+2026-05-23 19:42:24,732 - INFO - Container for django__django-13670 started: 0826bfe96766ff6b31f5b7bcff5bfb42d318d398efceb953873b9dfc4c24e982
+2026-05-23 19:42:24,732 - INFO - Intermediate patch for django__django-13670 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13670/patch.diff, now applying to container...
+2026-05-23 19:42:24,834 - INFO - >>>>> Applied Patch:
+Checking patch django/utils/dateformat.py...
+Applied patch django/utils/dateformat.py cleanly.
+
+2026-05-23 19:42:25,623 - INFO - Git diff before:
+diff --git a/django/utils/dateformat.py b/django/utils/dateformat.py
+index afd36d79e0..526414363b 100644
+--- a/django/utils/dateformat.py
++++ b/django/utils/dateformat.py
+@@ -326,7 +326,7 @@ class DateFormat(TimeFormat):
+ 
+     def y(self):
+         "Year, 2 digits; e.g. '99'"
+-        return str(self.data.year)[2:]
++        return '%02d' % (self.data.year % 100)
+ 
+     def Y(self):
+         "Year, 4 digits; e.g. '1999'"
+2026-05-23 19:42:25,623 - INFO - Eval script for django__django-13670 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13670/eval.sh; copying to container...
+2026-05-23 19:42:30,282 - INFO - Test runtime: 4.55 seconds
+2026-05-23 19:42:30,282 - INFO - Test output for django__django-13670 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13670/test_output.txt
+2026-05-23 19:42:30,366 - INFO - Git diff after:
+diff --git a/django/utils/dateformat.py b/django/utils/dateformat.py
+index afd36d79e0..526414363b 100644
+--- a/django/utils/dateformat.py
++++ b/django/utils/dateformat.py
+@@ -326,7 +326,7 @@ class DateFormat(TimeFormat):
+ 
+     def y(self):
+         "Year, 2 digits; e.g. '99'"
+-        return str(self.data.year)[2:]
++        return '%02d' % (self.data.year % 100)
+ 
+     def Y(self):
+         "Year, 4 digits; e.g. '1999'"
+2026-05-23 19:42:30,366 - INFO - Grading answer for django__django-13670...
+2026-05-23 19:42:30,366 - INFO - report: {'django__django-13670': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_year_before_1000 (utils_tests.test_dateformat.DateFormatTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_am_pm (utils_tests.test_dateformat.DateFormatTests)', 'test_date (utils_tests.test_dateformat.DateFormatTests)', 'test_date_formats (utils_tests.test_dateformat.DateFormatTests)', 'test_dateformat (utils_tests.test_dateformat.DateFormatTests)', 'test_datetime_with_local_tzinfo (utils_tests.test_dateformat.DateFormatTests)', 'test_datetime_with_tzinfo (utils_tests.test_dateformat.DateFormatTests)', 'test_day_of_year_leap (utils_tests.test_dateformat.DateFormatTests)', 'test_empty_format (utils_tests.test_dateformat.DateFormatTests)', 'test_epoch (utils_tests.test_dateformat.DateFormatTests)', 'test_futuredates (utils_tests.test_dateformat.DateFormatTests)', 'test_invalid_time_format_specifiers (utils_tests.test_dateformat.DateFormatTests)', 'test_microsecond (utils_tests.test_dateformat.DateFormatTests)', 'test_naive_ambiguous_datetime (utils_tests.test_dateformat.DateFormatTests)', 'test_naive_datetime (utils_tests.test_dateformat.DateFormatTests)', 'test_r_format_with_non_en_locale (utils_tests.test_dateformat.DateFormatTests)', 'test_time_formats (utils_tests.test_dateformat.DateFormatTests)', 'test_timezones (utils_tests.test_dateformat.DateFormatTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-13670: resolved: True
+2026-05-23 19:42:30,366 - INFO - Attempting to stop container sweb.eval.django__django-13670.batch...
+2026-05-23 19:42:45,834 - INFO - Attempting to remove container sweb.eval.django__django-13670.batch...
+2026-05-23 19:42:45,847 - INFO - Container sweb.eval.django__django-13670.batch removed.

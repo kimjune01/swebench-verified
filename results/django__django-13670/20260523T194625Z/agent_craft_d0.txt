@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_year_before_1000` pass. Changed `y()` method in `django/utils/dateformat.py` from string slicing to modulo arithmetic with zero-padding: `return '%02d' % (self.data.year % 100)`.
+
+---STDERR---

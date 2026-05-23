@@ -1,0 +1,44 @@
+# Recon: django__django-13670
+
+## Failure summary
+
+The test `test_year_before_1000` checks that the 'y' date format character produces a 2-digit year with leading zeros for years before 1000. The test fails because:
+- Year 476 produces '6' instead of '76'
+- Year 42 produces '' (empty string) instead of '42'  
+- Year 4 produces '' (empty string) instead of '04'
+
+The 'y' format should return the last two digits of the year, zero-padded to 2 digits, consistent with Python's strftime('%y') and PHP's date('y').
+
+## Suspect set
+
+- `django/utils/dateformat.py` lines 327-329: The `y()` method implementation
+
+## Root cause
+
+The `y()` method in `DateFormat` class uses string slicing to extract year digits: `str(self.data.year)[2:]`. This implementation assumes the year is at least 3 digits and takes everything after the first two characters. For years < 100, this produces incorrect results because there are fewer than 3 characters to slice.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `django/utils/dateformat.py:329` — `return str(self.data.year)[2:]`
+- Year 476: str(476) = '476', [2:] = '6' (only last character)
+- Year 42: str(42) = '42', [2:] = '' (nothing after index 2)
+- Year 4: str(4) = '4', [2:] = '' (nothing after index 2)
+- Python strftime('%y') correctly produces '76', '42', '04' using modulo 100 arithmetic
+- PHP date('y') also uses modulo 100 (per problem description)
+
+## Edit sites
+
+- `django/utils/dateformat.py` line 329: Replace `return str(self.data.year)[2:]` with `return '%02d' % (self.data.year % 100)`
+
+The fix uses modulo 100 to extract the last two digits mathematically (not by string position) and formats with leading zeros to ensure exactly 2 digits.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and confirmed by comparing with Python's strftime behavior.
+
+## Open questions
+
+None — the fix is straightforward and matches the behavior of both Python's strftime and PHP's date function.
+
+---STDERR---
