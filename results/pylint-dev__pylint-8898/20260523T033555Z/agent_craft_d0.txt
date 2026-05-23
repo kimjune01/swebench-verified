@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes all tests on the first gate attempt. The implementation adds brace-depth tracking to `_regexp_csv_transfomer` in `pylint/config/argument.py`, allowing it to correctly parse comma-separated regexes that contain commas inside quantifier braces like `{1,3}`.
+
+---STDERR---

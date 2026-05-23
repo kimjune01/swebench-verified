@@ -1,0 +1,18 @@
+# Audit: pylint-dev__pylint-8898
+
+## FAIL_TO_PASS
+- `tests/config/test_config.py::test_csv_regex_error`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_csv_regex_comma_in_quantifier[foo, bar{1,3}-expected3]` was failing on base, now passes (bonus fix)
+
+## Summary
+All 20 tests passed. The patch correctly handles comma-separated regex values by tracking brace depth to distinguish commas inside quantifiers `{n,m}` from separator commas. Error messages now preserve the full regex pattern when reporting parse errors.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
