@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is that path simplification (enabled for paths with ≥128 vertices) discards vertices during data limit calculation in `_update_patch_limits`. The fix is a one-line change: add `simplify=False` to the `iter_bezier()` call to ensure all vertices are considered when computing axis limits.
+
+---STDERR---

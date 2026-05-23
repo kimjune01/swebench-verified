@@ -1,0 +1,24 @@
+# Audit: matplotlib-24177
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_axes.py::test_small_autoscale`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None. All 769 tests passed, 64 skipped.
+
+## Pre-existing failures (not counted)
+None. Gate output matches fail-on-base baseline (769 passed, 64 skipped on both).
+
+## Patch
+```diff
+lib/matplotlib/axes/_base.py:2437
+-        for curve, code in p.iter_bezier():
++        for curve, code in p.iter_bezier(simplify=False):
+```
+
+The single-line fix prevents path simplification from discarding vertices during autoscale limit calculation. The FAIL_TO_PASS test now passes with ylim[1] correctly reaching 0.33 (previously only 0.25), and no PASS_TO_PASS tests regressed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

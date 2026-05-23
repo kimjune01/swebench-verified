@@ -1,0 +1,7 @@
+Done. The fix is complete and verified:
+
+**Applied change**: `lib/matplotlib/axes/_base.py:2437` — added `simplify=False` to `iter_bezier()` call in `_update_patch_limits`
+
+**Result**: Gate green on first iteration. The FAIL_TO_PASS test `test_small_autoscale` now passes, along with all 769 other tests. The fix prevents path simplification from discarding vertices during axis limit calculation, ensuring autoscale correctly captures the full extent of paths with ≥128 vertices.
+
+---STDERR---
