@@ -1,0 +1,21 @@
+# Audit: sympy__sympy-13372
+
+## FAIL_TO_PASS
+- test_evalf_bugs: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_evalf_complex_bug (expected fail, was 'f' on base)
+- test_evalf_complex_powers_bug (expected fail, was 'f' on base)
+
+## Gate Summary
+46 passed, 2 expected to fail, in 11.37 seconds
+
+The craft patch successfully fixed the test_evalf_bugs failure by adding proper handling for unevaluated `Mul` expressions in the evalf codepath.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

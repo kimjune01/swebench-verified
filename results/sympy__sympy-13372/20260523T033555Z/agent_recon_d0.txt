@@ -1,0 +1,62 @@
+Now I'll print my structured diagnosis to stdout:
+
+# Recon: sympy__sympy-13372
+
+## Failure summary
+
+The test `test_evalf_bugs` checks that `Mul(Max(0, y), x, evaluate=False).evalf()` returns the string representation `'x*Max(0, y)'` (i.e., evaluates to the symbolic expression unchanged). Instead, the code raises `UnboundLocalError: local variable 'reprec' referenced before assignment` at line 1310 in `sympy/core/evalf.py`. The error occurs when `evalf` attempts to evaluate `Max(0, y)` during multiplication evaluation - since `Max` has no entry in `evalf_table`, it falls back to extracting real/imaginary parts, but fails to handle the case where those parts are neither zero nor numeric.
+
+## Suspect set
+
+- `sympy/core/evalf.py` lines 1285-1315: The `evalf` function's KeyError exception handler, specifically the conditional blocks that assign `reprec` and `imprec` (lines 1299-1310)
+- `sympy/core/evalf.py` line 540: The `evalf_mul` function calls `evalf` on each multiplication argument, triggering the bug when Max appears
+
+## Root cause
+
+In `sympy/core/evalf.py` at lines 1299-1310, the exception handler for expressions without `evalf_table` entries attempts to extract real and imaginary components using `as_real_imag()`. The code then processes these components with if/elif blocks:
+
+```python
+if re == 0:
+    re = None
+    reprec = None
+elif re.is_number:
+    re = re._to_mpmath(prec, allow_ints=False)._mpf_
+    reprec = prec
+# NO ELSE CLAUSE - reprec undefined if re is non-zero and non-numeric
+
+if im == 0:
+    im = None
+    imprec = None
+elif im.is_number:
+    im = im._to_mpmath(prec, allow_ints=False)._mpf_
+    imprec = prec
+# NO ELSE CLAUSE - imprec undefined if im is non-zero and non-numeric
+
+r = re, im, reprec, imprec  # Line 1310 - UnboundLocalError if reprec/imprec not set
+```
+
+When `Max(0, y)` is evaluated: `as_real_imag()` returns `(Max(0, y), 0)`. The real part `Max(0, y)` is neither zero nor numeric (`Max(0, y).is_number == False`), so neither branch executes and `reprec` remains undefined. Line 1310 then references the undefined `reprec`, causing `UnboundLocalError`.
+
+Confidence: **Deduction — 99%**
+
+Supporting evidence:
+- `sympy/core/evalf.py:1299-1310` — if/elif blocks lack else clauses to handle non-zero, non-numeric values
+- Verified: `Max(0, y).as_real_imag()` returns `(Max(0, y), 0)` where `Max(0, y).is_number == False`
+- Stack trace confirms error at line 1310: `r = re, im, reprec, imprec`
+
+## Edit sites
+
+- `sympy/core/evalf.py` lines 1299-1304: After `elif re.is_number: ... reprec = prec`, add `else: raise NotImplementedError` to handle cases where `re` is neither zero nor numeric
+- `sympy/core/evalf.py` lines 1305-1310: After `elif im.is_number: ... imprec = prec`, add `else: raise NotImplementedError` to handle cases where `im` is neither zero nor numeric
+
+The fix ensures that if a real or imaginary component cannot be evaluated to a number, `NotImplementedError` is raised (consistent with the exception handling pattern used elsewhere in `evalf`), preventing undefined variable access.
+
+## Rejected hypotheses
+
+None - the root cause was immediately apparent from the stack trace and code inspection.
+
+## Open questions
+
+- Why does argument order matter? `Mul(x, Max(0, y), evaluate=False).evalf()` succeeds but `Mul(Max(0, y), x, evaluate=False).evalf()` fails. Both should encounter the same issue when evaluating Max. This suggests there may be early-exit logic in `evalf_mul` that prevents later arguments from being processed in some cases, but the specific mechanism was not identified in this read-only diagnosis. The primary bug (missing else clauses) should be fixed regardless of the ordering mystery.
+
+---STDERR---
