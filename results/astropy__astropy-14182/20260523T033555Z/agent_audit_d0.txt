@@ -1,0 +1,23 @@
+# Audit: astropy__astropy-14182
+
+## FAIL_TO_PASS
+- test_rst_with_header_rows: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+All 10 tests passed:
+- 1/1 FAIL_TO_PASS test now passing
+- 9/9 PASS_TO_PASS tests still passing  
+- 0 regressions introduced
+
+The patch successfully resolves the issue by accepting `header_rows` in `RST.__init__()`, computing `data.start_line` dynamically in `read()`, and adjusting the separator line index in `write()`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

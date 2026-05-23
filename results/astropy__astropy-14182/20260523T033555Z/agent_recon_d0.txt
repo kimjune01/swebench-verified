@@ -1,0 +1,63 @@
+Now I'll output the diagnosis to stdout:
+
+```markdown
+# Recon: astropy__astropy-14182
+
+## Failure summary
+The test `test_rst_with_header_rows` attempts to read and write RST-format tables with multiple header rows specified via the `header_rows` parameter (e.g., `header_rows=["name", "unit", "dtype"]`). The test fails during the read operation with `TypeError: __init__() got an unexpected keyword argument 'header_rows'` at `astropy/io/ascii/core.py:1692` when trying to instantiate the RST reader class.
+
+## Suspect set
+- `astropy/io/ascii/rst.py` lines 61-62: RST.__init__() method signature and implementation
+
+## Root cause
+The `RST` class inherits from `FixedWidth`, which supports the `header_rows` parameter in its `__init__()` method. However, RST overrides `__init__()` with a signature that doesn't accept `header_rows`, preventing users from specifying multiple header rows (name, unit, dtype, etc.) when reading or writing RST tables.
+
+**Current code path:**
+1. User calls `QTable.read(..., format="ascii.rst", header_rows=["name", "unit", "dtype"])`
+2. The reader instantiation reaches `core._get_reader()` at line 1692
+3. Attempts `reader = Reader(**reader_kwargs)` where `reader_kwargs = {'header_rows': ['name', 'unit', 'dtype']}`
+4. RST.__init__() doesn't accept header_rows → TypeError
+
+**Why this breaks:**
+The parent class `FixedWidth` (at fixedwidth.py:339-354) has full support for `header_rows`, including:
+- Accepting it as a parameter (defaulting to `["name"]`)
+- Setting `self.header.header_rows` and `self.data.header_rows`
+- Adjusting `data.start_line` when needed
+
+RST's override at rst.py:61 blocks this functionality by not accepting or forwarding the parameter.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `rst.py:61-62` — RST.__init__() signature: `def __init__(self): super().__init__(delimiter_pad=None, bookend=False)`
+- `fixedwidth.py:339-345` — FixedWidth.__init__() accepts header_rows and processes it
+- `fixedwidth.py:475-487` — FixedWidthTwoLine shows the correct pattern: accept header_rows, pass to super(), then adjust format-specific attributes
+- `fixedwidth.py:102` — FixedWidthHeader.get_cols() reads from `self.header_rows`
+- `fixedwidth.py:263` — FixedWidthData.write() uses `self.header_rows` for output
+
+## Edit sites
+
+**File: `astropy/io/ascii/rst.py`**  
+**Lines: 61-62** (RST.__init__ method)
+
+Change needed:
+1. Update method signature to accept `header_rows=None` parameter
+2. Pass `header_rows` to `super().__init__(delimiter_pad=None, bookend=False, header_rows=header_rows)`
+3. After calling super(), set `self.data.start_line = len(self.header.header_rows) + 2`
+
+The formula `len(header_rows) + 2` accounts for RST format structure:
+- Line 0: top separator (position line with `=`)
+- Lines 1 to N: header rows (where N = len(header_rows))
+- Line N+1: middle separator
+- Lines N+2 onward: data
+
+This maintains backward compatibility (1 header row → start_line=3, the current hardcoded value) while supporting multiple header rows (3 header rows → start_line=5, as expected by the test).
+
+## Rejected hypotheses
+None - the diagnosis is straightforward from tracing the error through the code.
+
+## Open questions
+None - the fix is localized to RST.__init__() and follows the established pattern from FixedWidthTwoLine.
+```
+
+---STDERR---

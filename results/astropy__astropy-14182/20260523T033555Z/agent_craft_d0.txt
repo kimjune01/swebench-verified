@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully makes all FAIL_TO_PASS tests pass. The RST class now properly supports the `header_rows` parameter by:
+
+1. Accepting it in `__init__()` and forwarding to the parent `FixedWidth` class
+2. Dynamically computing `data.start_line` in the `read()` method based on the actual number of header rows
+3. Dynamically computing the separator line index in the `write()` method
+
+The codex volley identified critical issues (write method needs updating, timing of start_line computation) that were addressed before gating, resulting in a clean first-gate pass.
+
+---STDERR---
