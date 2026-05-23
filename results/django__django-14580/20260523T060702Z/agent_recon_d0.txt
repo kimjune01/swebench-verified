@@ -1,0 +1,29 @@
+# Recon: django__django-14580
+
+## Failure summary
+The test `test_serialize_type_model` verifies that when `models.Model` is serialized (for use as a base class in migrations), it returns both the string representation `'models.Model'` and the required import `'from django.db import models'`. Currently, the serialization returns an empty imports set, causing generated migrations to reference `models.Model` without importing it, resulting in `NameError: name 'models' is not defined`.
+
+## Suspect set
+- `django/db/migrations/serializer.py` lines 273-287: `TypeSerializer` class and its `serialize()` method
+
+## Root cause
+The `TypeSerializer.serialize()` method at line 276 includes a special case for `models.Model` that returns an empty imports list `[]` instead of `['from django.db import models']`. When the tuple `(case, string, imports)` is processed at line 281, it returns `string, set(imports)`, which becomes `("models.Model", set())` instead of `("models.Model", {'from django.db import models'})`.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `django/db/migrations/serializer.py:276` — `(models.Model, "models.Model", [])` has empty imports list
+- `django/db/migrations/serializer.py:281` — `return string, set(imports)` converts the empty list to empty set
+- Test expects: `('models.Model', {'from django.db import models'})`
+- Test receives: `('models.Model', set())`
+
+## Edit sites
+- `django/db/migrations/serializer.py` line 276: Change `(models.Model, "models.Model", [])` to `(models.Model, "models.Model", ['from django.db import models'])` — this adds the required import to the serialization result
+
+## Rejected hypotheses
+None — the issue is directly observable in the code with 99% confidence.
+
+## Open questions
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---

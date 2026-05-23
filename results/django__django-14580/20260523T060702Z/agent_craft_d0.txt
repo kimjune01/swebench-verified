@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix has been successfully implemented and verified. The issue was in `django/db/migrations/serializer.py` at line 276, where `models.Model` was being serialized with an empty imports list. Changed it to include `['from django.db import models']`, and all 50 tests now pass, including the previously failing `test_serialize_type_model`.
+
+---STDERR---

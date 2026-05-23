@@ -1,0 +1,20 @@
+# Audit: django__django-14580
+
+## FAIL_TO_PASS
+- test_serialize_type_model (migrations.test_writer.WriterTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 49 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. No pre-existing failures in scope.
+
+## Summary
+The craft patch successfully resolves the issue by adding the missing import statement for `models.Model` in the TypeSerializer. The minimal one-line change (`django/db/migrations/serializer.py:276`) adds `['from django.db import models']` to the imports list, ensuring generated migrations properly import `models.Model` when used as a base class.
+
+Full test suite result: **50/50 tests pass** in 0.020s.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
