@@ -1,0 +1,36 @@
+diff --git a/sympy/sets/sets.py b/sympy/sets/sets.py
+index 3c4aa86e36..5ee5f2d5f1 100644
+--- a/sympy/sets/sets.py
++++ b/sympy/sets/sets.py
+@@ -859,6 +859,31 @@ def _measure(self):
+             measure *= s.measure
+         return measure
+ 
++    def _eval_is_subset(self, other):
++        """Returns a fuzzy bool for whether self is a subset of other."""
++        if self.is_finite_set is True:
++            # Only enumerate if ProductSet is definitely finite
++            return fuzzy_and(other.contains(elem) for elem in self)
++        # Cannot determine for infinite ProductSets
++        return None
++
++    def _eval_Eq(self, other):
++        if isinstance(other, ProductSet):
++            # Two ProductSets are equal if they have same length and all component sets match
++            if len(self.sets) != len(other.sets):
++                return false
++            # Only return true if all components are structurally equal, None otherwise
++            if all(a == b for a, b in zip(self.sets, other.sets)):
++                return true
++            return None
++        elif isinstance(other, FiniteSet) and self.is_finite_set is True:
++            # ProductSet equals FiniteSet if both directions of subset hold
++            return fuzzy_and([self.is_subset(other), other.is_subset(self)])
++        elif isinstance(other, Interval):
++            # ProductSet contains tuples, Interval contains real numbers - can never be equal
++            return false
++        return None
++
+     def __len__(self):
+         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
+ 

@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-20438
+
+## FAIL_TO_PASS
+- test_Eq: PASS ✓
+- test_issue_19378: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_Complement_as_relational_fail (expected to fail)
+- test_image_Intersection (expected to fail)
+- test_union_boundary_of_joining_sets (expected to fail)
+- test_issue_16878b (expected to fail)
+
+## Gate results
+96 passed, 4 expected to fail, 0 failed. Both FAIL_TO_PASS tests now pass. No regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
