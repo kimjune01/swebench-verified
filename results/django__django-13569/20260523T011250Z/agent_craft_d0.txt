@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. By overriding `get_group_by_cols()` in the `Random` class to return an empty list, Random() expressions are no longer incorrectly added to the GROUP BY clause when using `order_by('?')` with aggregation. This approach is cleaner and more consistent than filtering in the compiler, as it puts the behavior on the expression itself and handles all code paths where Random might be grouped.
+
+---STDERR---

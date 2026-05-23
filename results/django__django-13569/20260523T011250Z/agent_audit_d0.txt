@@ -1,0 +1,18 @@
+# Audit: django__django-13569
+
+## FAIL_TO_PASS
+- test_aggregation_random_ordering: PASS ✅
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch adds a `get_group_by_cols()` override to the `Random` class that returns an empty list, preventing Random() from being included in GROUP BY clauses. All 68 tests pass, including the previously failing `test_aggregation_random_ordering`. No regressions detected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

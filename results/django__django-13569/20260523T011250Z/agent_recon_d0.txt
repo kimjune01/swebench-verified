@@ -1,0 +1,32 @@
+# Recon: django__django-13569
+
+## Failure summary
+The test `test_aggregation_random_ordering` checks that using `order_by('?')` (random ordering) with aggregation produces correct grouped counts. The test expects 9 authors with their proper book counts (e.g., Peter Norvig with 2 books). However, the test fails because authors with multiple books appear as duplicate rows with count=1 instead of a single row with the correct count. The assertion shows `Counter({('Peter Norvig', 1): 2, ...})` (Peter Norvig appearing twice with count 1) instead of the expected `Counter({..., ('Peter Norvig', 2): 1})`.
+
+## Suspect set
+- `django/db/models/sql/compiler.py` lines 128-133: The get_group_by method unconditionally adds all non-reference ORDER BY expressions to the GROUP BY clause, including Random()
+- `django/db/models/sql/compiler.py` line 310: Where `OrderBy(Random())` is created for '?' ordering
+- `django/db/models/expressions.py` lines 1228-1232: OrderBy.get_group_by_cols() delegates to wrapped expression
+- `django/db/models/expressions.py` lines 349-351: Base Expression.get_group_by_cols() returns [self] for non-aggregate expressions
+
+## Root cause
+When `order_by('?')` is used with aggregation, the Random() expression is incorrectly added to the GROUP BY clause. The call chain: (1) `order_by('?')` creates `OrderBy(Random())` at compiler.py:310, (2) get_group_by at line 132 calls `expr.get_group_by_cols()` on all non-reference order_by expressions, (3) OrderBy delegates to Random().get_group_by_cols(), (4) Random uses the base implementation returning `[self]`, (5) Random() is added to GROUP BY, creating separate groups per random value instead of grouping by the actual data. Random() is a non-deterministic function for ordering only and should never affect grouping.
+
+Confidence: deduction — 98%
+
+Supporting evidence:
+- `django/db/models/sql/compiler.py:310` — `order_by.append((OrderBy(Random()), False))` when field == '?'
+- `django/db/models/sql/compiler.py:132` — `expressions.extend(expr.get_group_by_cols())` unconditionally adds order_by columns
+- `django/db/models/functions/math.py:144` — Random class has no get_group_by_cols override, uses base implementation
+- `django/db/models/functions/__init__.py:10` — Random already imported in compiler.py
+
+## Edit sites
+- `django/db/models/sql/compiler.py` lines 128-133: Modify the order_by loop in get_group_by to filter out Random instances from the columns returned by expr.get_group_by_cols(). Random is already imported at line 10. The fix: instead of unconditionally extending with all columns, filter to exclude Random instances since they're non-deterministic ordering functions that should not affect grouping.
+
+## Rejected hypotheses
+None — the root cause is directly observable from code trace and test failure.
+
+## Open questions
+None — the fix location and approach are clear.
+
+---STDERR---
