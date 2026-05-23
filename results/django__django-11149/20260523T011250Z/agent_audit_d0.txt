@@ -1,0 +1,19 @@
+# Audit: django__django-11149
+
+## FAIL_TO_PASS
+- test_inline_add_m2m_view_only_perm: PASS ✓
+- test_inline_change_m2m_view_only_perm: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Classification
+All FAIL_TO_PASS tests now pass. The craft patch correctly restricts `has_add_permission`, `has_change_permission`, and `has_delete_permission` on auto-created ManyToMany inline models to require `change` permission on the related model, while preserving view-only access with just `view` permission. Zero regressions introduced across all PASS_TO_PASS tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,53 @@
+Now I'll output the structured diagnosis to stdout:
+
+```markdown
+# Recon: django__django-11149
+
+## Failure summary
+Two tests verify that admin inlines for auto-created ManyToMany intermediate models respect view-only permissions. Both tests fail with `AssertionError: True is not False` at lines 646 and 693 of `tests/admin_inlines/tests.py`. The tests check that when a user has only `view_book` permission, the inline formset should have `has_add_permission=False`, but it incorrectly returns `True`. The same issue affects `has_change_permission` and `has_delete_permission`.
+
+## Suspect set
+- `django/contrib/admin/options.py` lines 2114-2138: The `InlineModelAdmin` methods `has_add_permission`, `has_change_permission`, and `has_delete_permission` that handle auto-created ManyToMany intermediate models.
+
+## Root cause
+The three permission methods (`has_add_permission`, `has_change_permission`, `has_delete_permission`) all delegate to `self.has_view_permission(request, obj)` for auto-created intermediate models. The `has_view_permission` method returns `True` if the user has either `view` OR `change` permission on the related model. This means a user with only `view` permission incorrectly gets add/change/delete permissions on the inline.
+
+The correct behavior is:
+- `has_view_permission`: check for `view` OR `change` permission (already correct)
+- `has_add_permission`, `has_change_permission`, `has_delete_permission`: check for `change` permission only (currently broken)
+
+This is confirmed by test `test_inline_add_m2m_add_perm` which shows that even `add` permission alone is insufficient - you need `change` permission to manipulate m2m relationships.
+
+Confidence: **deduction — 98%**
+
+Supporting evidence:
+- `django/contrib/admin/options.py:2119` — `return self.has_view_permission(request, obj)` in `has_add_permission`
+- `django/contrib/admin/options.py:2128` — `return self.has_view_permission(request, obj)` in `has_change_permission`
+- `django/contrib/admin/options.py:2137` — `return self.has_view_permission(request, obj)` in `has_delete_permission`
+- `django/contrib/admin/options.py:2150-2152` — `has_view_permission` returns `True` for `view` OR `change` permission
+
+## Edit sites
+- `django/contrib/admin/options.py` lines 2114-2120 (`has_add_permission` method): Replace the return statement for auto-created models. Instead of returning `self.has_view_permission(request, obj)`, check specifically for `change` permission on the related model, following the same pattern as `has_view_permission` but only checking `change` permission.
+
+- `django/contrib/admin/options.py` lines 2123-2129 (`has_change_permission` method): Replace the return statement for auto-created models. Instead of returning `self.has_view_permission(request, obj)`, check specifically for `change` permission on the related model.
+
+- `django/contrib/admin/options.py` lines 2132-2138 (`has_delete_permission` method): Replace the return statement for auto-created models. Instead of returning `self.has_view_permission(request, obj)`, check specifically for `change` permission on the related model.
+
+All three methods should follow the pattern from `has_view_permission` (lines 2141-2153) which:
+1. Detects it's an auto-created intermediate model
+2. Finds the related model by iterating through fields
+3. Checks the permission on that related model
+
+But instead of checking `view` OR `change`, they should only check for `change` permission.
+
+## Competing hypotheses
+None - the root cause is definitively identified by tracing the code path.
+
+## Rejected hypotheses
+None - first diagnosis.
+
+## Open questions
+None - the fix is straightforward.
+```
+
+---STDERR---

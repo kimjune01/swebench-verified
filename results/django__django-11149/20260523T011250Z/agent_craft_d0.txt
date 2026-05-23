@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass. The three permission methods (`has_add_permission`, `has_change_permission`, `has_delete_permission`) now correctly check for `change` permission only on the related model for auto-created ManyToMany intermediate models, rather than accepting either `view` or `change` permission.
+
+---STDERR---
