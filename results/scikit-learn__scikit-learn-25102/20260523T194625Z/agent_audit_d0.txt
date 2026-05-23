@@ -1,0 +1,26 @@
+# Audit: scikit-learn__scikit-learn-25102
+
+## FAIL_TO_PASS
+- sklearn/feature_selection/tests/test_base.py::test_output_dataframe: **PASS** ✅
+- sklearn/feature_selection/tests/test_feature_select.py::test_dataframe_output_dtypes: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 59 tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — both FAIL_TO_PASS tests were failing on base with dtype mismatch errors and are now resolved.
+
+## Summary
+
+The craft patch successfully resolved the dtype preservation issue. The fix works by:
+1. Detecting pandas output mode + DataFrame input in `SelectorMixin.transform()`
+2. Skipping `_validate_data` to preserve DataFrame structure
+3. Using `_safe_indexing(X, mask, axis=1)` for column selection
+4. Returning DataFrame slices with original dtypes intact
+
+Gate run: 61/61 tests passed. Both FAIL_TO_PASS tests now pass, zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,3 @@
+Recon complete. The diagnosis is written above and appended to the hypothesis graph. The root cause is clear: `_wrap_in_pandas_container` in `sklearn/utils/_set_output.py` creates a new DataFrame without preserving the original dtypes from the input DataFrame, causing all columns to be inferred as object dtype when the data comes from a mixed-type numpy array.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Fixed in `sklearn/feature_selection/_base.py`. When pandas output is configured and input is a DataFrame, the selector now preserves the DataFrame through selection using `_safe_indexing` instead of converting to ndarray and back. This preserves dtypes automatically through positional slicing. Both FAIL_TO_PASS tests now pass.
+
+---STDERR---
