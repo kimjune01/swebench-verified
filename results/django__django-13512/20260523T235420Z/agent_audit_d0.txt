@@ -1,0 +1,26 @@
+# Audit: django__django-13512
+
+## FAIL_TO_PASS
+- test_prepare_value (forms_tests.field_tests.test_jsonfield.JSONFieldTest): **PASS**
+- test_json_display_for_field (admin_utils.tests.UtilsTests): **PASS**
+- test_label_for_field (admin_utils.tests.UtilsTests): **PASS**
+
+## PASS_TO_PASS regressions
+**None** - All 35 tests passed cleanly.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Kill report
+Not applicable - patch resolves all failing tests without introducing regressions.
+
+The patch adds `ensure_ascii=False` to two `json.dumps()` calls:
+1. `django/db/models/fields/json.py:84` in `get_prep_value()` 
+2. `django/forms/fields.py:1261` in `prepare_value()`
+
+This prevents Unicode characters from being escaped as `\uXXXX` sequences, preserving them as actual Unicode characters in JSON output.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

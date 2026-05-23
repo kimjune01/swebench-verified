@@ -1,0 +1,9 @@
+**RESOLVED**
+
+All three FAIL_TO_PASS tests now pass with the minimal fix of adding `ensure_ascii=False` to `json.dumps()` in:
+- `django/db/models/fields/json.py:84` (get_prep_value)
+- `django/forms/fields.py:1261` (prepare_value)
+
+The gate confirmed all 35 tests pass with no regressions.
+
+---STDERR---

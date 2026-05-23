@@ -1,0 +1,54 @@
+# Recon: django__django-13512
+
+## Failure summary
+
+The failing tests check that JSONField properly displays Unicode characters (Chinese, emoji, Polish diacritics) in both Django admin and form contexts. The tests fail because `json.dumps()` is being called without the `ensure_ascii=False` parameter, causing Unicode characters to be escaped as ASCII sequences like `\u4f60\u597d` instead of being preserved as `你好`.
+
+**Exact errors**:
+- `test_json_display_for_field`: Expected `'{"a": "你好 世界"}'`, got `'{"a": "\\u4f60\\u597d \\u4e16\\u754c"}'`
+- `test_prepare_value`: Expected `'"你好，世界"'`, got `'"\\u4f60\\u597d\\uff0c\\u4e16\\u754c"'`
+
+## Suspect set
+
+- `django/db/models/fields/json.py` lines 81-84: `get_prep_value()` method uses `json.dumps()` without `ensure_ascii=False`
+- `django/db/models/fields/json.py` lines 92-95: `validate()` method uses `json.dumps()` without `ensure_ascii=False`
+- `django/forms/fields.py` lines 1260-1262: `prepare_value()` method uses `json.dumps()` without `ensure_ascii=False`
+- `django/forms/fields.py` lines 1268-1270: `has_changed()` method uses `json.dumps()` without `ensure_ascii=False`
+
+## Root cause
+
+Python's `json.dumps()` defaults to `ensure_ascii=True`, which escapes all non-ASCII characters as `\uXXXX` sequences. The Django JSONField implementations call `json.dumps()` without explicitly setting `ensure_ascii=False`, causing Unicode characters to be escaped instead of preserved.
+
+**Call path for admin display** (`test_json_display_for_field`):
+1. `django/contrib/admin/utils.py:401` - `display_for_field()` calls `field.get_prep_value(value)` for JSONField
+2. `django/db/models/fields/json.py:84` - `get_prep_value()` returns `json.dumps(value, cls=self.encoder)` ← missing `ensure_ascii=False`
+
+**Call path for form display** (`test_prepare_value`):
+1. `django/forms/fields.py:1261` - `prepare_value()` returns `json.dumps(value, cls=self.encoder)` ← missing `ensure_ascii=False`
+
+Confidence: **Deduction — 99%**
+
+Supporting evidence:
+- `django/db/models/fields/json.py:84` — `return json.dumps(value, cls=self.encoder)` (no `ensure_ascii=False`)
+- `django/forms/fields.py:1261` — `return json.dumps(value, cls=self.encoder)` (no `ensure_ascii=False`)
+- Python docs: `json.dumps()` defaults to `ensure_ascii=True`, which "ensures that all incoming non-ASCII characters are escaped"
+
+## Edit sites
+
+1. **`django/db/models/fields/json.py` line 84** - In `get_prep_value()` method, change `json.dumps(value, cls=self.encoder)` to `json.dumps(value, ensure_ascii=False, cls=self.encoder)`
+
+2. **`django/db/models/fields/json.py` line 95** - In `validate()` method, change `json.dumps(value, cls=self.encoder)` to `json.dumps(value, ensure_ascii=False, cls=self.encoder)` (for consistency - validation should use same serialization behavior)
+
+3. **`django/forms/fields.py` line 1261** - In `prepare_value()` method, change `json.dumps(value, cls=self.encoder)` to `json.dumps(value, ensure_ascii=False, cls=self.encoder)`
+
+4. **`django/forms/fields.py` lines 1269-1270** - In `has_changed()` method, change both `json.dumps(initial, sort_keys=True, cls=self.encoder)` and `json.dumps(self.to_python(data), sort_keys=True, cls=self.encoder)` to include `ensure_ascii=False` (for consistency - comparison should use same serialization behavior)
+
+## Rejected hypotheses
+
+None - the root cause is unambiguous from the error messages and code trace.
+
+## Open questions
+
+None - the fix is straightforward and all edit sites have been enumerated via `grep -n "json.dumps"`.
+
+---STDERR---
