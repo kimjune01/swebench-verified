@@ -1,0 +1,20 @@
+# Audit: sympy__sympy-24066
+
+## FAIL_TO_PASS
+- test_issue_24062: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 29 tests in PASS_TO_PASS list passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_factor_and_dimension_with_Abs: "f" (expected to fail, was also "f" on base)
+- test_physics_constant: improved from [FAIL] on base to "ok" now (not in contract)
+
+## Contract fulfilled
+- All FAIL_TO_PASS pass: ✓
+- Zero PASS_TO_PASS regressions: ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,40 @@
+# Recon: sympy__sympy-24066
+
+## Failure summary
+The test `test_issue_24062` checks that `SI._collect_factor_and_dimension()` correctly handles expressions with `exp()` of dimensionless quantities. The test creates quantities R (impedance), C (capacitance), and T (time), then forms `expr = T/(R*C)` which is dimensionless, and expects `1 + exp(expr)` to return `(1 + E, Dimension(1))`. The test fails with `ValueError: Dimension of "exp(T/(C*R))" is Dimension(time/(capacitance*impedance)), but it should be Dimension(1)`.
+
+## Suspect set
+- `sympy/physics/units/unitsystem.py` lines 192-196: The Function case in `_collect_factor_and_dimension()` method
+
+## Root cause
+The `_collect_factor_and_dimension()` method has a Function case (lines 192-196) that processes mathematical functions like `exp`, `sin`, `cos`, etc. The current implementation returns the dimension of the function's argument without checking whether it's dimensionless. For `exp(T/(C*R))`, even though `T/(C*R)` is dimensionless (time/(impedance*capacitance) simplifies to 1 in the SI dimension system), the code returns `Dimension(time/(capacitance*impedance))` instead of checking `is_dimensionless()` and returning `Dimension(1)`.
+
+The error occurs when the Add case tries to combine `1` (dimensionless) with `exp(expr)` (incorrectly reported as dimensional), causing a dimension mismatch error.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `sympy/physics/units/unitsystem.py:192-196` — Current code:
+  ```python
+  elif isinstance(expr, Function):
+      fds = [self._collect_factor_and_dimension(arg) for arg in expr.args]
+      return (expr.func(*(f[0] for f in fds)),
+              *(d[1] for d in fds))
+  ```
+- `sympy/physics/units/unitsystem.py:170` — The Pow case already uses `is_dimensionless()` check:
+  ```python
+  if self.get_dimension_system().is_dimensionless(exp_dim):
+      exp_dim = 1
+  ```
+- Verified experimentally: `SI.get_dimension_system().is_dimensionless(dim)` returns `True` for `T/(R*C)` dimension
+
+## Edit sites
+- `sympy/physics/units/unitsystem.py` lines 192-196: Replace the Function case to check if all argument dimensions are dimensionless using `self.get_dimension_system().is_dimensionless()`. If all arguments are dimensionless, return `(expr.func(*(f[0] for f in fds)), Dimension(1))`. This matches the pattern used in the Pow case at line 170.
+
+## Rejected hypotheses
+None — diagnosis is straightforward from the error trace.
+
+## Open questions
+None — the fix is clear and follows the existing pattern in the codebase.
+
+---STDERR---

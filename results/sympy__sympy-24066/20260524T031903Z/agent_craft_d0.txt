@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete. The failing test `test_issue_24062` now passes. 
+
+**Summary:** Modified the Function case in `_collect_factor_and_dimension()` to check if all argument dimensions are dimensionless using `self.get_dimension_system().is_dimensionless()`. When all arguments are dimensionless, the method now correctly returns `Dimension(1)` instead of propagating the raw dimension. This allows expressions like `1 + exp(T/(R*C))` to work correctly when the argument to `exp()` is dimensionless.
+
+---STDERR---
