@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix is complete and all FAIL_TO_PASS tests pass. 
+
+**Final change**: Updated `language_code_prefix_re` regex from `r'^/(\w+([@-]\w+)?)(/|$)'` to `r'^/(\w+(?:[@-]\w+){0,2})(/|$)'`
+
+The bounded quantifier `{0,2}` allows 0-2 additional segments (up to 3 total), which covers all valid multi-segment language codes like `en-latn-us` and `de-ch-1901`, while preventing matches on arbitrary hyphenated page URLs like `de-simple-page-test`.
+
+Gate results: ✓ Both FAIL_TO_PASS tests pass with no regressions.
+
+---STDERR---

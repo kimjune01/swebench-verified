@@ -1,0 +1,64 @@
+# Recon: django__django-15098
+
+## Failure summary
+
+The failing tests check that `get_language_from_path()` correctly extracts RFC 5646 language tags from URL paths. Language tags can contain multiple hyphen-separated segments (language-script-region-variant), but the function returns `None` for paths with more than two segments. 
+
+Failures:
+- `/en-latn-us/` returns `None`, expected `'en-latn-us'`
+- `/en-Latn-US/` returns `None`, expected `'en-Latn-US'`  
+- `/de-ch-1901/` returns `None`, expected `'de-ch-1901'`
+- `/nan-hani-tw/` returns `None`, expected `'nan-hani-tw'`
+
+All failing cases have 3+ segments. Two-segment codes like `/en-gb/` work correctly.
+
+## Suspect set
+
+- `django/utils/translation/trans_real.py` line 46: `language_code_prefix_re` regex definition
+- `django/utils/translation/trans_real.py` lines 501-514: `get_language_from_path()` function that uses the regex
+
+## Root cause
+
+The `language_code_prefix_re` regex at line 46 only matches language codes with at most two segments:
+
+```python
+language_code_prefix_re = _lazy_re_compile(r'^/(\w+([@-]\w+)?)(/|$)')
+```
+
+The pattern `\w+([@-]\w+)?` means:
+- `\w+`: Match word characters (the first segment, e.g., `en`)
+- `([@-]\w+)?`: Optionally match `@` or `-` followed by word characters (one additional segment, e.g., `-latn`)
+
+The `?` quantifier allows **zero or one** additional segment, so `/en-latn/` matches but `/en-latn-us/` does not. After matching `en-latn`, the pattern expects `(/|$)` (slash or end), but finds `-us`, causing the match to fail.
+
+By contrast, the related `language_code_re` validation regex (lines 41-43) correctly handles multiple segments using the `*` quantifier:
+
+```python
+language_code_re = _lazy_re_compile(
+    r'^[a-z]{1,8}(?:-[a-z0-9]{1,8})*(?:@[a-z0-9]{1,20})?$',
+    re.IGNORECASE
+)
+```
+
+The `(?:-[a-z0-9]{1,8})*` allows **zero or more** hyphen-separated segments, which is correct per RFC 5646.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/utils/translation/trans_real.py:46` — regex uses `?` quantifier limiting to two segments
+- `django/utils/translation/trans_real.py:41-43` — validation regex uses `*` quantifier allowing multiple segments
+- Test output shows all 3+ segment paths fail, 2-segment paths pass
+
+## Edit sites
+
+- `django/utils/translation/trans_real.py` line 46: Change the regex pattern from `r'^/(\w+([@-]\w+)?)(/|$)'` to `r'^/(\w+([@-]\w+)*)(/|$)'` (change `?` to `*` to allow multiple segments instead of just one)
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from code inspection and test output.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single regex pattern.
+
+---STDERR---

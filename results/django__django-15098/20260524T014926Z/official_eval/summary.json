@@ -1,0 +1,7 @@
+{
+ "instance_id": "django__django-15098",
+ "official_resolved": true,
+ "run_id": "20260524T014926Z",
+ "grader": "swebench.harness.run_evaluation",
+ "dataset": "princeton-nlp/SWE-bench_Verified"
+}

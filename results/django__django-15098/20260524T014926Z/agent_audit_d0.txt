@@ -1,0 +1,21 @@
+# Audit: django__django-15098
+
+## FAIL_TO_PASS
+- `test_get_language_from_path_real (i18n.tests.MiscTests)`: **PASS** ✓
+- `test_get_supported_language_variant_null (i18n.tests.MiscTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 89 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_i18n_app_dirs (i18n.tests.WatchForTranslationChangesTests)` — ERROR (ModuleNotFoundError: No module named 'tests')
+
+## Summary
+The patch successfully resolves the issue. The regex change from `r'^/(\w+([@-]\w+)?)(/|$)'` to `r'^/(\w+(?:[@-]\w+){0,2})(/|$)'` now supports RFC 5646 language tags with up to 3 segments (language-script-region) while avoiding false positives on arbitrary hyphenated paths.
+
+All FAIL_TO_PASS tests pass. Zero regressions introduced. The only failure is pre-existing (confirmed in baseline capture).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
