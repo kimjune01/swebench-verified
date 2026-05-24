@@ -1,0 +1,55 @@
+```markdown
+# Recon: scikit-learn__scikit-learn-14087
+
+## Failure summary
+
+The test `test_LogisticRegressionCV_no_refit` checks that `LogisticRegressionCV` works correctly when `refit=False`. With this parameter, the model should perform cross-validation to find the best regularization parameters without refitting the model. The test creates a 3-class classification problem and expects the fitted model to have `C_`, `l1_ratio_`, and `coef_` attributes with correct shapes.
+
+The test fails with `TypeError: only integer scalar arrays can be converted to a scalar index` at line 2184 in `sklearn/linear_model/logistic.py`. This occurs during the averaging of l1_ratio values across folds when attempting to index a Python list with a numpy array.
+
+## Suspect set
+
+- `sklearn/linear_model/logistic.py` lines 1971-1978: Initial assignment of `l1_ratios_` as a Python list
+- `sklearn/linear_model/logistic.py` lines 2169-2184: The `refit=False` branch that performs array indexing
+- `sklearn/linear_model/logistic.py` line 2199: Where `l1_ratios_` is converted to numpy array (occurs too late)
+
+## Root cause
+
+The variable `l1_ratios_` is initialized as a Python list in the `fit()` method:
+- For `penalty='elasticnet'`: `l1_ratios_ = self.l1_ratios` (line 1971, still a list)
+- For other penalties: `l1_ratios_ = [None]` (line 1978)
+
+When `refit=False` and we reach line 2184, the code attempts:
+```python
+best_indices_l1 = best_indices // len(self.Cs_)  # shape: (n_folds,) - numpy array
+self.l1_ratio_.append(np.mean(l1_ratios_[best_indices_l1]))  # array indexing on list FAILS
+```
+
+Python lists do not support fancy indexing with numpy arrays, only scalar integer indices. The refit=True branch (line 2144) uses scalar indexing `l1_ratios_[best_index_l1]` which works fine with a list.
+
+The code does convert `l1_ratios_` to a numpy array at line 2199 with `self.l1_ratios_ = np.asarray(l1_ratios_)`, but this happens after the loop that performs the failing indexing operation.
+
+Confidence: **deduction** — 95-99%
+
+Supporting evidence:
+- `sklearn/linear_model/logistic.py:1971-1978` — `l1_ratios_` assigned as Python list in both branches
+- `sklearn/linear_model/logistic.py:2184` — `l1_ratios_[best_indices_l1]` where `best_indices_l1` is a numpy array
+- `sklearn/linear_model/logistic.py:2199` — `np.asarray(l1_ratios_)` conversion happens after the error
+- Minimal reproduction verified: `[None][np.array([0,0])]` raises the exact same TypeError
+
+## Edit sites
+
+- `sklearn/linear_model/logistic.py` line 1978: Immediately after `l1_ratios_ = [None]`, add conversion to numpy array. The fix is to insert `l1_ratios_ = np.asarray(l1_ratios_)` right after line 1978, or to convert both the elasticnet and non-elasticnet branches to numpy arrays after their respective assignments (lines 1971 and 1978).
+
+Alternative: Convert at line 1971-1978 for both branches to ensure consistency.
+
+## Rejected hypotheses
+
+- H₁: IndexError on line 2194 (from problem description) — The actual current error is TypeError at line 2184. Line numbers may have shifted between versions, or the IndexError was describing a manifestation in an older version. The failing tests show TypeError, not IndexError.
+
+## Open questions
+
+None. The root cause is clear and the fix is straightforward: convert `l1_ratios_` to a numpy array immediately after assignment, before any indexing operations.
+```
+
+---STDERR---

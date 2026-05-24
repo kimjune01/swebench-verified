@@ -1,0 +1,26 @@
+# Audit: scikit-learn__scikit-learn-14087
+
+## FAIL_TO_PASS
+- test_LogisticRegressionCV_no_refit[ovr-l2]: **PASS** ✅
+- test_LogisticRegressionCV_no_refit[multinomial-l2]: **PASS** ✅
+- test_LogisticRegressionCV_no_refit[auto-l2]: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — all 175 tests passed with zero failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — base capture showed tests passing, gate shows all tests passing.
+
+## Gate summary
+- Total tests run: 175
+- Passed: 175
+- Failed: 0
+- Warnings: 445
+- Duration: 8.03s
+
+The fix successfully resolved the issue. All three FAIL_TO_PASS tests now pass, and no regressions were introduced. The patch converted `l1_ratios_` from a Python list to a numpy array and added conditional logic to handle non-elasticnet penalties when `refit=False`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

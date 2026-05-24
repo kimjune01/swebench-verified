@@ -1,0 +1,12 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests now pass. The fix required two minimal changes:
+
+1. **Line 1979**: Convert `l1_ratios_` to numpy array immediately after assignment to enable fancy indexing with numpy arrays
+2. **Lines 2185-2188**: Add conditional in refit=False branch - compute mean for elasticnet penalty, append None otherwise
+
+The recon diagnosis was correct: `l1_ratios_` was a Python list that couldn't be indexed with numpy arrays. The codex volley caught that the fix also needed to handle the non-elasticnet case where taking the mean of None values would fail.
+
+Gate result: 175 tests passed (including all 6 parametrized variants of the failing test).
+
+---STDERR---

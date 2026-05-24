@@ -1,0 +1,24 @@
+diff --git a/sklearn/linear_model/logistic.py b/sklearn/linear_model/logistic.py
+index 1999f1dae..ab749134c 100644
+--- a/sklearn/linear_model/logistic.py
++++ b/sklearn/linear_model/logistic.py
+@@ -1976,6 +1976,7 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
+                                   self.penalty))
+ 
+             l1_ratios_ = [None]
++        l1_ratios_ = np.asarray(l1_ratios_)
+ 
+         if self.penalty == 'none':
+             raise ValueError(
+@@ -2181,7 +2182,10 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
+                 self.C_.append(np.mean(self.Cs_[best_indices_C]))
+ 
+                 best_indices_l1 = best_indices // len(self.Cs_)
+-                self.l1_ratio_.append(np.mean(l1_ratios_[best_indices_l1]))
++                if self.penalty == 'elasticnet':
++                    self.l1_ratio_.append(np.mean(l1_ratios_[best_indices_l1]))
++                else:
++                    self.l1_ratio_.append(None)
+ 
+             if multi_class == 'multinomial':
+                 self.C_ = np.tile(self.C_, n_classes)
