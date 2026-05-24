@@ -1,0 +1,36 @@
+# Recon: django__django-11163
+
+## Failure summary
+The test `test_modelform_subclassed_model` checks that `model_to_dict(bw, fields=[])` returns an empty dict when passed an empty fields list. The test fails with `AssertionError: Lists differ: ['id', 'name', 'score', 'writer_ptr'] != []` — the function returns all four fields instead of none.
+
+## Suspect set
+- `django/forms/models.py` lines 69-91: The `model_to_dict` function, specifically line 86 where the fields parameter is checked
+
+## Root cause
+The bug is at `django/forms/models.py:86` where the condition `if fields and f.name not in fields:` treats an empty list as falsy in Python. When `fields=[]` is passed, the expression `if [] and ...` evaluates to `False`, so the continue statement never executes, and all fields are added to the returned dict instead of being skipped.
+
+The fix is to change the condition to `if fields is not None and f.name not in fields:` which properly distinguishes:
+- `fields=None` (default) → don't filter, return all fields
+- `fields=[]` (empty list) → filter out everything, return empty dict
+- `fields=['id', 'name']` → filter to only specified fields
+
+This pattern is already used correctly in other functions in the same file (`construct_instance` at line 46, `fields_for_model` at line 151).
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `django/forms/models.py:86` — `if fields and f.name not in fields:`
+- `django/forms/models.py:46` — `if fields is not None and f.name not in fields:` (correct pattern in construct_instance)
+- `django/forms/models.py:151` — `if fields is not None and f.name not in fields:` (correct pattern in fields_for_model)
+
+## Edit sites
+- `django/forms/models.py` line 86: Change `if fields and f.name not in fields:` to `if fields is not None and f.name not in fields:`
+- `django/forms/models.py` line 434: Change `if fields and f.name not in fields:` to `if fields is not None and f.name not in fields:` (same bug in `_save_m2m` method — not tested but should be fixed for consistency)
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and confirmed by the test failure.
+
+## Open questions
+None — the fix is straightforward and follows the existing pattern used elsewhere in the file.
+
+---STDERR---

@@ -1,0 +1,3 @@
+**RESOLVED** — The fix passes the gate on first iteration. Changed `django/forms/models.py:86` from `if fields and f.name not in fields:` to `if fields is not None and f.name not in fields:`, properly distinguishing empty list from None.
+
+---STDERR---

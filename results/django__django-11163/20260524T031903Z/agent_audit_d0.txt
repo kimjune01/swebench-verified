@@ -1,0 +1,37 @@
+# Audit: django__django-11163
+
+## FAIL_TO_PASS
+- test_modelform_subclassed_model (model_forms.tests.ModelOneToOneFieldTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 143 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - the test that failed on base now passes.
+
+## Patch details
+```diff
+diff --git a/django/forms/models.py b/django/forms/models.py
+index d157c291ef..5edbbd376f 100644
+--- a/django/forms/models.py
++++ b/django/forms/models.py
+@@ -83,7 +83,7 @@ def model_to_dict(instance, fields=None, exclude=None):
+     for f in chain(opts.concrete_fields, opts.private_fields, opts.many_to_many):
+         if not getattr(f, 'editable', False):
+             continue
+-        if fields and f.name not in fields:
++        if fields is not None and f.name not in fields:
+             continue
+         if exclude and f.name in exclude:
+             continue
+```
+
+The fix changes the truthy check `if fields` to an explicit None check `if fields is not None`, allowing `fields=[]` to be properly distinguished from `fields=None`. This causes `model_to_dict(instance, fields=[])` to correctly return an empty dict instead of all fields.
+
+## Verdict
+All FAIL_TO_PASS tests pass. Zero PASS_TO_PASS regressions. The patch is minimal, surgical, and solves the reported issue.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
