@@ -1,0 +1,26 @@
+# Audit: django__django-16145
+
+## FAIL_TO_PASS
+- `test_zero_ip_addr (admin_scripts.tests.ManageRunserver)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 208 PASS_TO_PASS tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - Base capture showed only `test_zero_ip_addr` failing.
+
+## Summary
+
+The craft patch successfully fixed the issue. The 3-line addition in `runserver.py` handles the "0" shorthand by expanding it to "0.0.0.0" for IPv4 or "::" for IPv6, with proper `_raw_ipv6` flag handling. Full gate run (209 tests) passed with zero regressions.
+
+**Patch diff:**
+```python
+elif self.addr == "0":
+    self.addr = "::" if self.use_ipv6 else "0.0.0.0"
+    self._raw_ipv6 = self.use_ipv6
+```
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

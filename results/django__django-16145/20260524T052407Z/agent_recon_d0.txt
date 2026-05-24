@@ -1,0 +1,45 @@
+Now let me print the final handoff to stdout:
+
+# Recon: django__django-16145
+
+## Failure summary
+
+Test `test_zero_ip_addr` in `tests/admin_scripts/tests.py` verifies that when `runserver` is called with `addrport="0:8000"`, the output message should display "Starting development server at http://0.0.0.0:8000/". The test fails because the actual output shows "http://0:8000/" instead. According to Django's tutorial documentation, "0" is documented as a shorthand for "0.0.0.0" (bind to all interfaces), but this expansion only happens at the socket bind level, not in the display message.
+
+## Suspect set
+
+- `django/core/management/commands/runserver.py` lines 88-150: The `handle()` and `inner_run()` methods where address parsing and display output occur
+- Specifically lines 98-107: Address normalization logic that sets default addresses
+- Line 145: The stdout message that displays the server URL
+
+## Root cause
+
+When a user provides "0:8000" as the addrport argument, the regex parser (`naiveip_re`) extracts `addr="0"` (matched as an FQDN). The code at line 105 checks `if not self.addr:` to set the default address, but since "0" is a truthy string, this condition fails. The special shorthand "0" is never expanded to "0.0.0.0", so when the startup message is printed at line 145, it displays the literal "0" instead of "0.0.0.0".
+
+The Python socket library handles the "0" → "0.0.0.0" conversion internally during `bind()`, so the server actually binds correctly to all interfaces. The bug is purely cosmetic in the output message, but it makes the displayed URL non-functional in browsers and inconsistent with documentation.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/core/management/commands/runserver.py:98-107` — Only handles empty addr string (`if not self.addr:`), does not check for "0" shorthand
+- `django/core/management/commands/runserver.py:145` — Outputs `self.addr` directly in the server start message without expanding "0"
+- Regex test confirms "0:8000" parses as `addr='0', fqdn='0', port='8000'` (no IPv4/IPv6 match)
+- Socket bind test confirms Python's socket lib converts "0" to "0.0.0.0" internally
+
+## Edit sites
+
+- `django/core/management/commands/runserver.py` lines 105-108: After the existing `if not self.addr:` block (which sets default addresses for empty strings), add a check for the special "0" shorthand. When `self.addr == "0"`, replace it with "0.0.0.0" for IPv4 or "::" for IPv6 (based on `self.use_ipv6` flag). This should be inserted before the `self.run(**options)` call.
+
+## Competing hypotheses
+
+None. The root cause is definitively localized to the address normalization logic.
+
+## Rejected hypotheses
+
+None - this is the initial diagnosis.
+
+## Open questions
+
+- Should the fix also handle the IPv6 case (runserver 0:8000 --ipv6)? The current failing test only covers IPv4, but for completeness the fix should map "0" to "::" when `self.use_ipv6` is True.
+
+---STDERR---

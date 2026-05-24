@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 admin_scripts.tests
+
+test_builtin_with_settings (admin_scripts.tests.ManageMinimalSettings)
+minimal: manage.py builtin commands fail if settings are provided as argument ... ok
+test_custom_command (admin_scripts.tests.ManageMinimalSettings)
+minimal: manage.py can't execute user commands without appropriate settings ... ok
+test_custom_command_with_environment (admin_scripts.tests.ManageMinimalSettings)
+minimal: manage.py can't execute user commands, even if settings are ... ok
+test_custom_command_with_settings (admin_scripts.tests.ManageMinimalSettings)
+minimal: manage.py can't execute user commands, even if settings are ... ok
+test_builtin_command (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py builtin commands fail with an error when no ... ok
+test_builtin_with_bad_environment (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py builtin commands fail if settings file (from ... ok
+test_builtin_with_bad_settings (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py builtin commands fail if settings file (from ... ok
+test_builtin_with_environment (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py can execute builtin commands if settings are ... ok
+test_builtin_with_settings (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py builtin commands succeed if settings are provided ... ok
+test_custom_command (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py can't execute user commands using default settings ... ok
+test_custom_command_with_environment (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py can execute user commands if settings are provided ... ok
+test_custom_command_with_settings (admin_scripts.tests.ManageMultipleSettings)
+multiple: manage.py can execute user commands if settings are provided ... ok
+test_builtin_command (admin_scripts.tests.ManageNoSettings)
+no settings: manage.py builtin commands fail with an error when no ... ok
+test_builtin_with_bad_environment (admin_scripts.tests.ManageNoSettings)
+no settings: manage.py builtin commands fail if settings file (from ... ok
+test_builtin_with_bad_settings (admin_scripts.tests.ManageNoSettings)
+no settings: manage.py builtin commands fail if settings file (from ... ok
+test_no_database (admin_scripts.tests.ManageRunserver)
+Ensure runserver.check_migrations doesn't choke on empty DATABASES. ... ok
+test_readonly_database (admin_scripts.tests.ManageRunserver)
+runserver.check_migrations() doesn't choke when a database is read-only. ... ok
+test_runner_addrport_ipv6 (admin_scripts.tests.ManageRunserver) ... ok
+test_runner_ambiguous (admin_scripts.tests.ManageRunserver) ... ok
+test_runner_custom_defaults (admin_scripts.tests.ManageRunserver) ... ok
+test_runner_custom_defaults_ipv6 (admin_scripts.tests.ManageRunserver) ... ok
+test_runner_hostname (admin_scripts.tests.ManageRunserver) ... ok
+test_runner_hostname_ipv6 (admin_scripts.tests.ManageRunserver) ... ok
+test_runserver_addrport (admin_scripts.tests.ManageRunserver) ... ok
+test_skip_checks (admin_scripts.tests.ManageRunserver) ... ok
+test_zero_ip_addr (admin_scripts.tests.ManageRunserver) ... FAIL
+test_empty_allowed_hosts_error (admin_scripts.tests.ManageRunserverEmptyAllowedHosts) ... ok
+test_suppressed_options (admin_scripts.tests.ManageRunserverHelpOutput)
+runserver doesn't support --verbosity and --trackback options. ... ok
+test_attribute_error (admin_scripts.tests.ManageSettingsWithSettingsErrors)
+manage.py builtin commands does not swallow attribute error due to bad ... ok
+test_help (admin_scripts.tests.ManageSettingsWithSettingsErrors)
+Test listing available commands output note when only core commands are ... ok
+test_import_error (admin_scripts.tests.ManageSettingsWithSettingsErrors)
+import error: manage.py builtin commands shows useful diagnostic info ... ok
+test_key_error (admin_scripts.tests.ManageSettingsWithSettingsErrors) ... ok
+test_params_to_runserver (admin_scripts.tests.ManageTestserver) ... ok
+test_testserver_handle_params (admin_scripts.tests.ManageTestserver) ... ok
+test_importable_name (admin_scripts.tests.StartApp)
+startapp validates that app name doesn't clash with existing Python ... ok
+test_importable_target_name (admin_scripts.tests.StartApp) ... ok
+test_invalid_name (admin_scripts.tests.StartApp)
+startapp validates that app name is a valid Python identifier. ... ok
+test_invalid_target_name (admin_scripts.tests.StartApp) ... ok
+test_overlaying_app (admin_scripts.tests.StartApp) ... ok
+test_template (admin_scripts.tests.StartApp) ... ok
+test_trailing_slash_in_target_app_directory_name (admin_scripts.tests.StartApp) ... ok
+test_custom_project_destination_missing (admin_scripts.tests.StartProject)
+Make sure an exception is raised when the provided ... ok
+test_custom_project_template (admin_scripts.tests.StartProject)
+The startproject management command is able to use a different project ... ok
+test_custom_project_template_context_variables (admin_scripts.tests.StartProject)
+Make sure template context variables are rendered with proper values ... ok
+test_custom_project_template_exclude_directory (admin_scripts.tests.StartProject)
+Excluded directories (in addition to .git and __pycache__) are not ... ok
+test_custom_project_template_from_tarball_by_path (admin_scripts.tests.StartProject)
+The startproject management command is able to use a different project ... ok
+test_custom_project_template_from_tarball_by_url (admin_scripts.tests.StartProject)
+The startproject management command is able to use a different project ... ok
+test_custom_project_template_from_tarball_by_url_django_user_agent (admin_scripts.tests.StartProject) ... ok
+test_custom_project_template_from_tarball_to_alternative_location (admin_scripts.tests.StartProject)
+Startproject can use a project template from a tarball and create it in ... ok
+test_custom_project_template_hidden_directory_default_excluded (admin_scripts.tests.StartProject)
+Hidden directories are excluded by default. ... ok
+test_custom_project_template_hidden_directory_included (admin_scripts.tests.StartProject)
+Template context variables in hidden directories are rendered, if not ... ok
+test_custom_project_template_with_non_ascii_templates (admin_scripts.tests.StartProject)
+The startproject management command is able to render templates with ... ok
+test_file_without_extension (admin_scripts.tests.StartProject)
+Make sure the startproject management command is able to render custom files ... ok
+test_honor_umask (admin_scripts.tests.StartProject) ... ok
+test_importable_project_name (admin_scripts.tests.StartProject)
+startproject validates that project name doesn't clash with existing ... ok
+test_invalid_project_name (admin_scripts.tests.StartProject)
+Make sure the startproject management command validates a project name ... ok
+test_no_escaping_of_project_variables (admin_scripts.tests.StartProject)
+Make sure template context variables are not html escaped ... ok
+test_project_template_tarball_url (admin_scripts.tests.StartProject)
+" ... ok
+test_simple_project (admin_scripts.tests.StartProject)
+Make sure the startproject management command creates a project ... ok
+test_simple_project_different_directory (admin_scripts.tests.StartProject)
+The startproject management command creates a project in a specific ... ok
+test_template_dir_with_trailing_slash (admin_scripts.tests.StartProject)
+Ticket 17475: Template dir passed has a trailing path separator ... ok
+test_wrong_args (admin_scripts.tests.StartProject)
+Passing the wrong kinds of arguments outputs an error and prints usage. ... ok
+
+======================================================================
+FAIL: test_zero_ip_addr (admin_scripts.tests.ManageRunserver)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/unittest/mock.py", line 1336, in patched
+    return func(*newargs, **newkeywargs)
+  File "/testbed/tests/admin_scripts/tests.py", line 1600, in test_zero_ip_addr
+    self.assertIn(
+AssertionError: 'Starting development server at http://0.0.0.0:8000/' not found in "May 23, 2026 - 22:58:28\nDjango version 4.2.dev20260524035802, using settings 'test_sqlite'\nStarting development server at http://0:8000/\nQuit the server with CONTROL-C.\n"
+
+----------------------------------------------------------------------
+Ran 209 tests in 32.980s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

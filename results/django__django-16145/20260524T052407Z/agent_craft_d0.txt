@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully expands the "0" shorthand to "0.0.0.0" (IPv4) or "::" (IPv6) in the runserver display message. The FAIL_TO_PASS test `test_zero_ip_addr` now passes, and all 209 tests pass with no regressions.
+
+---STDERR---
