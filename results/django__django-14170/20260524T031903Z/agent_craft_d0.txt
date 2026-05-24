@@ -1,0 +1,5 @@
+## RESOLVED
+
+All FAIL_TO_PASS tests pass. The fix removes the incorrect Year* lookup registrations on ExtractIsoYear, allowing iso_year filters to use the correct EXTRACT SQL operation instead of incorrect calendar-year BETWEEN optimization. Tests updated to reflect this intentional behavior change.
+
+---STDERR---

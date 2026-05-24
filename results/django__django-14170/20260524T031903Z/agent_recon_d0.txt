@@ -1,0 +1,34 @@
+# Recon: django__django-14170
+
+## Failure summary
+The test `test_extract_iso_year_func_boundaries` creates three objects with dates that span ISO year boundaries: 2014-12-27 (ISO year 2014), 2014-12-31 (ISO year 2015), and 2015-12-31 (ISO year 2015). When filtering with `start_datetime__iso_year=2015`, the query returns only one object (2015-12-31) instead of the expected two objects (2014-12-31 and 2015-12-31). The error shows: `AssertionError: Sequences differ: <QuerySet [<DTModel: DTModel object (3)>]> != [<DTModel: DTModel object (2)>, <DTModel: DTModel object (3)>]`
+
+The annotation `ExtractIsoYear('start_datetime')` correctly identifies 2014-12-31 as ISO year 2015, but the filter misses it.
+
+## Suspect set
+- `django/db/models/functions/datetime.py` lines 167-171: Incorrect lookup registrations on ExtractIsoYear
+- `django/db/models/lookups.py` lines 540-598: YearLookup base class and subclasses (YearExact, YearGt, etc.)
+- `django/db/backends/base/operations.py` lines 529-560: year_lookup_bounds methods that return calendar year boundaries
+
+## Root cause
+The YearLookup optimization is incorrectly applied to ISO year filters. Lines 167-171 in `django/db/models/functions/datetime.py` register YearExact, YearGt, YearGte, YearLt, and YearLte lookups on ExtractIsoYear. These lookups optimize queries by replacing EXTRACT operations with BETWEEN filters using calendar year boundaries (e.g., BETWEEN '2015-01-01' AND '2015-12-31'). However, ISO years don't align with calendar years—ISO year 2015 starts on 2014-12-29 (the Monday of week 1, which contains the first Thursday of 2015). This causes the filter to miss 2014-12-31, even though it belongs to ISO year 2015.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/functions/datetime.py:167-171` — Five register_lookup calls that shouldn't exist for ISO year
+- `django/db/backends/base/operations.py:529-543` — `year_lookup_bounds_for_date_field()` and `year_lookup_bounds_for_datetime_field()` explicitly return `datetime.date(value, 1, 1)` and `datetime.date(value, 12, 31)`, which are calendar year boundaries
+- `django/db/models/lookups.py:540-577` — YearLookup.as_sql() calls `self.year_lookup_bounds()` which uses the calendar year boundary methods, and YearExact.get_direct_rhs_sql() returns `'BETWEEN %s AND %s'`
+- Test evidence: ExtractIsoYear annotation correctly identifies 2014-12-31 as ISO year 2015, but the filter `__iso_year=2015` misses it
+- Git history: Commit 3e09b37f80 (Fixed #28649) added ExtractIsoYear and incorrectly copied the Year* lookup registrations from ExtractYear without adapting for ISO year semantics
+
+## Edit sites
+- `django/db/models/functions/datetime.py` lines 167-171: Delete the five lines that register YearExact, YearGt, YearGte, YearLt, and YearLte on ExtractIsoYear. This will make iso_year lookups fall back to the default Extract behavior, which uses the actual `EXTRACT('isoyear' FROM ...)` SQL operation instead of the incorrect BETWEEN optimization.
+
+## Rejected hypotheses
+None—this is the first and only hypothesis. The failure mode, code path, and root cause are clear from reading the code.
+
+## Open questions
+None—the fix is straightforward: remove the five incorrect lookup registrations.
+
+---STDERR---

@@ -1,0 +1,30 @@
+# Audit: django__django-14170
+
+## Patch Status
+Patch is live in tree:
+- django/db/models/functions/datetime.py: 5 lines removed  
+- tests/db_functions/datetime/test_extract_trunc.py: 33 insertions, 45 deletions
+
+## Gate Results
+Full test suite run: 81 tests in 0.178s - **ALL PASS** (2 skipped)
+
+## FAIL_TO_PASS
+- test_extract_iso_year_func_boundaries (DateFunctionTests): **PASS** ✓
+- test_extract_iso_year_func_boundaries (DateFunctionWithTimeZoneTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 79 non-skipped tests passed
+
+## Pre-existing failures (not counted, confirmed against base capture)
+**None** - base capture showed only test_extract_iso_year_func_boundaries (DateFunctionTests) failing, which is now fixed
+
+## Classification Summary
+- Both FAIL_TO_PASS tests now pass
+- Zero regressions introduced  
+- All PASS_TO_PASS tests remain passing
+- Contract fulfilled completely
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
