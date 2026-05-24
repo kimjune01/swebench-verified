@@ -56,7 +56,7 @@ Three skills, run as separate `claude --print` invocations, chained by a driver:
 
 The driver wraps these in an outer loop (max 3): a non-RESOLVED audit routes back to recon (wrong diagnosis) or craft (over-broad fix that regressed something). The system under test is an offline Docker container; the only ground truth is the test gate, never the model's own say-so.
 
-The skills in `skills/` are **hardlinks** to the canonical authoring copies, so this repo always carries the exact text in use. If you clone the repo you get real file copies.
+The skills in `skills/` are **frozen independent copies** — a pinned snapshot of the exact recon/craft/audit text that produced the Verified run (422/438). They were hardlinked to the canonical authoring copies during the campaign; now that the eligible pool is exhausted the link is broken, so ongoing edits to the canonical copies (e.g. the SWE-bench Pro port) do not mutate this frozen artifact. `driver/link_skills.sh` is retired for this repo — do not re-run it. A clone gets these real files regardless.
 
 ## Recordkeeping (how the honesty is enforced)
 
@@ -143,11 +143,11 @@ See `PROCEDURE.md` for the full step-by-step and `WORKLOG.md` for the build hist
 ## Layout
 
 ```
-skills/{recon,craft,audit}/skill.md   the three skills (hardlinked to canonical copies)
+skills/{recon,craft,audit}/skill.md   the three skills (frozen snapshot; formerly hardlinked)
 driver/rung4_driver.py                the orchestrator (recon -> craft -> audit + outer loop)
 driver/make_task.py                   builds a task JSON from any Verified instance id
 driver/provision.sh                   EC2 provisioning with self-terminating watchdog
-driver/link_skills.sh                 re-establish the skill hardlinks after edits
+driver/link_skills.sh                 (retired) re-established skill hardlinks during the campaign
 tasks/                                generated task JSONs
 results/<instance>/                   ledger, patch, hypothesis graph, agent logs, codex proof
 ```
