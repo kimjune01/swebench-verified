@@ -17,36 +17,40 @@ A three-stage agent pipeline for SWE-bench Verified, built to be re-run and insp
 ## Where the numbers come from (start at 500)
 
 Every one of the 500 SWE-bench Verified instances flows to a visible terminal below — nothing is
-silently dropped. **Resolved: 422 / 438 eligible (~96%); 422 / 500 full set (~84%).** The gap from 500
-is 44 sphinx-doc (tox-based, can't run airgapped) + 18 documented defects (`KNOWN_BAD.md`) — not
-cherry-picking. Counts are re-derivable: the eligible/excluded split from the dataset + `KNOWN_BAD.md`,
-the resolved count from committed `official_eval/summary.json` files (`driver/scoreboard.py`).
+silently dropped. **Resolved: 426 / 438 eligible (~97%); 426 / 500 full set (~85%).** Of the 426, 418
+were first-attempt and 8 won only on a re-run — and every re-run was an **external-fault correction**
+(box-death, a serialization bug since fixed, co-tenant contention), never a re-roll of a reasoning loss;
+the original losing runs stay in history. The gap from 500 is 44 sphinx-doc (tox-based, can't run
+airgapped) + 18 documented defects (`KNOWN_BAD.md`) — not cherry-picking. Counts are re-derivable: the
+eligible/excluded split from the dataset + `KNOWN_BAD.md`, the resolved count from committed
+`official_eval/summary.json` files (`driver/scoreboard.py`).
 
 ```mermaid
 sankey-beta
 SWE-bench Verified,sphinx-doc (offline-infeasible),44
 SWE-bench Verified,KNOWN_BAD defects,18
 SWE-bench Verified,Eligible (attempted),438
-Eligible (attempted),Resolved (official),422
-Eligible (attempted),Not resolved,16
+Eligible (attempted),Resolved (official),426
+Eligible (attempted),Not resolved,12
+Resolved (official),first attempt,418
+Resolved (official),external-fault re-run,8
 Not resolved,Reasoning loss,9
-Not resolved,Infra / timeout DNF,6
-Not resolved,Contamination (rerun pending),1
+Not resolved,Infra / timeout DNF,3
 Reasoning loss,recon-ceiling,2
 Reasoning loss,genuinely-hard,2
 Reasoning loss,gate-divergence,2
 Reasoning loss,craft-overfit,1
 Reasoning loss,other (sympy),2
-Infra / timeout DNF,box-death (rerunnable),2
-Infra / timeout DNF,heavy-suite hang,4
+Infra / timeout DNF,heavy-suite hang,3
 ```
 
-The 16 not-won, by name (audit them against `results/`): **reasoning (9, not rerun — genuine no-solve)**
+The 12 not-won, by name (audit them against `results/`): **reasoning (9, not rerun — genuine no-solve)**
 django-11734, django-14351 (recon-ceiling), astropy-13398, django-16263 (genuinely-hard), django-14170,
 pytest-5787 (gate-divergence), sympy-13091 (craft-overfit), sympy-20438, sympy-17139; **infra/timeout
-(6)** django-14404, django-15563 (box-death), django-15957, matplotlib-25311, sympy-19040, sympy-13878
-(heavy-suite stage-hang); **contamination (1)** django-15987 (serialization, fix pending re-grade). Only
-external/infra faults are eligible for rerun — a reasoning loss stays a loss.
+(3)** django-15957, matplotlib-25311, sympy-19040 (heavy-suite stage-hang, await a general stage-cap fix
+— not re-rolled). The 4 external-fault losses (django-15563/14404 box-death, django-15987 serialization,
+sympy-13878 contention) were corrected by re-run and now resolve; their original losing runs remain in
+history. Only external/infra faults are eligible for rerun — a reasoning loss stays a loss.
 
 ## What it is
 

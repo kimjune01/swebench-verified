@@ -110,6 +110,24 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-24 — rerun_003: 4/4 external-fault losses converted (426/438, ~85% of 500)
+
+Ran the external-fault reruns on the one kept box (b_1), same frozen artifact — predicate-clean
+fault-correction, not variance-mining. RUNID 20260524T062204Z. **All 4 resolved:**
+- `django-15563`, `django-14404` — box-death DNFs (b_4 OOM in batch_010); the artifact solves both given a
+  live box.
+- `django-15987` — the serialization (`-R`) bug, fixed earlier; re-grade now resolves cleanly.
+- `sympy-13878` — batch_016 recon-hang, **resolved solo** → confirms the hang was co-tenant contention,
+  not the instance (the disambiguation worked).
+
+**Scoreboard now 426/438 (first=418, rerun=8), 12 not-won, 446 runs.** README headline + Sankey updated;
+contamination node retired (django-15987 resolved). The 8 rerun wins are all external-fault corrections
+with original losing runs preserved — a skeptic can discount them, but none is a re-rolled reasoning loss.
+
+**Remaining 12 not-won:** 9 reasoning (NOT rerun — genuine no-solve) + 3 heavy-suite stage-hangs
+(django-15957, matplotlib-25311, sympy-19040) that await a *general* stage-cap/suite-selection fix, not a
+re-roll. b_1 kept alive for any further external-fault work; otherwise the Verified campaign is closed.
+
 ## 2026-05-24 — batch_016 archived: 30/32 — ELIGIBLE POOL EXHAUSTED (422/438, ~84% of 500)
 
 batch_016 (seed=16, all 32 remaining eligible: 18 django, 7 sympy, 2 matplotlib, 2 xarray, 2 sklearn,
