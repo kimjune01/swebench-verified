@@ -110,6 +110,27 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-24 — batch_015 archived: 28/30 + SESSION CLOSE (6 batches, 171/180)
+
+batch_015 (seed=15, 30 disjoint: 21 django, 3 sympy, 3 xarray, 1 each astropy/matplotlib/sklearn; pool=62, excluded=404). RUNID 20260524T031903Z. **Official 28/30.** 30/30 captured, 0 empty, 0 DNF, 0 box-death. 2 reasoning losses: `django__django-14170` and `sympy__sympy-13091` (the latter went to outer-loop recon d2 and never converged — fits the "2nd consecutive `wants_rediagnose` = wrong diagnosis" signal).
+
+**Session total (batches 010-015, 9-10 wide on reused boxes): 171/180.** Scoreboard **392/406 (~96.6% of attempted)**, 410 runs.
+- 010: 27/30 (1 reasoning + 2 infra-DNF from b_4 OOM-death)
+- 011: 28/30 (2 reasoning)
+- 012: 28/30 (2 reasoning)
+- 013: 30/30 (perfect)
+- 014: 30/30 (perfect)
+- 015: 28/30 (2 reasoning)
+
+**Loss taxonomy across the 9 session not-wons:** 7 reasoning losses (django-16263, pytest-5787, django-11734, astropy-13398, django-14351, django-14170, sympy-13091), 2 infra-DNF (django-15563, django-14404 — queued in `tasks/rerun_002.json` for clean campaign-end re-run). Zero craft-DNF, zero contamination/serialization losses, one box OOM-death (recovered: salvaged its 2 completed instances by re-grading on a live box).
+
+**Durable findings for `/retro`:**
+1. **Oversized-patch → wrong-fix (held all session).** Every reasoning loss with a patch >~3KB graded UNRESOLVED; median win ~400-2000 bytes. Lever: treat >~5KB patch or 2nd `wants_rediagnose` as "diagnosis is wrong, back off and re-diagnose," not "add more code."
+2. **Duration-aware sharding.** `shard_batch.py` round-robins blindly after heavy-isolation; makespan = slowest box's total wall-time. LPT bin-pack on per-instance duration priors (seeded from archived `ledger.jsonl` `wall_s`, clustered by repo) would flatten the straggler tail (cf. batch_012's b_8).
+3. **Box-death detection.** AWS status (ok/ok) misses OS-level OOM; ping/SSH liveness is the real signal. An *active* per-box SSH probe in the monitor false-positives against the launch's own SSH burst — progress-plateau + file-mtime is the reliable detector. If a probe is wanted, piggyback the driver's existing session, don't open new connections.
+
+README updated this session: contamination disclaimer hoisted to the top, front and center (per operator — the Gwern move: the caveat governs how the number is read, so it goes first, not buried).
+
 ## 2026-05-24 — batch_014 archived: 30/30 (2nd perfect batch in a row, 9-wide)
 
 batch_014 (seed=14, 30 disjoint: 23 django, 3 sympy, 2 matplotlib, 2 sklearn; pool=92, excluded=374). RUNID 20260524T014926Z. **Official 30/30** — second perfect batch back-to-back (013 + 014). 30/30 captured, 0 empty, 0 DNF, 0 box-death, 0 reasoning loss. Scoreboard now **364/376**, 380 runs. Django-heavy (23) and fast (~50 min) on warm-cache boxes. No oversized-patch blowups, nothing lost. Session continues to batch_015 (final), then teardown.
