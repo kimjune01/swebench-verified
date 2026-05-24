@@ -1,0 +1,24 @@
+# Audit: django__django-13820
+
+## FAIL_TO_PASS
+- `test_loading_package_without__file__ (migrations.test_loader.LoaderTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully resolves the issue:
+- Changed `loader.py:93` to add `and not isinstance(getattr(module, '__path__', None), list)` condition
+- Target test now passes (frozen regular packages accepted)
+- Namespace package test still passes (namespace packages still rejected)
+- All 26 tests passed with zero regressions
+
+The fix correctly distinguishes between namespace packages (rejected) and regular packages in frozen environments (accepted) by checking whether `__path__` is a list.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,37 @@
+# Recon: django__django-13820
+
+## Failure summary
+The test `test_loading_package_without__file__` simulates a frozen Python environment by deleting the `__file__` attribute from a regular migrations package and setting `__spec__.origin = None` and `__spec__.has_location = False`. The test expects `MigrationLoader.load_disk()` to find 2 migrations (`0001_initial` and `0002_second`), but it finds 0. The loader incorrectly treats the regular package as a namespace package and skips it.
+
+## Suspect set
+- `django/db/migrations/loader.py` lines 91-96: Namespace package detection logic that checks for absence of `__file__` attribute
+
+## Root cause
+Line 93 in `django/db/migrations/loader.py` checks `if getattr(module, '__file__', None) is None:` to identify and skip namespace packages. However, this check is too broad. According to Python's import system:
+- **Namespace packages**: no `__file__` attribute, `__path__` is a custom iterable type (not a list)
+- **Regular packages in frozen environments**: no `__file__` attribute, `__path__` IS a list
+- **Regular packages in normal environments**: has `__file__` attribute, `__path__` is a list
+
+The current implementation conflates namespace packages with regular packages in frozen environments, incorrectly rejecting the latter.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/migrations/loader.py:93` — `if getattr(module, '__file__', None) is None:` followed by `self.unmigrated_apps.add(app_config.label)`
+- `tests/migrations/test_migrations/` has `__init__.py` (regular package) with migrations `0001_initial.py` and `0002_second.py`
+- `tests/migrations/test_migrations_namespace_package/` has NO `__init__.py` (namespace package) and should remain rejected
+- Git history `ff55adbd0d`: Prior attempt to allow namespace packages was reverted, confirming intent is to block namespace packages specifically, not all packages without `__file__`
+- Python documentation: "Namespace packages do not use an ordinary list for their `__path__` attribute"
+
+## Edit sites
+- `django/db/migrations/loader.py` line 93: Change the namespace package check from testing only `__file__` absence to also verifying that `__path__` is not a list. The new condition should be: `if getattr(module, '__file__', None) is None and not isinstance(getattr(module, '__path__', None), list):`
+
+This preserves the rejection of namespace packages (which have non-list `__path__`) while allowing regular packages in frozen environments (which have list `__path__`).
+
+## Rejected hypotheses
+None — diagnosis converged immediately on the documented discrepancy between namespace package detection (custom iterable `__path__`) and the actual implementation (only checking `__file__`).
+
+## Open questions
+None — the fix is localized to a single conditional check with clear semantics from Python's import specification.
+
+---STDERR---
