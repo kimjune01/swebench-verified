@@ -1,0 +1,41 @@
+# Audit: django__django-11095
+
+## FAIL_TO_PASS
+- test_get_inline_instances_override_get_inlines: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 19 PASS_TO_PASS tests remain passing:
+- test_no_deletion: ok
+- test_custom_form_meta_exclude: ok
+- test_custom_form_meta_exclude_with_readonly: ok
+- test_get_fieldsets: ok
+- test_get_formset_kwargs: ok
+- test_get_formsets_with_inlines_returns_tuples: ok
+- test_extra_param: ok
+- test_get_extra: ok
+- test_get_max_num: ok
+- test_get_min_num: ok
+- test_max_num_param: ok
+- test_min_num_param: ok
+- test_no_param: ok
+- test_basic_add_GET: ok
+- test_basic_add_POST: ok
+- test_basic_edit_GET: ok
+- test_basic_edit_POST: ok
+- test_add: ok
+- test_delete: ok
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the only failure on base was `test_get_inline_instances_override_get_inlines`, which is now fixed.
+
+## Patch Analysis
+The craft patch successfully implements the required hook:
+1. Added `get_inlines(request, obj=None)` method returning `self.inlines`
+2. Updated `get_inline_instances()` to call `self.get_inlines(request, obj)` instead of directly accessing `self.inlines`
+
+This allows subclasses to override `get_inlines()` to dynamically control which inlines are instantiated, exactly as the test expected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

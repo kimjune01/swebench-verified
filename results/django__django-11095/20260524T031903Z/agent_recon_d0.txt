@@ -1,0 +1,44 @@
+# Recon: django__django-11095
+
+## Failure summary
+The test `test_get_inline_instances_override_get_inlines` verifies that a custom `get_inlines()` hook on ModelAdmin allows dynamic selection of inlines based on request or object state. The test defines an `EpisodeAdmin` with a `get_inlines()` method that returns different inline classes based on `request.name`. When `request.name` is not set, `get_inlines()` returns an empty list, and the test expects `get_inline_instances(request)` to also return an empty list. However, it fails with `AssertionError: Lists differ: [<AlternateInline...>, <MediaInline...>] != []` — returning instances for both inlines instead of respecting the empty list from `get_inlines()`.
+
+## Suspect set
+- `django/contrib/admin/options.py` lines 583-596: `get_inline_instances()` method that directly accesses `self.inlines` instead of calling a hook method
+- `django/contrib/admin/options.py` line 585 specifically: `for inline_class in self.inlines:` — the direct attribute access
+- Missing: `get_inlines()` hook method (should exist but doesn't)
+
+## Root cause
+The `get_inline_instances()` method at line 585 of `django/contrib/admin/options.py` directly iterates over `self.inlines` (`for inline_class in self.inlines:`), ignoring any potential `get_inlines()` override. The feature request is to add a `get_inlines(request, obj=None)` hook (following the same pattern as `get_readonly_fields`, `get_prepopulated_fields`, etc.) that allows dynamic inline selection. This hook doesn't exist, and `get_inline_instances()` has no call to it.
+
+**Confidence:** deduction — 98%
+
+**Supporting evidence:**
+- `django/contrib/admin/options.py:585` — `for inline_class in self.inlines:` (direct attribute access, no hook call)
+- `django/contrib/admin/options.py:336-340` — existing pattern: `get_readonly_fields(self, request, obj=None)` returns `self.readonly_fields`
+- `django/contrib/admin/options.py:342-346` — existing pattern: `get_prepopulated_fields(self, request, obj=None)` returns `self.prepopulated_fields`
+- Test code shows the expected API: `def get_inlines(self, request, obj): ...` that returns a filtered list
+- Grep of `django/contrib/admin/options.py` shows no `def get_inlines` method exists
+
+## Edit sites
+1. **Add `get_inlines()` hook method** in `django/contrib/admin/options.py` before `get_inline_instances()` (insert around line 583):
+   - Method signature: `def get_inlines(self, request, obj=None):`
+   - Docstring: "Hook for specifying custom inlines."
+   - Implementation: `return self.inlines`
+   - Follow the exact pattern of `get_readonly_fields()` and `get_prepopulated_fields()`
+
+2. **Update `get_inline_instances()` method** in `django/contrib/admin/options.py` at line 585:
+   - Change: `for inline_class in self.inlines:` 
+   - To: `for inline_class in self.get_inlines(request, obj):`
+   - This makes the method respect the hook
+
+## Competing hypotheses
+None — the code path is deterministic and the fix is unambiguous.
+
+## Rejected hypotheses
+None — first diagnosis from clear symptom.
+
+## Open questions
+None — the pattern is well-established in the codebase and the fix is straightforward.
+
+---STDERR---

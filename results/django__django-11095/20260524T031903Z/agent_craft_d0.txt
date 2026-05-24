@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully implements the `get_inlines()` hook following Django's existing pattern for similar methods. The `test_get_inline_instances_override_get_inlines` test now passes, along with all other tests in the suite.
+
+---STDERR---
