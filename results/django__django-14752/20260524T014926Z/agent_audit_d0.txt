@@ -1,0 +1,18 @@
+# Audit: django__django-14752
+
+## FAIL_TO_PASS
+- `test_serialize_result (admin_views.test_autocomplete_view.AutocompleteJsonViewTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 15 non-Selenium PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - all tests passed (3 Selenium tests skipped due to no browser configuration, not failures).
+
+## Kill report
+Not applicable - instance is RESOLVED. The fix successfully extracts inline dict construction into a `serialize_result()` method, enabling subclass override as required by the test.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

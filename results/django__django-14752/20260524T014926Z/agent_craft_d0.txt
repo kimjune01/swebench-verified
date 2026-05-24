@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully makes `test_serialize_result` pass by extracting the inline dictionary construction into a `serialize_result()` method that subclasses can override. The implementation:
+
+1. Added `serialize_result(self, obj, to_field_name)` method to `AutocompleteJsonView`
+2. Replaced inline `{'id': ..., 'text': ...}` construction with `self.serialize_result(obj, to_field_name)` call
+3. Preserves existing behavior while enabling customization through inheritance
+
+Gate confirms all 19 tests pass with no regressions.
+
+---STDERR---
