@@ -6,6 +6,30 @@ port is mostly a task-adapter swap. That thesis holds only if a few unknowns abo
 back favorable — if the eval images or the grader diverge, it's a new adapter, not a swap. Treat the
 specifics here as a starting read, not a spec; the verification pass will redraw parts of it.
 
+## Goal (the predicate)
+
+A single **frozen, instance-agnostic artifact** (recon/craft/audit skills + driver) that clears
+SWE-bench Pro under **official third-party grading on the held-out private set, in one submission**,
+and is **verifiably free of per-instance priors**. The deliverable is that artifact + its reproducible
+attestation trail — not a percentage.
+
+Everything else in this doc is loose on purpose. The looseness is in the *how*; this is the invariant.
+When a constraint below admits more than one reading, choose the reading that keeps the predicate true.
+A change, interpretation, or action is **admissible iff all five hold**:
+
+1. **General** — instance-blind, motivated by a failure *class*, expected to help instances it wasn't
+   derived from. (Violation tell: it only ever helps the instance you were debugging.)
+2. **No leakage** — no held-out signal flows back into the artifact; the private verifier's grades are
+   never a stopping signal or an iteration input. One frozen version, one private submission.
+3. **Official-attested** — a win is an official-*test* verdict, nothing else (not our gate, not the
+   agent's claim, not a synthesized proxy test).
+4. **Honest denominator** — exclusions are documented defects only; any other excluded category (e.g.
+   offline-infeasible repos) is disclosed, never quietly trimmed to lift the rate.
+5. **Reproducible** — the frozen version is tagged and re-runnable from scratch; the result is
+   re-derivable from committed attestations, not asserted.
+
+If a proposed step fails any clause, it's out — however well it would raise the number.
+
 ## Strategy: public set, then private
 
 Public Pro is in hand; private (held-out) is a later request. They're two modes:
