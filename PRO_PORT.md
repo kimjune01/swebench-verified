@@ -60,6 +60,30 @@ held-out measure I am otherwise graded against."**
   then there is no held-out measure, the public/private distinction collapses, and the clean-capability
   framing must be rethought (it would no longer be a third-party-graded generalization claim).
 
+### Oracle vs. regression tests (what you may run on a blind instance)
+
+"Never touch the oracle" does **not** mean "never run tests." Regression checking is allowed and is
+already core to the pipeline — it's what audit does (run the suite, classify failures against the
+fail-on-base baseline). The distinction:
+
+- **The oracle** = the held-out **FAIL_TO_PASS grade** — the test(s) that define "did you fix the bug,"
+  graded by the third party. On the private set you never see these and never use their verdict as a
+  stopping signal. *That* is the line.
+- **Regression tests** answer a different question — "did I break what already worked" — and the verdict
+  comes from *you* running tests, not from the verifier. Allowed, freely.
+
+Safe regression sources on a blind private instance, in order of preference:
+1. **The repo's own existing test suite** (ships in `/testbed`, predates any test patch, is just the
+   project's code — not benchmark metadata, not the grader). Always available, always clean. This is the
+   same thing a developer runs before pushing.
+2. **The curated PASS_TO_PASS list, if the private set exposes it** — regression scaffolding that does
+   not reveal the F2P answer.
+
+The one trap: don't let "regression test" smuggle in the held-out F2P under a different label. If the
+target test stays unseen and the verifier's pass/fail never becomes craft's stopping signal, you're
+clean. The instant you'd run the *graded* test to decide you're done, that's the oracle — even if you
+call it a regression check.
+
 ---
 
 ## Step 0 — VERIFY before touching code (these gate everything)
