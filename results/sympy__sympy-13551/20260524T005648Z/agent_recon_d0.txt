@@ -1,0 +1,46 @@
+# Recon: sympy__sympy-13551
+
+## Failure summary
+The test `test_issue_13546` checks that `Product(n + 1/2**k, (k, 0, n-1)).doit()` correctly evaluates to 15/2 when n=2. The manual calculation confirms this: (2+1)*(2+1/2) = 3*2.5 = 15/2. However, the code returns 9/2, failing the assertion at line 362.
+
+## Suspect set
+- `sympy/concrete/products.py` lines 276-288: The `is_Add` branch in `_eval_product` method that handles product of sum expressions
+- Specifically line 286: `p = sum([self._eval_product(i, (k, a, n)) for i in p.as_coeff_Add()])`
+
+## Root cause
+The `_eval_product` method contains mathematically incorrect logic at line 286 that treats the product of a sum as the sum of products: `Product(a + b) ≠ Product(a) + Product(b)`.
+
+When evaluating `Product(n + 1/2**k, k=0..n-1)`:
+1. The term is rewritten via `as_numer_denom()` as `(2**k*n + 1) / 2**k`
+2. The denominator product `Product(2**k)` is correctly evaluated as `2^(n(n-1)/2)`
+3. The numerator `2**k*n + 1` recursively hits the `is_Add` branch
+4. Since `as_numer_denom(2**k*n + 1)` returns `(2**k*n + 1, 1)`, the denominator is 1 (a number)
+5. The buggy `if q.is_Number:` branch at line 280-286 splits the expression using `as_coeff_Add()` into `(1, 2**k*n)`
+6. It incorrectly computes: `Product(1) + Product(2**k*n)` = `1 + 2^(n(n-1)/2)*n^n`
+7. The final result is `(1 + 2^(n(n-1)/2)*n^n) / 2^(n(n-1)/2)` which evaluates to 9/2 when n=2
+
+The correct result for the numerator should be the actual product: `3 * 5 = 15`, not `1 + 8 = 9`.
+
+This buggy logic was introduced in commit db70c45cb (2016-07-10) to prevent infinite recursion in issue #9983. The intent was to handle cases where `as_numer_denom()` doesn't change the expression, but the implementation incorrectly distributes the product over the sum.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/concrete/products.py:286` — The line that sums products of individual terms
+- Manual trace confirms: for n=2, the buggy code yields `(1 + 8)/2 = 9/2` instead of correct `15/2`
+
+## Edit sites
+- `sympy/concrete/products.py` lines 280-286: Replace the incorrect sum-of-products logic with code that returns `None` when encountering an Add expression with `q.is_Number = True` that contains the iteration variable. This signals the product cannot be symbolically simplified and should remain unevaluated, preventing both the wrong answer and infinite recursion.
+
+The fix must:
+1. Detect when `p` (the numerator after `as_numer_denom`) contains the iteration variable `k`
+2. Return `None` instead of computing the incorrect sum
+3. Preserve the fix for issue #9983 (no infinite recursion) by avoiding recursive `_eval_product(p, ...)` calls when `q == 1`
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and trace verification.
+
+## Open questions
+None — the bug, its location, and the correct fix are all determined.
+
+---STDERR---

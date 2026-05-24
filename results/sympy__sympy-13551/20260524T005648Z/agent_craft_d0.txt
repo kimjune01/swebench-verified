@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The patch successfully fixes the issue. The failing test `test_issue_13546` now passes along with all other tests.
+
+**Summary:**
+- **Root cause:** The `_eval_product` method incorrectly treated `Product(a + b)` as `Product(a) + Product(b)` at line 286
+- **Fix:** Modified lines 280-288 in `sympy/concrete/products.py` to return `None` when the numerator contains the iteration variable and denominator is numeric, preventing the incorrect algebraic transformation
+- **Key insights from codex:** Added `q is None` check and nested `p is None` check to handle recursive evaluation correctly
+- **Result:** All 19 tests pass, including the target `test_issue_13546` which now correctly evaluates `Product(n + 1/2**k, (k, 0, n-1)).subs(n, 2).doit()` to `15/2`
+
+---STDERR---
