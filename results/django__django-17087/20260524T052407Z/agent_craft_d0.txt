@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `klass.__name__` to `klass.__qualname__` on line 171 of `django/db/migrations/serializer.py` to preserve the full qualified name for nested class methods. All 54 tests pass, including the target `test_serialize_nested_class_method`.
+
+---STDERR---

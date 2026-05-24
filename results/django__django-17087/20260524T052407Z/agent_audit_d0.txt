@@ -1,0 +1,18 @@
+# Audit: django__django-17087
+
+## FAIL_TO_PASS
+- `test_serialize_nested_class_method` (migrations.test_writer.WriterTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Verification Summary
+The craft patch successfully resolves the issue. The single-line change from `klass.__name__` to `klass.__qualname__` at line 171 of `django/db/migrations/serializer.py` correctly preserves the full qualified path for nested class methods. All 54 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

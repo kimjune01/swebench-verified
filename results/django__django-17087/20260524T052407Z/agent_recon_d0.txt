@@ -1,0 +1,31 @@
+Now I'll output the structured handoff:
+
+# Recon: django__django-17087
+
+## Failure summary
+The test `test_serialize_nested_class_method` checks that a classmethod from a nested class (`WriterTests.NestedChoices.method`) serializes with its full qualified path. The test fails with an AssertionError showing that the serialized path is missing the parent class name: it produces `'migrations.test_writer.NestedChoices.method'` instead of the expected `'migrations.test_writer.WriterTests.NestedChoices.method'`.
+
+## Suspect set
+- `django/db/migrations/serializer.py` lines 166-173: The `FunctionTypeSerializer.serialize()` method that handles serialization of class methods. Specifically line 171 constructs the qualified path using `klass.__name__` which only returns the simple class name, not the full qualified name.
+
+## Root cause
+The `FunctionTypeSerializer` class handles serialization of class methods in its first conditional branch (lines 166-173). When constructing the qualified path for a class method, line 171 uses `klass.__name__` to get the class name. However, `__name__` only returns the simple name of the class without any parent classes. For nested classes like `WriterTests.NestedChoices`, `__name__` returns `"NestedChoices"` instead of the full qualified name `"WriterTests.NestedChoices"`. The correct attribute to use is `__qualname__`, which includes the complete nesting hierarchy.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/migrations/serializer.py:171` — `return "%s.%s.%s" % (module, klass.__name__, self.value.__name__)`
+- Verified via Python inspection: for nested class `Outer.Inner`, `Inner.__name__` = `"Inner"` but `Inner.__qualname__` = `"Outer.Inner"`
+- Line 182 in the same file correctly uses `self.value.__qualname__` for non-class-method functions
+- Line 421 (`TypeSerializer`) correctly uses `self.value.__qualname__` for serializing class types
+
+## Edit sites
+- `django/db/migrations/serializer.py` line 171: Replace `klass.__name__` with `klass.__qualname__` in the string formatting expression. This ensures nested classes include their full qualified path including all parent classes.
+
+## Rejected hypotheses
+None — the root cause was directly evident from the test failure message and code inspection. No competing hypotheses required consideration.
+
+## Open questions
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---
