@@ -1,0 +1,27 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/physics/hep/tests/test_gamma_matrices.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        32618404
+hash randomization: on (PYTHONHASHSEED=1523120518)
+
+sympy/physics/hep/tests/test_gamma_matrices.py[4] 
+test_kahane_algorithm ok
+test_kahane_simplify1 F
+test_gamma_matrix_class ok
+test_gamma_matrix_trace ok                                                [FAIL]
+
+
+________________________________________________________________________________
+_____ sympy/physics/hep/tests/test_gamma_matrices.py:test_kahane_simplify1 _____
+Traceback (most recent call last):
+  File "/testbed/sympy/physics/hep/tests/test_gamma_matrices.py", line 265, in test_kahane_simplify1
+    assert r.equals(4*G(rho)*G(sigma))
+AssertionError
+
+============= tests finished: 3 passed, 1 failed, in 5.55 seconds ==============
+DO *NOT* COMMIT!

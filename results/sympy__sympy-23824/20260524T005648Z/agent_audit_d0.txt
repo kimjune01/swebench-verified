@@ -1,0 +1,32 @@
+# Audit: sympy__sympy-23824
+
+## FAIL_TO_PASS
+- `test_kahane_simplify1`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Verdict analysis
+All FAIL_TO_PASS tests now pass. All PASS_TO_PASS tests remain passing. Zero regressions introduced. The patch successfully resolves the issue.
+
+**Gate output:**
+```
+test_kahane_algorithm ok
+test_kahane_simplify1 ok
+test_gamma_matrix_class ok
+test_gamma_matrix_trace ok
+================== tests finished: 4 passed, in 5.48 seconds ===================
+```
+
+**Baseline comparison:**
+- test_kahane_simplify1: F (base) → ok (patched) — **fixed** ✓
+- test_kahane_algorithm: ok (base) → ok (patched) — **stable** ✓
+- test_gamma_matrix_class: ok (base) → ok (patched) — **stable** ✓
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

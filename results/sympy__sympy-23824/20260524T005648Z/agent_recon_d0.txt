@@ -1,0 +1,39 @@
+# Recon: sympy__sympy-23824
+
+## Failure summary
+The test `test_kahane_simplify1` checks that `kahane_simplify()` correctly simplifies products of gamma matrices by canceling contracted indices. The test fails when verifying that leading uncontracted gamma matrices remain in their original order. Specifically, when `G(rho)*G(sigma)*G(mu)*G(-mu)` is simplified, it produces `4*G(sigma)*G(rho)` instead of the expected `4*G(rho)*G(sigma)`. The contracted pair `G(mu)*G(-mu)` correctly simplifies to a factor of 4, but the leading free indices `rho` and `sigma` appear in reversed order.
+
+**Error:** AssertionError at line 265 in `sympy/physics/hep/tests/test_gamma_matrices.py`
+
+## Suspect set
+- `sympy/physics/hep/gamma_matrices.py` lines 695-698: Loop that re-inserts leading free gamma matrices after processing contractions
+
+## Root cause
+The `kahane_simplify()` function removes leading uncontracted gamma matrices (those appearing before the first contracted pair) at the start of the algorithm, processes the contracted indices, then re-inserts the leading matrices at the end. The re-insertion loop at lines 697-698 iterates forward from 0 to `first_dum_pos` while inserting each element at position 0 of the result lists. This causes the indices to be prepended in reverse order.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `sympy/physics/hep/gamma_matrices.py:697-698`:
+  ```python
+  for i in range(0, first_dum_pos):
+      [ri.insert(0, free_pos[i]) for ri in resulting_indices]
+  ```
+- When `first_dum_pos = 2` with `free_pos = [rho, sigma, ...]`:
+  - Iteration i=0: insert `rho` at position 0 → result becomes `[rho]`
+  - Iteration i=1: insert `sigma` at position 0 → result becomes `[sigma, rho]` ← REVERSED
+- Experimental confirmation shows `G(rho)*G(sigma)*G(mu)*G(-mu)` produces `4*G(sigma)*G(rho)`
+
+## Edit sites
+- `sympy/physics/hep/gamma_matrices.py` line 697: Change the loop iteration order from forward to reverse. Replace `for i in range(0, first_dum_pos):` with `for i in range(first_dum_pos - 1, -1, -1):` to maintain correct order when inserting at position 0.
+
+## Competing hypotheses
+None — the bug is definitively localized to the single loop with direct causality confirmed by code trace and test execution.
+
+## Rejected hypotheses
+None applicable — the problem statement correctly identified the approximate location, and code inspection confirmed the exact line.
+
+## Open questions
+None — the fix is straightforward and affects only the iteration order of a single loop.
+
+---STDERR---

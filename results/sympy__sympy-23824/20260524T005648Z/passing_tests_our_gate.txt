@@ -1,0 +1,19 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/physics/hep/tests/test_gamma_matrices.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        13409258
+hash randomization: on (PYTHONHASHSEED=461338995)
+
+sympy/physics/hep/tests/test_gamma_matrices.py[4] 
+test_kahane_algorithm ok
+test_kahane_simplify1 ok
+test_gamma_matrix_class ok
+test_gamma_matrix_trace ok                                                  [OK]
+
+
+================== tests finished: 4 passed, in 5.53 seconds ===================

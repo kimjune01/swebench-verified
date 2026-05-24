@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully corrected the gamma matrix simplification bug. By reversing the loop iteration order at line 697 from `range(0, first_dum_pos)` to `range(first_dum_pos - 1, -1, -1)`, leading free gamma matrices now maintain their original order after re-insertion. The gate confirms all tests pass, including `test_kahane_simplify1` which now correctly simplifies `G(rho)*G(sigma)*G(mu)*G(-mu)` to `4*G(rho)*G(sigma)`.
+
+---STDERR---
