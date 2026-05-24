@@ -1,0 +1,32 @@
+# Audit: django__django-15375
+
+## FAIL_TO_PASS
+- test_aggregation_default_after_annotation (aggregation.tests.AggregateTestCase): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 96 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - the base capture showed all tests except the FAIL_TO_PASS test were passing, and they remain passing.
+
+## Verification
+
+**Patch confirmed live:**
+```
+ django/db/models/aggregates.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+```
+
+**Full gate output:** All 96 tests in aggregation.tests.AggregateTestCase passed in 0.109s.
+
+**Contract satisfied:**
+- ✅ All FAIL_TO_PASS tests now pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (0 failures in 95 tests)
+- ✅ No new failures introduced
+
+The fix successfully preserves the `is_summary` flag when wrapping aggregates in `Coalesce`, allowing the query builder to correctly place the expression in the outer aggregate query instead of leaving it in the inner query with an empty SELECT clause.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

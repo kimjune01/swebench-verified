@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. Codex confirms the approach is correct, and the gate shows all 96 tests passing with no regressions.
+
+---STDERR---

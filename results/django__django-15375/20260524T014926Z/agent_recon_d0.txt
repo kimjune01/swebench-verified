@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is that when an aggregate has a `default` parameter, Django wraps it in a `Coalesce` function without preserving the `is_summary` flag. This causes the query builder to leave the Coalesce-wrapped aggregate in the inner query instead of moving it to the outer aggregate query, resulting in an empty outer SELECT clause.
+
+---STDERR---
