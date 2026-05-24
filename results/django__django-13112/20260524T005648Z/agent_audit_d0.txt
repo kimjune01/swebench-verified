@@ -1,0 +1,27 @@
+# Audit: django__django-13112
+
+## FAIL_TO_PASS
+- `test_reference_mixed_case_app_label (migrations.test_state.StateTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 63 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None. All tests passing on base remain passing.
+
+## Patch summary
+The fix modifies `ForeignKey.deconstruct()` in `django/db/models/fields/related.py` to preserve app_label case when the remote field model is a string reference:
+
+- Splits string references on the dot separator
+- Preserves the app_label portion as-is
+- Lowercases only the model_name portion
+- Handles bare model names (no app_label) by lowercasing the entire string
+
+This matches the behavior of `make_model_tuple` and `label_lower`, ensuring lazy references resolve correctly with mixed-case app labels.
+
+**Gate output**: All 64 tests passed in 0.064s
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

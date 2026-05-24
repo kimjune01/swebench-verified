@@ -1,0 +1,60 @@
+Now let me write the handoff:
+
+```markdown
+# Recon: django__django-13112
+
+## Failure summary
+The test `test_reference_mixed_case_app_label` creates models with a mixed-case app label (`MiXedCase_migrations`) and tests that ForeignKey and ManyToManyField references work correctly. The test fails when `ProjectState.apps` is accessed, which creates a `StateApps` instance and renders the models. During rendering, the lazy reference validation fails with:
+
+```
+ValueError: The field MiXedCase_migrations.Book.author was declared with a lazy reference to 'mixedcase_migrations.author', but app 'mixedcase_migrations' isn't installed.
+```
+
+The Book model is correctly registered under app `MiXedCase_migrations`, but the ForeignKey's lazy reference is looking for the lowercase version `mixedcase_migrations`, causing a key mismatch.
+
+## Suspect set
+- `django/db/models/fields/related.py` lines 584-587: ForeignKey.deconstruct() method where string model references are processed
+
+## Root cause
+When a ForeignKey field is cloned during migration state operations, it goes through `deconstruct()` twice:
+1. First clone: `remote_field.model` is a class, so it uses `label_lower` which preserves app_label case: `'MiXedCase_migrations.author'`
+2. Second clone (in `ModelState.render()`): `remote_field.model` is now a string `'MiXedCase_migrations.author'`, and line 585 lowercases the **entire string** to `'mixedcase_migrations.author'`, losing the app_label case
+
+The bug is that `str.lower()` lowercases both the app_label and model_name, but it should only lowercase the model_name part (since model names are always lowercase, but app_labels can have mixed case).
+
+This is inconsistent with how `label_lower` property works (line 136 in options.py), which preserves app_label case: `return '%s.%s' % (self.app_label, self.model_name)`.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/fields/related.py:585` — `kwargs['to'] = self.remote_field.model.lower()` lowercases entire string
+- `django/db/models/options.py:136` — `label_lower` returns `'%s.%s' % (self.app_label, self.model_name)` (preserves case)
+- `django/db/models/utils.py:11-12` — `make_model_tuple` splits string and only lowercases model_name, not app_label
+- `django/db/migrations/state.py:576` — `ModelState.render()` clones fields again via dict comprehension
+
+## Edit sites
+- `django/db/models/fields/related.py` lines 584-587 (in ForeignKey.deconstruct()): Change the string lowercasing logic to preserve app_label case. When `remote_field.model` is a string containing a dot (fully-qualified reference), split it and only lowercase the model name part, not the app_label.
+
+  Specifically, replace:
+  ```python
+  if isinstance(self.remote_field.model, str):
+      kwargs['to'] = self.remote_field.model.lower()
+  ```
+  
+  With logic that:
+  - If the string contains a dot: split on dot, keep app_label as-is, lowercase model_name only
+  - If no dot (bare model name): lowercase the entire string (current behavior for bare names is correct)
+
+- Possible similar issue in `django/db/models/fields/related.py` around line 845 for ManyToManyField.deconstruct() — check if the same pattern exists there
+
+## Rejected hypotheses
+- H: app_label is lowercased when stored in Options — killed by reading Options.contribute_to_class which preserves the case from Meta
+- H: app_label is lowercased in StateApps.register_model — killed by reading the code which uses app_label parameter as-is
+- H: make_model_tuple lowercases app_label — killed by reading line 12 which only lowercases model_name, not app_label from the split
+
+## Open questions
+- Does ManyToManyField have the same bug? Need to check its deconstruct() method
+- Are there other field types that reference models and might have this issue?
+```
+
+---STDERR---

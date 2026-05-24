@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. The root cause was correctly identified by recon: `ForeignKey.deconstruct()` was lowercasing the entire string reference including the app_label, when it should only lowercase the model name portion. The fix preserves app_label case and only lowercases the model name, consistent with Django's `make_model_tuple` behavior.
+
+---STDERR---
