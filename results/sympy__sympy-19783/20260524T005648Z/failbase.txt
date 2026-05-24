@@ -1,0 +1,45 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/physics/quantum/tests/test_dagger.py sympy/physics/quantum/tests/test_operator.py
+
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+numpy:              None
+random seed:        98653593
+hash randomization: on (PYTHONHASHSEED=3176193434)
+
+sympy/physics/quantum/tests/test_dagger.py[6] 
+test_scalars ok
+test_matrix ok
+test_dagger_mul F
+test_eval_adjoint ok
+test_numpy_dagger numpy not installed. s
+test_scipy_sparse_dagger numpy not installed. s                           [FAIL]
+
+sympy/physics/quantum/tests/test_operator.py[8] 
+test_operator ok
+test_operator_inv ok
+test_hermitian ok
+test_unitary ok
+test_identity F
+test_outer_product ok
+test_operator_dagger ok
+test_differential_operator ok                                             [FAIL]
+
+
+________________________________________________________________________________
+__________ sympy/physics/quantum/tests/test_dagger.py:test_dagger_mul __________
+Traceback (most recent call last):
+  File "/testbed/sympy/physics/quantum/tests/test_dagger.py", line 39, in test_dagger_mul
+    assert Dagger(O)*Dagger(I) == Dagger(O)
+AssertionError
+________________________________________________________________________________
+__________ sympy/physics/quantum/tests/test_operator.py:test_identity __________
+Traceback (most recent call last):
+  File "/testbed/sympy/physics/quantum/tests/test_operator.py", line 97, in test_identity
+    assert I * Dagger(O) == Dagger(O)
+AssertionError
+
+======= tests finished: 10 passed, 2 failed, 2 skipped, in 0.43 seconds ========
+DO *NOT* COMMIT!
