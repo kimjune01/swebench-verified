@@ -1,0 +1,5 @@
+**HYPOTHESIS WRONG**: After 3 iterations, the diagnosis is incomplete. The fix requires avoiding sympify on Basic objects, but ANY guard condition (isinstance, hasattr, type check) triggers recursion through ABCMeta's isinstance checks in Rational.__new__. The issue is deeper than just the sympify call.
+
+NOT-RESOLVED — re-diagnose
+
+---STDERR---

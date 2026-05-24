@@ -1,0 +1,10 @@
+Recon complete. The diagnosis has been printed to stdout and the hypothesis graph has been updated at `/tmp/swebench-abduction/r4_hgraph_sympy__sympy-13091.md`.
+
+**Summary:** The tests fail because SymPy's rich comparison methods return `False` or raise `TypeError` when comparing with unknown types, instead of returning `NotImplemented` to delegate to Python's comparison protocol. This requires changes to 37 locations across `basic.py`, `expr.py`, and `numbers.py`:
+- 4 `__eq__` methods: change `return False` → `return NotImplemented`
+- 5 `__ne__` methods: handle `NotImplemented` from `__eq__`
+- 28 ordering methods: change `raise TypeError` → `return NotImplemented`
+
+The root cause is confirmed by code inspection (deduction, 95% confidence) and matches the problem statement's suggestion to fix line 316 in `basic.py`.
+
+---STDERR---

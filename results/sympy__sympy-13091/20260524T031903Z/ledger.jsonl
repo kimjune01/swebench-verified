@@ -1,0 +1,11 @@
+{"instance": "sympy__sympy-13091", "stage": "start"}
+{"instance": "sympy__sympy-13091", "stage": "recon", "depth": 0, "wall_s": 346, "fixed_point": false}
+{"instance": "sympy__sympy-13091", "stage": "craft", "depth": 0, "wall_s": 930, "claim": false, "wants_rediagnose": true}
+{"instance": "sympy__sympy-13091", "stage": "recon", "depth": 1, "wall_s": 489, "fixed_point": false}
+{"instance": "sympy__sympy-13091", "stage": "craft", "depth": 1, "wall_s": 630, "claim": false, "wants_rediagnose": true}
+{"instance": "sympy__sympy-13091", "stage": "recon", "depth": 2, "wall_s": 292, "fixed_point": false}
+{"instance": "sympy__sympy-13091", "stage": "craft", "depth": 2, "wall_s": 991, "claim": false, "wants_rediagnose": true}
+{"instance": "sympy__sympy-13091", "stage": "audit", "depth": 2, "wall_s": 250, "verdict": "NOT_RESOLVED", "route": "recon"}
+{"instance": "sympy__sympy-13091", "stage": "halt", "msg": "depth budget exhausted at NOT_RESOLVED"}
+{"instance": "sympy__sympy-13091", "stage": "verify_gate", "agent_verdict": "NOT_RESOLVED", "driver_f2p_pass": false, "passgate_file": "/tmp/swebench-abduction/r4_passgate_sympy__sympy-13091.txt"}
+{"instance": "sympy__sympy-13091", "stage": "done", "final_verdict": "NOT_RESOLVED", "driver_f2p_pass": false, "patch_bytes": 7577, "patch_file": "/tmp/swebench-abduction/r4_patch_sympy__sympy-13091.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_sympy__sympy-13091.md"}

@@ -1,0 +1,20 @@
+I've made progress but hit a fundamental issue. Let me document the current state:
+
+**HYPOTHESIS WRONG**: After multiple iterations, the diagnosis is incomplete. The reflection mapping fix is correct but exposes deeper issues:
+
+1. ✓ Fixed all 8 reflection mappings in Float/Rational  
+2. ✓ Fixed NumberSymbol.__gt__/__ge__ to avoid symbolic negation
+3. ✗ Cannot add NotImplemented to __eq__ without triggering recursion
+
+The test `test_comparisons_with_unknown_type` fails (`assert n == bar`) because __eq__ returns False instead of NotImplemented for unknown types. But adding NotImplemented causes recursion through ABCMeta isinstance checks during Rational.__new__, exactly as the audit kill report warned.
+
+The issue is deeper than just comparison methods - it's about the interaction between:
+- sympify attempting to convert types
+- ABCMeta's isinstance machinery
+- Comparison reflection triggering nested comparisons
+
+Current best state: 95 passed, 1 failed (test_comparisons_with_unknown_type), 1 exception (RecursionError in unrelated test).
+
+NOT-RESOLVED — re-diagnose
+
+---STDERR---
