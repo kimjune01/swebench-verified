@@ -1,0 +1,5 @@
+Recon complete. The bug is in `django/db/models/sql/compiler.py:730` where the code incorrectly compares the full lookup path (`'author__editor_id'`) to `field.attname` (`'editor_id'`) instead of comparing just the last path component. This causes the related model's default ordering to be applied when it shouldn't be.
+
+The fix is a one-line change: replace `name` with `pieces[-1]` in the comparison at line 730. This will make traversed FK attname references (`author__editor_id`) behave consistently with direct FK attname references (`author_id`), both skipping the default ordering as intended by issue #19195.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed line 730 of `django/db/models/sql/compiler.py` to compare `pieces[-1]` (the last component of the lookup path) instead of `name` (the full path) against `field.attname` and `'pk'`. This ensures that ordering by FK attname references like `author__editor_id` orders by the ID directly without applying the related model's default ordering, while `author__editor` still expands the default ordering as expected.
+
+---STDERR---

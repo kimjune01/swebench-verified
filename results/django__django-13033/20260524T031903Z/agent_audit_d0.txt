@@ -1,0 +1,18 @@
+# Audit: django__django-13033
+
+## FAIL_TO_PASS
+- `test_order_by_self_referential_fk`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 27 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Result
+All FAIL_TO_PASS tests now pass. Zero regressions. The fix correctly handles self-referential FK ordering with attname suffixes by comparing `pieces[-1]` (the final path component) rather than the full lookup path, making traversed FK attname ordering behave consistently with direct FK attname ordering.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
