@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully adds an `AlterModelManagers` handler to `CreateModel.reduce()` in `django/db/migrations/operations/models.py:173`. The optimizer now correctly folds `CreateModel` + `AlterModelManagers` into a single `CreateModel` with the updated managers, matching the existing pattern for `AlterModelOptions`. Gate passed on first iteration — all 36 optimizer tests pass.
+
+---STDERR---

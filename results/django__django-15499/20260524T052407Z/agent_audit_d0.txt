@@ -1,0 +1,23 @@
+# Audit: django__django-15499
+
+## FAIL_TO_PASS
+- `test_create_alter_model_managers`: ✅ **PASS** (was FAIL on base)
+
+## PASS_TO_PASS regressions
+None. All 35 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None. The baseline had only one failure (test_create_alter_model_managers), which is now fixed.
+
+## Classification
+All 36 tests in the suite passed:
+- The single FAIL_TO_PASS target is now passing
+- Zero PASS_TO_PASS regressions introduced
+- The fix correctly handles `CreateModel + AlterModelManagers` reduction
+
+The craft patch added 13 lines to `django/db/migrations/operations/models.py`, implementing an `elif` clause in `CreateModel.reduce()` that folds `AlterModelManagers` operations into the `CreateModel` by setting `managers=operation.managers`, following the exact pattern already established for `AlterModelOptions`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

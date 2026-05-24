@@ -1,0 +1,3 @@
+Recon complete. The root cause is clear: `CreateModel.reduce()` handles `AlterModelOptions` but is missing the parallel handler for `AlterModelManagers`. The fix is a simple addition of an `elif` clause following the existing pattern.
+
+---STDERR---
