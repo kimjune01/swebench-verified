@@ -110,6 +110,10 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-24 — batch_014 archived: 30/30 (2nd perfect batch in a row, 9-wide)
+
+batch_014 (seed=14, 30 disjoint: 23 django, 3 sympy, 2 matplotlib, 2 sklearn; pool=92, excluded=374). RUNID 20260524T014926Z. **Official 30/30** — second perfect batch back-to-back (013 + 014). 30/30 captured, 0 empty, 0 DNF, 0 box-death, 0 reasoning loss. Scoreboard now **364/376**, 380 runs. Django-heavy (23) and fast (~50 min) on warm-cache boxes. No oversized-patch blowups, nothing lost. Session continues to batch_015 (final), then teardown.
+
 ## 2026-05-24 — batch_013 archived: 30/30 (perfect batch, 9-wide)
 
 batch_013 (seed=13, 30 disjoint: 14 django, 9 sympy, 3 matplotlib, 2 xarray, 1 pytest, 1 sklearn; pool=122, excluded=344). RUNID 20260524T005648Z. **Official 30/30** — first perfect batch this session (cf. batches 007/008 prior session). 30/30 captured, 0 empty, 0 DNF, 0 box-death, 0 reasoning loss. Scoreboard now **334/346**, 350 runs.
