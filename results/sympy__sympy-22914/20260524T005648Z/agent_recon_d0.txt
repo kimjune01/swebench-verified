@@ -1,0 +1,43 @@
+# Recon: sympy__sympy-22914
+
+## Failure summary
+
+The test `test_PythonCodePrinter` in `sympy/printing/tests/test_pycode.py` at lines 61-62 expects `prntr.doprint(Min(x, y))` to output `"min(x, y)"` and `prntr.doprint(Max(x, y))` to output `"max(x, y)"`. However, the current implementation outputs piecewise conditionals instead: `'((x) if (x <= y) else (y))'` for Min and `'((x) if (x >= y) else (y))'` for Max. The test fails with AssertionError when comparing the actual output against the expected output.
+
+## Suspect set
+
+- `sympy/printing/pycode.py` lines 425-473: PythonCodePrinter class definition — lacks `_print_Min` and `_print_Max` methods
+- `sympy/printing/pycode.py` lines 18-20: `_known_functions` dictionary — could alternatively be extended to include Min/Max mappings
+
+## Root cause
+
+The `PythonCodePrinter` class (line 425 in `sympy/printing/pycode.py`) does not have `_print_Min` or `_print_Max` methods, nor are Min/Max included in the `_known_functions` dictionary. When the printer encounters Min or Max expressions, it falls back to the default printing behavior inherited from the parent class, which converts them to Piecewise conditional expressions. Python's built-in `min()` and `max()` functions are the correct target output, as they handle multiple arguments and match the semantics of SymPy's Min and Max.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `sympy/printing/pycode.py:18-20` — `_known_functions = {'Abs': 'abs',}` shows the pattern for mapping SymPy functions to Python builtins, but Min/Max are missing
+- `sympy/printing/pycode.py:425-473` — PythonCodePrinter class has no `_print_Min` or `_print_Max` methods
+- `sympy/printing/pycode.py:475` — loop `for k in PythonCodePrinter._kf: setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)` dynamically creates print methods for known functions, but Min/Max are not in the dict
+- Actual output test: `PythonCodePrinter().doprint(Min(x, y))` returns `'((x) if (x <= y) else (y))'` instead of `'min(x, y)'`
+
+## Edit sites
+
+**Option 1 (recommended, matches problem statement):** Add explicit methods to PythonCodePrinter class
+- `sympy/printing/pycode.py` lines 427-472: Add `_print_Min` and `_print_Max` methods to the `PythonCodePrinter` class body. These should be simple methods that format the output as `min(args)` and `max(args)` respectively, similar to how the problem statement describes.
+
+**Option 2 (alternative, more concise):** Extend _known_functions dictionary
+- `sympy/printing/pycode.py` lines 18-20: Add `'Min': 'min'` and `'Max': 'max'` to the `_known_functions` dictionary, which would leverage the existing `_print_known_func` mechanism at line 63-66.
+
+Both approaches are valid. The problem statement explicitly suggests Option 1, which provides more explicit control and matches the pattern used for other special cases in the class (like `_print_sign`, `_print_Not`, etc.).
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection.
+
+## Open questions
+
+- Should MpmathPrinter (line 555) or other subclasses also override Min/Max? (Likely no, since mpmath doesn't have built-in min/max equivalents and inheriting from PythonCodePrinter would give the correct behavior)
+- Are there any edge cases where Python's `min()`/`max()` semantics differ from SymPy's Min/Max? (No — tested with multiple arguments, both work identically)
+
+---STDERR---

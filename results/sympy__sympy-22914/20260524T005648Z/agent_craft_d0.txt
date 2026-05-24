@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_PythonCodePrinter` pass. Added `_print_Min` and `_print_Max` methods to the `PythonCodePrinter` class that format Min/Max expressions as Python's built-in `min()`/`max()` functions instead of piecewise conditionals.
+
+---STDERR---

@@ -1,0 +1,21 @@
+# Audit: sympy__sympy-22914
+
+## Patch Summary
+The craft patch added `_print_Min` and `_print_Max` methods to the PythonCodePrinter class in `sympy/printing/pycode.py`, formatting Min/Max expressions as `min(args)` and `max(args)` respectively.
+
+## FAIL_TO_PASS
+- test_PythonCodePrinter: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 16 PASS_TO_PASS tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the 2 skipped tests (test_issue_18770, test_issue_20762) were also skipped on base due to missing dependencies (numpy, antlr).
+
+## Gate Result
+All tests passed (19 passed, 2 skipped). The fix successfully resolves the issue without introducing any regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

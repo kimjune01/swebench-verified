@@ -1,0 +1,59 @@
+2026-05-24 00:54:13,281 - INFO - Creating container for sympy__sympy-22914...
+2026-05-24 00:54:13,379 - INFO - Container for sympy__sympy-22914 created: 3c8ceb777aca5f82b6cd8a98fae5c03bfdb6a8637e6d30700f6596e7eb152a12
+2026-05-24 00:54:13,653 - INFO - Container for sympy__sympy-22914 started: 3c8ceb777aca5f82b6cd8a98fae5c03bfdb6a8637e6d30700f6596e7eb152a12
+2026-05-24 00:54:13,653 - INFO - Intermediate patch for sympy__sympy-22914 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22914/patch.diff, now applying to container...
+2026-05-24 00:54:13,774 - INFO - >>>>> Applied Patch:
+Checking patch sympy/printing/pycode.py...
+Applied patch sympy/printing/pycode.py cleanly.
+
+2026-05-24 00:54:14,068 - INFO - Git diff before:
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index 3a72ab606c..01cbe6ad10 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -432,6 +432,15 @@ def _print_Not(self, expr):
+         PREC = precedence(expr)
+         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+ 
++
++    def _print_Min(self, expr):
++        args = ", ".join(self._print(arg) for arg in expr.args)
++        return "min({})".format(args)
++
++    def _print_Max(self, expr):
++        args = ", ".join(self._print(arg) for arg in expr.args)
++        return "max({})".format(args)
++
+     def _print_Indexed(self, expr):
+         base = expr.args[0]
+         index = expr.args[1:]
+2026-05-24 00:54:14,068 - INFO - Eval script for sympy__sympy-22914 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22914/eval.sh; copying to container...
+2026-05-24 00:54:16,454 - INFO - Test runtime: 2.28 seconds
+2026-05-24 00:54:16,455 - INFO - Test output for sympy__sympy-22914 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-22914/test_output.txt
+2026-05-24 00:54:16,548 - INFO - Git diff after:
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index 3a72ab606c..01cbe6ad10 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -432,6 +432,15 @@ def _print_Not(self, expr):
+         PREC = precedence(expr)
+         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+ 
++
++    def _print_Min(self, expr):
++        args = ", ".join(self._print(arg) for arg in expr.args)
++        return "min({})".format(args)
++
++    def _print_Max(self, expr):
++        args = ", ".join(self._print(arg) for arg in expr.args)
++        return "max({})".format(args)
++
+     def _print_Indexed(self, expr):
+         base = expr.args[0]
+         index = expr.args[1:]
+2026-05-24 00:54:16,548 - INFO - Grading answer for sympy__sympy-22914...
+2026-05-24 00:54:16,548 - INFO - report: {'sympy__sympy-22914': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_PythonCodePrinter'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_PythonCodePrinter_standard', 'test_MpmathPrinter', 'test_NumPyPrinter', 'test_SciPyPrinter', 'test_pycode_reserved_words', 'test_sqrt', 'test_frac', 'test_printmethod', 'test_codegen_ast_nodes', 'test_issue_14283', 'test_NumPyPrinter_print_seq', 'test_issue_16535_16536', 'test_Integral', 'test_fresnel_integrals', 'test_beta', 'test_airy', 'test_airy_prime'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-22914: resolved: True
+2026-05-24 00:54:16,548 - INFO - Attempting to stop container sweb.eval.sympy__sympy-22914.batch...
+2026-05-24 00:54:31,998 - INFO - Attempting to remove container sweb.eval.sympy__sympy-22914.batch...
+2026-05-24 00:54:32,009 - INFO - Container sweb.eval.sympy__sympy-22914.batch removed.
