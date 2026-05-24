@@ -1,0 +1,51 @@
+# Recon: django__django-16819
+
+## Failure summary
+
+The test `test_add_remove_index` verifies that the migration optimizer reduces consecutive AddIndex/RemoveIndex operations on the same index to an empty list (eliminating both operations). The test fails because the optimizer returns both operations unchanged instead of optimizing them away.
+
+**Error**: AssertionError: Lists differ: [] != ["migrations.AddIndex(...)", "migrations.RemoveIndex(...)"]
+
+The optimizer expects optimization to work like it does for AddField/RemoveField (which successfully optimizes to []), but AddIndex/RemoveIndex aren't being reduced.
+
+## Suspect set
+
+- `django/db/migrations/operations/models.py` lines 811-864: AddIndex class definition
+- `django/db/migrations/optimizer.py` lines 27-63: optimize_inner loop that calls operation.reduce()
+
+## Root cause
+
+The `AddIndex` class does not implement a `reduce` method. The migration optimizer works by calling `operation.reduce(other, app_label)` for each pair of consecutive operations. When `reduce` returns a list, those operations are replaced with the returned list; an empty list `[]` means both operations should be eliminated.
+
+AddIndex inherits from IndexOperation → Operation, neither of which provides index-specific reduction logic. The base Operation.reduce() (base.py:129-135) only handles elidable operations, not inverse operation pairs.
+
+Working examples that follow the required pattern:
+- `AddField.reduce()` (fields.py:141-142): returns `[]` when followed by RemoveField on the same field
+- `CreateModel.reduce()` (models.py:136-143): returns `[]` when followed by DeleteModel on the same model
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/db/migrations/operations/models.py:811-864` — AddIndex class has no reduce method
+- `django/db/migrations/operations/fields.py:141-142` — AddField returns `[]` when followed by RemoveField: `elif isinstance(operation, RemoveField): return []`
+- `django/db/migrations/operations/models.py:136-143` — CreateModel returns `[]` when followed by DeleteModel
+- Test output confirms both operations are returned unchanged, indicating reduce was not triggered
+
+## Edit sites
+
+- `django/db/migrations/operations/models.py` lines 811-864: Add a `reduce` method to the `AddIndex` class (insert before line 865 where RemoveIndex begins). The method should:
+  1. Check if `operation` is an instance of `RemoveIndex`
+  2. Compare `self.model_name_lower == operation.model_name_lower`
+  3. Compare `self.index.name == operation.name` (AddIndex stores the index object with a name property; RemoveIndex stores the name directly)
+  4. If all conditions match, return `[]` to eliminate both operations
+  5. Otherwise, call `super().reduce(operation, app_label)` to fall back to base behavior
+
+## Rejected hypotheses
+
+None — this is the first diagnosis. The pattern is clear from the working AddField/RemoveField optimization, and no alternative explanation for the missing reduction exists.
+
+## Open questions
+
+None — the fix is straightforward following the established pattern from AddField.reduce().
+
+---STDERR---

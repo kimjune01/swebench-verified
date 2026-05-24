@@ -1,0 +1,18 @@
+# Audit: django__django-16819
+
+## FAIL_TO_PASS
+- test_add_remove_index: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+Not applicable — fix is RESOLVED.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

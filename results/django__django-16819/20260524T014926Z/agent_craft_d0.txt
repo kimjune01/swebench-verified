@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete and verified. Added a `reduce` method to the `AddIndex` class that optimizes away consecutive AddIndex/RemoveIndex operations on the same index, following the established pattern from `AddField.reduce()`. All 39 tests pass including the originally failing `test_add_remove_index`.
+
+---STDERR---
