@@ -1,0 +1,24 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 urlpatterns.test_resolvers
+
+test_str (urlpatterns.test_resolvers.RegexPatternTests) ... ok
+test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests) ... FAIL
+test_str (urlpatterns.test_resolvers.RoutePatternTests) ... ok
+
+======================================================================
+FAIL: test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 370, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/urlpatterns/test_resolvers.py", line 24, in test_resolver_cache_default__root_urlconf
+    self.assertIs(get_resolver(), get_resolver('urlpatterns.path_urls'))
+AssertionError: <URLResolver 'urlpatterns.path_urls' (None:None) '^/'> is not <URLResolver 'urlpatterns.path_urls' (None:None) '^/'>
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (failures=1)
+Testing against Django installed in '/testbed/django'
+Importing application urlpatterns
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

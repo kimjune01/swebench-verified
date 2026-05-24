@@ -1,0 +1,18 @@
+# Audit: django__django-11333
+
+## FAIL_TO_PASS
+- test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests): PASS ✅
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Verdict
+All FAIL_TO_PASS tests now pass. Zero PASS_TO_PASS regressions. The fix successfully resolved the caching issue by normalizing the urlconf parameter before the cached function is invoked.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

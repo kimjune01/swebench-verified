@@ -1,0 +1,41 @@
+# Recon: django__django-11333
+
+## Failure summary
+The test `test_resolver_cache_default__root_urlconf` verifies that calling `get_resolver()` with no argument and calling `get_resolver('urlpatterns.path_urls')` when `ROOT_URLCONF='urlpatterns.path_urls'` should return the same cached URLResolver object. The test fails with `AssertionError: <URLResolver 'urlpatterns.path_urls' (None:None) '^/'> is not <URLResolver 'urlpatterns.path_urls' (None:None) '^/'>`, indicating two different URLResolver instances were created instead of reusing the cached one.
+
+## Suspect set
+- `django/urls/resolvers.py` lines 67-71: The `get_resolver` function with its `@functools.lru_cache` decorator
+
+## Root cause
+The `@functools.lru_cache(maxsize=None)` decorator on `get_resolver` (line 67) caches function results based on the input parameter values. When `get_resolver()` is called with `urlconf=None`, the cache key is `None`. When `get_resolver('urlpatterns.path_urls')` is called, the cache key is the string `'urlpatterns.path_urls'`. These are different cache keys, so the `lru_cache` treats them as distinct function calls.
+
+The function normalizes `None` to `settings.ROOT_URLCONF` on line 70 (`if urlconf is None: urlconf = settings.ROOT_URLCONF`), but this happens INSIDE the function body, AFTER the decorator has already computed the cache key from the input parameters. Therefore, two separate URLResolver instances are created and cached separately, even though they should logically be the same.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/urls/resolvers.py:67-71` — Shows the current implementation where normalization occurs inside the cached function
+```python
+@functools.lru_cache(maxsize=None)
+def get_resolver(urlconf=None):
+    if urlconf is None:
+        urlconf = settings.ROOT_URLCONF
+    return URLResolver(RegexPattern(r'^/'), urlconf)
+```
+- Test failure output confirms two distinct URLResolver objects with identical string representations
+- Python `functools.lru_cache` behavior: cache keys are computed from function arguments before function body executes
+
+## Edit sites
+- `django/urls/resolvers.py` lines 67-71: Refactor to normalize the `urlconf` parameter to `settings.ROOT_URLCONF` when it's `None` BEFORE the cached function is invoked. This can be done by:
+  1. Creating a wrapper function that normalizes `urlconf` and calls a separate `@lru_cache`-decorated internal function, OR
+  2. Moving the normalization logic outside the cached function scope
+
+The fix ensures that both `get_resolver()` and `get_resolver(settings.ROOT_URLCONF)` use the same cache key, preventing duplicate URLResolver construction.
+
+## Rejected hypotheses
+None — the root cause is directly observable from the code structure.
+
+## Open questions
+None — the diagnosis is complete and actionable.
+
+---STDERR---

@@ -1,0 +1,14 @@
+**RESOLVED**
+
+The gate is green. The fix successfully addresses the caching issue:
+
+**Root cause**: `@lru_cache` computed cache keys from the `urlconf` parameter before the function body normalized `None` to `settings.ROOT_URLCONF`, causing `get_resolver()` and `get_resolver(settings.ROOT_URLCONF)` to create separate cached instances.
+
+**Fix applied**:
+1. Created `_get_resolver(urlconf)` with `@lru_cache` decorator (internal cached function)
+2. Changed `get_resolver(urlconf=None)` to a wrapper that normalizes `None` to `settings.ROOT_URLCONF` before calling `_get_resolver`
+3. Exposed cache methods (`cache_clear`, `cache_info`) to maintain compatibility with Django's URL cache clearing system
+
+Now `get_resolver()` and `get_resolver(settings.ROOT_URLCONF)` both resolve to the same cache key, returning the same URLResolver instance as expected by the test.
+
+---STDERR---
