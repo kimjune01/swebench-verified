@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix was successful on the first iteration. All four `yield` statements in the `partitions()` function now copy the dictionary before yielding, preventing the aliasing bug where consumers received references to the same mutable object. Both `test_partitions` and `test_uniq` now pass.
+
+---STDERR---

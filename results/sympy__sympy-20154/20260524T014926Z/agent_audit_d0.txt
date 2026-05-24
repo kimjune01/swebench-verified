@@ -1,0 +1,19 @@
+# Audit: sympy__sympy-20154
+
+## FAIL_TO_PASS
+- `test_partitions`: **PASS** ✓
+- `test_uniq`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 41 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None confirmed against base capture.
+
+## Summary
+The craft patch successfully fixes the dictionary reuse bug in `partitions()` by adding `.copy()` to all four yield statements in `sympy/utilities/iterables.py`. Both failing tests now pass, and no regressions were introduced. The fix is minimal, surgical, and directly addresses the root cause identified during recon.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,49 @@
+# Recon: sympy__sympy-20154
+
+## Failure summary
+
+The `test_partitions` and `test_uniq` tests fail because the `partitions()` iterator in `sympy/utilities/iterables.py` reuses the same dictionary object across all iterations. When consumers collect the yielded partitions into a list (e.g., `[p for p in partitions(6, k=2)]`), they get multiple references to the same dictionary object, which by the end contains only the final partition value `{1: 6}` instead of the expected sequence `[{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]`. The `test_uniq` test fails similarly because all partition dictionaries are the same object, so `uniq()` sees only one unique value.
+
+**Error type:** Wrong return value (all dictionaries in list have same value)
+
+## Suspect set
+
+- `sympy/utilities/iterables.py` lines 1696-1849: `partitions()` function
+  - Lines 1796-1808: Initial partition creation and first yield
+  - Lines 1810-1848: Main while loop that modifies `ms` in-place and yields it
+  - Lines 1805, 1807, 1845, 1847: The four `yield` statements that yield `ms` without copying
+
+## Root cause
+
+The `partitions()` function creates a single dictionary `ms` at line 1796 and modifies it in-place throughout the iteration. It yields this same dictionary object at lines 1807 and 1847 without creating a copy. This means all consumers receive references to the same mutable dictionary, which gets mutated after being yielded.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `sympy/utilities/iterables.py:1796` — `ms = {k: q}` creates the dictionary once
+- `sympy/utilities/iterables.py:1807` — `yield ms` yields without copying
+- `sympy/utilities/iterables.py:1820-1828` — modifies `ms` in-place (`ms[i] = ms[i] - 1`, `del ms[i]`, etc.)
+- `sympy/utilities/iterables.py:1847` — `yield ms` yields without copying again
+- Verified: `python3 -c "from sympy.utilities.iterables import partitions; print([p for p in partitions(6, k=2)])"` → `[{1: 6}, {1: 6}, {1: 6}, {1: 6}]`
+- Docstring line 1739 explicitly documents this behavior: "Note that the _same_ dictionary object is returned each time."
+
+## Edit sites
+
+Four yield statements must copy the dictionary before yielding:
+
+- `sympy/utilities/iterables.py` line 1805: Change `yield sum(ms.values()), ms` to `yield sum(ms.values()), ms.copy()`
+- `sympy/utilities/iterables.py` line 1807: Change `yield ms` to `yield ms.copy()`
+- `sympy/utilities/iterables.py` line 1845: Change `yield sum(ms.values()), ms` to `yield sum(ms.values()), ms.copy()`
+- `sympy/utilities/iterables.py` line 1847: Change `yield ms` to `yield ms.copy()`
+
+The early return cases at lines 1777 and 1787 yield new dictionary literals (`{}` and `{0: 1}`) so they do not have the reuse problem and require no changes.
+
+## Rejected hypotheses
+
+None — the root cause was immediately evident from tracing the code path and confirmed by running the actual function.
+
+## Open questions
+
+None — the fix is straightforward: copy the dictionary before yielding.
+
+---STDERR---
