@@ -4,16 +4,6 @@ A three-stage agent pipeline for SWE-bench Verified, built to be re-run and insp
 
 > **One repo per benchmark.** This is the **Verified** run. The SWE-bench **Pro** run — and its port plan, goal predicate, and validation design (`PRO_PORT.md`) — lives in its own repo, [`swebench-pro`](https://github.com/kimjune01/swebench-pro). Separate repos so each run's artifacts and number stand alone, rather than hiding behind branches.
 
-> ## ⚠️ Contamination disclaimer — read this before the number
->
-> **SWE-bench Verified is training-data contaminated for every modern model, including the ones used here.** Claude Sonnet generates and codex (GPT-5.5) filters; both training cutoffs postdate the Verified instances. This is a **leaderboard / capability configuration, not a contamination-clean science claim.**
->
-> - Contamination is a property of the *benchmark*, shared by all leaderboard entries — so any score here is a fair entry on the same terms as everyone else, and **nothing more**. It is not evidence that the method causes the result.
-> - **Isolating the method** as the cause requires a separate clean-room ablation: post-cutoff instances (SWE-rebench), with-vs-without the pipeline on one fixed model. This repo does **not** make that claim. What it demonstrates is that the pipeline runs end-to-end and produces correct, official-grader-verified patches.
-> - The honest unit is a **win count with an explicit denominator** (`KNOWN_BAD.md` exclusions committed), not a "solve rate" you should read as model capability.
->
-> **[`LIMITATIONS.md`](LIMITATIONS.md) is the full, unhedged list.** Read it before drawing any conclusion.
-
 ## Where the numbers come from (start at 500)
 
 Every one of the 500 SWE-bench Verified instances flows to a visible terminal below — nothing is
@@ -51,6 +41,16 @@ pytest-5787 (gate-divergence), sympy-13091 (craft-overfit), sympy-20438, sympy-1
 — not re-rolled). The 4 external-fault losses (django-15563/14404 box-death, django-15987 serialization,
 sympy-13878 contention) were corrected by re-run and now resolve; their original losing runs remain in
 history. Only external/infra faults are eligible for rerun — a reasoning loss stays a loss.
+
+> ## ⚠️ Contamination disclaimer — read this before trusting the number
+>
+> **SWE-bench Verified is training-data contaminated for every modern model, including the ones used here.** Claude Sonnet generates and codex (GPT-5.5) filters; both training cutoffs postdate the Verified instances. This is a **leaderboard / capability configuration, not a contamination-clean science claim.**
+>
+> - Contamination is a property of the *benchmark*, shared by all leaderboard entries — so any score here is a fair entry on the same terms as everyone else, and **nothing more**. It is not evidence that the method causes the result.
+> - **Isolating the method** as the cause requires a separate clean-room ablation: post-cutoff instances (SWE-rebench), with-vs-without the pipeline on one fixed model. This repo does **not** make that claim. What it demonstrates is that the pipeline runs end-to-end and produces correct, official-grader-verified patches.
+> - The honest unit is a **win count with an explicit denominator** (`KNOWN_BAD.md` exclusions committed), not a "solve rate" you should read as model capability.
+>
+> **[`LIMITATIONS.md`](LIMITATIONS.md) is the full, unhedged list.** Read it before drawing any conclusion.
 
 ## What it is
 
