@@ -1,0 +1,30 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 async.tests
+
+test_async_unsafe (async.tests.AsyncUnsafeTest) ... ok
+test_async_unsafe_suppressed (async.tests.AsyncUnsafeTest)
+Utility class which turns an awaitable that only works on the thread with ... ok
+test_caches_local (async.tests.CacheTest) ... ok
+test_get_async_connection (async.tests.DatabaseConnectionTest) ... ok
+test_base_view_class_is_sync (async.tests.ViewTests)
+View and by extension any subclasses that don't define handlers are ... ok
+test_http_method_not_allowed_responds_correctly (async.tests.ViewTests) ... test_mixed_views_raise_error (async.tests.ViewTests) ... ok
+test_options_handler_responds_correctly (async.tests.ViewTests) ... ok
+test_views_are_correctly_marked (async.tests.ViewTests) ... ok
+
+======================================================================
+FAIL: test_http_method_not_allowed_responds_correctly (async.tests.ViewTests) (view_cls=<class 'async.tests.AsyncView'>, is_coroutine=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/async/tests.py", line 132, in test_http_method_not_allowed_responds_correctly
+    self.assertIs(
+AssertionError: False is not True
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.013s
+
+FAILED (failures=1)
+Testing against Django installed in '/testbed/django'
+Importing application async
+Found 9 test(s).
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

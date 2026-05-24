@@ -1,0 +1,55 @@
+# Recon: django__django-16136
+
+## Failure summary
+
+The test `test_http_method_not_allowed_responds_correctly` checks that when `http_method_not_allowed()` is called on a view instance, it should return a coroutine if the view is async, or a regular response if the view is sync. The test fails for `AsyncView` because `http_method_not_allowed()` returns an `HttpResponseNotAllowed` object directly instead of wrapping it in a coroutine, causing `asyncio.iscoroutine(response)` to return `False` when it should return `True`.
+
+The problem manifests when an async view receives an HTTP method it doesn't support - Django tries to await the response from `http_method_not_allowed()`, which raises: `TypeError: object HttpResponseNotAllowed can't be used in 'await' expression`
+
+## Suspect set
+
+- `django/views/generic/base.py` lines 144-150: `http_method_not_allowed()` method that returns response directly
+- `django/views/generic/base.py` lines 156-167: `options()` method that correctly handles async views (reference implementation)
+- `django/views/generic/base.py` lines 67-84: `view_is_async` property that determines if a view is async
+
+## Root cause
+
+When async view support was added to Django in commit 9ffd4eae2c (Fixed #33611), the `options()` method was correctly updated to check `self.view_is_async` and wrap the response in an async function when needed. However, `http_method_not_allowed()` was not given the same treatment and continues to return `HttpResponseNotAllowed` directly regardless of whether the view is async or sync.
+
+For async views, all handler methods must return coroutines. The `options()` method achieves this by:
+```python
+if self.view_is_async:
+    async def func():
+        return response
+    return func()
+else:
+    return response
+```
+
+The `http_method_not_allowed()` method lacks this check and always returns the response directly, causing a type mismatch when used with async views.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/views/generic/base.py:144-150` — `http_method_not_allowed` unconditionally returns `HttpResponseNotAllowed(self._allowed_methods())` without checking `self.view_is_async`
+- `django/views/generic/base.py:156-167` — `options` implements the correct pattern: checks `self.view_is_async` and wraps response in `async def func()` if True
+- `tests/async/tests.py:125-140` — test expects `asyncio.iscoroutine(response)` to be True for AsyncView, False for SyncView
+- `git show 9ffd4eae2c` — commit that added async view support modified `options()` but not `http_method_not_allowed()`
+
+## Edit sites
+
+- `django/views/generic/base.py` lines 144-150: Modify `http_method_not_allowed()` to mirror the pattern used in `options()` - check `self.view_is_async` and if True, wrap the `HttpResponseNotAllowed` response in an async function before returning
+
+## Competing hypotheses
+
+None - the root cause is unambiguous from code inspection and git history.
+
+## Rejected hypotheses
+
+None - first-pass diagnosis.
+
+## Open questions
+
+None - the fix is straightforward and follows an established pattern already present in the same class.
+
+---STDERR---

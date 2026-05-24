@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix is complete. Modified `django/views/generic/base.py` to make `http_method_not_allowed()` return a coroutine for async views, mirroring the pattern already established in the `options()` method. Both FAIL_TO_PASS tests now pass:
+- ✅ `test_http_method_not_allowed_responds_correctly` 
+- ✅ `test_mixed_views_raise_error`
+
+Gate green on first iteration.
+
+---STDERR---

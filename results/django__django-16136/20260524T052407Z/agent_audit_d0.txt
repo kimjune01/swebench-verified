@@ -1,0 +1,21 @@
+# Audit: django__django-16136
+
+## FAIL_TO_PASS
+- test_http_method_not_allowed_responds_correctly (async.tests.ViewTests): **PASS** ✓
+- test_mixed_views_raise_error (async.tests.ViewTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all PASS_TO_PASS tests remain passing
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Verification
+All 9 tests in the async.tests suite pass cleanly. Both FAIL_TO_PASS tests now pass, and zero regressions introduced.
+
+The craft patch successfully added async wrapper handling to `http_method_not_allowed()`, mirroring the pattern from `options()` method. The fix correctly checks `self.view_is_async` and wraps the response in a coroutine when needed.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
