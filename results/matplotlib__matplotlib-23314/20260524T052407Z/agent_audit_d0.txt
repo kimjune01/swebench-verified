@@ -1,0 +1,24 @@
+# Audit: matplotlib-23314
+
+## FAIL_TO_PASS
+- `lib/mpl_toolkits/tests/test_mplot3d.py::test_invisible_axes[png]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 864 tests passed in gate output.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch adds a 2-line visibility check at the start of `Axes3D.draw()`:
+```python
+if not self.get_visible():
+    return
+```
+
+This prevents 3D elements from being drawn when axes are invisible, matching the behavior of the parent `Axes.draw()` method. The FAIL_TO_PASS test now passes, and all 864 tests in the gate run passed with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

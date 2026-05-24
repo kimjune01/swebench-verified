@@ -1,0 +1,46 @@
+# Recon: matplotlib__matplotlib-23314
+
+## Failure summary
+
+The test `test_invisible_axes[png]` creates a 3D axes subplot and calls `set_visible(False)`. The test expects a blank figure (matching the reference figure which has no axes), but instead the test produces an image showing the 3D axes grid, panes, and frame. The image comparison fails with RMS error of 17.513 because the axes elements remain visible despite the visibility flag being set to False.
+
+## Suspect set
+
+- `lib/mpl_toolkits/mplot3d/axes3d.py` lines 389-443: The `Axes3D.draw()` method that controls rendering of 3D axes
+
+## Root cause
+
+The `Axes3D.draw()` method performs all 3D-specific rendering operations BEFORE calling the parent class's `draw()` method. The parent `Axes.draw()` (in `lib/matplotlib/axes/_base.py` lines 3021-3022) checks visibility and returns early if the axes is not visible:
+
+```python
+if not self.get_visible():
+    return
+```
+
+However, `Axes3D.draw()` executes the following rendering before calling `super().draw()`:
+- Line 393: `self.patch.draw(renderer)` - draws the background patch
+- Lines 437-441: Draws 3D axis panes and axes (when `_axis3don` is True)
+
+Only after all this 3D-specific rendering does it call `super().draw(renderer)` at line 443. By that point, even though `super().draw()` will return early due to the visibility check, the 3D elements have already been rendered to the canvas.
+
+The 2D `test_invisible_axes` test in `lib/matplotlib/tests/test_axes.py` passes because regular 2D axes only go through `Axes.draw()`, which checks visibility at the very beginning.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `lib/mpl_toolkits/mplot3d/axes3d.py:389` — `def draw(self, renderer):` with no visibility check
+- `lib/mpl_toolkits/mplot3d/axes3d.py:393` — `self.patch.draw(renderer)` executes unconditionally
+- `lib/mpl_toolkits/mplot3d/axes3d.py:437-441` — axis panes and axes drawn unconditionally (if `_axis3don`)
+- `lib/mpl_toolkits/mplot3d/axes3d.py:443` — `super().draw(renderer)` called after all 3D drawing
+- `lib/matplotlib/axes/_base.py:3021-3022` — parent class checks visibility first
+- `git blame` shows the draw method dates to 2009 commit edd492e866b, before robust visibility handling was standard
+
+## Edit sites
+
+- `lib/mpl_toolkits/mplot3d/axes3d.py` lines 389-391: Add visibility check at the beginning of the `draw()` method, immediately after the method signature and before any drawing operations. The check should mirror the parent class: `if not self.get_visible(): return`
+
+## Open questions
+
+None. The fix is straightforward — add the visibility check that the parent class has, but at the start of the overridden method before any 3D-specific drawing occurs.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_invisible_axes[png]` pass. Added a visibility check at the beginning of `Axes3D.draw()` to prevent rendering when the axes is invisible, matching the parent class's behavior. Gate passed on first attempt with no regressions (864 tests passed).
+
+---STDERR---

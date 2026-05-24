@@ -1,0 +1,7 @@
+{
+ "instance_id": "matplotlib__matplotlib-23314",
+ "official_resolved": true,
+ "run_id": "20260524T052407Z",
+ "grader": "swebench.harness.run_evaluation",
+ "dataset": "princeton-nlp/SWE-bench_Verified"
+}
