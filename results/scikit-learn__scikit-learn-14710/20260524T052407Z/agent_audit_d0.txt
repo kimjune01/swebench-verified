@@ -1,0 +1,23 @@
+# Audit: scikit-learn__scikit-learn-14710
+
+## FAIL_TO_PASS
+- `test_string_target_early_stopping[None]`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+**None** - all validation tests and other PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - no pre-existing failures observed in this test run.
+
+## Gate summary
+The full gate ran successfully with 80/80 tests passed:
+- The single FAIL_TO_PASS test now passes
+- All PASS_TO_PASS tests (test_init_parameters_validation variants and others) continue passing
+- Zero regressions introduced by the patch
+
+The patch correctly addresses the type mismatch by decoding encoded labels before passing them to the scorer in the `_check_early_stopping_scorer` method, ensuring encoded y values align with decoded predictions from `predict()`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

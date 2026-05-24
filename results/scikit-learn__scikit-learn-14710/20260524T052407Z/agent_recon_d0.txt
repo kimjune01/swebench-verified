@@ -1,0 +1,48 @@
+Now let me output my final diagnosis.
+
+```markdown
+# Recon: scikit-learn__scikit-learn-14710
+
+## Failure summary
+The test `test_string_target_early_stopping[None]` checks that HistGradientBoostingClassifier works with string targets when early stopping is enabled. When `scoring=None` (using default accuracy scorer), the test fails with `TypeError: '<' not supported between instances of 'str' and 'float'` in numpy's array sorting function called from `accuracy_score`. The test with `scoring='loss'` passes because it uses a different code path.
+
+## Suspect set
+- `sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py` lines 423-440: `_check_early_stopping_scorer` method in BaseHistGradientBoosting class
+
+## Root cause
+When early stopping is enabled with a scorer (not loss), the classifier passes encoded numeric labels to the scorer but the scorer compares them against decoded string predictions, causing a type mismatch.
+
+The data flow:
+1. Line 105: `y = self._encode_y(y)` encodes string labels ('x', 'y') to numeric (0, 1) for classifiers
+2. Line 145-150: encoded y is split into y_train, y_val  
+3. Lines 429-430 and 434-436: `_check_early_stopping_scorer` passes encoded y values to `self.scorer_(self, X, y_encoded)`
+4. The scorer calls `estimator.score(X, y_encoded)` 
+5. Score method (base.py:368) calls `accuracy_score(y_encoded, self.predict(X))`
+6. `self.predict(X)` decodes predictions back to strings using `self.classes_[encoded_classes]` (line 983)
+7. `accuracy_score` receives mixed types: encoded numeric y_true and decoded string y_pred
+8. numpy's `union1d` fails when trying to sort the mixed-type array
+
+When `scoring='loss'`, a different code path (`_check_early_stopping_loss`) is used that passes raw predictions and encoded y to the loss function, which works with encoded values only.
+
+Confidence: deduction — 95%
+Supporting evidence:
+- `gradient_boosting.py:105` — `y = self._encode_y(y)` encodes all labels
+- `gradient_boosting.py:430` — `self.scorer_(self, X_binned_small_train, y_small_train)` passes encoded y
+- `gradient_boosting.py:983` — `return self.classes_[encoded_classes]` shows predict() decodes back to original classes
+- `gradient_boosting.py:629` — regressor's `_encode_y` is a no-op, so this only affects classifiers
+
+## Edit sites
+- `sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py` lines 429-430: Before calling `self.scorer_(self, X_binned_small_train, y_small_train)`, decode y_small_train to original labels if this is a classifier. Check `hasattr(self, 'classes_')` and use `self.classes_[y_small_train]` to decode.
+
+- `sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py` lines 434-436: Before calling `self.scorer_(self, X_binned_val, y_val)`, decode y_val to original labels if this is a classifier. Check `hasattr(self, 'classes_')` and use `self.classes_[y_val]` to decode.
+
+The fix must be conditional because `_check_early_stopping_scorer` is in the base class (BaseHistGradientBoosting) shared by both regressor and classifier. Regressors don't encode y and don't have a `classes_` attribute, so unconditional decoding would fail for regressors.
+
+## Rejected hypotheses
+None - the root cause is clear from code inspection and matches the observed error exactly.
+
+## Open questions
+None - the fix is straightforward.
+```
+
+---STDERR---

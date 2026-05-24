@@ -1,0 +1,9 @@
+**RESOLVED**
+
+Fixed the string target early stopping issue in HistGradientBoostingClassifier. The problem was that encoded numeric labels were passed to the scorer, but the scorer compared them against decoded string predictions from `predict()`, causing a type mismatch.
+
+The fix decodes y_small_train and y_val back to original class labels before passing to the scorer (when it's a classifier), using `self.classes_[y.astype(np.intp)]`. The `.astype(np.intp)` cast was critical (caught by codex) since the y arrays are float dtype.
+
+Gate passed on first iteration — all 80 tests pass including `test_string_target_early_stopping[None]`.
+
+---STDERR---

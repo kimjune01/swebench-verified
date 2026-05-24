@@ -1,0 +1,302 @@
+$ pytest -rA sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py
+
+[13/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.20088, val loss: 0.16576, in 0.000s
+[14/50] 1 tree, 4 leaves, max depth = 2, train loss: 0.18723, val loss: 0.15504, in 0.000s
+[15/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.17483, val loss: 0.15129, in 0.000s
+[16/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.16363, val loss: 0.13574, in 0.000s
+[17/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.15335, val loss: 0.12864, in 0.000s
+[18/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.14390, val loss: 0.12043, in 0.000s
+[19/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.13529, val loss: 0.10824, in 0.000s
+[20/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.12236, val loss: 0.11017, in 0.000s
+[21/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.11078, val loss: 0.12778, in 0.000s
+[22/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.10049, val loss: 0.11531, in 0.000s
+[23/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.09123, val loss: 0.12352, in 0.000s
+[24/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.08331, val loss: 0.11163, in 0.000s
+Fit 24 trees in 0.010 s, (84 total leaves)
+Time spent computing histograms: 0.001s
+Time spent finding best splits:  0.000s
+Time spent applying splits:      0.001s
+Time spent predicting:           0.000s
+__________ test_early_stopping_classification[loss-0.1-5-1e-07-data1] __________
+----------------------------- Captured stdout call -----------------------------
+Binning 0.000 GB of training data: 0.001 s
+Binning 0.000 GB of validation data: 0.000 s
+Fitting gradient boosted rounds:
+[1/50] 3 trees, 9 leaves (3 on avg), max depth = 2, train loss: 0.86684, val loss: 0.88207, in 0.001s
+[2/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.70290, val loss: 0.72087, in 0.001s
+[3/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.57985, val loss: 0.59839, in 0.002s
+[4/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.48409, val loss: 0.50236, in 0.001s
+[5/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.40798, val loss: 0.42555, in 0.001s
+[6/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.34656, val loss: 0.36307, in 0.001s
+[7/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.29620, val loss: 0.31012, in 0.001s
+[8/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.25455, val loss: 0.26822, in 0.001s
+[9/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.21989, val loss: 0.23211, in 0.001s
+[10/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.19067, val loss: 0.20302, in 0.001s
+[11/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.16613, val loss: 0.17829, in 0.001s
+[12/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.14515, val loss: 0.15687, in 0.001s
+[13/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.12733, val loss: 0.13898, in 0.001s
+[14/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.11197, val loss: 0.12335, in 0.001s
+[15/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.09591, val loss: 0.11953, in 0.001s
+[16/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.08190, val loss: 0.10992, in 0.001s
+[17/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.07049, val loss: 0.10897, in 0.001s
+[18/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.06211, val loss: 0.09210, in 0.001s
+[19/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.05343, val loss: 0.09664, in 0.001s
+[20/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.04610, val loss: 0.09373, in 0.001s
+[21/50] 3 trees, 13 leaves (4 on avg), max depth = 4, train loss: 0.04035, val loss: 0.08539, in 0.001s
+[22/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.03494, val loss: 0.08207, in 0.001s
+[23/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.02985, val loss: 0.09083, in 0.001s
+[24/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.02581, val loss: 0.09533, in 0.001s
+[25/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.02265, val loss: 0.09196, in 0.001s
+[26/50] 3 trees, 13 leaves (4 on avg), max depth = 4, train loss: 0.01946, val loss: 0.09869, in 0.001s
+[27/50] 3 trees, 13 leaves (4 on avg), max depth = 3, train loss: 0.01687, val loss: 0.10491, in 0.001s
+Fit 81 trees in 0.032 s, (347 total leaves)
+Time spent computing histograms: 0.004s
+Time spent finding best splits:  0.001s
+Time spent applying splits:      0.006s
+Time spent predicting:           0.001s
+__________ test_early_stopping_classification[loss-None-5-0.1-data0] ___________
+----------------------------- Captured stdout call -----------------------------
+Binning 0.000 GB of training data: 0.001 s
+Fitting gradient boosted rounds:
+[1/50] 1 tree, 3 leaves, max depth = 2, train loss: 0.60827, in 0.000s
+[2/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.53845, in 0.000s
+[3/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.48010, in 0.000s
+[4/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.43070, in 0.000s
+[5/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.38844, in 0.000s
+[6/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.35196, in 0.000s
+[7/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.32025, in 0.000s
+[8/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.29255, in 0.000s
+[9/50] 1 tree, 5 leaves, max depth = 3, train loss: 0.26812, in 0.000s
+[10/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.24655, in 0.000s
+[11/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.22738, in 0.000s
+[12/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.21019, in 0.000s
+[13/50] 1 tree, 4 leaves, max depth = 3, train loss: 0.19474, in 0.000s
+Fit 13 trees in 0.006 s, (54 total leaves)
+Time spent computing histograms: 0.001s
+Time spent finding best splits:  0.000s
+Time spent applying splits:      0.001s
+Time spent predicting:           0.000s
+__________ test_early_stopping_classification[loss-None-5-0.1-data1] ___________
+----------------------------- Captured stdout call -----------------------------
+Binning 0.000 GB of training data: 0.001 s
+Fitting gradient boosted rounds:
+[1/50] 3 trees, 9 leaves (3 on avg), max depth = 2, train loss: 0.86534, in 0.001s
+[2/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.69970, in 0.001s
+[3/50] 3 trees, 14 leaves (4 on avg), max depth = 3, train loss: 0.57532, in 0.001s
+[4/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.47824, in 0.001s
+[5/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.40121, in 0.001s
+[6/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.33889, in 0.001s
+[7/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.28811, in 0.001s
+[8/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.24613, in 0.001s
+[9/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.21127, in 0.001s
+[10/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.18188, in 0.001s
+[11/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.15714, in 0.001s
+[12/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.13606, in 0.001s
+[13/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.11815, in 0.001s
+[14/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.10278, in 0.001s
+[15/50] 3 trees, 15 leaves (5 on avg), max depth = 3, train loss: 0.08963, in 0.001s
+Fit 45 trees in 0.018 s, (218 total leaves)
+Time spent computing histograms: 0.003s
+Time spent finding best splits:  0.001s
+Time spent applying splits:      0.004s
+Time spent predicting:           0.001s
+________ test_early_stopping_classification[None-None-None-None-data0] _________
+----------------------------- Captured stdout call -----------------------------
+Binning 0.000 GB of training data: 0.001 s
+Fitting gradient boosted rounds:
+[1/50] 1 tree, 3 leaves, max depth = 2, in 0.000s
+[2/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[3/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[4/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[5/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[6/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[7/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[8/50] 1 tree, 4 leaves, max depth = 3, in 0.001s
+[9/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[10/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[11/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[12/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[13/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[14/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[15/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[16/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[17/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[18/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[19/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[20/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[21/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[22/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[23/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[24/50] 1 tree, 5 leaves, max depth = 3, in 0.001s
+[25/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[26/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[27/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[28/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[29/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[30/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[31/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[32/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[33/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[34/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[35/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[36/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[37/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[38/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[39/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[40/50] 1 tree, 5 leaves, max depth = 3, in 0.001s
+[41/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[42/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[43/50] 1 tree, 4 leaves, max depth = 3, in 0.000s
+[44/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[45/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[46/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[47/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[48/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[49/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+[50/50] 1 tree, 5 leaves, max depth = 3, in 0.000s
+Fit 50 trees in 0.019 s, (231 total leaves)
+Time spent computing histograms: 0.003s
+Time spent finding best splits:  0.001s
+Time spent applying splits:      0.004s
+Time spent predicting:           0.001s
+________ test_early_stopping_classification[None-None-None-None-data1] _________
+----------------------------- Captured stdout call -----------------------------
+Binning 0.000 GB of training data: 0.001 s
+Fitting gradient boosted rounds:
+[1/50] 3 trees, 9 leaves (3 on avg), max depth = 2, in 0.001s
+[2/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[3/50] 3 trees, 14 leaves (4 on avg), max depth = 3, in 0.001s
+[4/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[5/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[6/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[7/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[8/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[9/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[10/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[11/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[12/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[13/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[14/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[15/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[16/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[17/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[18/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[19/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[20/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[21/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[22/50] 3 trees, 16 leaves (5 on avg), max depth = 4, in 0.001s
+[23/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[24/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[25/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[26/50] 3 trees, 16 leaves (5 on avg), max depth = 4, in 0.001s
+[27/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[28/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[29/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[30/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[31/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[32/50] 3 trees, 16 leaves (5 on avg), max depth = 4, in 0.001s
+[33/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[34/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[35/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[36/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[37/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[38/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[39/50] 3 trees, 16 leaves (5 on avg), max depth = 4, in 0.001s
+[40/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[41/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[42/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[43/50] 3 trees, 14 leaves (4 on avg), max depth = 3, in 0.001s
+[44/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[45/50] 3 trees, 14 leaves (4 on avg), max depth = 3, in 0.001s
+[46/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[47/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[48/50] 3 trees, 14 leaves (4 on avg), max depth = 3, in 0.001s
+[49/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+[50/50] 3 trees, 15 leaves (5 on avg), max depth = 3, in 0.001s
+Fit 150 trees in 0.053 s, (744 total leaves)
+Time spent computing histograms: 0.009s
+Time spent finding best splits:  0.003s
+Time spent applying splits:      0.013s
+Time spent predicting:           0.003s
+=========================== short test summary info ============================
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params0-Loss blah is not supported for-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params0-Loss blah is not supported for-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params1-learning_rate=0 must be strictly positive-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params1-learning_rate=0 must be strictly positive-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params2-learning_rate=-1 must be strictly positive-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params2-learning_rate=-1 must be strictly positive-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params3-max_iter=0 must not be smaller than 1-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params3-max_iter=0 must not be smaller than 1-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params4-max_leaf_nodes=0 should not be smaller than 2-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params4-max_leaf_nodes=0 should not be smaller than 2-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params5-max_leaf_nodes=1 should not be smaller than 2-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params5-max_leaf_nodes=1 should not be smaller than 2-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params6-max_depth=0 should not be smaller than 2-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params6-max_depth=0 should not be smaller than 2-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params7-max_depth=1 should not be smaller than 2-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params7-max_depth=1 should not be smaller than 2-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params8-min_samples_leaf=0 should not be smaller-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params8-min_samples_leaf=0 should not be smaller-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params9-l2_regularization=-1 must be positive-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params9-l2_regularization=-1 must be positive-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params10-max_bins=1 should be no smaller than 2 and no larger-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params10-max_bins=1 should be no smaller than 2 and no larger-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params11-max_bins=256 should be no smaller than 2 and no-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params11-max_bins=256 should be no smaller than 2 and no-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params12-n_iter_no_change=-1 must be positive-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params12-n_iter_no_change=-1 must be positive-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params13-validation_fraction=-1 must be strictly-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params13-validation_fraction=-1 must be strictly-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params14-validation_fraction=0 must be strictly-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params14-validation_fraction=0 must be strictly-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params15-tol=-1 must not be smaller than 0-HistGradientBoostingClassifier-X0-y0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_init_parameters_validation[params15-tol=-1 must not be smaller than 0-HistGradientBoostingRegressor-X1-y1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_invalid_classification_loss
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[neg_mean_squared_error-0.1-5-1e-07]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[neg_mean_squared_error-None-5-0.1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[None-0.1-5-1e-07]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[None-None-5-0.1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[loss-0.1-5-1e-07]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[loss-None-5-0.1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_regression[None-None-None-None]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[accuracy-0.1-5-1e-07-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[accuracy-0.1-5-1e-07-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[accuracy-None-5-0.1-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[accuracy-None-5-0.1-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-0.1-5-1e-07-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-0.1-5-1e-07-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-None-5-0.1-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-None-5-0.1-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[loss-0.1-5-1e-07-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[loss-0.1-5-1e-07-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[loss-None-5-0.1-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[loss-None-5-0.1-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-None-None-None-data0]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_early_stopping_classification[None-None-None-None-data1]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores0-1-0.001-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores1-5-0.001-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores2-5-0.001-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores3-5-0.001-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores4-5-0.0-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores5-5-0.999-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores6-5-4.99999-False]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores7-5-0.0-True]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores8-5-0.001-True]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_should_stop[scores9-5-5-True]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_binning_train_validation_are_separated
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_trivial
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.1-0.97-0.89-classification]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.1-0.97-0.89-regression]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.2-0.93-0.81-classification]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.2-0.93-0.81-regression]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.5-0.79-0.52-classification]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_resilience[0.5-0.79-0.52-regression]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_zero_division_hessians[binary_crossentropy]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_zero_division_hessians[categorical_crossentropy]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_small_trainset
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_missing_values_minmax_imputation
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_infinite_values
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_infinite_values_missing_values
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[None]
+PASSED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[loss]
+======================== 80 passed, 1 warning in 2.94s =========================
