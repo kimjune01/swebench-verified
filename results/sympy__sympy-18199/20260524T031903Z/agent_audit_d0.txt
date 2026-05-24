@@ -1,0 +1,28 @@
+Now outputting the final audit verdict:
+
+# Audit: sympy__sympy-18199
+
+## FAIL_TO_PASS
+- test_solve_modular: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_solve_trig: Base capture shows error trace at line 786 (same AssertionError as current)
+- test_solve_hyperbolic: Base capture shows error trace at line 840 (same AssertionError as current)
+
+Both tests were already failing on base with identical errors. The base capture includes error traces for these tests showing they failed before any patch was applied.
+
+## Summary
+
+The fix successfully resolves the target issue:
+- `test_solve_modular` was failing on base with NotImplementedError (composite p not supported)
+- Now passes after adding CRT-based composite moduli support to `nthroot_mod`
+- Zero regressions in PASS_TO_PASS tests
+- The 2 failing tests (test_solve_trig, test_solve_hyperbolic) are pre-existing, confirmed by error traces in the base capture showing the same failures before the patch
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

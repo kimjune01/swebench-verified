@@ -1,0 +1,88 @@
+diff --git a/sympy/ntheory/residue_ntheory.py b/sympy/ntheory/residue_ntheory.py
+index 9a3052d4c3..4569e88eee 100644
+--- a/sympy/ntheory/residue_ntheory.py
++++ b/sympy/ntheory/residue_ntheory.py
+@@ -743,6 +743,45 @@ def _nthroot_mod1(s, q, p, all_roots):
+     return min(res)
+ 
+ 
++def _nthroot_mod_prime_power(a, n, p, k):
++    from sympy.core.numbers import igcdex
++    pk = p**k
++    a = a % pk
++    if a == 0:
++        m = (k + n - 1) // n
++        pm = p**m
++        return list(range(0, pk, pm))
++    try:
++        if (p - 1) % n == 0:
++            base_roots = _nthroot_mod1(a % p, n, p, all_roots=True)
++        else:
++            pa, pb, b, a_temp = n, p - 1, 1, a % p
++            if pa < pb:
++                a_temp, pa, b, pb = b, pb, a_temp, pa
++            while pb:
++                q, r = divmod(pa, pb)
++                c = pow(b, q, p)
++                c = igcdex(c, p)[0]
++                c = (c * a_temp) % p
++                pa, pb = pb, r
++                a_temp, b = b, c
++            if pa == 1:
++                base_roots = [a_temp]
++            elif pa == 2:
++                base_roots = sqrt_mod(a_temp, p, all_roots=True)
++            else:
++                base_roots = _nthroot_mod1(a_temp, pa, p, all_roots=True)
++    except ValueError:
++        # No solution exists for this prime power
++        return []
++    if not base_roots:
++        return []
++    if k == 1:
++        return sorted(base_roots) if isinstance(base_roots, list) else [base_roots]
++    res = [x for x in range(pk) if pow(x, n, pk) == a]
++    return sorted(res)
++
++
+ def nthroot_mod(a, n, p, all_roots=False):
+     """
+     Find the solutions to ``x**n = a mod p``
+@@ -768,13 +807,35 @@ def nthroot_mod(a, n, p, all_roots=False):
+     """
+     from sympy.core.numbers import igcdex
+     a, n, p = as_int(a), as_int(n), as_int(p)
++    if a == 0 and isprime(p):
++        return [0] if all_roots else 0
+     if n == 2:
+         return sqrt_mod(a, p, all_roots)
+     # see Hackman "Elementary Number Theory" (2009), page 76
++    if not isprime(p):
++        from sympy.polys.galoistools import gf_crt1, gf_crt2
++        from sympy.polys.domains import ZZ
++        from sympy.ntheory import factorint
++        f = factorint(p)
++        if not f:
++            return [0] if all_roots else 0
++        v, pv = [], []
++        for px, ex in f.items():
++            rx = _nthroot_mod_prime_power(a, n, px, ex)
++            if not rx:
++                return []  # No roots for composite p
++            v.append(rx)
++            pv.append(px**ex)
++        mm, e, s = gf_crt1(pv, ZZ)
++        res = [int(gf_crt2(list(vx), pv, mm, e, s, ZZ)) for vx in _product(*v)]
++        if not res:
++            return [] if all_roots else None
++        res = sorted(res)
++        return res  # Always return list for composite p
++
++    # Prime p: check if solution exists
+     if not is_nthpow_residue(a, n, p):
+         return None
+-    if not isprime(p):
+-        raise NotImplementedError("Not implemented for composite p")
+ 
+     if (p - 1) % n == 0:
+         return _nthroot_mod1(a, n, p, all_roots)

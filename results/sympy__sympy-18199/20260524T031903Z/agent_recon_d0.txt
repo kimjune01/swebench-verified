@@ -1,0 +1,53 @@
+# Recon: sympy__sympy-18199
+
+## Failure summary
+
+The test `test_solve_modular` expects `solveset(Mod(x**3, 8) - 1, x, S.Integers)` to return `ImageSet(Lambda(n, 8*n + 1), S.Integers)` but instead returns `ConditionSet(x, Eq(Mod(x**3, 8) - 1, 0), Integers)`. The root cause is that `nthroot_mod` lacks support for composite moduli and doesn't handle the case when `a % p == 0`. When called with composite p=8, it raises `NotImplementedError`, causing solveset to fall back to an unsolved ConditionSet.
+
+## Suspect set
+
+- `sympy/ntheory/residue_ntheory.py` lines 746-820: `nthroot_mod` function - raises NotImplementedError for composite p
+- `sympy/ntheory/residue_ntheory.py` lines 699-744: `_nthroot_mod1` and `_nthroot_mod2` helpers - fail with ValueError when a % p == 0
+- `sympy/solvers/solveset.py` lines 1203-1212: `_invert_modular` - catches the exception and falls back to ConditionSet
+
+## Root cause
+
+**nthroot_mod does not support composite moduli or handle a % p == 0**
+
+When solving `x**n ≡ a (mod p)`:
+1. **Composite p**: Line 777 raises `NotImplementedError("Not implemented for composite p")` 
+2. **Zero value (a % p == 0)**: Even for prime p, the algorithm fails at line 728 with `ValueError("Log does not exist")` because discrete_log cannot handle the zero case
+
+The function assumes p is prime and a is coprime to p throughout its algorithm. The analogous `sqrt_mod` function already handles both cases using Chinese Remainder Theorem for composite moduli and special logic in `_sqrt_mod1` for zero values.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `sympy/ntheory/residue_ntheory.py:777` — explicit check that blocks composite p
+- Manual test confirms: `nthroot_mod(1, 3, 8, True)` raises NotImplementedError
+- Manual test confirms: `nthroot_mod(0, 12, 37, True)` raises ValueError: Log does not exist
+- `sympy/ntheory/residue_ntheory.py:323-360` — sqrt_mod_iter successfully uses CRT for composite moduli
+- `sympy/ntheory/residue_ntheory.py:485-500` — _sqrt_mod1 successfully handles a == 0 case
+
+## Edit sites
+
+- `sympy/ntheory/residue_ntheory.py` lines 746-820 (`nthroot_mod`): 
+  - Add early return for `a % p == 0` case before main algorithm
+  - Replace isprime check with branching logic: if prime use existing code path, if composite use CRT approach
+  - For composite p, factorize into prime powers, solve for each prime power, combine via CRT
+
+- `sympy/ntheory/residue_ntheory.py` (new helper function, location ~550-680 near _sqrt_mod1):
+  - Add `_nthroot_mod_prime_power(a, n, p, k)` to solve `x**n ≡ a (mod p**k)` for prime p and power k
+  - Add special handler for `a % p == 0` case (analogous to _sqrt_mod1 lines 485-500)
+  - When a ≡ 0 (mod p**k), return multiples of p**(k//n) if k is divisible by n, else return empty/None
+
+## Rejected hypotheses
+
+None yet - this is the initial diagnosis.
+
+## Open questions
+
+1. When `a % p**k == 0` but `a ≠ 0 (mod p**k)`, what are the correct roots? Need to determine the pattern for partial divisibility.
+2. For composite p with multiple prime factors, verify CRT combination logic matches test expectations for cases like `nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]`
+
+---STDERR---
