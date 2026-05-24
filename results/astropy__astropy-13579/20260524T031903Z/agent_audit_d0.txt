@@ -1,0 +1,18 @@
+# Audit: astropy__astropy-13579
+
+## FAIL_TO_PASS
+- `test_coupled_world_slicing`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 40 baseline-passing tests still pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the baseline showed only `test_coupled_world_slicing` failing, which now passes.
+
+## Resolution summary
+The patch correctly computes world coordinates for sliced-out dimensions using `_pixel_to_world_values_all(*[0] * len(self._pixel_keep))` instead of hardcoded `1.`. This resolves the coupling issue when dimensions are correlated via the PC matrix. All 41 tests pass cleanly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

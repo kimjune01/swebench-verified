@@ -1,0 +1,11 @@
+## RESOLVED
+
+The fix was implemented and verified successfully in a single gate iteration. The `world_to_pixel_values` method in `sliced_wcs.py` now correctly uses the actual world coordinate values from the sliced position instead of a hardcoded `1.` placeholder. This fix handles the case where dimensions are coupled via the PC matrix, allowing proper coordinate transformation for sliced WCS objects.
+
+**Fix applied:**
+- Computed `sliced_out_world_coords` using `_pixel_to_world_values_all(*[0] * len(self._pixel_keep))` 
+- Replaced `world_arrays_new.append(1.)` with `world_arrays_new.append(sliced_out_world_coords[iworld])`
+
+**Gate result:** All 41 tests passed, including the target `test_coupled_world_slicing`.
+
+---STDERR---

@@ -1,0 +1,30 @@
+# Recon: astropy__astropy-13579
+
+## Failure summary
+The test `test_coupled_world_slicing` creates a 3D WCS with dimensions corresponding to space, space, and wavelength, with a PC matrix that couples the spectral and spatial dimensions (PC1_2=-1.0, PC2_3=-1.0). The test slices the WCS at the first wavelength position (index 0) to create a 2D spatial WCS, then attempts to convert world coordinates back to pixel coordinates using `SlicedLowLevelWCS.world_to_pixel_values()`. The method returns `1.81818182e+11` for the first pixel coordinate instead of the expected `0`, causing the assertion `assert np.allclose(out_pix[0], 0)` to fail.
+
+## Suspect set
+- `astropy/wcs/wcsapi/wrappers/sliced_wcs.py` lines 245-269: `world_to_pixel_values` method reconstructs world coordinate arrays for transformation
+
+## Root cause
+In `world_to_pixel_values`, when reconstructing the full set of world coordinates to pass to the underlying WCS transform, the code uses a hardcoded placeholder value of `1.` for world dimensions that were sliced away (line 254). This is incorrect when dimensions are coupled via the PC matrix. The actual world coordinate value for the sliced position is available in `self.dropped_world_dimensions["value"]` but is not being used.
+
+The axis correlation matrix for the test WCS shows that all world dimensions are coupled to all pixel dimensions due to the PC matrix. When an incorrect world value (1.0 instead of 1.05e-10) is passed for the spectral dimension, it propagates through the coupled transformation and produces a wildly incorrect pixel value (1.81818182e+11).
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `sliced_wcs.py:254` — `world_arrays_new.append(1.)` — uses constant placeholder regardless of actual sliced position
+- `sliced_wcs.py:175` — `dropped_info["value"].append(world_coords[i])` — actual world values at sliced position ARE computed and stored
+- Manual reproduction: calling full WCS with correct 3rd coordinate returns pixel ≈0; calling with 1.0 returns 1.81818182e+11, matching the buggy output
+
+## Edit sites
+- `astropy/wcs/wcsapi/wrappers/sliced_wcs.py` lines 245-254: In `world_to_pixel_values`, add a counter `iworld_dropped` (initialized to -1) that increments when a world dimension is not in `self._world_keep`. Replace line 254's `world_arrays_new.append(1.)` with `world_arrays_new.append(self.dropped_world_dimensions["value"][iworld_dropped])` to use the actual world coordinate value from the sliced position instead of the hardcoded placeholder.
+
+## Rejected hypotheses
+None — the root cause was identified on first pass through deductive code tracing and confirmed by manual reproduction.
+
+## Open questions
+None — the fix is straightforward and the mechanism is well understood.
+
+---STDERR---
