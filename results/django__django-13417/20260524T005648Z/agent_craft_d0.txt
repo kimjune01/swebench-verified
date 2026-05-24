@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass without breaking any existing tests. The `QuerySet.ordered` property now correctly returns `False` when there's a GROUP BY clause with only default ordering, matching the SQL compiler's behavior.
+
+---STDERR---

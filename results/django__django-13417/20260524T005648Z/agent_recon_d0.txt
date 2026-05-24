@@ -1,0 +1,48 @@
+# Recon: django__django-13417
+
+## Failure summary
+
+The tests `test_annotated_default_ordering` and `test_annotated_values_default_ordering` both fail with the assertion `AssertionError: True is not False`. These tests check that when a QuerySet with `Meta.ordering` is annotated (producing a GROUP BY clause), the `.ordered` property should return `False` because the SQL will not include an ORDER BY clause. However, `.ordered` incorrectly returns `True`.
+
+## Suspect set
+
+- `django/db/models/query.py` lines 1218-1231: The `QuerySet.ordered` property implementation
+- `django/db/models/sql/compiler.py` lines 585-591: The GROUP BY handling that clears default ordering
+- `django/db/models/sql/compiler.py` lines 271-290: The `get_order_by` method that sets `_meta_ordering`
+
+## Root cause
+
+The `QuerySet.ordered` property doesn't account for the SQL compiler's behavior of clearing default ordering when there's a GROUP BY clause. 
+
+When the SQL compiler generates a query with GROUP BY (line 585-591 in compiler.py), it checks if the ordering comes from `Meta.ordering` (via `self._meta_ordering`). If so, it sets `order_by = None` to clear the ordering, preventing an ORDER BY clause from being added to the SQL. This is the correct SQL generation behavior.
+
+However, the `QuerySet.ordered` property (lines 1228-1229 in query.py) only checks:
+```python
+elif self.query.default_ordering and self.query.get_meta().ordering:
+    return True
+```
+
+It doesn't check whether `self.query.group_by` exists, which would cause the default ordering to be cleared by the compiler. This causes the property to return `True` even when the generated SQL will have no ORDER BY clause.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/query.py:1228-1229` — Returns True for default ordering without checking GROUP BY
+- `django/db/models/sql/compiler.py:590` — `if self._meta_ordering: order_by = None` clears ordering when there's GROUP BY
+- `django/db/models/sql/compiler.py:286-288` — `_meta_ordering` is set only when ordering comes from Meta.ordering (not explicit order_by)
+
+## Edit sites
+
+- `django/db/models/query.py` lines 1228-1229: Add a check for `self.query.group_by`. When there's a GROUP BY (`self.query.group_by is not None`) and only default ordering (no explicit `self.query.order_by` or `self.query.extra_order_by`), return `False` because the SQL compiler will clear the ordering.
+
+The fix should preserve the behavior that explicit `.order_by()` calls make `.ordered` return `True` even with GROUP BY, since explicit ordering is not cleared by the compiler.
+
+## Rejected hypotheses
+
+None — the root cause was directly traced through the code path.
+
+## Open questions
+
+None — the fix location and logic are clear from the code trace.
+
+---STDERR---

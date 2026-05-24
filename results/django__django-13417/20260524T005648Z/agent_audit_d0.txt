@@ -1,0 +1,24 @@
+# Audit: django__django-13417
+
+## FAIL_TO_PASS
+- test_annotated_default_ordering (queries.tests.QuerysetOrderedTests): **PASS** ✓
+- test_annotated_values_default_ordering (queries.tests.QuerysetOrderedTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all PASS_TO_PASS tests remain passing
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Classification
+
+The craft patch adds `and not self.query.group_by` to the default ordering condition in `QuerySet.ordered` property. This correctly handles annotated queries where GROUP BY clauses should suppress default ordering.
+
+**Gate result:** All 288 tests passed (OK, skipped=3, expected failures=2)
+
+All FAIL_TO_PASS tests now pass. Zero regressions introduced. The fix aligns the `.ordered` property with the SQL compiler's behavior of clearing default ordering in GROUP BY contexts.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
