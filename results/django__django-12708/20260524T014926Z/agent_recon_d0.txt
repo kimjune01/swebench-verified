@@ -1,0 +1,41 @@
+Now I'll emit my diagnosis:
+
+# Recon: django__django-12708
+
+## Failure summary
+The test `test_alter_index_together_remove_with_unique_together` creates a model with both `unique_together` and `index_together` on the same fields ('pink', 'weight'). When attempting to remove the `index_together` via `AlterIndexTogether('Pony', set())`, the operation crashes with `ValueError: Found wrong number (2) of constraints for test_alintoremove_wunto_pony(pink, weight)` at `django/db/backends/base/schema.py:414` in `_delete_composed_index()`. The method expects exactly 1 constraint but finds 2: the regular index from `index_together` and the unique constraint from `unique_together`.
+
+## Suspect set
+- `django/db/backends/base/schema.py` lines 386-398: `alter_index_together` method that calls `_delete_composed_index` with insufficient filtering
+- `django/db/backends/base/schema.py` lines 402-415: `_delete_composed_index` method that delegates to `_constraint_names` 
+- `django/db/backends/base/schema.py` lines 1142-1170: `_constraint_names` method that filters constraints based on criteria
+
+## Root cause
+The `alter_index_together` method at line 396 calls `_delete_composed_index(model, fields, {'index': True}, self.sql_delete_index)` with only `{'index': True}` as the filter. According to the database introspection contract (`django/db/backends/base/introspection.py:166-183`), unique constraints have BOTH `unique=True` AND `index=True` because unique constraints are implemented as unique indexes. Therefore, when `_constraint_names` filters by `index=True` (line 1159), it matches both:
+1. The regular non-unique index created by `index_together` 
+2. The unique constraint created by `unique_together` (which also has `index=True`)
+
+The `_delete_composed_index` method expects exactly 1 constraint (line 411: `if len(constraint_names) != 1`) and raises ValueError when 2 are found.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/backends/base/schema.py:396` — `self._delete_composed_index(model, fields, {'index': True}, self.sql_delete_index)` only filters by index
+- `django/db/backends/base/schema.py:380` — Comparison: `alter_unique_together` correctly uses `{'unique': True}` filter alone
+- `django/db/backends/base/introspection.py:166-183` — Contract documents that unique constraints have `index=True`
+- `django/db/backends/base/schema.py:1159` — `_constraint_names` filter: `if index is not None and infodict['index'] != index: continue`
+- `tests/migrations/test_base.py` assertIndexExists — Test helper explicitly checks `not c['unique']` to distinguish regular indexes from unique constraints
+
+## Edit sites
+- `django/db/backends/base/schema.py:396` — Change `{'index': True}` to `{'index': True, 'unique': False}` in the call to `_delete_composed_index`. This ensures only non-unique indexes are matched when deleting `index_together`, excluding unique constraints that happen to also have `index=True`.
+
+## Competing hypotheses
+None — the code path is deterministic and the evidence is deductive.
+
+## Rejected hypotheses
+None.
+
+## Open questions
+None — the fix is straightforward: add `'unique': False` to filter out unique constraints.
+
+---STDERR---

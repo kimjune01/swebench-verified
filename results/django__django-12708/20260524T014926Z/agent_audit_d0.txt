@@ -1,0 +1,21 @@
+# Audit: django__django-12708
+
+## FAIL_TO_PASS
+- test_alter_index_together_remove_with_unique_together (migrations.test_operations.OperationTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** — all 102 tests in the gate passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the baseline capture showed tests passing; the current run shows all 102 tests passing with no failures.
+
+## Summary
+
+The craft patch successfully resolves the issue. The fix adds `'unique': False` to the constraint filter when deleting index_together indexes (`django/db/backends/base/schema.py:396`), preventing `_delete_composed_index` from matching unique constraints that share the same fields. This eliminates the ValueError that occurred when both `index_together` and `unique_together` were defined on the same field set.
+
+**Gate results**: 102/102 tests passed, including all three `alter_index_together` tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,18 @@
+## RESOLVED
+
+The fix is complete and verified:
+
+**Patch**: Single-line change to `django/db/backends/base/schema.py:396`
+- **Before**: `{'index': True}`  
+- **After**: `{'index': True, 'unique': False}`
+
+**Rationale**: When deleting `index_together`, we must exclude unique constraints (which also have `index=True`) to avoid finding 2 constraints when only the regular index should be deleted.
+
+**Verification**:
+- ✅ Codex approved (no blocking issues)
+- ✅ FAIL_TO_PASS test passes: `test_alter_index_together_remove_with_unique_together`
+- ✅ Gate green on first iteration
+
+The working tree is ready for audit.
+
+---STDERR---
