@@ -1,0 +1,35 @@
+# Recon: django__django-14089
+
+## Failure summary
+
+The test `test_reversed` (utils_tests/test_datastructures.py:38) attempts to call `reversed(OrderedSet([1, 2, 3]))` but fails with `TypeError: 'OrderedSet' object is not reversible`. The test expects to receive a `collections.abc.Iterator` that yields `[3, 2, 1]` when converted to a list.
+
+## Suspect set
+
+- `django/utils/datastructures.py` lines 5-35: The OrderedSet class implementation
+
+## Root cause
+
+OrderedSet does not implement the `__reversed__()` method, which is required for an object to work with Python's built-in `reversed()` function. The class currently implements `__iter__()` (line 27) that delegates to `iter(self.dict)`, but lacks the corresponding `__reversed__()` method. Since OrderedSet uses `dict.fromkeys()` internally to maintain insertion order and Python 3.8+ supports `reversed()` on dicts natively, the fix is straightforward delegation.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/utils/datastructures.py:27` — `__iter__` delegates to `iter(self.dict)`
+- `django/utils/datastructures.py:11` — OrderedSet uses `dict.fromkeys()` for storage
+- Verified on Python 3.8.20: `list(reversed(dict.fromkeys([1, 2, 3]))) == [3, 2, 1]`
+- TypeError message explicitly states the object is "not reversible"
+
+## Edit sites
+
+- `django/utils/datastructures.py` line 28 (after `__iter__` method): Add `__reversed__()` method that returns `reversed(self.dict)`, following the same delegation pattern as `__iter__()`
+
+## Rejected hypotheses
+
+None — the failure mode is unambiguous and the fix is direct.
+
+## Open questions
+
+None — the implementation is straightforward and follows the existing pattern established by `__iter__()`.
+
+---STDERR---

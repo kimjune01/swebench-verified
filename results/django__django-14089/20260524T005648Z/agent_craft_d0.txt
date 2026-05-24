@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully adds `__reversed__()` to OrderedSet, making it reversible. Gate shows all 44 tests passing, including the previously failing `test_reversed`.
+
+---STDERR---

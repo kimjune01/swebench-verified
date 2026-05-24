@@ -1,0 +1,22 @@
+# Audit: django__django-14089
+
+## FAIL_TO_PASS
+- `test_reversed (utils_tests.test_datastructures.OrderedSetTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 43 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Patch verification
+- Patch is live: `django/utils/datastructures.py | 3 insertions(+)`
+- The `__reversed__()` method successfully delegates to `reversed(self.dict)`
+- Gate result: All 44 tests passed in 0.002s
+
+The fix correctly implements `__reversed__()` for the OrderedSet class, following the same delegation pattern as `__iter__()`. The underlying dict's native `reversed()` support (Python 3.8+) provides the expected reversed iteration.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
