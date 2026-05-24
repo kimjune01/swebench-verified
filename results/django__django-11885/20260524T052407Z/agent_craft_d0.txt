@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully combines DELETE queries for multiple foreign keys pointing to the same object while preserving batch boundaries. The implementation:
+
+1. **Modified import**: Added `defaultdict` to collections imports
+2. **Modified collection phase** (lines 194, 229): Store `(batch_key, queryset)` tuples in `fast_deletes` to preserve batch identity
+3. **Modified execution phase** (lines 314-324): Group by `(model, batch_key)` and combine querysets within each group using OR
+
+**Result**: `test_fast_delete_combined_relationships` now passes (2 queries instead of 3), and all 45 tests pass with no regressions.
+
+---STDERR---

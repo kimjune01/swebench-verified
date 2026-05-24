@@ -1,0 +1,43 @@
+# Recon: django__django-11885
+
+## Failure summary
+
+The test `test_fast_delete_combined_relationships` expects 2 DELETE queries when deleting a `Referrer` instance, but Django executes 3. The `SecondReferrer` model has two foreign keys to `Referrer` (`referrer` pointing to `id` and `other_referrer` pointing to `unique_field`). Currently, Django issues separate DELETE queries for each FK relationship:
+1. `DELETE FROM "delete_secondreferrer" WHERE "delete_secondreferrer"."referrer_id" IN (1)`
+2. `DELETE FROM "delete_secondreferrer" WHERE "delete_secondreferrer"."other_referrer_id" IN (42)`
+3. `DELETE FROM "delete_referrer" WHERE "delete_referrer"."id" IN (1)`
+
+The first two queries should be combined into one using OR.
+
+## Suspect set
+
+- `django/db/models/deletion.py` lines 313-315: The fast delete execution loop that processes each queryset independently
+- `django/db/models/deletion.py` lines 220-228: Where querysets are added to `self.fast_deletes` (one per FK relationship)
+- `django/db/models/deletion.py` lines 252-258: The `related_objects()` method that creates filtered querysets
+
+## Root cause
+
+The `Collector.delete()` method executes fast deletes by iterating over `self.fast_deletes` and calling `_raw_delete()` on each queryset independently (lines 313-315). When multiple foreign keys from the same model point to the object being deleted, each FK creates a separate queryset entry via the `related_objects()` method (called at line 226). These querysets target the same table but filter on different fields, resulting in multiple DELETE queries instead of a single combined query.
+
+The code path:
+1. `collect()` at line 193 or cascade handling at line 227 calls `self.fast_deletes.append(sub_objs)`
+2. Each FK relationship creates its own queryset via `related_objects()` (lines 252-258)
+3. The delete loop (lines 313-315) executes each queryset separately without combining same-model queries
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/deletion.py:313-315` — `for qs in self.fast_deletes: count = qs._raw_delete(using=self.using)`
+- `django/db/models/deletion.py:228` — `self.fast_deletes.append(sub_objs)` appends one queryset per FK
+- `django/db/models/deletion.py:256-257` — `related.related_model._base_manager.using(self.using).filter(**{"%s__in" % related.field.name: objs})` creates FK-specific filter
+- `django/db/models/query.py:324-335` — QuerySet supports `|` operator for OR combining via `query.combine(other.query, sql.OR)`
+
+## Edit sites
+
+- `django/db/models/deletion.py` lines 312-316: Replace the simple loop over `self.fast_deletes` with logic that groups querysets by model, combines same-model querysets using the `|` operator, then executes the combined querysets. The grouping should use `itertools.groupby` or a dict keyed by `qs.model`. For each model, reduce the querysets using `qs1 | qs2 | ... | qsN` to create a single combined queryset with OR conditions, then call `_raw_delete()` on the result.
+
+## Open questions
+
+None. The fix is straightforward: group by model, combine with `|`, execute once per model instead of once per queryset.
+
+---STDERR---
