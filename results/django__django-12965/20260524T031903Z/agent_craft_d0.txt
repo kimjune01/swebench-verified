@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_fast_delete_all` pass. The root cause was that `single_alias` evaluated `sum({}) == 1` (False) for queries with empty alias_map, incorrectly routing simple deletes through the subquery path. The solution adds explicit `get_initial_alias()` to populate the alias map and changes `== 1` to `<= 1` to handle both base-table queries (0 aliases after setup) and single-table queries with explicit aliases (1 alias). All 54 tests pass.
+
+---STDERR---

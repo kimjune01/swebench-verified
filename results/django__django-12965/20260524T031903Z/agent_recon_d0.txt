@@ -1,0 +1,46 @@
+# Recon: django__django-12965
+
+## Failure summary
+
+The test `test_fast_delete_all` checks that `User.objects.all().delete()` generates a simple `DELETE FROM` SQL statement without any subqueries. The test fails because Django 3.1 generates `DELETE FROM "delete_user" WHERE "delete_user"."id" IN (SELECT "delete_user"."id" FROM "delete_user")` instead of the expected `DELETE FROM "delete_user"`. This subquery usage causes performance regression (0.2s → 7.5s for 100k rows) and breaks MySQL LOCK TABLES compatibility.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 1408-1436: `SQLDeleteCompiler` class, specifically the `single_alias` property and `as_sql()` method
+
+## Root cause
+
+In commit `7acef095d7` (Oct 2019), Django moved DELETE SQL generation from `DeleteQuery.delete_qs()` to `SQLDeleteCompiler.as_sql()`. The compiler uses a `single_alias` cached property to decide between simple DELETE vs subquery-based DELETE:
+
+```python
+@cached_property
+def single_alias(self):
+    return sum(self.query.alias_refcount[t] > 0 for t in self.query.alias_map) == 1
+```
+
+The bug: For `User.objects.all().delete()`, when `_raw_delete()` clones the query and converts it to `DeleteQuery`, the `alias_map` is empty (no aliases have been added yet). The `single_alias` check evaluates `sum({}) == 1` which is `0 == 1 = False`, causing the code to incorrectly use the subquery path.
+
+The old `delete_qs()` method explicitly called `get_initial_alias()` to populate `alias_map` before checking table count. The new compiler checks `single_alias` before any alias setup, causing empty-alias-map queries to be misclassified as multi-table deletes.
+
+**Confidence**: abduction — 90%
+
+**Supporting evidence**:
+- `django/db/models/sql/compiler.py:1408-1409` — `single_alias` property returns `sum(...) == 1`  
+- `django/db/models/sql/compiler.py:1423` — branches on `if self.single_alias`
+- Git commit `7acef095d7` diff shows old code called `get_initial_alias()` and checked `if not innerq_used_tables or ...` (allowing 0 or 1 tables), new code only checks `== 1`
+
+## Edit sites
+
+- `django/db/models/sql/compiler.py` line 1409: Change the comparison from `== 1` to `<= 1` to handle the case where `alias_map` is empty (count of 0 means simple base-table query with no joins)
+
+This matches the old logic where `not innerq_used_tables` (0 tables referenced) was treated as a simple delete case.
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward from code inspection and git history.
+
+## Open questions
+
+None — the fix is clear and minimal.
+
+---STDERR---

@@ -1,0 +1,36 @@
+# Audit: django__django-12965
+
+## FAIL_TO_PASS
+- `test_fast_delete_all (delete.tests.FastDeleteTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 54 tests passed, including all specified PASS_TO_PASS tests:
+- test_fast_delete_combined_relationships: PASS
+- test_fast_delete_empty_no_update_can_self_select: PASS
+- test_fast_delete_fk: PASS
+- test_fast_delete_inheritance: PASS
+- test_fast_delete_instance_set_pk_none: PASS
+- test_fast_delete_joined_qs: PASS
+- test_fast_delete_large_batch: PASS
+- test_fast_delete_m2m: PASS
+- test_fast_delete_qs: PASS
+- test_fast_delete_revm2m: PASS
+- test_auto: PASS
+- test_auto_nullable: PASS
+- test_cascade: PASS
+- test_cascade_from_child: PASS
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — baseline showed `test_fast_delete_all` was failing before the patch
+
+## Kill report
+Not applicable — patch successfully resolves the issue. The fix correctly addresses the root cause where `single_alias` returned False for queries with empty `alias_map` (0 aliases ≠ 1), causing unnecessary subquery generation. The patch:
+1. Calls `get_initial_alias()` to populate the alias_map
+2. Changes comparison from `== 1` to `<= 1` to handle both 0-alias (base table only) and 1-alias (simple join) cases
+
+All tests pass with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
