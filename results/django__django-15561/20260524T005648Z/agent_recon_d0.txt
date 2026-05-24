@@ -1,0 +1,39 @@
+# Recon: django__django-15561
+
+## Failure summary
+
+The test `test_alter_field_choices_noop` verifies that altering a field to add or remove `choices` should generate no SQL queries since choices are a Python-level validation constraint, not a database schema feature. However, on SQLite, the test fails with 4 queries executed instead of 0. These queries recreate the entire table: CREATE new table, INSERT data, DROP old table, RENAME new table to old name.
+
+## Suspect set
+
+- `django/db/backends/base/schema.py` lines 1372-1398: `_field_should_be_altered()` method that determines whether a field alteration requires database changes
+- `django/db/backends/base/schema.py` lines 1379-1392: The `non_database_attrs` list defining which field attributes don't affect database schema
+- `django/db/backends/sqlite3/schema.py` lines 118-168: SQLite's `alter_field()` implementation that calls base class after checking `_field_should_be_altered()`
+
+## Root cause
+
+The `choices` field attribute is not included in the `non_database_attrs` list in `BaseDatabaseSchemaEditor._field_should_be_altered()`. When comparing two fields, the method calls `deconstruct()` on both and compares their kwargs after removing attributes in `non_database_attrs`. Since `choices` is not in this list, fields differing only in choices are considered different, causing `_field_should_be_altered()` to return `True`. This triggers SQLite's expensive table recreation process even though choices don't affect the actual database schema.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/backends/base/schema.py:1379-1392` — The `non_database_attrs` list includes `blank`, `validators`, `verbose_name`, `help_text`, etc., but omits `choices`
+- `django/db/models/fields/__init__.py:524` — Field's `deconstruct()` includes `"choices": None` in possibles dict, so choices appear in deconstructed kwargs
+- No occurrences of `.choices` in `django/db/backends/` directory — choices are never used in SQL generation
+- Git commit `9159d173c38` (Fixed #25253) — Introduced `non_database_attrs` to skip alterations for non-schema attributes, but didn't include `choices`
+
+## Edit sites
+
+- `django/db/backends/base/schema.py` lines 1379-1392: Add `"choices"` to the `non_database_attrs` list (alphabetically after `"blank"`)
+
+The fix is a one-line addition. Adding `"choices"` to this list will cause `_field_should_be_altered()` to filter it out before comparison, making choices-only changes return `False`, which triggers the early return at line 119 of SQLite's `alter_field()` (or line 703 of base `alter_field()`).
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward from code reading.
+
+## Open questions
+
+None — the fix location and approach are clear.
+
+---STDERR---

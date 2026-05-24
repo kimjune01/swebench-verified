@@ -1,0 +1,36 @@
+# Audit: django__django-15561
+
+## FAIL_TO_PASS
+- `test_alter_field_choices_noop (schema.tests.SchemaTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 176 tests in the schema.tests suite passed successfully.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. All tests that passed on the base continue to pass.
+
+## Summary
+
+**Patch content**:
+```diff
++            "choices",
+```
+Added to `non_database_attrs` list in `django/db/backends/base/schema.py:1380`
+
+**Gate results**:
+- Total tests: 176
+- Passed: 176
+- Failed: 0
+- Skipped: 28
+
+**Classification**:
+- FAIL_TO_PASS test `test_alter_field_choices_noop` now passes (was failing on base)
+- All PASS_TO_PASS tests continue to pass (no regressions)
+- The fix is minimal, surgical, and correct
+
+The patch correctly identifies that `choices` is a validation-level attribute that doesn't affect database schema, preventing unnecessary table recreation when only choices are modified.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

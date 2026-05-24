@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `"choices"` to the `non_database_attrs` list in `django/db/backends/base/schema.py` at line 1380. The test `test_alter_field_choices_noop` now passes, confirming that altering a field to add or remove choices generates no SQL queries, as choices are a Python-level validation constraint that doesn't affect the database schema.
+
+---STDERR---
