@@ -1,0 +1,49 @@
+# Recon: sympy__sympy-17139
+
+## Failure summary
+
+The tests `test__TR56` and `test_issue_17137` fail when simplifying trigonometric expressions with complex exponents (e.g., `cos(x)**I` or `sin(x)**(2*I + 1)`). The failure occurs in `sympy/simplify/fu.py` at line 504 where the `_TR56` helper function attempts to compare a complex exponent with zero using `rv.exp < 0`, which raises `TypeError: Invalid comparison of complex I` because complex numbers don't support ordering comparisons.
+
+## Suspect set
+
+- `sympy/simplify/fu.py` lines 500-524: The `_f` nested function inside `_TR56` that performs unsafe comparisons on exponents without checking if they are real numbers
+
+## Root cause
+
+The `_TR56` function is designed to transform trigonometric powers with real integer exponents (e.g., converting `sin(x)**6` to `(1 - cos(x)**2)**3`). At lines 504 and 506, it performs direct numerical comparisons (`rv.exp < 0` and `rv.exp > max`) without first verifying that the exponent is a real number. When the exponent is complex (like `I` or `2 + 3*I`), these comparisons raise a `TypeError` because complex numbers lack a total ordering in Python/SymPy.
+
+The rest of the function also assumes real integer exponents (using modulo, floor division, and `perfect_power` checks), so complex exponents should be filtered out early and returned unchanged.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `fu.py:504` — `if (rv.exp < 0) == True:` (crashes on complex exponents)
+- `fu.py:506` — `if (rv.exp > max) == True:` (crashes on complex exponents)
+- `fu.py:633` — Shows correct pattern: `a.exp.is_Integer and a.exp > 0` (type check before comparison)
+- `fu.py:513` — `if rv.exp % 2:` (assumes integer exponent)
+- `fu.py:514` — `e = rv.exp//2` (assumes integer exponent)
+- Tests expect: `T(sin(x)**I, ...) == sin(x)**I` and `simplify(cos(x)**I) == cos(x)**I` (return unchanged for complex exponents)
+
+## Edit sites
+
+- `sympy/simplify/fu.py` lines 500-507: Add an early-return guard in the `_f` function that checks if `rv.exp` is not real or not numeric. If the exponent is complex or unsuitable for the integer-based transformations, return `rv` unchanged. This check should come right after the `if not (rv.is_Pow and rv.base.func == f):` guard and before the problematic comparison lines.
+
+Specifically, add after line 502 (after checking `rv.is_Pow`):
+```
+if rv.exp.is_real is False or not rv.exp.is_number:
+    return rv
+```
+
+Then optionally replace the unsafe comparisons with safe property checks:
+- Line 504: Replace `(rv.exp < 0) == True` with `rv.exp.is_negative`
+- Line 506: Replace `(rv.exp > max) == True` with `(rv.exp - max).is_positive` or equivalent safe check
+
+## Rejected hypotheses
+
+None — the error is deterministic and the code path is clear from the stack trace.
+
+## Open questions
+
+None — the fix is straightforward: guard against non-real exponents before attempting comparisons.
+
+---STDERR---

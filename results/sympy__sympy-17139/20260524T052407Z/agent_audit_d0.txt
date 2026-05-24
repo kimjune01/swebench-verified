@@ -1,0 +1,31 @@
+# Audit: sympy__sympy-17139
+
+## FAIL_TO_PASS
+- test__TR56: **PASS** ✓
+- test_issue_17137: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_factorial_simplify: expected to fail ('f' on both base and patched)
+- test_simplify_float_vs_integer: expected to fail ('f' on both base and patched)
+
+## Summary
+
+The patch successfully resolves the issue. Both FAIL_TO_PASS tests now pass with zero regressions.
+
+**The fix**: Added a guard in `sympy/simplify/fu.py` at line 504 that returns early if the exponent is not real:
+```python
+if rv.exp.is_real is not True:
+    return rv
+```
+
+This prevents the `TypeError: Invalid comparison of complex I` that occurred when attempting to compare complex exponents (like `I`) with integers in expressions like `cos(x)**I`.
+
+Gate results: 71 passed, 2 expected to fail (pre-existing), 0 regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

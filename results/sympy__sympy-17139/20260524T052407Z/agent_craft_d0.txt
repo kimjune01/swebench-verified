@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully prevents the TypeError when simplifying trigonometric expressions with complex exponents. The guard `if rv.exp.is_real is not True: return rv` catches both definitely non-real and unknown-realness cases, returning the expression unchanged before attempting ordering comparisons. All FAIL_TO_PASS tests now pass with no regressions.
+
+---STDERR---
