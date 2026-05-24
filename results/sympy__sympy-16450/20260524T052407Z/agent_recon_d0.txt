@@ -1,0 +1,67 @@
+# Recon: sympy__sympy-16450
+
+## Failure summary
+
+The test `test_posify` checks that when a Symbol with `finite=True` is passed through `posify()`, the resulting posified symbol should preserve the `finite` assumption along with the added `positive` assumption. The test fails with an AssertionError at line 517 because the returned symbol's `assumptions0` dictionary is missing `'finite': True` and `'infinite': False`.
+
+**Error**: `AssertionError` at `sympy/simplify/tests/test_simplify.py:517`  
+**Expected**: `eq.assumptions0` should include `{'finite': True, 'infinite': False, ...}`  
+**Actual**: These assumptions are missing from the result
+
+## Suspect set
+
+- `sympy/simplify/simplify.py` lines 252-253: The `posify()` function creates replacement Dummy symbols but only passes `positive=True`, discarding all other original assumptions.
+
+## Root cause
+
+When `posify()` creates a replacement Dummy symbol for symbols with unspecified positivity (`is_positive is None`), it only passes `positive=True` to the Dummy constructor, losing all other assumptions from the original symbol such as `finite`, `integer`, `even`, `rational`, etc.
+
+The problematic code at lines 252-253:
+```python
+reps = {s: Dummy(s.name, positive=True)
+             for s in eq.free_symbols if s.is_positive is None}
+```
+
+The original symbol's assumptions are stored in `s._assumptions._generator` (a dictionary containing explicitly set assumptions). These should be preserved and merged with `positive=True` when creating the Dummy.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `sympy/simplify/simplify.py:252-253` — Only passes `positive=True` to Dummy constructor
+- Verified via Python REPL that `Symbol('k', finite=True)._assumptions._generator` contains `{'finite': True}`
+- Verified that `Dummy('k', positive=True)` creates a symbol without `finite` assumption
+- Verified that `Dummy('k', positive=True, finite=True)` correctly includes both assumptions
+- Confirmed the filter `s.is_positive is None` ensures no conflicting assumptions (e.g., `negative=True` symbols are not processed)
+
+## Edit sites
+
+- `sympy/simplify/simplify.py` lines 252-253: Replace the dict comprehension with an explicit loop that:
+  1. Copies the original symbol's `_assumptions._generator` dictionary
+  2. Adds `'positive': True` to the copied assumptions
+  3. Creates the Dummy with `**assumptions` to pass all assumptions as keyword arguments
+
+The change from:
+```python
+reps = {s: Dummy(s.name, positive=True)
+             for s in eq.free_symbols if s.is_positive is None}
+```
+
+To:
+```python
+reps = {}
+for s in eq.free_symbols:
+    if s.is_positive is None:
+        assumptions = s._assumptions._generator.copy()
+        assumptions['positive'] = True
+        reps[s] = Dummy(s.name, **assumptions)
+```
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from code reading.
+
+## Open questions
+
+None — the fix is localized to a single location with no edge cases.
+
+---STDERR---

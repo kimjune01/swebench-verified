@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `posify()` in `sympy/simplify/simplify.py` to preserve all original assumptions by using `**s.assumptions0` when creating the Dummy symbol, not just `positive=True`. The `test_posify` test now passes with the `finite=True` assumption properly preserved.
+
+---STDERR---

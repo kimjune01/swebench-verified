@@ -1,0 +1,31 @@
+# Audit: sympy__sympy-16450
+
+## FAIL_TO_PASS
+- test_posify: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 40 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_factorial_simplify: expected to fail (baseline and patched)
+- test_simplify_float_vs_integer: expected to fail (baseline and patched)
+
+## Gate Results Summary
+- **Baseline**: 40 passed, 1 failed (test_posify), 2 expected to fail
+- **With patch**: 41 passed, 0 failed, 2 expected to fail
+- **FAIL_TO_PASS fixed**: test_posify now passes
+- **Regressions**: 0
+
+## Patch Applied
+```python
+# sympy/simplify/simplify.py:254
+- reps = {s: Dummy(s.name, positive=True)
++ reps = {s: Dummy(s.name, positive=True, **s.assumptions0)
+```
+
+The fix preserves all original symbol assumptions when creating Dummy replacements in `posify()`, preventing loss of orthogonal assumptions like `finite=True`. The test now correctly asserts that the posified equation retains `finite=True` and `infinite=False` assumptions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
