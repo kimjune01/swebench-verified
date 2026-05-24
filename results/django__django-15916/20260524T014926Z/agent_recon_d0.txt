@@ -1,0 +1,58 @@
+# Recon: django__django-15916
+
+## Failure summary
+
+The tests check that `formfield_callback` can be specified in `ModelForm.Meta` and should be used when constructing form fields. `test_custom_callback_in_meta` defines a ModelForm with `Meta.formfield_callback` that returns fields with `Textarea` widgets. `test_custom_callback_from_base_form_meta` uses `modelform_factory` with a base form that has `Meta.formfield_callback`. Both tests fail because the callback is not being invoked—fields have `TextInput` widgets instead of `Textarea` widgets.
+
+**Error:** `AssertionError: <class 'django.forms.widgets.TextInput'> != <class 'django.forms.widgets.Textarea'>`
+
+## Suspect set
+
+- `django/forms/models.py` lines 258-320: `ModelFormMetaclass.__new__` — responsible for extracting `formfield_callback` and calling `fields_for_model`
+- `django/forms/models.py` lines 563-650: `modelform_factory` — creates form classes dynamically and should inherit callback from base form's Meta
+- `django/forms/models.py` line 245-256: `ModelFormOptions` — doesn't extract `formfield_callback` from Meta (all other Meta options are extracted here)
+
+## Root cause
+
+The `ModelFormMetaclass` only checks for `formfield_callback` in class-level attributes (`attrs.pop("formfield_callback", ...)`) and base classes' Meta attributes, but never checks the current class's own `Meta.formfield_callback` after the class is created. When a user defines `class Meta: formfield_callback = callback`, it exists as `new_class.Meta.formfield_callback` but is never retrieved.
+
+Additionally, `modelform_factory` explicitly sets `formfield_callback` to None in the class attributes when the parameter is not provided, which prevents the metaclass from finding any inherited value from the base form's Meta.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/forms/models.py:266` — `formfield_callback = attrs.pop("formfield_callback", base_formfield_callback)` only pops from class attrs, not Meta
+- `django/forms/models.py:262-263` — Only checks base classes' Meta: `if hasattr(b, "Meta") and hasattr(b.Meta, "formfield_callback")`
+- `django/forms/models.py:639` — Sets class attr to None: `form_class_attrs = {"Meta": Meta, "formfield_callback": formfield_callback}` (formfield_callback defaults to None)
+- `django/forms/models.py:311` — Uses the (still None) `formfield_callback` when calling `fields_for_model`
+
+## Edit sites
+
+**Site 1:** `django/forms/models.py` lines 266-275 (in `ModelFormMetaclass.__new__`)
+
+After `opts` is created (line 273), check if `new_class.Meta` has `formfield_callback` when no class-level or base callback was found. Insert after line 273:
+```python
+if formfield_callback is None:
+    if hasattr(new_class, 'Meta') and hasattr(new_class.Meta, 'formfield_callback'):
+        formfield_callback = new_class.Meta.formfield_callback
+```
+
+**Site 2:** `django/forms/models.py` lines 630-640 (in `modelform_factory`)
+
+Before line 639, check if `formfield_callback` should be inherited from `form.Meta`. Only include `formfield_callback` in `form_class_attrs` if it has a non-None value:
+```python
+# Before creating form_class_attrs, inherit from base form's Meta if needed
+if formfield_callback is None and hasattr(form, 'Meta') and hasattr(form.Meta, 'formfield_callback'):
+    formfield_callback = form.Meta.formfield_callback
+
+# Only set formfield_callback in class attrs if we have a value
+form_class_attrs = {"Meta": Meta}
+if formfield_callback is not None:
+    form_class_attrs["formfield_callback"] = formfield_callback
+```
+
+## Open questions
+
+None—the root cause is clear from code reading and both test scenarios are explained by the same underlying issue.
+
+---STDERR---

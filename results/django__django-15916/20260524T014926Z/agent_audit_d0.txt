@@ -1,0 +1,18 @@
+# Audit: django__django-15916
+
+## FAIL_TO_PASS
+- test_custom_callback_from_base_form_meta (model_forms.tests.FormFieldCallbackTests): **PASS** ✓
+- test_custom_callback_in_meta (model_forms.tests.FormFieldCallbackTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+All 152 tests in the model_forms.tests suite passed. Both FAIL_TO_PASS tests now pass, and no PASS_TO_PASS tests regressed. The patch successfully resolves the issue without introducing any side effects.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

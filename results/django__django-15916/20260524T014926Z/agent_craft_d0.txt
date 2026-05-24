@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Fixed in one gate iteration. The issue was that `ModelFormMetaclass` scanned base classes for `Meta.formfield_callback` before class creation, preventing the newly created class's own `Meta.formfield_callback` from being used. The fix removes the base scan and instead checks `new_class.Meta.formfield_callback` after class creation, allowing Python's normal Meta inheritance (via MRO) to handle both direct definitions and inherited callbacks correctly.
+
+---STDERR---
