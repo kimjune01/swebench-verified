@@ -1,0 +1,37 @@
+# Recon: django__django-14787
+
+## Failure summary
+
+The test `test_wrapper_assignments` checks that when `@method_decorator` is used with a decorator that uses `@wraps(func)`, the decorator receives a function object with proper attributes like `__name__` and `__module__`. The test fails with `AssertionError: None != 'method'` because the function passed to the decorator (a `functools.partial` object) lacks the `__name__` attribute, so `getattr(func, '__name__', None)` returns `None` instead of `'method'`.
+
+## Suspect set
+
+- `django/utils/decorators.py` lines 36-43: The `_wrapper` function in `_multi_decorate` creates a partial object and passes it to decorators without copying function attributes.
+
+## Root cause
+
+In `django/utils/decorators.py:40`, `_multi_decorate` creates a `functools.partial` object wrapping the bound method:
+```python
+bound_method = partial(method.__get__(self, type(self)))
+```
+
+This partial object is immediately passed to decorators (lines 41-42) without first copying the original method's function attributes (`__name__`, `__module__`, `__qualname__`, `__doc__`, `__annotations__`). Decorators that use `@functools.wraps(func)` expect these attributes to exist on the function parameter, but `partial` objects don't have them by default.
+
+The partial wrapper was intentionally introduced in commit f434f5b84f7 to fix #29253 - bound method objects are read-only for attribute assignment, so decorators that try to set new attributes would crash. The partial wrapper solves that problem but introduced this regression.
+
+**Confidence:** deduction — 95%  
+
+**Supporting evidence:**
+- `django/utils/decorators.py:40` — `bound_method = partial(method.__get__(self, type(self)))`
+- Experimental verification shows `hasattr(partial(...), '__name__')` returns `False`
+- Experimental verification shows `update_wrapper(partial_obj, method)` successfully copies the attributes
+
+## Edit sites
+
+- `django/utils/decorators.py` line 40 (after): After creating the `bound_method` partial object, add a call to `update_wrapper(bound_method, method)` to copy function attributes from the original method to the partial object, before passing it to decorators on line 41.
+
+## Open questions
+
+None - the root cause is clear and the fix is straightforward.
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_wrapper_assignments` pass by copying function attributes (`__name__`, `__module__`, etc.) from the original method to the `partial` object before it's passed to decorators. All 21 tests pass with no regressions.
+
+---STDERR---
