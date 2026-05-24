@@ -1,0 +1,19 @@
+# Audit: django__django-12273
+
+## FAIL_TO_PASS
+- test_create_new_instance_with_pk_equals_none: **PASS** ✓
+- test_create_new_instance_with_pk_equals_none_multi_inheritance: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 28 PASS_TO_PASS tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_inheritance_values_joins: expected failure (intentional xfail in baseline, not a regression)
+
+## Summary
+The craft patch successfully fixed both failing tests. The fix snapshots `child_pk_was_none` before the parent loop and uses it to conditionally clear parent pk fields when parent pointer fields are None — preventing IntegrityError on UNIQUE constraint violations. Gate shows OK (expected failures=1) with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

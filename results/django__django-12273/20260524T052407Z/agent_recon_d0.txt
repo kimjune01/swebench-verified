@@ -1,0 +1,57 @@
+# Recon: django__django-12273
+
+## Failure summary
+The tests `test_create_new_instance_with_pk_equals_none` and `test_create_new_instance_with_pk_equals_none_multi_inheritance` attempt to create new child model instances by setting the primary key and parent pointer fields to None, then calling save(). The expected behavior is to INSERT new parent and child rows. Instead, both tests fail with `IntegrityError: UNIQUE constraint failed` on the parent pointer fields (`user_ptr_id`, `politician_ptr_id`) because Django tries to INSERT the child with the old parent pointer value.
+
+## Suspect set
+- `django/db/models/base.py` lines 803-833: `_save_parents()` method — handles synchronization and saving of parent models in multi-table inheritance
+- Specifically lines 807-809: one-directional sync from pointer field to parent pk
+- Specifically line 819: unconditional assignment of parent pk to pointer field after parent save
+
+## Root cause
+The `_save_parents` method performs one-directional field synchronization. At lines 807-809, it syncs the parent pointer field value to the parent's pk field when the parent pk is None but the pointer is not None. However, there is no reverse synchronization when the pointer field is None — it doesn't clear the parent's pk field in the child instance.
+
+When a user sets `p2.user_ptr_id = None` to create a new instance:
+1. The parent's pk field (`p2.id`) remains set to its old value (e.g., 1)
+2. During save, the parent is saved first using that pk value, resulting in an UPDATE of the existing parent row instead of an INSERT
+3. Line 819 then unconditionally sets `self.user_ptr_id = self._get_pk_val(parent._meta)`, which is the old value (1)
+4. When the child tries to INSERT with `user_ptr_id=1`, it violates the UNIQUE constraint because that value already exists
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `django/db/models/base.py:807-809` — Conditional sync only handles parent_pk=None case, missing pointer=None case
+- `django/db/models/base.py:819` — Unconditional overwrite of pointer field after parent save
+- Test execution trace confirms parent UPDATE occurs instead of INSERT when parent pk field is not cleared
+
+## Edit sites
+- `django/db/models/base.py` lines 807-809: Modify the sync logic to bidirectionally sync between parent pointer field and parent pk field. When the pointer field is None, set the parent pk to None. This ensures that when the user explicitly sets the parent pointer to None to create a new instance, the parent's pk is also cleared, forcing an INSERT instead of UPDATE.
+
+The fix should change from:
+```python
+if (field and getattr(self, parent._meta.pk.attname) is None and
+        getattr(self, field.attname) is not None):
+    setattr(self, parent._meta.pk.attname, getattr(self, field.attname))
+```
+
+To include the reverse sync:
+```python
+if field:
+    parent_pk_val = getattr(self, parent._meta.pk.attname)
+    field_val = getattr(self, field.attname)
+    # Sync in both directions to keep parent link fields consistent
+    if field_val is None:
+        # Clear parent pk when pointer is None (user wants new parent)
+        setattr(self, parent._meta.pk.attname, None)
+    elif parent_pk_val is None and field_val is not None:
+        # Sync pointer to parent pk (existing behavior)
+        setattr(self, parent._meta.pk.attname, field_val)
+```
+
+## Rejected hypotheses
+None — first iteration
+
+## Open questions
+- Should line 819's unconditional assignment also be made conditional? Current analysis suggests the pre-save sync fix is sufficient, as line 819's assignment is correct when a new parent is created (it assigns the new pk to the pointer).
+
+---STDERR---

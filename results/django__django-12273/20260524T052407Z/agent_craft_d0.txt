@@ -1,0 +1,17 @@
+## RESOLVED
+
+Both FAIL_TO_PASS tests now pass. The fix adds bidirectional synchronization between parent pointer fields and parent pk fields in multi-table inheritance:
+
+**Key changes:**
+1. **Snapshot child pk before loop** (`child_pk_was_none`) - prevents unstable condition in multi-inheritance where pk changes mid-loop
+2. **Clear parent pk when pointer is None** - when user sets parent pointer to None to create new instance, also clear the inherited parent pk field
+3. **Preserve existing sync** - when parent pk is None but pointer is not, sync pointer to parent pk
+
+**Final diff:**
+- Added `child_pk_was_none = self._get_pk_val() is None` snapshot before parent loop
+- When `field_val is None and parent_pk_val is not None and child_pk_was_none`, clear parent pk
+- Extracted variables for clarity and maintainability
+
+The fix handles both single inheritance (Profile→User) and multi-inheritance (Congressman→Person+Politician) by using the snapshot to detect "instance being reset for INSERT" regardless of when parent pointers get populated during the loop.
+
+---STDERR---
