@@ -1,0 +1,55 @@
+# Recon: django__django-16116
+
+## Failure summary
+
+The test `test_makemigrations_check` verifies that `makemigrations --check` should exit with a non-zero status when there are pending model changes requiring migrations, but should NOT create any migration files. The test fails at line 2397 (`self.assertFalse(os.path.exists(tmpdir))`) because the migration directory is created when it shouldn't be, indicating that migration files are being written despite the `--check` flag.
+
+## Suspect set
+
+- `django/core/management/commands/makemigrations.py` lines 251-256: The code that handles detected changes writes migration files before checking the `--check` flag
+
+## Root cause
+
+The `makemigrations --check` command currently writes migration files to disk and THEN exits with status 1, rather than exiting WITHOUT writing files. This is inconsistent with other Django management commands (`migrate --check`, `optimizemigration --check`) which exit before performing their action.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/core/management/commands/makemigrations.py:251-256`:
+  ```python
+  else:
+      if self.update:
+          self.write_to_last_migration_files(changes)
+      else:
+          self.write_migration_files(changes)
+      if check_changes:
+          sys.exit(1)
+  ```
+  The check happens AFTER the write operations.
+
+- `django/core/management/commands/optimizemigration.py:75-77`:
+  ```python
+  if check:
+      sys.exit(1)
+  ```
+  This happens BEFORE the "Write out the optimized migration file" section at line 82.
+
+- Test expectation at `tests/migrations/test_commands.py:2397`:
+  ```python
+  self.assertFalse(os.path.exists(tmpdir))
+  ```
+  Confirms that --check should not create the directory/files.
+
+## Edit sites
+
+- `django/core/management/commands/makemigrations.py` lines 251-256: Move the `if check_changes: sys.exit(1)` check to execute BEFORE the `write_migration_files(changes)` and `write_to_last_migration_files(changes)` calls. This ensures that when `--check` is provided and changes are detected, the command exits immediately without writing any migration files.
+
+## Rejected hypotheses
+
+None — the code path is straightforward and the comparison with `optimizemigration --check` confirms the expected pattern.
+
+## Open questions
+
+None — the fix is clear: reorder the code to check `check_changes` before performing write operations.
+
+---STDERR---

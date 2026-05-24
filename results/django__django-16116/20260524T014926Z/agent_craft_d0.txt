@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `makemigrations --check` exit without writing migration files or creating directories when changes are detected. The gate passes all 140 tests including the FAIL_TO_PASS test.
+
+---STDERR---

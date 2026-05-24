@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 migrations.test_commands
+
+test_makemigrations_update_manual_porting (migrations.test_commands.MakeMigrationsTests) ... ok
+test_makemigrations_update_no_migration (migrations.test_commands.MakeMigrationsTests) ... ok
+test_makemigrations_update_squash_migration (migrations.test_commands.MakeMigrationsTests) ... ok
+test_makemigrations_with_custom_name (migrations.test_commands.MakeMigrationsTests)
+makemigrations --name generate a custom migration name. ... ok
+test_makemigrations_with_invalid_custom_name (migrations.test_commands.MakeMigrationsTests) ... ok
+test_ambiguous_prefix (migrations.test_commands.MigrateTests) ... ok
+test_app_without_migrations (migrations.test_commands.MigrateTests) ... ok
+test_migrate (migrations.test_commands.MigrateTests)
+Tests basic usage of the migrate command. ... ok
+test_migrate_backward_to_squashed_migration (migrations.test_commands.MigrateTests) ... ok
+test_migrate_check (migrations.test_commands.MigrateTests) ... ok
+test_migrate_check_migrated_app (migrations.test_commands.MigrateTests) ... ok
+test_migrate_check_plan (migrations.test_commands.MigrateTests) ... ok
+test_migrate_conflict_exit (migrations.test_commands.MigrateTests)
+migrate exits if it detects a conflict. ... ok
+test_migrate_fake_initial (migrations.test_commands.MigrateTests)
+--fake-initial only works if all tables created in the initial ... ok
+test_migrate_fake_initial_case_insensitive (migrations.test_commands.MigrateTests) ... ok
+test_migrate_fake_split_initial (migrations.test_commands.MigrateTests)
+Split initial migrations can be faked with --fake-initial. ... ok
+test_migrate_inconsistent_history (migrations.test_commands.MigrateTests)
+Running migrate with some migrations applied before their dependencies ... ok
+test_migrate_initial_false (migrations.test_commands.MigrateTests)
+`Migration.initial = False` skips fake-initial detection. ... ok
+test_migrate_not_reflected_changes (migrations.test_commands.MigrateTests) ... ok
+test_migrate_partially_applied_squashed_migration (migrations.test_commands.MigrateTests)
+Migrating to a squashed migration specified by name should succeed ... ok
+test_migrate_plan (migrations.test_commands.MigrateTests)
+Tests migrate --plan output. ... ok
+test_migrate_prune (migrations.test_commands.MigrateTests)
+With prune=True, references to migration files deleted from the ... ok
+test_migrate_record_replaced (migrations.test_commands.MigrateTests)
+Running a single squashed migration should record all of the original ... ok
+test_migrate_record_squashed (migrations.test_commands.MigrateTests)
+Running migrate for a squashed migration should record as run ... ok
+test_migrate_syncdb_app_label (migrations.test_commands.MigrateTests)
+Running migrate --run-syncdb with an app_label only creates tables for ... ok
+test_migrate_syncdb_app_with_migrations (migrations.test_commands.MigrateTests) ... ok
+test_migrate_syncdb_deferred_sql_executed_with_schemaeditor (migrations.test_commands.MigrateTests)
+For an app without migrations, editor.execute() is used for executing ... ok
+test_migrate_with_system_checks (migrations.test_commands.MigrateTests) ... ok
+test_prune_deleted_squashed_migrations_in_replaces (migrations.test_commands.MigrateTests) ... ok
+test_prune_no_app_label (migrations.test_commands.MigrateTests) ... ok
+test_prune_no_migrations_to_prune (migrations.test_commands.MigrateTests) ... ok
+test_regression_22823_unmigrated_fk_to_migrated_model (migrations.test_commands.MigrateTests)
+Assuming you have 3 apps, `A`, `B`, and `C`, such that: ... ok
+test_showmigrations_list (migrations.test_commands.MigrateTests)
+showmigrations --list  displays migrations and whether or not they're ... ok
+test_showmigrations_list_squashed (migrations.test_commands.MigrateTests) ... ok
+test_showmigrations_no_migrations (migrations.test_commands.MigrateTests) ... ok
+test_showmigrations_plan (migrations.test_commands.MigrateTests)
+Tests --plan output of showmigrations command ... ok
+test_showmigrations_plan_app_label_no_migrations (migrations.test_commands.MigrateTests) ... ok
+test_showmigrations_plan_multiple_app_labels (migrations.test_commands.MigrateTests)
+`showmigrations --plan app_label` output with multiple app_labels. ... ok
+test_showmigrations_plan_no_migrations (migrations.test_commands.MigrateTests)
+Tests --plan output of showmigrations command without migrations ... ok
+test_showmigrations_plan_single_app_label (migrations.test_commands.MigrateTests)
+`showmigrations --plan app_label` output with a single app_label. ... ok
+test_showmigrations_plan_squashed (migrations.test_commands.MigrateTests)
+Tests --plan output of showmigrations command with squashed migrations. ... ok
+test_showmigrations_unmigrated_app (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_ambiguous_prefix_squashed_migrations (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_backwards (migrations.test_commands.MigrateTests)
+sqlmigrate outputs reverse looking SQL. ... ok
+test_sqlmigrate_for_non_atomic_migration (migrations.test_commands.MigrateTests)
+Transaction wrappers aren't shown for non-atomic migrations. ... ok
+test_sqlmigrate_for_non_transactional_databases (migrations.test_commands.MigrateTests)
+Transaction wrappers aren't shown for databases that don't support ... ok
+test_sqlmigrate_forwards (migrations.test_commands.MigrateTests)
+sqlmigrate outputs forward looking SQL. ... ok
+test_sqlmigrate_no_operations (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_noop (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_replaced_migration (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_squashed_migration (migrations.test_commands.MigrateTests) ... ok
+test_sqlmigrate_unrepresentable (migrations.test_commands.MigrateTests) ... ok
+test_unknown_prefix (migrations.test_commands.MigrateTests) ... ok
+test_ambigious_prefix (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_app_without_migrations (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_creates_replace_migration_manual_porting (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_fails_squash_migration_manual_porting (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_no_optimization_possible (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_optimization (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_optimization_no_verbosity (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_optimizemigration_check (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_unknown_prefix (migrations.test_commands.OptimizeMigrationTests) ... ok
+test_squashed_name_exists (migrations.test_commands.SquashMigrationsTests) ... ok
+test_squashed_name_with_start_migration_name (migrations.test_commands.SquashMigrationsTests)
+--squashed-name specifies the new migration's name. ... ok
+test_squashed_name_without_start_migration_name (migrations.test_commands.SquashMigrationsTests)
+--squashed-name also works if a start migration is omitted. ... ok
+test_squashmigrations_initial_attribute (migrations.test_commands.SquashMigrationsTests) ... ok
+test_squashmigrations_invalid_start (migrations.test_commands.SquashMigrationsTests)
+squashmigrations doesn't accept a starting migration after the ending migration. ... ok
+test_squashmigrations_manual_porting (migrations.test_commands.SquashMigrationsTests) ... ok
+test_squashmigrations_optimizes (migrations.test_commands.SquashMigrationsTests)
+squashmigrations optimizes operations. ... ok
+test_squashmigrations_squashes (migrations.test_commands.SquashMigrationsTests)
+squashmigrations squashes migrations. ... ok
+test_squashmigrations_valid_start (migrations.test_commands.SquashMigrationsTests)
+squashmigrations accepts a starting migration. ... ok
+test_ticket_23799_squashmigrations_no_optimize (migrations.test_commands.SquashMigrationsTests)
+squashmigrations --no-optimize doesn't optimize operations. ... ok
+
+======================================================================
+FAIL: test_makemigrations_check (migrations.test_commands.MakeMigrationsTests)
+makemigrations --check should exit with a non-zero status when
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_commands.py", line 2397, in test_makemigrations_check
+    self.assertFalse(os.path.exists(tmpdir))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 140 tests in 5.410s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Destroying test database for alias 'other' ('file:memorydb_other?mode=memory&cache=shared')...
