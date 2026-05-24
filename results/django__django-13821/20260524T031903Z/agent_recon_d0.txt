@@ -1,0 +1,30 @@
+# Recon: django__django-13821
+
+## Failure summary
+The test `test_check_sqlite_version` verifies that Django raises an `ImproperlyConfigured` exception when SQLite version is below 3.9.0. The test mocks the SQLite version to 3.8.11.1 and expects the error message "SQLite 3.9.0 or later is required (found 3.8.11.1)." However, the test fails with `AssertionError: ImproperlyConfigured not raised` because the current implementation still checks for SQLite 3.8.3 instead of 3.9.0.
+
+## Suspect set
+- `django/db/backends/sqlite3/base.py` lines 66-71: The `check_sqlite_version()` function and its invocation
+
+## Root cause
+The `check_sqlite_version()` function checks for SQLite version >= 3.8.3, but according to the problem statement and the failing test, Django needs to drop support for SQLite < 3.9.0. Since the mocked version 3.8.11.1 is >= 3.8.3 but < 3.9.0, no exception is raised.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/backends/sqlite3/base.py:67` — `if Database.sqlite_version_info < (3, 8, 3):`
+- `django/db/backends/sqlite3/base.py:68` — `raise ImproperlyConfigured('SQLite 3.8.3 or later is required (found %s).' % Database.sqlite_version)`
+- `tests/backends/sqlite/tests.py:33` — `msg = 'SQLite 3.9.0 or later is required (found 3.8.11.1).'`
+- Git history shows `d5af14aa84 Fixed #30055 -- Dropped support for SQLite < 3.8.3.` was the previous version bump
+
+## Edit sites
+- `django/db/backends/sqlite3/base.py` line 67: Change version tuple from `(3, 8, 3)` to `(3, 9, 0)`
+- `django/db/backends/sqlite3/base.py` line 68: Change error message from "SQLite 3.8.3 or later is required" to "SQLite 3.9.0 or later is required"
+
+## Rejected hypotheses
+None — the root cause is straightforward from code inspection.
+
+## Open questions
+None — the fix is clear and localized to a single function.
+
+---STDERR---

@@ -1,0 +1,24 @@
+# Audit: django__django-13821
+
+## FAIL_TO_PASS
+- `test_check_sqlite_version (backends.sqlite.tests.Tests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully updated the SQLite version check from 3.8.3 to 3.9.0 in `django/db/backends/sqlite3/base.py`. The target test now passes and all existing tests remain passing with zero regressions.
+
+**Diff applied:**
+- Line 67: `(3, 8, 3)` → `(3, 9, 0)`
+- Line 68: Error message updated to match
+
+**Gate results:** 18 tests OK (2 skipped), clean run.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
