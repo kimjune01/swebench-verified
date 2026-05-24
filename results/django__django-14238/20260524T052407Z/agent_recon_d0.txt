@@ -1,0 +1,43 @@
+# Recon: django__django-14238
+
+## Failure summary
+
+Two tests fail when checking subclass relationships with AutoField. `test_issubclass_of_autofield` expects custom subclasses of BigAutoField and SmallAutoField (e.g., `MyBigAutoField(models.BigAutoField)`) to return True for `issubclass(MyBigAutoField, models.AutoField)`, but it returns False. Similarly, `test_default_auto_field_setting_bigautofield_subclass` expects to use a BigAutoField subclass as DEFAULT_AUTO_FIELD, but Django raises ValueError: "Primary key 'model_options.test_default_pk.MyBigAutoField' referred by DEFAULT_AUTO_FIELD must subclass AutoField."
+
+The validation error occurs in `django/db/models/options.py:246` within `_get_default_pk_class()`, which checks `issubclass(pk_class, AutoField)` and rejects classes that fail this check.
+
+## Suspect set
+
+- `django/db/models/fields/__init__.py` lines 2502-2528: `AutoFieldMeta` metaclass, specifically the `__subclasscheck__` method at lines 2524-2526
+
+## Root cause
+
+The `AutoFieldMeta.__subclasscheck__` method uses identity checking (`in`) instead of inheritance checking when determining if a class should be considered a subclass of AutoField. The method checks `subclass in self._subclasses` where `_subclasses` returns `(BigAutoField, SmallAutoField)`. This identity check only succeeds for BigAutoField and SmallAutoField themselves, not their subclasses.
+
+When `issubclass(MyBigAutoField, AutoField)` is called:
+1. Python invokes `AutoFieldMeta.__subclasscheck__(AutoField, MyBigAutoField)`
+2. The check `MyBigAutoField in (BigAutoField, SmallAutoField)` returns False (identity, not inheritance)
+3. Falls back to `type.__subclasscheck__`, which returns False because MyBigAutoField doesn't directly inherit from AutoField
+4. Result: False (incorrect - MyBigAutoField inherits from BigAutoField, which is treated as an AutoField)
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/fields/__init__.py:2524-2526` — Current implementation: `def __subclasscheck__(self, subclass): return subclass in self._subclasses or super().__subclasscheck__(subclass)`
+- Verified via Python REPL: `MyBigAutoField in (BigAutoField, SmallAutoField)` → False, but `issubclass(MyBigAutoField, BigAutoField)` → True
+- `django/db/models/fields/__init__.py:2519-2520` — `_subclasses` property returns `(BigAutoField, SmallAutoField)` tuple
+- Note: `__instancecheck__` works correctly because it uses `isinstance(instance, self._subclasses)` which does check inheritance for instances
+
+## Edit sites
+
+- `django/db/models/fields/__init__.py` lines 2524-2526: Change `__subclasscheck__` to check inheritance, not identity. Replace `subclass in self._subclasses` with `any(issubclass(subclass, cls) for cls in self._subclasses)`. This will handle both direct classes (BigAutoField, SmallAutoField) and their subclasses (MyBigAutoField, etc.). No recursion risk since BigAutoField/SmallAutoField use metaclass `type`, not `AutoFieldMeta`.
+
+## Rejected hypotheses
+
+None - the code path is straightforward and the root cause is clear from tracing `issubclass()` through the metaclass.
+
+## Open questions
+
+None - the fix is localized to a single method with well-defined semantics.
+
+---STDERR---

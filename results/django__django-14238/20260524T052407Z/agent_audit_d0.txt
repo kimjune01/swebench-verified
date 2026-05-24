@@ -1,0 +1,19 @@
+# Audit: django__django-14238
+
+## FAIL_TO_PASS
+- ✅ test_issubclass_of_autofield (model_fields.test_autofield.AutoFieldInheritanceTests): PASS
+- ✅ test_default_auto_field_setting_bigautofield_subclass (model_options.test_default_pk.TestDefaultPK): PASS
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves both failing tests. Changed `AutoFieldMeta.__subclasscheck__` at `django/db/models/fields/__init__.py:2527` from identity check (`subclass in self._subclasses`) to inheritance check (`issubclass(subclass, self._subclasses)`). This allows custom subclasses of BigAutoField/SmallAutoField to be correctly recognized as AutoField subclasses. All 61 tests pass with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

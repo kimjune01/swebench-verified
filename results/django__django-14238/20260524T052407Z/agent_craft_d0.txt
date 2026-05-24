@@ -1,0 +1,18 @@
+## RESOLVED
+
+Fixed django__django-14238 in one gate iteration.
+
+**The fix**: Changed `AutoFieldMeta.__subclasscheck__` to use inheritance checking instead of identity checking:
+```python
+# Before
+return subclass in self._subclasses or super().__subclasscheck__(subclass)
+
+# After  
+return issubclass(subclass, self._subclasses) or super().__subclasscheck__(subclass)
+```
+
+This allows custom subclasses like `MyBigAutoField(models.BigAutoField)` to correctly return `True` for `issubclass(MyBigAutoField, models.AutoField)`, enabling them to be used as `DEFAULT_AUTO_FIELD`.
+
+Both FAIL_TO_PASS tests now pass, along with all 61 related tests.
+
+---STDERR---

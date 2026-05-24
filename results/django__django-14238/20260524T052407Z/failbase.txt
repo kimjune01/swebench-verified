@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 model_fields.test_autofield model_options.test_default_pk
+
+test_coercing (model_fields.test_autofield.AutoFieldTests) ... ok
+test_documented_range (model_fields.test_autofield.AutoFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_autofield.AutoFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_autofield.AutoFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_autofield.AutoFieldTests) ... ok
+test_types (model_fields.test_autofield.AutoFieldTests) ... ok
+test_backend_range_save (model_fields.test_autofield.BigAutoFieldTests)
+Backend specific ranges can be saved without corruption. ... ok
+test_backend_range_validation (model_fields.test_autofield.BigAutoFieldTests)
+Backend specific ranges are enforced at the model validation level ... ok
+test_coercing (model_fields.test_autofield.BigAutoFieldTests) ... ok
+test_documented_range (model_fields.test_autofield.BigAutoFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_autofield.BigAutoFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_autofield.BigAutoFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_autofield.BigAutoFieldTests) ... ok
+test_types (model_fields.test_autofield.BigAutoFieldTests) ... ok
+test_backend_range_save (model_fields.test_integerfield.BigIntegerFieldTests)
+Backend specific ranges can be saved without corruption. ... ok
+test_backend_range_validation (model_fields.test_integerfield.BigIntegerFieldTests)
+Backend specific ranges are enforced at the model validation level ... ok
+test_coercing (model_fields.test_integerfield.BigIntegerFieldTests) ... ok
+test_documented_range (model_fields.test_integerfield.BigIntegerFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_integerfield.BigIntegerFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_integerfield.BigIntegerFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_integerfield.BigIntegerFieldTests) ... ok
+test_types (model_fields.test_integerfield.BigIntegerFieldTests) ... ok
+test_backend_range_save (model_fields.test_integerfield.IntegerFieldTests)
+Backend specific ranges can be saved without corruption. ... ok
+test_backend_range_validation (model_fields.test_integerfield.IntegerFieldTests)
+Backend specific ranges are enforced at the model validation level ... ok
+test_coercing (model_fields.test_integerfield.IntegerFieldTests) ... ok
+test_documented_range (model_fields.test_integerfield.IntegerFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_integerfield.IntegerFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_integerfield.IntegerFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_integerfield.IntegerFieldTests) ... ok
+test_types (model_fields.test_integerfield.IntegerFieldTests) ... ok
+test_backend_range_save (model_fields.test_autofield.SmallAutoFieldTests)
+Backend specific ranges can be saved without corruption. ... ok
+test_backend_range_validation (model_fields.test_autofield.SmallAutoFieldTests)
+Backend specific ranges are enforced at the model validation level ... ok
+test_coercing (model_fields.test_autofield.SmallAutoFieldTests) ... ok
+test_documented_range (model_fields.test_autofield.SmallAutoFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_autofield.SmallAutoFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_autofield.SmallAutoFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_autofield.SmallAutoFieldTests) ... ok
+test_types (model_fields.test_autofield.SmallAutoFieldTests) ... ok
+test_backend_range_save (model_fields.test_integerfield.SmallIntegerFieldTests)
+Backend specific ranges can be saved without corruption. ... ok
+test_backend_range_validation (model_fields.test_integerfield.SmallIntegerFieldTests)
+Backend specific ranges are enforced at the model validation level ... ok
+test_coercing (model_fields.test_integerfield.SmallIntegerFieldTests) ... ok
+test_documented_range (model_fields.test_integerfield.SmallIntegerFieldTests)
+Values within the documented safe range pass validation, and can be ... ok
+test_invalid_value (model_fields.test_integerfield.SmallIntegerFieldTests) ... ok
+test_redundant_backend_range_validators (model_fields.test_integerfield.SmallIntegerFieldTests)
+If there are stricter validators than the ones from the database ... ok
+test_rel_db_type (model_fields.test_integerfield.SmallIntegerFieldTests) ... ok
+test_types (model_fields.test_integerfield.SmallIntegerFieldTests) ... ok
+test_isinstance_of_autofield (model_fields.test_autofield.AutoFieldInheritanceTests) ... ok
+test_issubclass_of_autofield (model_fields.test_autofield.AutoFieldInheritanceTests) ... test_app_default_auto_field (model_options.test_default_pk.TestDefaultPK) ... ok
+test_app_default_auto_field_non_auto (model_options.test_default_pk.TestDefaultPK) ... ok
+test_app_default_auto_field_none (model_options.test_default_pk.TestDefaultPK) ... ok
+test_app_default_auto_field_nonexistent (model_options.test_default_pk.TestDefaultPK) ... ok
+test_default_auto_field_setting (model_options.test_default_pk.TestDefaultPK) ... ok
+test_default_auto_field_setting_bigautofield_subclass (model_options.test_default_pk.TestDefaultPK) ... ERROR
+test_default_auto_field_setting_non_auto (model_options.test_default_pk.TestDefaultPK) ... ok
+test_default_auto_field_setting_none (model_options.test_default_pk.TestDefaultPK) ... ok
+test_default_auto_field_setting_nonexistent (model_options.test_default_pk.TestDefaultPK) ... ok
+test_m2m_app_default_auto_field (model_options.test_default_pk.TestDefaultPK) ... ok
+test_m2m_default_auto_field_setting (model_options.test_default_pk.TestDefaultPK) ... ok
+
+======================================================================
+ERROR: test_default_auto_field_setting_bigautofield_subclass (model_options.test_default_pk.TestDefaultPK)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/utils.py", line 430, in inner
+    return func(*args, **kwargs)
+  File "/testbed/tests/model_options/test_default_pk.py", line 85, in test_default_auto_field_setting_bigautofield_subclass
+    class Model(models.Model):
+  File "/testbed/django/db/models/base.py", line 320, in __new__
+    new_class._prepare()
+  File "/testbed/django/db/models/base.py", line 333, in _prepare
+    opts._prepare(cls)
+  File "/testbed/django/db/models/options.py", line 285, in _prepare
+    pk_class = self._get_default_pk_class()
+  File "/testbed/django/db/models/options.py", line 246, in _get_default_pk_class
+    raise ValueError(
+ValueError: Primary key 'model_options.test_default_pk.MyBigAutoField' referred by DEFAULT_AUTO_FIELD must subclass AutoField.
+
+======================================================================
+FAIL: test_issubclass_of_autofield (model_fields.test_autofield.AutoFieldInheritanceTests) [MyBigAutoField]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_autofield.py", line 47, in test_issubclass_of_autofield
+    self.assertTrue(issubclass(field, models.AutoField))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_issubclass_of_autofield (model_fields.test_autofield.AutoFieldInheritanceTests) [MySmallAutoField]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/model_fields/test_autofield.py", line 47, in test_issubclass_of_autofield
+    self.assertTrue(issubclass(field, models.AutoField))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 61 tests in 0.031s
+
+FAILED (failures=2, errors=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
