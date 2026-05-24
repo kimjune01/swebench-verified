@@ -1,0 +1,41 @@
+# Recon: django__django-16139
+
+## Failure summary
+The test `test_link_to_password_reset_in_helptext_via_to_field` verifies that when a UserChangeForm is accessed via a `to_field` parameter (using a field other than the primary key as the URL identifier, such as username), the password reset link in the help text still resolves correctly to the password change URL, which always uses the primary key. The test fails because the relative URL `../password/` in the help text preserves the to_field identifier instead of resolving to the pk-based URL.
+
+**Error**: `AssertionError: '/admin/auth/user/testclient/password/' != '/admin/auth/user/1/password/'`
+
+## Suspect set
+- `django/contrib/auth/forms.py` lines 147-172: UserChangeForm class, specifically the `__init__` method at line 164-166 where the password help text is formatted
+
+## Root cause
+The UserChangeForm.__init__ method formats the password field's help text with a hardcoded relative URL `../password/`:
+
+```python
+# django/contrib/auth/forms.py:166
+password.help_text = password.help_text.format("../password/")
+```
+
+This relative URL construction assumes the change form is always accessed via primary key. When accessed normally (`/admin/auth/user/1/change/`), `../password/` correctly resolves to `/admin/auth/user/1/password/`.
+
+However, when the change form is accessed via a `to_field` parameter (e.g., `/admin/auth/user/testclient/change/?_to_field=username`), the relative URL still only goes up one level, replacing `change/` with `password/` while preserving the identifier (`testclient`), resulting in `/admin/auth/user/testclient/password/` instead of the correct `/admin/auth/user/1/password/`.
+
+Django admin's password change URL always uses the primary key, never the to_field value. The fix requires constructing a path that explicitly uses `self.instance.pk` rather than a relative path that inherits the URL context.
+
+**Confidence**: Deduction — 98%
+
+**Supporting evidence**:
+- `django/contrib/auth/forms.py:166` — `password.help_text = password.help_text.format("../password/")`
+- `tests/auth_tests/test_forms.py:908-915` — Test constructs admin URL with `args=(user.username,)` and expects joined URL to equal password change URL with `args=(user.pk,)`
+- `django/contrib/auth/admin.py:73` — UserChangeForm is used for editing existing users (not creation), so `self.instance.pk` is always available
+
+## Edit sites
+- `django/contrib/auth/forms.py` line 166: Replace `password.help_text = password.help_text.format("../password/")` with `password.help_text = password.help_text.format(f"../../{self.instance.pk}/password/")`. This constructs an absolute-ish path that goes up two levels (past both the identifier and `change/`), then explicitly uses the instance's pk to build the correct URL regardless of to_field access.
+
+## Rejected hypotheses
+None — the root cause is directly observable from the code and the test failure.
+
+## Open questions
+None — the fix is straightforward and well-scoped.
+
+---STDERR---

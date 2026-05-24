@@ -1,0 +1,22 @@
+# Audit: django__django-16139
+
+**Patch applied:** `django/contrib/auth/forms.py` — changed password reset link from `../password/` to `../../{self.instance.pk}/password/`
+
+## FAIL_TO_PASS
+- `test_link_to_password_reset_in_helptext_via_to_field (auth_tests.test_forms.UserChangeFormTest)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 86 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None
+
+## Gate summary
+Ran 87 tests in 0.145s — all passed.
+
+The patch correctly fixes the password reset link to account for the `to_field` URL parameter by using the instance PK to navigate up two levels (`../../{pk}/password/`) instead of one (`../password/`).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

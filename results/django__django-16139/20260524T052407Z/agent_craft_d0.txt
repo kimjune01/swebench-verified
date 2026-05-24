@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete. The failing test `test_link_to_password_reset_in_helptext_via_to_field` now passes, along with all 87 tests in the suite (no regressions).
+
+The solution replaced the relative URL `../password/` with `../../{self.instance.pk}/password/` in the UserChangeForm's password help text. This ensures the password reset link always uses the primary key, regardless of whether the form is accessed via a `to_field` parameter or normally.
+
+---STDERR---
