@@ -1,0 +1,27 @@
+# Audit: django__django-14915
+
+## FAIL_TO_PASS
+- test_choice_value_hash: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Kill report
+Not applicable — all tests pass.
+
+**Patch summary:**
+Added `__hash__` method to `ModelChoiceIteratorValue` class in django/forms/models.py, returning `hash(self.value)`. This makes instances hashable (consistent with the existing `__eq__` implementation) and fixes the TypeError that was preventing hash() calls on these objects.
+
+**Gate results:**
+- 24/24 tests pass
+- FAIL_TO_PASS test (test_choice_value_hash) now passes
+- No regressions in PASS_TO_PASS tests
+- Test suite execution time: 0.031s
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

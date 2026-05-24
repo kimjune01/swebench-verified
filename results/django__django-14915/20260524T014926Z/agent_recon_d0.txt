@@ -1,0 +1,34 @@
+# Recon: django__django-14915
+
+## Failure summary
+
+The test `test_choice_value_hash` creates `ModelChoiceIteratorValue` instances and attempts to hash them for use as dictionary keys or set members. The test fails with `TypeError: unhashable type: 'ModelChoiceIteratorValue'` when calling `hash(value_1)`. This breaks user code that migrated from Django 3.0 to 3.1, where `ModelChoiceIteratorValue` was introduced and is now returned by choice iterators, causing failures when values are used as dict keys (e.g., `if value in self.show_fields`).
+
+## Suspect set
+
+- `django/forms/models.py` lines 1161-1172: `ModelChoiceIteratorValue` class definition
+
+## Root cause
+
+`ModelChoiceIteratorValue` defines `__eq__` (line 1169) but not `__hash__`. In Python's data model, when a class defines `__eq__` without defining `__hash__`, Python automatically sets `__hash__ = None`, making instances unhashable. The `__eq__` method compares instances based on `self.value`, so `__hash__` must return `hash(self.value)` to maintain the invariant that equal objects have equal hashes.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/forms/models.py:1161-1172` — Class definition shows `__init__`, `__str__`, `__eq__` methods but no `__hash__`
+- `django/forms/models.py:1169-1172` — `__eq__` implementation: compares `self.value` after unwrapping `ModelChoiceIteratorValue` instances
+- Git commit 67ea35df52 added `ModelChoiceIteratorValue` in Django 3.1 with `__eq__` but without `__hash__`
+
+## Edit sites
+
+- `django/forms/models.py` lines 1161-1172: Add `def __hash__(self)` method after the `__eq__` method. The implementation should return `hash(self.value)` to be consistent with the `__eq__` implementation that compares based on `self.value`.
+
+## Rejected hypotheses
+
+None — the root cause is immediately evident from the error message and class structure.
+
+## Open questions
+
+None — the fix is straightforward and the test expectations are clear.
+
+---STDERR---

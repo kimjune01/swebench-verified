@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added `__hash__` method to `ModelChoiceIteratorValue` class that returns `hash(self.value)`, consistent with the existing `__eq__` implementation. All 24 tests passed, including the required `test_choice_value_hash`.
+
+---STDERR---
