@@ -1,0 +1,45 @@
+Now let me output the complete diagnosis:
+
+# Recon: scikit-learn__scikit-learn-14983
+
+## Failure summary
+
+The tests `test_repeated_cv_repr[RepeatedKFold]` and `test_repeated_cv_repr[RepeatedStratifiedKFold]` verify that the `__repr__` method returns a properly formatted string like `RepeatedKFold(n_repeats=6, n_splits=2, random_state=None)`. Currently, both classes return the default Python object representation `<sklearn.model_selection._split.RepeatedKFold object at 0x...>` because they lack a custom `__repr__` implementation.
+
+The test creates instances with `n_splits=2, n_repeats=6` and expects the repr to show these parameters in sorted order: `RepeatedKFold(n_repeats=6, n_splits=2, random_state=None)`.
+
+## Suspect set
+
+- `sklearn/model_selection/_split.py` lines 1066-1165: `_RepeatedSplits` class (parent class) - missing `__repr__` method
+- `sklearn/model_selection/_split.py` lines 1215-1218: `RepeatedKFold.__init__` - doesn't store `n_splits` as instance attribute
+- `sklearn/model_selection/_split.py` lines 1267-1270: `RepeatedStratifiedKFold.__init__` - doesn't store `n_splits` as instance attribute
+
+## Root cause
+
+The `_RepeatedSplits` class does not inherit from `BaseCrossValidator` (which provides `__repr__` via `_build_repr`) and doesn't implement its own `__repr__` method. Additionally, the child classes `RepeatedKFold` and `RepeatedStratifiedKFold` don't store `n_splits` as an instance attribute - it only exists in `self.cvargs` dict. The `_build_repr` utility function extracts parameter values using `getattr(self, key)`, so `n_splits` returns None since it's not a direct attribute.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `sklearn/model_selection/_split.py:1066` — `class _RepeatedSplits(metaclass=ABCMeta):` uses ABCMeta but doesn't inherit BaseCrossValidator
+- `sklearn/model_selection/_split.py:105` — `BaseCrossValidator` has `def __repr__(self): return _build_repr(self)`
+- `sklearn/model_selection/_split.py:1102-1104` — Parent stores `self.n_repeats` and `self.random_state` but `n_splits` goes to `self.cvargs = {'n_splits': n_splits}`
+- Verified: `getattr(RepeatedKFold(n_splits=2), 'n_splits')` raises AttributeError; only accessible via `cvargs`
+
+## Edit sites
+
+1. `sklearn/model_selection/_split.py` lines ~1163-1165 (after `get_n_splits` method in `_RepeatedSplits`): Add `__repr__` method that returns `_build_repr(self)`
+
+2. `sklearn/model_selection/_split.py` line ~1217 (`RepeatedKFold.__init__`): Store `self.n_splits = n_splits` before the `super().__init__()` call
+
+3. `sklearn/model_selection/_split.py` line ~1268 (`RepeatedStratifiedKFold.__init__`): Store `self.n_splits = n_splits` before the `super().__init__()` call
+
+## Rejected hypotheses
+
+None - this is the first pass diagnosis.
+
+## Open questions
+
+None - the fix is straightforward and follows the established pattern in the codebase (BaseCrossValidator, BaseShuffleSplit both use _build_repr for their __repr__ methods).
+
+---STDERR---

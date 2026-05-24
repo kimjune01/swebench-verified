@@ -1,0 +1,23 @@
+# Audit: scikit-learn__scikit-learn-14983
+
+## FAIL_TO_PASS
+- `test_repeated_cv_repr[RepeatedKFold]`: PASS ✅
+- `test_repeated_cv_repr[RepeatedStratifiedKFold]`: PASS ✅
+
+## PASS_TO_PASS regressions
+None — all 107 tests passed with no failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — baseline had the 2 FAIL_TO_PASS tests failing, both now resolved.
+
+## Summary
+The craft patch successfully fixed the missing `__repr__` methods for `RepeatedKFold` and `RepeatedStratifiedKFold` by:
+1. Adding `__repr__` method to the `_RepeatedSplits` base class that calls `_build_repr(self)`
+2. Storing `self.n_splits` as an instance attribute in both subclasses so `_build_repr` can access it
+
+Full test suite: 107 passed, 0 failed, 0 regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
