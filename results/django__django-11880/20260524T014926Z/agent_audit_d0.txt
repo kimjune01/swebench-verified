@@ -1,0 +1,25 @@
+# Audit: django__django-11880
+
+## FAIL_TO_PASS
+- test_field_deep_copy_error_messages (forms_tests.tests.test_forms.FormsTestCase): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+
+The patch successfully resolves the issue by adding `result.error_messages = self.error_messages.copy()` to the Field.__deepcopy__ method. This ensures each deepcopied field gets its own error_messages dictionary instance, preventing shared mutable state.
+
+**Test results:**
+- All 115 tests passed in 0.164s
+- The FAIL_TO_PASS test now passes
+- No PASS_TO_PASS regressions detected
+- No pre-existing failures
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

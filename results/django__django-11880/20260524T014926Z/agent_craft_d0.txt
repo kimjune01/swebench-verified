@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added a shallow copy of `error_messages` dictionary in the `Field.__deepcopy__` method to ensure deepcopied fields have independent error_messages dictionaries. The test `test_field_deep_copy_error_messages` now passes along with all other tests (115/115 OK).
+
+---STDERR---

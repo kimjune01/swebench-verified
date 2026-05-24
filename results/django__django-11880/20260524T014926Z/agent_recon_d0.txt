@@ -1,0 +1,32 @@
+Now I'll output the structured handoff to stdout:
+
+# Recon: django__django-11880
+
+## Failure summary
+The test `test_field_deep_copy_error_messages` creates a CustomCharField with custom error messages, deepcopies it, and verifies that the copy has a separate error_messages dictionary. The test fails with `AssertionError: unexpectedly identical: {'required': 'This field is required.', 'invalid': 'Form custom error message.'}` because `assertIsNot(field_copy.error_messages, field.error_messages)` detects that both fields share the same dictionary object rather than having independent copies.
+
+## Suspect set
+- `django/forms/fields.py` lines 198-203: Field.__deepcopy__ method - performs shallow copy without deepcopying error_messages dictionary
+
+## Root cause
+The `Field.__deepcopy__` method at line 198-203 performs a shallow copy of the field object (`copy.copy(self)` at line 199), which means all attributes are copied by reference. The method explicitly deepcopies the `widget` attribute (line 201) and creates a new `validators` list (line 202), but **does not deepcopy the `error_messages` dictionary**. Since `error_messages` is a mutable dictionary (constructed at lines 110-113 in __init__), all deepcopied fields share the same error_messages object. This violates the expectation that deepcopy creates independent objects, and causes problems when Forms or ModelForms modify field error messages dynamically (as mentioned in the problem description).
+
+**Confidence:** Deduction — 99%
+
+**Supporting evidence:**
+- `django/forms/fields.py:199` — `result = copy.copy(self)` creates shallow copy where error_messages is shared
+- `django/forms/fields.py:201` — `result.widget = copy.deepcopy(self.widget, memo)` shows widget is explicitly deepcopied
+- `django/forms/fields.py:202` — `result.validators = self.validators[:]` shows validators list is explicitly copied
+- `django/forms/fields.py:110-113` — error_messages is initialized as a dictionary: `messages = {}; ...; self.error_messages = messages`
+- `django/forms/forms.py:87` — Form.__init__ deepcopies fields: `self.fields = copy.deepcopy(self.base_fields)`
+
+## Edit sites
+- `django/forms/fields.py` lines 198-203: Add a line to deepcopy error_messages dictionary after line 202 and before the return statement. The fix should be: `result.error_messages = copy.deepcopy(self.error_messages, memo)` inserted between line 202 and line 203, similar to how widget is deepcopied at line 201.
+
+## Rejected hypotheses
+None - the root cause is straightforward and confirmed by code inspection.
+
+## Open questions
+None - the fix is clear and localized to a single method. Subclasses (FileField at line 767, MultiValueField at line 985, ModelChoiceField in models.py at line 1195) all call super().__deepcopy__(memo) so they will automatically inherit the fix.
+
+---STDERR---
