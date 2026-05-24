@@ -1,0 +1,3 @@
+**RESOLVED** — All FAIL_TO_PASS tests pass on first gate iteration. Fix applied at lib/matplotlib/colorbar.py:654-661, replacing hardcoded `[1:-1]` slice with conditional logic that includes dividers at extension boundaries when `extend='min'`, `'max'`, or `'both'`.
+
+---STDERR---

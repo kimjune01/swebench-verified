@@ -1,0 +1,45 @@
+# Recon: matplotlib__matplotlib-22865
+
+## Failure summary
+
+The tests verify that colorbar divider lines (vertical lines separating colors when `drawedges=True`) appear at the correct positions based on the `extend` parameter. When `extend='both'`, dividers should appear at positions 0, 1, and 2 (at both extension boundaries and the middle). When `extend='min'` or `'max'`, dividers should appear at one extension boundary plus the middle. The tests fail because only the middle divider appears (position 1) regardless of the extend mode—the dividers at extension boundaries (positions 0 and/or 2) are missing.
+
+Error message: `AssertionError: assert False` when comparing `cbar.dividers.get_segments()` against expected segment arrays. For `extend='both'`, expected 3 segments but got 1; for `extend='min'` and `'max'`, expected 2 segments but got 1.
+
+## Suspect set
+
+- `lib/matplotlib/colorbar.py` lines 654-655: The `_add_solids()` method where dividers are created via `dividers.set_segments()` with a hardcoded `[1:-1]` slice that unconditionally removes the first and last divider positions.
+
+## Root cause
+
+The divider segments are created with a hardcoded `[1:-1]` slice that removes the first and last positions from the mesh coordinates. This slice was designed for `extend='neither'` where you don't want divider lines at the absolute extremities of the colorbar. However, when extension triangles exist (`extend='min'`, `'max'`, or `'both'`), divider lines SHOULD appear at the boundaries between the regular colorbar and the extension triangles.
+
+The mesh created by `_mesh()` has N positions corresponding to boundary locations. For example, with 3 bounds [0, 1, 2], the mesh has positions at x=0, x=1, and x=2 (for horizontal orientation). The `np.dstack([X, Y])` operation creates segment arrays for all N positions, but the `[1:-1]` slice keeps only the middle segments, discarding those at positions 0 and N-1 where the extensions begin.
+
+Confidence: **abduction — 85%**
+
+Supporting evidence:
+- `lib/matplotlib/colorbar.py:655` — `self.dividers.set_segments(np.dstack([X, Y])[1:-1] if self.drawedges else [])`
+- Debug output shows for `extend='both'`: mesh has positions [0., 1., 2.], but `[1:-1]` yields only position 1
+- `lib/matplotlib/colorbar.py:1354-1359` — Methods `_extend_lower()` and `_extend_upper()` return True when extensions exist, providing the logic needed for conditional slicing
+
+## Edit sites
+
+- `lib/matplotlib/colorbar.py` lines 654-655: Replace the hardcoded `[1:-1]` slice with conditional slicing logic. The slice should:
+  - Start at index 0 (instead of 1) when `self._extend_lower()` returns True
+  - End at None (instead of -1) when `self._extend_upper()` returns True
+  - Maintain `[1:-1]` behavior when both return False (extend='neither' case)
+
+## Competing hypotheses
+
+None — the root cause is definitively at line 655 based on code trace and debug output.
+
+## Rejected hypotheses
+
+- H0 (initial): The tests fail because dividers are not being created — **killed** by observing that `cbar.dividers` exists and has 1 segment (the middle one), confirming dividers ARE created but with wrong slice bounds.
+
+## Open questions
+
+None — the fix is localized to a single line with clear conditional logic.
+
+---STDERR---

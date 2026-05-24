@@ -1,0 +1,122 @@
+$ pytest -rA lib/matplotlib/tests/test_colorbar.py
+
+        cmap, norm = mcolors.from_levels_and_colors(bounds, colors, extend=extend)
+    
+        plt.figure(figsize=(5, 1))
+        ax = plt.subplot(111)
+        cbar = Colorbar(ax, cmap=cmap, norm=norm, orientation='horizontal',
+                        drawedges=True)
+>       assert np.all(np.equal(cbar.dividers.get_segments(), res))
+E       AssertionError: assert False
+E        +  where False = <function all at 0x7f10d129b170>(array([[[False,  True],\n        [False,  True]],\n\n       [[ True,  True],\n        [ True,  True]]]))
+E        +    where <function all at 0x7f10d129b170> = np.all
+E        +    and   array([[[False,  True],\n        [False,  True]],\n\n       [[ True,  True],\n        [ True,  True]]]) = <ufunc 'equal'>([array([[1., 0.],\n       [1., 1.]])], [array([[0., 0.],\n       [0., 1.]]), array([[1., 0.],\n       [1., 1.]])])
+E        +      where <ufunc 'equal'> = np.equal
+E        +      and   [array([[1., 0.],\n       [1., 1.]])] = get_segments()
+E        +        where get_segments = <matplotlib.collections.LineCollection object at 0x7f10c4f0ce50>.get_segments
+E        +          where <matplotlib.collections.LineCollection object at 0x7f10c4f0ce50> = <matplotlib.colorbar.Colorbar object at 0x7f10bee06c10>.dividers
+
+lib/matplotlib/tests/test_colorbar.py:943: AssertionError
+__________________ test_colorbar_extend_drawedges[max-0-res2] __________________
+
+extend = 'max', coloroffset = 0
+res = [array([[1., 0.],
+       [1., 1.]]), array([[2., 0.],
+       [2., 1.]])]
+
+    @pytest.mark.parametrize("extend, coloroffset, res", [
+        ('both', 1, [np.array([[0., 0.], [0., 1.]]),
+                     np.array([[1., 0.], [1., 1.]]),
+                     np.array([[2., 0.], [2., 1.]])]),
+        ('min', 0, [np.array([[0., 0.], [0., 1.]]),
+                    np.array([[1., 0.], [1., 1.]])]),
+        ('max', 0, [np.array([[1., 0.], [1., 1.]]),
+                    np.array([[2., 0.], [2., 1.]])]),
+        ('neither', -1, [np.array([[1., 0.], [1., 1.]])])
+        ])
+    def test_colorbar_extend_drawedges(extend, coloroffset, res):
+        cmap = plt.get_cmap("viridis")
+        bounds = np.arange(3)
+        nb_colors = len(bounds) + coloroffset
+        colors = cmap(np.linspace(100, 255, nb_colors).astype(int))
+        cmap, norm = mcolors.from_levels_and_colors(bounds, colors, extend=extend)
+    
+        plt.figure(figsize=(5, 1))
+        ax = plt.subplot(111)
+        cbar = Colorbar(ax, cmap=cmap, norm=norm, orientation='horizontal',
+                        drawedges=True)
+>       assert np.all(np.equal(cbar.dividers.get_segments(), res))
+E       AssertionError: assert False
+E        +  where False = <function all at 0x7f10d129b170>(array([[[ True,  True],\n        [ True,  True]],\n\n       [[False,  True],\n        [False,  True]]]))
+E        +    where <function all at 0x7f10d129b170> = np.all
+E        +    and   array([[[ True,  True],\n        [ True,  True]],\n\n       [[False,  True],\n        [False,  True]]]) = <ufunc 'equal'>([array([[1., 0.],\n       [1., 1.]])], [array([[1., 0.],\n       [1., 1.]]), array([[2., 0.],\n       [2., 1.]])])
+E        +      where <ufunc 'equal'> = np.equal
+E        +      and   [array([[1., 0.],\n       [1., 1.]])] = get_segments()
+E        +        where get_segments = <matplotlib.collections.LineCollection object at 0x7f10c5109b10>.get_segments
+E        +          where <matplotlib.collections.LineCollection object at 0x7f10c5109b10> = <matplotlib.colorbar.Colorbar object at 0x7f10be1d6790>.dividers
+
+lib/matplotlib/tests/test_colorbar.py:943: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_shape[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_length[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[min-expected0-horizontal]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[min-expected0-vertical]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[max-expected1-horizontal]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[max-expected1-vertical]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[both-expected2-horizontal]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extension_inverted_axis[both-expected2-vertical]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_positioning[png-True]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_positioning[png-False]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_single_ax_panchor_false
+PASSED lib/matplotlib/tests/test_colorbar.py::test_contour_colorbar[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_gridspec_make_colorbar[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_single_scatter[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_remove_from_figure[no gridspec]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_remove_from_figure[with gridspec]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_remove_from_figure_cl
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbarbase
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_closed_patch[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_ticks
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_minorticks_on_off
+PASSED lib/matplotlib/tests/test_colorbar.py::test_cbar_minorticks_for_rc_xyminortickvisible
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_autoticks
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_autotickslog
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_get_ticks
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_lognorm_extension[both]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_lognorm_extension[min]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_lognorm_extension[max]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_powernorm_extension
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_axes_kw
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_log_minortick_labels
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_renorm
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_format[%4.2e]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_format[{x:.2e}]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_scale_reset
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_get_ticks_2
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_inverted_ticks
+PASSED lib/matplotlib/tests/test_colorbar.py::test_mappable_no_alpha
+PASSED lib/matplotlib/tests/test_colorbar.py::test_mappable_2d_alpha
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_label
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_int[clim0]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_int[clim1]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_anchored_cbar_position_using_specgrid
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_change_lim_scale[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_axes_handles_same_functions[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_inset_colorbar_layout
+PASSED lib/matplotlib/tests/test_colorbar.py::test_twoslope_colorbar[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_remove_cb_whose_mappable_has_no_figure[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_aspects
+PASSED lib/matplotlib/tests/test_colorbar.py::test_proportional_colorbars[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[neither--1-res3]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_negative_boundarynorm
+PASSED lib/matplotlib/tests/test_colorbar.py::test_boundaries[png]
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_no_warning_rcparams_grid_true
+PASSED lib/matplotlib/tests/test_colorbar.py::test_colorbar_set_formatter_locator
+PASSED lib/matplotlib/tests/test_colorbar.py::test_offset_text_loc
+PASSED lib/matplotlib/tests/test_colorbar.py::test_title_text_loc
+SKIPPED [1] ../opt/miniconda3/envs/testbed/lib/python3.11/contextlib.py:81: Cannot compare svg files on this system
+FAILED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[both-1-res0]
+FAILED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[min-0-res1]
+FAILED lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[max-0-res2]
+=================== 3 failed, 57 passed, 1 skipped in 6.25s ====================

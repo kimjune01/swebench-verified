@@ -1,0 +1,126 @@
+diff --git a/lib/matplotlib/colorbar.py b/lib/matplotlib/colorbar.py
+index c59b0ac815..cce271afc5 100644
+--- a/lib/matplotlib/colorbar.py
++++ b/lib/matplotlib/colorbar.py
+@@ -651,8 +651,13 @@ class Colorbar:
+             if not self.drawedges:
+                 if len(self._y) >= self.n_rasterize:
+                     self.solids.set_rasterized(True)
+-        self.dividers.set_segments(
+-            np.dstack([X, Y])[1:-1] if self.drawedges else [])
++        if self.drawedges:
++            segments = np.dstack([X, Y])
++            start = 0 if self._extend_lower() else 1
++            end = None if self._extend_upper() else -1
++            self.dividers.set_segments(segments[start:end])
++        else:
++            self.dividers.set_segments([])
+ 
+     def _add_solids_patches(self, X, Y, C, mappable):
+         hatches = mappable.hatches * len(C)  # Have enough hatches.
+diff --git a/test_dividers_debug.py b/test_dividers_debug.py
+new file mode 100644
+index 0000000000..ec52a9c969
+--- /dev/null
++++ b/test_dividers_debug.py
+@@ -0,0 +1,25 @@
++import numpy as np
++import matplotlib.pyplot as plt
++import matplotlib.colors as mcolors
++from matplotlib.colorbar import Colorbar
++
++# Test with extend=both
++cmap = plt.get_cmap("viridis")
++bounds = np.arange(3)  # [0, 1, 2]
++nb_colors = len(bounds) + 1  # 4 colors
++colors = cmap(np.linspace(100, 255, nb_colors).astype(int))
++cmap_both, norm_both = mcolors.from_levels_and_colors(bounds, colors, extend="both")
++
++plt.figure(figsize=(5, 1))
++ax = plt.subplot(111)
++cbar = Colorbar(ax, cmap=cmap_both, norm=norm_both, orientation="horizontal", drawedges=True)
++
++print("extend=both:")
++print("  _boundaries:", cbar._boundaries)
++print("  _inside:", cbar._inside)
++print("  _values:", cbar._values)
++print("  _extend_lower():", cbar._extend_lower())
++print("  _extend_upper():", cbar._extend_upper())
++print("  X, Y shape from _mesh():", cbar._mesh()[0].shape, cbar._mesh()[1].shape)
++print("  Y values:", cbar._mesh()[1])
++print("  dividers segments:", cbar.dividers.get_segments())
+diff --git a/test_dividers_debug2.py b/test_dividers_debug2.py
+new file mode 100644
+index 0000000000..a754e73f72
+--- /dev/null
++++ b/test_dividers_debug2.py
+@@ -0,0 +1,25 @@
++import numpy as np
++import matplotlib.pyplot as plt
++import matplotlib.colors as mcolors
++from matplotlib.colorbar import Colorbar
++
++# Test with extend=both
++cmap = plt.get_cmap("viridis")
++bounds = np.arange(3)  # [0, 1, 2]
++nb_colors = len(bounds) + 1  # 4 colors
++colors = cmap(np.linspace(100, 255, nb_colors).astype(int))
++cmap_both, norm_both = mcolors.from_levels_and_colors(bounds, colors, extend="both")
++
++plt.figure(figsize=(5, 1))
++ax = plt.subplot(111)
++cbar = Colorbar(ax, cmap=cmap_both, norm=norm_both, orientation="horizontal", drawedges=True)
++
++X, Y = cbar._mesh()
++print("extend=both:")
++print("  X shape:", X.shape)
++print("  Y shape:", Y.shape)
++print("  X values:\n", X)
++print("  Y values:\n", Y)
++print("  np.dstack([X, Y]) shape:", np.dstack([X, Y]).shape)
++print("  np.dstack([X, Y]):\n", np.dstack([X, Y]))
++print("  np.dstack([X, Y])[1:-1]:\n", np.dstack([X, Y])[1:-1])
+diff --git a/test_dividers_debug3.py b/test_dividers_debug3.py
+new file mode 100644
+index 0000000000..8931fe81e3
+--- /dev/null
++++ b/test_dividers_debug3.py
+@@ -0,0 +1,38 @@
++import numpy as np
++import matplotlib.pyplot as plt
++import matplotlib.colors as mcolors
++from matplotlib.colorbar import Colorbar
++
++for extend in ["neither", "min", "max", "both"]:
++    cmap = plt.get_cmap("viridis")
++    bounds = np.arange(3)
++    if extend == "both":
++        coloroffset = 1
++    elif extend in ["min", "max"]:
++        coloroffset = 0
++    else:
++        coloroffset = -1
++    nb_colors = len(bounds) + coloroffset
++    colors = cmap(np.linspace(100, 255, nb_colors).astype(int))
++    cmap_test, norm_test = mcolors.from_levels_and_colors(bounds, colors, extend=extend)
++
++    plt.figure(figsize=(5, 1))
++    ax = plt.subplot(111)
++    cbar = Colorbar(ax, cmap=cmap_test, norm=norm_test, orientation="horizontal", drawedges=True)
++
++    X, Y = cbar._mesh()
++    print(f"\nextend={extend}:")
++    print(f"  _extend_lower(): {cbar._extend_lower()}")
++    print(f"  _extend_upper(): {cbar._extend_upper()}")
++    print(f"  mesh shape: {X.shape}")
++    print(f"  X[:,0]: {X[:,0]}")  # x-positions of dividers
++    print(f"  Current dividers (with [1:-1]): {[seg for seg in cbar.dividers.get_segments()]}")
++    print(f"  Full dstack: {np.dstack([X, Y]).shape}")
++    
++    # What we should have:
++    start = 0 if cbar._extend_lower() else 1
++    end = None if cbar._extend_upper() else -1
++    correct_dividers = np.dstack([X, Y])[start:end]
++    print(f"  Correct slice [{start}:{end}]: {correct_dividers.shape}, positions {X[start:end, 0]}")
++    
++    plt.close()

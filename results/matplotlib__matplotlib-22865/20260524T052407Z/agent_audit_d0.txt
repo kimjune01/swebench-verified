@@ -1,0 +1,30 @@
+# Audit: matplotlib__matplotlib-22865
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[both-1-res0]`: ✅ PASS
+- `lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[min-0-res1]`: ✅ PASS
+- `lib/matplotlib/tests/test_colorbar.py::test_colorbar_extend_drawedges[max-0-res2]`: ✅ PASS
+
+## PASS_TO_PASS regressions
+None. All 60 tests passed (1 skipped).
+
+## Pre-existing failures (not counted)
+None identified. The single skip (`test_colorbar_scale[svg]`) is environment-related (cannot compare SVG files), not a failure.
+
+## Gate summary
+- **Total**: 60 passed, 1 skipped, 0 failed
+- All FAIL_TO_PASS tests now pass
+- Zero regressions introduced
+- Clean contract fulfilled
+
+## Patch verification
+The craft patch correctly replaced the hardcoded `[1:-1]` slice with conditional logic:
+- `extend='both'`: includes dividers at both boundaries (start=0, end=None) → segments[0:None]
+- `extend='min'`: includes divider at lower boundary (start=0, end=-1) → segments[0:-1]
+- `extend='max'`: includes divider at upper boundary (start=1, end=None) → segments[1:None]
+- `extend='neither'`: excludes both boundaries (start=1, end=-1) → segments[1:-1] (original behavior)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
