@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass:
+- `test_annotation_and_alias_filter_in_subquery` 
+- `test_annotation_and_alias_filter_related_in_subquery`
+
+The minimal change to `In.get_prep_lookup()` at line 423 now correctly clears the select clause for querysets with annotations/aliases, allowing them to be used in `__in` lookups. All 82 tests in the annotations suite pass with no regressions.
+
+---STDERR---

@@ -1,0 +1,23 @@
+# Audit: django__django-16032
+
+## FAIL_TO_PASS
+- test_annotation_and_alias_filter_in_subquery: **PASS** ✓
+- test_annotation_and_alias_filter_related_in_subquery: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**none** — All 80 PASS_TO_PASS tests continue to pass with the patch applied.
+
+## Pre-existing (not counted, confirmed against base capture)
+**none** — The two FAIL_TO_PASS tests were the only failures on base (both ERROR status).
+
+## Summary
+The patch successfully resolves the issue:
+- **Patch size**: 1 file, 1 insertion, 1 deletion  
+- **Changed**: `django/db/models/lookups.py:423` - condition from `if not self.rhs.has_select_fields:` to `if self.rhs.default_cols or not self.rhs.has_select_fields:`
+- **Gate result**: 82 tests ran, all passed (3 skipped for database feature support)
+- **Contract met**: Both FAIL_TO_PASS tests now pass, zero regressions introduced
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

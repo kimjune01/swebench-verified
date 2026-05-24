@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 annotations.tests
+
+test_custom_functions_can_ref_other_functions (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_custom_transform_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_decimal_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_defer_annotation (annotations.tests.NonAggregateAnnotationTestCase)
+Deferred attributes can be referenced by an annotation, ... ok
+test_distinct_on_with_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... skipped "Database doesn't support feature(s): can_distinct_on_fields"
+test_empty_expression_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_empty_queryset_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_agg_with_double_f (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_annotation_with_double_f (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_annotation_with_f (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_decimal_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_filter_wrong_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_full_expression_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_full_expression_annotation_with_aggregation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_grouping_by_q_expression_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_joined_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_joined_transformed_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_mixed_type_annotation_date_interval (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_mixed_type_annotation_numbers (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_mti_annotations (annotations.tests.NonAggregateAnnotationTestCase)
+Fields on an inherited model can be referenced by an ... ok
+test_null_annotation (annotations.tests.NonAggregateAnnotationTestCase)
+Annotating None onto a model round-trips ... ok
+test_order_by_aggregate (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_order_by_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_q_expression_annotation_with_aggregation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_raw_sql_with_inherited_field (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_rawsql_group_by_collapse (annotations.tests.NonAggregateAnnotationTestCase) ... skipped "Database doesn't support feature(s): allows_group_by_pk"
+test_update_with_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+test_values_annotation (annotations.tests.NonAggregateAnnotationTestCase)
+Annotations can reference fields in a values clause, ... ok
+test_values_with_pk_annotation (annotations.tests.NonAggregateAnnotationTestCase) ... ok
+
+======================================================================
+ERROR: test_annotation_and_alias_filter_in_subquery (annotations.tests.NonAggregateAnnotationTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.OperationalError: sub-select returns 4 columns - expected 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/testbed/tests/annotations/tests.py", line 999, in test_annotation_and_alias_filter_in_subquery
+    self.assertCountEqual(qs, [self.p3, self.p4])
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/unittest/case.py", line 1179, in assertCountEqual
+    first_seq, second_seq = list(first), list(second)
+  File "/testbed/django/db/models/query.py", line 376, in __len__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1876, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 87, in __iter__
+    results = compiler.execute_sql(
+  File "/testbed/django/db/models/sql/compiler.py", line 1476, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/testbed/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.OperationalError: sub-select returns 4 columns - expected 1
+
+======================================================================
+ERROR: test_annotation_and_alias_filter_related_in_subquery (annotations.tests.NonAggregateAnnotationTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+sqlite3.OperationalError: sub-select returns 10 columns - expected 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/testbed/tests/annotations/tests.py", line 1010, in test_annotation_and_alias_filter_related_in_subquery
+    self.assertCountEqual(
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/unittest/case.py", line 1179, in assertCountEqual
+    first_seq, second_seq = list(first), list(second)
+  File "/testbed/django/db/models/query.py", line 376, in __len__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1876, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 204, in __iter__
+    for row in compiler.results_iter(
+  File "/testbed/django/db/models/sql/compiler.py", line 1427, in results_iter
+    results = self.execute_sql(
+  File "/testbed/django/db/models/sql/compiler.py", line 1476, in execute_sql
+    cursor.execute(sql, params)
+  File "/testbed/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/testbed/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/testbed/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/testbed/django/db/backends/sqlite3/base.py", line 369, in execute
+    return Database.Cursor.execute(self, query, params)
+django.db.utils.OperationalError: sub-select returns 10 columns - expected 1
+
+----------------------------------------------------------------------
+Ran 82 tests in 0.076s
+
+FAILED (errors=2, skipped=3)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

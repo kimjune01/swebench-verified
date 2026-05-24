@@ -1,0 +1,40 @@
+Now I'll output the recon report to stdout:
+
+# Recon: django__django-16032
+
+## Failure summary
+The failing tests check that QuerySets with both `.annotate()` and `.alias()` can be used in `__in` lookups. The tests fail with `django.db.utils.OperationalError: sub-select returns N columns - expected 1` (4 columns in first test, 10 in second). The error occurs during SQL execution when Django generates a subquery that includes annotation fields instead of only the primary key.
+
+## Suspect set
+- `django/db/models/lookups.py` lines 419-426: `In.get_prep_lookup()` method that prepares QuerySet for use in `__in` lookup
+- `django/db/models/lookups.py` lines 332-340: `Exact.get_prep_lookup()` method with identical pattern
+- `django/db/models/sql/query.py` lines 267-270: `has_select_fields` property that controls whether select clause is cleared
+
+## Root cause
+In `django/db/models/lookups.py:423`, the `In.get_prep_lookup()` method checks `if not self.rhs.has_select_fields:` before clearing the select clause and adding only the pk field. The `has_select_fields` property returns True when `annotation_select_mask` is non-empty, which occurs after `.annotate()` is called, even though annotations should not prevent clearing the select clause for `__in` subqueries.
+
+The issue is that `has_select_fields` does not distinguish between:
+1. Explicit field selection via `.values()` - which should be preserved
+2. Implicit annotation selection via `.annotate()` - which should be cleared for `__in` lookups
+
+The `default_cols` attribute (set to False only when `.values()` is called) provides this distinction.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `django/db/models/lookups.py:423` — `if not self.rhs.has_select_fields:` condition
+- `django/db/models/sql/query.py:267-270` — `has_select_fields` property returns `bool(self.select or self.annotation_select_mask or self.extra_select_mask)`
+- `django/db/models/sql/query.py:170` — `default_cols = True` is the default, set to False only by `.values()`
+
+## Edit sites
+- `django/db/models/lookups.py` line 423: Change condition from `if not self.rhs.has_select_fields:` to `if self.rhs.default_cols or not self.rhs.has_select_fields:` in the `In.get_prep_lookup()` method
+- `django/db/models/lookups.py` line 336 (approximate): Apply the same fix to `Exact.get_prep_lookup()` method which has the identical pattern
+
+## Rejected hypotheses
+None - this is the first diagnosis attempt.
+
+## Open questions
+- Are there other lookup classes that use the same pattern and need the same fix?
+- Could there be edge cases where `default_cols` doesn't correctly indicate explicit field selection?
+
+---STDERR---
