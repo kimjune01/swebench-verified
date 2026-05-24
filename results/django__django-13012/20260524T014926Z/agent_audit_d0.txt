@@ -1,0 +1,35 @@
+# Audit: django__django-13012
+
+## FAIL_TO_PASS
+- test_empty_group_by (expressions.tests.ExpressionWrapperTests): **PASS** ✓
+- test_non_empty_group_by (expressions.tests.ExpressionWrapperTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None.** All 141 tests passed (2 skipped).
+
+## Pre-existing (not counted, confirmed against base capture)
+**None.** Both FAIL_TO_PASS tests were confirmed failing on base, now passing on patched.
+
+## Patch applied
+```diff
+diff --git a/django/db/models/expressions.py b/django/db/models/expressions.py
+index c1a76584f0..14d6a1e525 100644
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -866,6 +866,9 @@ class ExpressionWrapper(Expression):
+     def as_sql(self, compiler, connection):
+         return self.expression.as_sql(compiler, connection)
+ 
++    def get_group_by_cols(self, alias=None):
++        return self.expression.get_group_by_cols(alias=alias)
++
+     def __repr__(self):
+         return "{}({})".format(self.__class__.__name__, self.expression)
+```
+
+The fix adds a `get_group_by_cols()` method to `ExpressionWrapper` that delegates to the wrapped expression, mirroring the existing delegation pattern in `as_sql()`. This resolved both failing tests with no regressions across the full 141-test suite.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

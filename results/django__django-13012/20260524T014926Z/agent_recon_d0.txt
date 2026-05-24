@@ -1,0 +1,42 @@
+# Recon: django__django-13012
+
+## Failure summary
+
+The tests verify that `ExpressionWrapper.get_group_by_cols()` correctly delegates to its wrapped expression. When wrapping a constant expression like `Value(3)`, the method should return an empty list (constants don't belong in GROUP BY clauses). When wrapping a non-constant expression like `Lower(Value('f'))`, it should return the wrapped expression itself. Both tests fail because `ExpressionWrapper` returns itself (`[ExpressionWrapper(...)]`) instead of delegating to the wrapped expression.
+
+**Test failures**:
+- `test_empty_group_by`: Expected `[]`, got `[ExpressionWrapper(Value(3))]`
+- `test_non_empty_group_by`: Expected `[Lower(Value(f))]`, got `[ExpressionWrapper(Lower(Value(f)))]`
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 850-870: `ExpressionWrapper` class lacks `get_group_by_cols()` override
+
+## Root cause
+
+`ExpressionWrapper` (line 850) does not override `get_group_by_cols()`, so it inherits the default implementation from `BaseExpression` (line 350). The default implementation returns `[self]` when the expression doesn't contain aggregates, which is incorrect for `ExpressionWrapper`. The wrapper should be transparent with respect to GROUP BY clauses — it should delegate to its wrapped expression, just as it already delegates `as_sql()` (line 867).
+
+When `Value(3)` is wrapped, `Value.get_group_by_cols()` correctly returns `[]` (line 706), but `ExpressionWrapper(Value(3)).get_group_by_cols()` incorrectly returns `[ExpressionWrapper(Value(3))]`. This causes PostgreSQL to reject the query with "aggregate functions are not allowed in GROUP BY" because the constant appears in the GROUP BY clause.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/models/expressions.py:350` — BaseExpression default: `return [self]` when `not self.contains_aggregate`
+- `django/db/models/expressions.py:706` — Value correctly returns `[]`
+- `django/db/models/expressions.py:867` — ExpressionWrapper.as_sql() already delegates: `return self.expression.as_sql(compiler, connection)`
+
+## Edit sites
+
+- `django/db/models/expressions.py` lines 850-870: Add `get_group_by_cols()` method to `ExpressionWrapper` class that delegates to `self.expression.get_group_by_cols(alias)`
+
+The method should be added after `as_sql()` (line 867) to maintain consistency with the existing delegation pattern. Implementation should be a single line delegation: `return self.expression.get_group_by_cols(alias)`.
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from reading the code and test expectations.
+
+## Open questions
+
+None — the fix is straightforward delegation following the existing `as_sql()` pattern.
+
+---STDERR---

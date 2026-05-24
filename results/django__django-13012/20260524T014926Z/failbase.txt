@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 expressions.tests
+
+test_datetime_subtraction (expressions.tests.FTimeDeltaTests) ... ok
+test_datetime_subtraction_microseconds (expressions.tests.FTimeDeltaTests) ... ok
+test_delta_add (expressions.tests.FTimeDeltaTests) ... ok
+test_delta_subtract (expressions.tests.FTimeDeltaTests) ... ok
+test_delta_update (expressions.tests.FTimeDeltaTests) ... ok
+test_duration_with_datetime (expressions.tests.FTimeDeltaTests) ... ok
+test_duration_with_datetime_microseconds (expressions.tests.FTimeDeltaTests) ... ok
+test_durationfield_add (expressions.tests.FTimeDeltaTests) ... ok
+test_exclude (expressions.tests.FTimeDeltaTests) ... ok
+test_invalid_operator (expressions.tests.FTimeDeltaTests) ... ok
+test_mixed_comparisons1 (expressions.tests.FTimeDeltaTests) ... skipped "Database doesn't support feature(s): supports_mixed_date_datetime_comparisons"
+test_mixed_comparisons2 (expressions.tests.FTimeDeltaTests) ... ok
+test_multiple_query_compilation (expressions.tests.FTimeDeltaTests) ... ok
+test_negative_timedelta_update (expressions.tests.FTimeDeltaTests) ... ok
+test_query_clone (expressions.tests.FTimeDeltaTests) ... ok
+test_time_subquery_subtraction (expressions.tests.FTimeDeltaTests) ... ok
+test_time_subtraction (expressions.tests.FTimeDeltaTests) ... ok
+test_month_aggregation (expressions.tests.FieldTransformTests) ... ok
+test_multiple_transforms_in_values (expressions.tests.FieldTransformTests) ... ok
+test_transform_in_values (expressions.tests.FieldTransformTests) ... ok
+test_complex_expressions_do_not_introduce_sql_injection_via_untrusted_string_inclusion (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_expressions_in_lookups_join_choice (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_in_lookup_allows_F_expressions_and_expressions_for_datetimes (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_in_lookup_allows_F_expressions_and_expressions_for_integers (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_range_lookup_allows_F_expressions_and_expressions_for_integers (expressions.tests.IterableLookupInnerExpressionsTests) ... ok
+test_deconstruct (expressions.tests.ValueTests) ... ok
+test_deconstruct_output_field (expressions.tests.ValueTests) ... ok
+test_equal (expressions.tests.ValueTests) ... ok
+test_equal_output_field (expressions.tests.ValueTests) ... ok
+test_hash (expressions.tests.ValueTests) ... ok
+test_raise_empty_expressionlist (expressions.tests.ValueTests) ... ok
+test_update_TimeField_using_Value (expressions.tests.ValueTests) ... ok
+test_update_UUIDField_using_Value (expressions.tests.ValueTests) ... ok
+test_and (expressions.tests.CombinableTests) ... ok
+test_negation (expressions.tests.CombinableTests) ... ok
+test_or (expressions.tests.CombinableTests) ... ok
+test_reversed_and (expressions.tests.CombinableTests) ... ok
+test_reversed_or (expressions.tests.CombinableTests) ... ok
+test_empty_group_by (expressions.tests.ExpressionWrapperTests) ... FAIL
+test_non_empty_group_by (expressions.tests.ExpressionWrapperTests) ... FAIL
+test_deconstruct (expressions.tests.FTests) ... ok
+test_deepcopy (expressions.tests.FTests) ... ok
+test_equal (expressions.tests.FTests) ... ok
+test_hash (expressions.tests.FTests) ... ok
+test_not_equal_Value (expressions.tests.FTests) ... ok
+test_aggregates (expressions.tests.ReprTests) ... ok
+test_distinct_aggregates (expressions.tests.ReprTests) ... ok
+test_expressions (expressions.tests.ReprTests) ... ok
+test_filtered_aggregates (expressions.tests.ReprTests) ... ok
+test_functions (expressions.tests.ReprTests) ... ok
+test_equal (expressions.tests.SimpleExpressionTests) ... ok
+test_hash (expressions.tests.SimpleExpressionTests) ... ok
+
+======================================================================
+FAIL: test_empty_group_by (expressions.tests.ExpressionWrapperTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 1836, in test_empty_group_by
+    self.assertEqual(expr.get_group_by_cols(alias=None), [])
+AssertionError: Lists differ: [ExpressionWrapper(Value(3))] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+ExpressionWrapper(Value(3))
+
+- [ExpressionWrapper(Value(3))]
++ []
+
+======================================================================
+FAIL: test_non_empty_group_by (expressions.tests.ExpressionWrapperTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/expressions/tests.py", line 1840, in test_non_empty_group_by
+    self.assertEqual(expr.get_group_by_cols(alias=None), [expr.expression])
+AssertionError: Lists differ: [ExpressionWrapper(Lower(Value(f)))] != [Lower(Value(f))]
+
+First differing element 0:
+ExpressionWrapper(Lower(Value(f)))
+Lower(Value(f))
+
+- [ExpressionWrapper(Lower(Value(f)))]
++ [Lower(Value(f))]
+
+----------------------------------------------------------------------
+Ran 141 tests in 0.169s
+
+FAILED (failures=2, skipped=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application expressions
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: auth, contenttypes, expressions, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table expressions_manager
+    Creating table expressions_employee
+    Creating table expressions_remoteemployee
+    Creating table expressions_company
+    Creating table expressions_number
+    Creating table expressions_ExPeRiMeNt
+    Creating table expressions_result
+    Creating table expressions_time
+    Creating table expressions_simulationrun
+    Creating table expressions_uuidpk
+    Creating table expressions_uuid
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).
