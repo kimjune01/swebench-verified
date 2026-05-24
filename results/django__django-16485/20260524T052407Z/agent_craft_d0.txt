@@ -1,0 +1,12 @@
+**RESOLVED**
+
+The fix has been successfully applied and verified:
+
+- **Change**: Modified `django/template/defaultfilters.py` line 186 to use `prec = max(1, abs(p) + units + 1)` instead of `prec = abs(p) + units + 1`
+- **Root cause**: The original precision calculation could produce 0 or negative values for edge cases like `Decimal("0.00")` with `p=0`, causing `Context(prec=prec)` to crash
+- **Gate result**: ✅ All 10 tests pass, including the FAIL_TO_PASS test `test_zero_values`
+- **Iterations**: 1 (converged on first attempt)
+
+The working tree is now in the fixed state ready for the driver to capture the diff.
+
+---STDERR---

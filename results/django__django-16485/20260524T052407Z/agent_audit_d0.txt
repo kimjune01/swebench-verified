@@ -1,0 +1,39 @@
+# Audit: django__django-16485
+
+## Patch confirmed live
+```
+ django/template/defaultfilters.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+
+Change: `prec = max(1, abs(p) + units + 1)` ensures prec >= 1
+
+## FAIL_TO_PASS
+- test_zero_values: **PASS** ✓
+
+## PASS_TO_PASS
+All 9 PASS_TO_PASS tests continue to pass:
+- test_floatformat01: PASS ✓
+- test_floatformat02: PASS ✓
+- test_float_dunder_method: PASS ✓
+- test_force_grouping: PASS ✓
+- test_infinity: PASS ✓
+- test_inputs: PASS ✓
+- test_low_decimal_precision (#15789): PASS ✓
+- test_negative_zero_values: PASS ✓
+- test_unlocalize: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Contract status
+✅ All FAIL_TO_PASS tests pass (1/1)
+✅ Zero PASS_TO_PASS regressions (0/9)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

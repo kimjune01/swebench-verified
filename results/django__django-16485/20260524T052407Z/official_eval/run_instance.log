@@ -1,0 +1,45 @@
+2026-05-24 05:17:41,528 - INFO - Creating container for django__django-16485...
+2026-05-24 05:17:58,921 - INFO - Container for django__django-16485 created: 9a371a0cce6d7d7e26c0fff76363eb82f2739431c7e97b96c83b65316ee2c626
+2026-05-24 05:17:59,472 - INFO - Container for django__django-16485 started: 9a371a0cce6d7d7e26c0fff76363eb82f2739431c7e97b96c83b65316ee2c626
+2026-05-24 05:17:59,472 - INFO - Intermediate patch for django__django-16485 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16485/patch.diff, now applying to container...
+2026-05-24 05:17:59,553 - INFO - >>>>> Applied Patch:
+Checking patch django/template/defaultfilters.py...
+Applied patch django/template/defaultfilters.py cleanly.
+
+2026-05-24 05:18:00,350 - INFO - Git diff before:
+diff --git a/django/template/defaultfilters.py b/django/template/defaultfilters.py
+index 23c3a08c67..3032a36f76 100644
+--- a/django/template/defaultfilters.py
++++ b/django/template/defaultfilters.py
+@@ -183,7 +183,7 @@ def floatformat(text, arg=-1):
+     tupl = d.as_tuple()
+     units = len(tupl[1])
+     units += -tupl[2] if m else tupl[2]
+-    prec = abs(p) + units + 1
++    prec = max(1, abs(p) + units + 1)
+ 
+     # Avoid conversion to scientific notation by accessing `sign`, `digits`,
+     # and `exponent` from Decimal.as_tuple() directly.
+2026-05-24 05:18:00,350 - INFO - Eval script for django__django-16485 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16485/eval.sh; copying to container...
+2026-05-24 05:18:05,745 - INFO - Test runtime: 5.35 seconds
+2026-05-24 05:18:05,746 - INFO - Test output for django__django-16485 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16485/test_output.txt
+2026-05-24 05:18:05,836 - INFO - Git diff after:
+diff --git a/django/template/defaultfilters.py b/django/template/defaultfilters.py
+index 23c3a08c67..3032a36f76 100644
+--- a/django/template/defaultfilters.py
++++ b/django/template/defaultfilters.py
+@@ -183,7 +183,7 @@ def floatformat(text, arg=-1):
+     tupl = d.as_tuple()
+     units = len(tupl[1])
+     units += -tupl[2] if m else tupl[2]
+-    prec = abs(p) + units + 1
++    prec = max(1, abs(p) + units + 1)
+ 
+     # Avoid conversion to scientific notation by accessing `sign`, `digits`,
+     # and `exponent` from Decimal.as_tuple() directly.
+2026-05-24 05:18:05,836 - INFO - Grading answer for django__django-16485...
+2026-05-24 05:18:05,837 - INFO - report: {'django__django-16485': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests.test_zero_values)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_floatformat01 (template_tests.filter_tests.test_floatformat.FloatformatTests.test_floatformat01)', 'test_floatformat02 (template_tests.filter_tests.test_floatformat.FloatformatTests.test_floatformat02)', 'test_float_dunder_method (template_tests.filter_tests.test_floatformat.FunctionTests.test_float_dunder_method)', 'test_force_grouping (template_tests.filter_tests.test_floatformat.FunctionTests.test_force_grouping)', 'test_infinity (template_tests.filter_tests.test_floatformat.FunctionTests.test_infinity)', 'test_inputs (template_tests.filter_tests.test_floatformat.FunctionTests.test_inputs)', '#15789', 'test_negative_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests.test_negative_zero_values)', 'test_unlocalize (template_tests.filter_tests.test_floatformat.FunctionTests.test_unlocalize)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-16485: resolved: True
+2026-05-24 05:18:05,837 - INFO - Attempting to stop container sweb.eval.django__django-16485.batch...
+2026-05-24 05:18:21,391 - INFO - Attempting to remove container sweb.eval.django__django-16485.batch...
+2026-05-24 05:18:21,401 - INFO - Container sweb.eval.django__django-16485.batch removed.

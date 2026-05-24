@@ -1,0 +1,45 @@
+# Recon: django__django-16485
+
+## Failure summary
+
+The test `test_zero_values` in `tests/template_tests/filter_tests/test_floatformat.py` calls `floatformat("0.00", 0)` and `floatformat(Decimal("0.00"), 0)`, expecting the string `"0"` as output. Both calls crash with `ValueError: valid range for prec is [1, MAX_PREC]` at line 190 in `django/template/defaultfilters.py` when attempting to create a `Context(prec=0)`. The error occurs because the precision calculation formula produces an invalid value (0) for the Decimal Context constructor, which requires prec >= 1.
+
+## Suspect set
+
+- `django/template/defaultfilters.py` lines 182-190: Precision calculation and Context creation
+  - Line 186: `prec = abs(p) + units + 1` - produces prec=0 for edge cases
+  - Line 190: `Context(prec=prec)` - crashes when prec < 1
+
+## Root cause
+
+The precision calculation at line 186 can produce 0 or negative values in edge cases. For `Decimal("0.00")` with `p=0`:
+
+1. `d.as_tuple()` returns `DecimalTuple(sign=0, digits=(0,), exponent=-2)`
+2. `m = int(d) - d = 0` (falsy - no fractional part)
+3. `units = len((0,)) = 1`
+4. `units += tupl[2]` (else branch since m is falsy) → `units += (-2)` → `units = -1`
+5. `prec = abs(0) + (-1) + 1 = 0`
+
+This is a regression from commit 12f7928f5a which fixed issue #27394 (large integer support). That commit changed the units calculation from `units = len(tupl[1]) - tupl[2]` to conditionally use `tupl[2]` directly when the number has no fractional part. This works for large integers with positive exponents but fails for decimals like "0.00" that have no fractional part but have negative exponents.
+
+**Confidence:** deduction — 99%
+
+**Supporting evidence:**
+- `django/template/defaultfilters.py:186` — `prec = abs(p) + units + 1` produces 0
+- `django/template/defaultfilters.py:190` — `Context(prec=prec)` crashes with ValueError
+- Traced exact execution: units=1, units+=(-2)=-1, prec=0+(-1)+1=0
+- Verified via git history that commit 12f7928f5a introduced the conditional logic
+
+## Edit sites
+
+- `django/template/defaultfilters.py` line 186: Change `prec = abs(p) + units + 1` to `prec = max(1, abs(p) + units + 1)` to ensure prec is always at least 1, satisfying the Context constraint while preserving the fixes for issues #15789 and #27394
+
+## Rejected hypotheses
+
+None - the root cause was immediately evident from the stack trace and code inspection.
+
+## Open questions
+
+None - the fix is straightforward and verified against existing test cases for related issues.
+
+---STDERR---
