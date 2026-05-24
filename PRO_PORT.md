@@ -263,6 +263,58 @@ treat as unproven and keep it below the strict levers.
 
 ---
 
+## Verification contracts (port from the sweep repo)
+
+The gate-divergence losses (local-green / official-red — pytest-5787, django-14170) and the
+`our_f2p=None` unparseable-gate losses share one root: the swebench gate **parses the agent's prose
+on its live tree**, so what earns "green" is not the artifact that gets graded. The `sweep` repo
+(`~/Documents/sweep`) already solved this; the Pro port should adopt its **contracts** (not its
+Temporal/actor/inbox infrastructure — swebench is a single driver loop and doesn't need that).
+
+Reference implementations to mirror:
+
+1. **Attestation = a deterministic gate that emits a hash** (`sweep/activities/attest.py`). It runs the
+   real fail-on-master/pass-on-fix gate and emits `att.sha256`. swebench equivalent: an `attest` step
+   that **applies the captured source-only prediction to a clean base and runs the pinned tests** (the
+   same object the official grader will round-trip), returning a structured verdict + a content hash of
+   the prediction. Replaces the current `verify_gate` (which parses agent output on the live tree).
+2. **Hash-as-downstream-precondition — the structural gate-divergence fix** (`sweep/pokayoke.py:has_attestation_hash`;
+   `compose` refuses to write a PR body without it: "upstream did not route through attest"). swebench
+   equivalent: **patch capture / submission is gated on the attestation hash — no hash, no submission.**
+   This makes local-green/official-red *impossible*, because the artifact that earns the hash IS the
+   serialized submission. (Would also have caught the earlier django-15987 `-R` serialization
+   false-positive — same class.)
+3. **Preconditions as pure poka-yoke functions** (`sweep/pokayoke.py`): `(fields) → SkipReason | None`,
+   composed per-boundary, short-circuit on first reject, the `SkipReason.code` carried forward as the
+   single source of truth (event field + verdict + classifier input). swebench equivalent: front-load
+   cheap deterministic checks before expensive stages (env-available, image-pullable, KNOWN_BAD) — each
+   returning a structured code, not a bool. (This is also a token/runtime lever: bail before burning a
+   stage. Recall sympy-13878 burned a 2000s recon timeout; a cheaper precondition can't fix a genuine
+   hang but stage caps + suite-selection bound it.)
+4. **The decided | errored | rejected trichotomy with structured reasons** (`sweep/skill_result.py`
+   `rejected`/`reject_reason`; attest's `env_artifact` / `test_passes_on_master` / `no_tests_in_pr` skip
+   codes). swebench equivalent: replace the ambiguous `our_f2p=None` with a structured verdict contract —
+   a rejection carries its cause and routes deterministically, instead of an unparseable gate output that
+   silently becomes "unknown."
+5. **Compact deterministic output (shim discipline)** (`sweep/skill_result.py:shim`): fast path = clean
+   JSON last line → *no* LLM call; tight bounded fallback; **4KB input cap** (refuse long transcripts,
+   fall back to artifact-on-disk); never raises. swebench equivalent: the gate returns a structured
+   verdict, never re-parsed prose; any LLM-extraction is bounded and falls back to the on-disk artifact.
+   This is the determinism-economics rule (above) already implemented.
+
+**What each contract buys against the observed losses:** hash-as-precondition kills GATE-DIVERGENCE
+(2 losses) + the serialization-contamination class; the structured trichotomy removes the
+`our_f2p=None` ambiguity (3 losses had it); front-loaded checks + stage caps bound the recon/craft
+heavy-suite hangs (sympy-13878 / sympy-19040 / matplotlib-25311). None of them touch RECON-CEILING or
+GENUINELY-HARD — those need better diagnosis, not better gates.
+
+**Port rule:** take the contracts — `(fields)→SkipReason`, hash-as-precondition, structured-verdict
+trichotomy, compact-deterministic-output — not the Temporal actor/inbox machinery. The contract is "a
+deterministic check that asserts a postcondition at the boundary, emits a structured result, and a hash
+that the next step requires."
+
+---
+
 ## Suggested sequence
 
 **Phase A — public set (develop + iterate):**
