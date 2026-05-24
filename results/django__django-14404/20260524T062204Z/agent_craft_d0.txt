@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix passed the gate on the first iteration. Changed `catch_all_view()` to use `request.get_full_path(force_append_slash=True)` for the redirect, preserving SCRIPT_NAME prefix while keeping `path_info` for URL resolution. Both FAIL_TO_PASS tests now pass, all 344 tests OK.
+
+---STDERR---

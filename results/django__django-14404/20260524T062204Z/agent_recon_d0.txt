@@ -1,0 +1,44 @@
+Now I'll print the recon handoff to stdout:
+
+# Recon: django__django-14404
+
+## Failure summary
+
+The failing tests `test_missing_slash_append_slash_true_script_name` and `test_missing_slash_append_slash_true_force_script_name` both verify that when a URL missing a trailing slash is accessed with `SCRIPT_NAME` set (either via request parameter or `FORCE_SCRIPT_NAME` setting), the admin's catch-all view should redirect to the correct URL including the script name prefix. Both tests fail because the redirect goes to `/test_admin/admin/admin_views/article/` instead of the expected `/prefix/test_admin/admin/admin_views/article/` — the `/prefix` script name is missing.
+
+## Suspect set
+
+- `django/contrib/admin/sites.py` lines 420-431: The `catch_all_view` method that handles redirects for URLs missing trailing slashes
+- Specifically line 423: `path = '%s/' % request.path_info` — this constructs the redirect URL
+
+## Root cause
+
+The `catch_all_view()` method uses `request.path_info` to construct the redirect URL when appending a trailing slash. However, `request.path_info` contains only the path without the SCRIPT_NAME prefix, while `request.path` includes it. This was confirmed by examining `django/core/handlers/wsgi.py:75-76` where `request.path` is constructed by joining `script_name` and `path_info`.
+
+When SCRIPT_NAME or FORCE_SCRIPT_NAME is set, the redirect URL must include this prefix. Django's `CommonMiddleware` handles similar trailing-slash redirects correctly by using `request.get_full_path()` which includes the script name, not `path_info`.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/contrib/admin/sites.py:423` — `path = '%s/' % request.path_info`
+- `django/core/handlers/wsgi.py:75-76` — `self.path = '%s/%s' % (script_name.rstrip('/'), path_info.replace('/', '', 1))`
+- `django/middleware/common.py:104-105` — CommonMiddleware uses `request.get_full_path(force_append_slash=True)` for similar redirects
+- Test error output shows redirect missing the `/prefix` component
+
+## Edit sites
+
+- `django/contrib/admin/sites.py` line 423: Change `path = '%s/' % request.path_info` to `path = '%s/' % request.path` to include the SCRIPT_NAME prefix in the redirect URL
+
+## Competing hypotheses
+
+None — the root cause is directly observable from the code and the distinction between `path` and `path_info` is clearly documented in Django's WSGI handler.
+
+## Rejected hypotheses
+
+None considered — the evidence directly points to a single root cause.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single line.
+
+---STDERR---
