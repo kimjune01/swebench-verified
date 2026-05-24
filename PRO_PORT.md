@@ -201,6 +201,68 @@ Also:
 
 ---
 
+## Token & runtime efficiency (Pro)
+
+Model compute is a **flat-rate Max subscription**, so the scarce resource is *quota*, not billed
+tokens — and it is **unverified** whether the API's cache-read discount passes through to subscription
+quota. So levers split into **strict improvements** (cut consumption no matter how the plan meters) and
+one **conditional** lever (caching, pending measurement). Also: on Pro the binding resource may shift
+from tokens to **test runtime**, so runtime levers count as efficiency too. (Two GPT-5.5/codex review
+rounds informed this section; their points are attributed inline.)
+
+**Measure first.** Instrument per-stage token + wall-clock accounting on the first Pro instances. Don't
+optimize a guessed sink — recon breadth, craft loops, and audit logs are all candidates and only data
+says which is the ceiling.
+
+### Strict improvements (robust to metering uncertainty — do these first)
+
+1. **Semantic gate-output extraction.** Feed back failing nodeids + traceback/assertion slice +
+   setup/collection errors + the final summary — never the whole pytest/runtests log. Biggest avoidable
+   sink, and worse on Pro's heavier suites. Use a *parser*, not char-truncation (codex: blind truncation
+   can hide the first-error root cause or collection failures when pytest cascades). Bonus: structurally
+   similar repeated attempts also improve cache reuse.
+2. **Suite selection (runtime + tokens).** Run the minimal `FAIL_TO_PASS` target first; defer the broad
+   suite until the patch stabilizes; full F2P+P2P only at audit. Directly attacks the heavy-suite craft
+   grind that caused our Verified DNFs (codex flagged runtime may be the real Pro ceiling).
+3. **Driver-enforced iteration caps + failure-signature early-bail.** Enforce the craft gate cap *outside*
+   the model (today "max 8" is only instructed). Bail when the **same failure signature** (nodeid/error/
+   assertion) repeats after N attempts, or new failures appear while the original persists. codex pushback:
+   prefer failure-signature over a hard patch-size cap — a legit framework fix can exceed ~5KB, so treat
+   patch size as a *soft* signal only.
+4. **Recon windowing.** `rg`/symbol/traceback-path localization → bounded line-range reads → whole-file
+   only for small files or module-invariant checks. codex caveat: don't over-trim — bad localization
+   causes wrong diagnoses, and an extra outer loop costs far more than reading an extra file. Summarize
+   large files into durable notes rather than re-reading.
+5. **Persistent per-instance state file, outside model context.** Files inspected, hypotheses rejected,
+   commands run, failure signatures. Feed *summaries* into context, not transcripts.
+6. **Cache fail-on-base baselines by instance/image.** Don't recompute the expensive known-bad baseline
+   unless the environment changed.
+7. **Dedup repeated logs/traces.** Replace identical stack frames / repeated output with "same as
+   previous" or a hash — direct volume win, stabilizes the prefix.
+8. **Stable structured prompt skeleton.** Same section order every iteration (`Task / Current Failure /
+   Relevant Files / Constraints / Requested Action`). Aids extraction and cache locality.
+
+### Conditional: prompt caching (verify before relying on it)
+
+Caching runs automatically in Claude Code regardless of auth; the **open question is whether a cache hit
+reduces Max-subscription quota drawdown** (clear on the API — ~90% cheaper reads; unclear on the flat
+plan). If it does, keeping craft in **one long-lived agentic session** is high-leverage — with in-session
+compaction: stable prefix + current hypothesis + current patch + latest gate result only; don't let
+failed runs linger verbatim. If it doesn't, caching is latency-only.
+- **Prereq if it counts:** byte-identical stable prefix (no timestamps/run-ids before the stable block)
+  or the cache busts.
+- **Hedge for free:** the strict levers above also improve cache locality, so you don't have to win the
+  metering bet to benefit from them.
+
+**A/B/C experiment to settle it** (codex design): one fixed instance, identical model/client/repo/tool
+budget, small *fixed* completion length. **Cold** = large random-nonce prefix (forces miss); **Warm** =
+large static prefix, tiny changing suffix; **Control** = tiny prompt. Batches of ~20, randomize order
+across days, hold output length constant, measure **quota drawdown / calls-until-rate-limit** (not
+wall-clock). Warm ≈ control → caching reduces quota; warm ≈ cold-but-faster → latency only; noisy →
+treat as unproven and keep it below the strict levers.
+
+---
+
 ## Suggested sequence
 
 **Phase A — public set (develop + iterate):**
