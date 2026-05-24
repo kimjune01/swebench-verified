@@ -1,0 +1,36 @@
+# Recon: django__django-17029
+
+## Failure summary
+
+The test `test_clear_cache` in `apps.tests.AppsTests` verifies that `Apps.clear_cache()` clears all internal caches. The test populates two caches (`get_swappable_settings_name` and `get_models`) by calling them, then calls `clear_cache()`, and asserts both caches are empty. The test fails with `AssertionError: 1 != 0` when checking `apps.get_swappable_settings_name.cache_info().currsize`, indicating the cache still contains 1 item after `clear_cache()` was called.
+
+## Suspect set
+
+- `django/apps/registry.py` lines 370-385: The `clear_cache()` method implementation
+- `django/apps/registry.py` lines 283-305: The `get_swappable_settings_name()` method with `@functools.cache` decorator
+
+## Root cause
+
+The `Apps.clear_cache()` method fails to clear the `get_swappable_settings_name` LRU cache. Both `get_models` and `get_swappable_settings_name` are decorated with `@functools.cache` (lines ~230 and 283 respectively), but only `get_models.cache_clear()` is called in the `clear_cache()` method (line 378). The `get_swappable_settings_name.cache_clear()` call is missing.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `django/apps/registry.py:283` — `@functools.cache` decorator on `get_swappable_settings_name`
+- `django/apps/registry.py:378` — `self.get_models.cache_clear()` is called (working correctly)
+- `django/apps/registry.py:370-385` — No call to `self.get_swappable_settings_name.cache_clear()` exists
+- Test failure shows `currsize=1` after `clear_cache()`, proving the cache was not cleared
+
+## Edit sites
+
+- `django/apps/registry.py` line 379 (immediately after line 378): Add `self.get_swappable_settings_name.cache_clear()` to clear the LRU cache for the `get_swappable_settings_name` method, matching the pattern used for `get_models.cache_clear()` on line 378.
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from reading the code.
+
+## Open questions
+
+None — the fix is straightforward and follows the existing pattern in the same method.
+
+---STDERR---

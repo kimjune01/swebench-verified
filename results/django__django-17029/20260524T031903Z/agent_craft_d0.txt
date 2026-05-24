@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully clears the `get_swappable_settings_name` cache by adding the missing `cache_clear()` call. All tests pass including the previously failing `test_clear_cache`.
+
+---STDERR---

@@ -1,0 +1,25 @@
+# Audit: django__django-17029
+
+## FAIL_TO_PASS
+- `test_clear_cache (apps.tests.AppsTests.test_clear_cache)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 43 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted)
+None.
+
+## Gate Output
+All 44 tests passed in 0.007s. The single FAIL_TO_PASS test (`test_clear_cache`) now passes, and zero regressions were introduced.
+
+## Classification Summary
+- **Patch live:** Yes — 1 line added to `django/apps/registry.py`
+- **All FAIL_TO_PASS tests pass:** Yes (1/1)
+- **Zero PASS_TO_PASS regressions:** Yes (0/43)
+
+The fix correctly addresses the root cause by clearing the `get_swappable_settings_name` cache alongside the existing `get_models.cache_clear()` call, following the established pattern for cached methods in the Apps registry.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
