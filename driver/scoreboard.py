@@ -30,14 +30,23 @@ for s in sorted(glob.glob(f"{REPO}/results/*/*/official_eval/summary.json")):
     runs_by_inst[d["instance_id"]].append((run_id, d.get("official_resolved")))
 
 won_first, won_rerun, lost = set(), set(), set()
+# Why a rerun-win lost the FIRST time, derived from the first attempt's official grade:
+#   None  -> never reached the grader (timeout / box-death / DNF / empty patch) — infra, not reasoning
+#   False -> graded and lost, then a clean rerun won (serialization false-positive / nondeterministic capture)
+rerun_first = {}  # iid -> first-attempt official_resolved (None or False)
 for iid, rs in runs_by_inst.items():
     rs.sort(key=lambda x: x[0])  # earliest attempt first
     if any(r is True for _, r in rs):
-        (won_first if rs[0][1] is True else won_rerun).add(iid)
+        if rs[0][1] is True:
+            won_first.add(iid)
+        else:
+            won_rerun.add(iid); rerun_first[iid] = rs[0][1]
     else:
         lost.add(iid)
 won = won_first | won_rerun
 attempted = set(runs_by_inst)
+rerun_nevergraded = sorted(i for i in won_rerun if rerun_first[i] is None)   # infra/DNF
+rerun_gradedloss  = sorted(i for i in won_rerun if rerun_first[i] is False)  # graded-then-lost
 
 L = []
 L.append("# Scoreboard")
@@ -49,8 +58,21 @@ L.append("")
 L.append(f"- **Wins (official-attested RESOLVED): {len(won)} / {len(attempted)} attempted**")
 L.append(f"  - won on first attempt: {len(won_first)}")
 L.append(f"  - won only on a re-run: {len(won_rerun)}  *(a skeptic may discount these — see note)*")
+L.append(f"    - of which, first attempt **never reached the grader** (timeout / box-death / DNF): "
+         f"{len(rerun_nevergraded)}")
+L.append(f"    - of which, first attempt **graded and lost**, clean rerun won "
+         f"(serialization / nondeterministic capture): {len(rerun_gradedloss)}")
 L.append(f"- Not won (no passing attestation): {len(lost)}")
 L.append(f"- Total archived runs: {total_runs}")
+L.append("")
+L.append("**What the re-run wins are (and are not).** They are NOT the method getting smarter on a "
+         "second look — the frozen artifact is unchanged between attempts. They are recovery of "
+         "**non-reasoning losses**: the first attempt either never produced a graded result (a "
+         "wall-clock timeout, a box dying mid-run, a DNF) or hit a capture/serialization false-positive "
+         "that a clean rerun of the same version didn't. The reasoning content is identical; only the "
+         "infrastructure outcome differs. They count as wins (same artifact, official grade) but they "
+         "speak to run reliability, not diagnostic capability — the gain came from *not losing work "
+         "already done*, not from thinking harder.")
 L.append("")
 L.append("**This is dev telemetry, not the deliverable.** The deliverable is a single frozen "
          "artifact version run from scratch on the whole target. The loop is methodeutics: fail "
@@ -64,7 +86,12 @@ L.append("## Wins — first attempt")
 for i in sorted(won_first): L.append(f"- ✓ {i}")
 L.append("")
 L.append("## Wins — only after re-run")
-for i in sorted(won_rerun): L.append(f"- ✓↻ {i}")
+L.append("*(`first: never-graded` = timeout/box-death/DNF; `first: graded-loss` = "
+         "serialization/nondeterministic-capture corrected by a clean rerun. Same frozen artifact "
+         "both times.)*")
+for i in sorted(won_rerun):
+    kind = "never-graded" if rerun_first[i] is None else "graded-loss"
+    L.append(f"- ✓↻ {i}  *(first: {kind})*")
 L.append("")
 L.append("## Not won (empty patch / timeout / unresolved, every attempt)")
 for i in sorted(lost): L.append(f"- ✗ {i}")

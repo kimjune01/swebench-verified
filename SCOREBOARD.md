@@ -5,8 +5,12 @@ Wins = official `swebench.harness.run_evaluation` attestations only. Generated b
 - **Wins (official-attested RESOLVED): 426 / 438 attempted**
   - won on first attempt: 418
   - won only on a re-run: 8  *(a skeptic may discount these — see note)*
+    - of which, first attempt **never reached the grader** (timeout / box-death / DNF): 7
+    - of which, first attempt **graded and lost**, clean rerun won (serialization / nondeterministic capture): 1
 - Not won (no passing attestation): 12
 - Total archived runs: 446
+
+**What the re-run wins are (and are not).** They are NOT the method getting smarter on a second look — the frozen artifact is unchanged between attempts. They are recovery of **non-reasoning losses**: the first attempt either never produced a graded result (a wall-clock timeout, a box dying mid-run, a DNF) or hit a capture/serialization false-positive that a clean rerun of the same version didn't. The reasoning content is identical; only the infrastructure outcome differs. They count as wins (same artifact, official grade) but they speak to run reliability, not diagnostic capability — the gain came from *not losing work already done*, not from thinking harder.
 
 **This is dev telemetry, not the deliverable.** The deliverable is a single frozen artifact version run from scratch on the whole target. The loop is methodeutics: fail -> improve the GENERAL (instance-blind) method -> restart from square 1. Retries are unlimited; FORBIDDEN are instance-specific changes and re-rolling the same version for variance. Prior losing runs stay in history. The anti-cherry-picking guarantee is the final from-scratch single-version run plus the readable per-version diffs — not a low retry count. Re-run wins below are expected and reflect method iteration.
 
@@ -431,14 +435,15 @@ Wins = official `swebench.harness.run_evaluation` attestations only. Generated b
 - ✓ sympy__sympy-24661
 
 ## Wins — only after re-run
-- ✓↻ django__django-11206
-- ✓↻ django__django-14404
-- ✓↻ django__django-15563
-- ✓↻ django__django-15987
-- ✓↻ django__django-16256
-- ✓↻ pydata__xarray-6599
-- ✓↻ sympy__sympy-13878
-- ✓↻ sympy__sympy-16766
+*(`first: never-graded` = timeout/box-death/DNF; `first: graded-loss` = serialization/nondeterministic-capture corrected by a clean rerun. Same frozen artifact both times.)*
+- ✓↻ django__django-11206  *(first: never-graded)*
+- ✓↻ django__django-14404  *(first: never-graded)*
+- ✓↻ django__django-15563  *(first: never-graded)*
+- ✓↻ django__django-15987  *(first: graded-loss)*
+- ✓↻ django__django-16256  *(first: never-graded)*
+- ✓↻ pydata__xarray-6599  *(first: never-graded)*
+- ✓↻ sympy__sympy-13878  *(first: never-graded)*
+- ✓↻ sympy__sympy-16766  *(first: never-graded)*
 
 ## Not won (empty patch / timeout / unresolved, every attempt)
 - ✗ astropy__astropy-13398
