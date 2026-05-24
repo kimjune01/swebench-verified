@@ -1,0 +1,33 @@
+# Audit: django__django-14559
+
+## FAIL_TO_PASS
+
+- ✅ test_empty_objects (queries.test_bulk_update.BulkUpdateTests) — PASS
+- ✅ test_large_batch (queries.test_bulk_update.BulkUpdateTests) — PASS
+- ✅ test_updated_rows_when_passing_duplicates (queries.test_bulk_update.BulkUpdateTests) — PASS
+
+## PASS_TO_PASS regressions
+
+**None.** All 26 tests passed in the gate output with no regressions.
+
+## Pre-existing (not counted, confirmed against base capture)
+
+**None.** The fail-on-base capture showed all tests passing on the unpatched base.
+
+## Gate Result
+
+```
+Ran 26 tests in 0.211s
+
+OK
+```
+
+The patch correctly implements the fix by:
+1. Returning `0` when `objs` is empty (line 544: `return 0`)
+2. Accumulating row counts across batches (line 569: `rows_updated += ...`)
+3. Returning the total count (line 570: `return rows_updated`)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

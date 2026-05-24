@@ -1,0 +1,51 @@
+# Recon: django__django-14559
+
+## Failure summary
+
+The three failing tests (`test_empty_objects`, `test_large_batch`, `test_updated_rows_when_passing_duplicates`) all expect `bulk_update()` to return the number of rows updated, similar to how `update()` works. Currently, `bulk_update()` returns `None` in all cases. The tests fail with assertions like `AssertionError: None != 0` and `AssertionError: None != 2000`.
+
+## Suspect set
+
+- `django/db/models/query.py` lines 527-566: The complete `bulk_update()` method
+- `django/db/models/query.py` line 544: Early return for empty objects that returns `None` instead of `0`
+- `django/db/models/query.py` lines 563-566: Transaction block that calls `update()` but discards return values
+
+## Root cause
+
+The `bulk_update()` method never returns a row count because:
+
+1. **Line 544** returns `None` (implicitly) when the objects list is empty, but should return `0`
+2. **Lines 565-566** call `self.filter(pk__in=pks).update(**update_kwargs)` in a loop inside a transaction, but the return values (row counts from each batch) are never captured or accumulated
+
+The `update()` method (line 785-788) returns the number of rows updated via `query.get_compiler(self.db).execute_sql(CURSOR)`. The `bulk_update()` implementation needs to sum these values across all batches and return the total.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/models/query.py:544` — `if not objs: return` (returns None)
+- `django/db/models/query.py:565-566` — `self.filter(pk__in=pks).update(**update_kwargs)` (return value discarded)
+- `django/db/models/query.py:788` — `return rows` (confirmed update() returns row count)
+- Test expectations confirm the required behavior matches `update()` semantics
+
+## Edit sites
+
+1. **django/db/models/query.py line 544**: Change `return` to `return 0` to return zero rows updated when objects list is empty
+
+2. **django/db/models/query.py lines 563-566** (the transaction block containing the update loop):
+   - Initialize a counter variable `rows_updated = 0` before the `for pks, update_kwargs in updates:` loop
+   - Modify line 565-566 from `self.filter(pk__in=pks).update(**update_kwargs)` to `rows_updated += self.filter(pk__in=pks).update(**update_kwargs)`
+   - After the transaction block completes, add `return rows_updated` to return the accumulated count
+
+## Competing hypotheses
+
+None — the root cause is unambiguous from code inspection and test failures.
+
+## Rejected hypotheses
+
+None — this is the first diagnosis pass.
+
+## Open questions
+
+None — the implementation is straightforward: accumulate and return the sum of `update()` calls.
+
+---STDERR---
