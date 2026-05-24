@@ -1,0 +1,52 @@
+```markdown
+# Recon: django__django-14349
+
+## Failure summary
+
+URLValidator tests fail on Python versions with bpo-43882 fix (3.10.0b1+, unreleased 3.9 branch). Eight test cases expect ValidationError to be raised for URLs containing newline (\n), carriage return (\r), or tab (\t) characters, but no exception is raised. Error: "AssertionError: ValidationError not raised" for URLs like `'http://www.djangoproject.com/\n'`, `'http://www.django\rproject.com/'`, and `'http://\twww.djangoproject.com/'`.
+
+## Suspect set
+
+- `django/core/validators.py` lines 100-145: URLValidator.__call__ method — uses urlsplit which strips forbidden characters
+- `django/core/validators.py` line 116: `scheme, netloc, path, query, fragment = urlsplit(value)` — where stripping occurs
+- `django/core/validators.py` line 123: `url = urlunsplit((scheme, netloc, path, query, fragment))` — reconstructs sanitized URL
+
+## Root cause
+
+URLValidator attempts to handle Internationalized Domain Names (IDN) by catching regex validation failures and re-validating after punycode conversion. During this IDN handling, it calls `urlsplit(value)` to decompose the URL. On Python versions with bpo-43882 fix, `urlsplit()` silently strips ASCII newline (\n), carriage return (\r), and tab (\t) characters before parsing. The reconstructed URL via `urlunsplit()` no longer contains these forbidden characters, so the second regex validation passes, and no ValidationError is raised.
+
+**Code flow:**
+1. URLValidator.__call__ receives URL with \n, \r, or \t
+2. Line 110: `super().__call__(value)` runs regex with `[^\s]*` pattern (correctly rejects whitespace)
+3. Line 111: ValidationError caught, enters IDN handling
+4. Line 116: `urlsplit(value)` strips the forbidden characters (bpo-43882 behavior)
+5. Line 123: `urlunsplit()` reconstructs URL without forbidden characters
+6. Line 124: `super().__call__(url)` passes with sanitized URL
+7. Method returns without raising ValidationError
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/core/validators.py:5` — imports `urlsplit, urlunsplit` from urllib.parse
+- `django/core/validators.py:116` — `scheme, netloc, path, query, fragment = urlsplit(value)` in exception handler
+- Confirmed behavior: `urlsplit('http://example.com/\n').geturl()` returns `'http://example.com/'` (newline stripped)
+- Similar pattern exists in codebase: ProhibitNullCharactersValidator (lines 541-556) checks for `'\x00'` in value before processing
+
+## Edit sites
+
+- `django/core/validators.py` lines 100-109: Add check for forbidden characters in URLValidator.__call__
+  - Insert after scheme validation (line 107) and before regex check (line 110)
+  - Check if any of '\n', '\r', or '\t' are in the value string
+  - Raise ValidationError if found
+  - Pattern: similar to ProhibitNullCharactersValidator at line 554: `if '\x00' in str(value)`
+
+## Rejected hypotheses
+
+None — first-pass diagnosis with direct code trace from failure to root cause.
+
+## Open questions
+
+None — the fix is straightforward character validation before urlsplit processing.
+```
+
+---STDERR---

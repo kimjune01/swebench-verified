@@ -1,0 +1,20 @@
+# Audit: django__django-14349
+
+## FAIL_TO_PASS
+- test_validators (validators.tests.TestValidators): PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+Patch successfully resolved the issue. URLValidator now rejects URLs containing newline, carriage return, or tab characters (`\n`, `\r`, `\t`) before urlsplit() can strip them. The fix adds a simple validation check that raises ValidationError when these characters are detected in the URL value.
+
+All FAIL_TO_PASS tests pass, all PASS_TO_PASS tests remain passing, zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

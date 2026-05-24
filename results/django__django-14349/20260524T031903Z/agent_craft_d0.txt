@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes all FAIL_TO_PASS tests pass. URLValidator now correctly rejects URLs containing ASCII newline (\n), carriage return (\r), or tab (\t) characters before Python's urlsplit() can strip them.
+
+---STDERR---
