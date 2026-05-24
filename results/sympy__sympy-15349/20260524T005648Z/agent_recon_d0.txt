@@ -1,0 +1,29 @@
+# Recon: sympy__sympy-15349
+
+## Failure summary
+The tests `test_quaternion_conversions` and `test_quaternion_rotation_iss1593` fail because `Quaternion.to_rotation_matrix()` returns an incorrect rotation matrix with a sign error in the [1,2] element. For example, when `q = Quaternion(cos(x/2), sin(x/2), 0, 0)`, the method returns `sin(x)` at position [1,2] but should return `-sin(x)`. Both tests fail with AssertionError when comparing expected vs actual rotation matrices.
+
+## Suspect set
+- `sympy/algebras/quaternion.py` line 532: Incorrect sign in m12 calculation
+
+## Root cause
+The rotation matrix element at position [1,2] (m12) has an incorrect sign in its formula. According to the standard quaternion-to-rotation-matrix formula (referenced in the test via Wikipedia), element m12 should be `2(yz - xw)` where (w,x,y,z) are quaternion components (q.a, q.b, q.c, q.d). The current implementation incorrectly uses addition instead of subtraction for the `q.b*q.a` term.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `quaternion.py:532` — Current code: `m12 = 2*s*(q.c*q.d + q.b*q.a)` (WRONG)
+- Manual verification for q=(1,2,3,4): current gives 14/15, test expects 2/3 = 2*(12-2)/30 ✓
+- Manual verification for q=(cos(x/2),sin(x/2),0,0): current gives sin(x), test expects -sin(x) ✓
+- Wikipedia formula confirms: position [1,2] should be `2(yz - xw)` not `2(yz + xw)`
+
+## Edit sites
+- `sympy/algebras/quaternion.py` line 532: Change `m12 = 2*s*(q.c*q.d + q.b*q.a)` to `m12 = 2*s*(q.c*q.d - q.b*q.a)` (replace the `+` with `-` before `q.b*q.a`)
+
+## Rejected hypotheses
+None — the sign error is directly observable from code inspection and manual calculation.
+
+## Open questions
+None — the fix is straightforward and localized to a single character change.
+
+---STDERR---

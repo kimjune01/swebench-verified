@@ -1,0 +1,5 @@
+**RESOLVED** ✅
+
+The fix is complete in 1 gate iteration. Changed the sign in line 532 of `sympy/algebras/quaternion.py` from `m12 = 2*s*(q.c*q.d + q.b*q.a)` to `m12 = 2*s*(q.c*q.d - q.b*q.a)` to match the standard quaternion-to-rotation-matrix formula. All tests pass including the FAIL_TO_PASS test `test_quaternion_conversions`.
+
+---STDERR---

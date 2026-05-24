@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-15349
+
+## FAIL_TO_PASS
+- test_quaternion_conversions: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_quaternion_rotation_iss1593: Was FAIL on base, now PASS (bonus fix)
+
+## Summary
+All FAIL_TO_PASS tests now pass. Zero PASS_TO_PASS regressions. The single-character fix (changing `+` to `-` at line 532) correctly implements the standard quaternion rotation matrix formula `2*(yz - xw)` for element m12. As a bonus, this also resolves the pre-existing failure in `test_quaternion_rotation_iss1593`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
