@@ -1,0 +1,122 @@
+$ pytest -rA lib/matplotlib/tests/test_axes.py
+
+PASSED lib/matplotlib/tests/test_axes.py::test_twinx_knows_limits
+PASSED lib/matplotlib/tests/test_axes.py::test_zero_linewidth
+PASSED lib/matplotlib/tests/test_axes.py::test_empty_errorbar_legend
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_decimal[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_markerfacecolor_none_alpha[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_tick_padding_tightbbox
+PASSED lib/matplotlib/tests/test_axes.py::test_inset
+PASSED lib/matplotlib/tests/test_axes.py::test_zoom_inset
+PASSED lib/matplotlib/tests/test_axes.py::test_inset_polar[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_inset_projection
+PASSED lib/matplotlib/tests/test_axes.py::test_inset_subclass
+PASSED lib/matplotlib/tests/test_axes.py::test_indicate_inset_inverted[False-False]
+PASSED lib/matplotlib/tests/test_axes.py::test_indicate_inset_inverted[False-True]
+PASSED lib/matplotlib/tests/test_axes.py::test_indicate_inset_inverted[True-False]
+PASSED lib/matplotlib/tests/test_axes.py::test_indicate_inset_inverted[True-True]
+PASSED lib/matplotlib/tests/test_axes.py::test_set_position
+PASSED lib/matplotlib/tests/test_axes.py::test_spines_properbbox_after_zoom
+PASSED lib/matplotlib/tests/test_axes.py::test_gettightbbox_ignore_nan
+PASSED lib/matplotlib/tests/test_axes.py::test_scatter_series_non_zero_index
+PASSED lib/matplotlib/tests/test_axes.py::test_scatter_empty_data
+PASSED lib/matplotlib/tests/test_axes.py::test_annotate_across_transforms[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_xy[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_fail
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_resize
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_minorloc
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_formatter
+PASSED lib/matplotlib/tests/test_axes.py::test_secondary_repr
+PASSED lib/matplotlib/tests/test_axes.py::test_normal_axes
+PASSED lib/matplotlib/tests/test_axes.py::test_nodecorator
+PASSED lib/matplotlib/tests/test_axes.py::test_displaced_spine
+PASSED lib/matplotlib/tests/test_axes.py::test_tickdirs
+PASSED lib/matplotlib/tests/test_axes.py::test_minor_accountedfor
+PASSED lib/matplotlib/tests/test_axes.py::test_axis_bool_arguments[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_axis_extent_arg
+PASSED lib/matplotlib/tests/test_axes.py::test_axis_extent_arg2
+PASSED lib/matplotlib/tests/test_axes.py::test_hist_auto_bins
+PASSED lib/matplotlib/tests/test_axes.py::test_hist_nan_data
+PASSED lib/matplotlib/tests/test_axes.py::test_hist_range_and_density
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_errbar_zorder
+PASSED lib/matplotlib/tests/test_axes.py::test_set_ticks_inverted
+PASSED lib/matplotlib/tests/test_axes.py::test_aspect_nonlinear_adjustable_box
+PASSED lib/matplotlib/tests/test_axes.py::test_aspect_nonlinear_adjustable_datalim
+PASSED lib/matplotlib/tests/test_axes.py::test_box_aspect
+PASSED lib/matplotlib/tests/test_axes.py::test_box_aspect_custom_position
+PASSED lib/matplotlib/tests/test_axes.py::test_bbox_aspect_axes_init
+PASSED lib/matplotlib/tests/test_axes.py::test_redraw_in_frame
+PASSED lib/matplotlib/tests/test_axes.py::test_invisible_axes_events
+PASSED lib/matplotlib/tests/test_axes.py::test_xtickcolor_is_not_markercolor
+PASSED lib/matplotlib/tests/test_axes.py::test_ytickcolor_is_not_markercolor
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[True-x]
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[True-y]
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[False-x]
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[False-y]
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[None-x]
+PASSED lib/matplotlib/tests/test_axes.py::test_unautoscale[None-y]
+PASSED lib/matplotlib/tests/test_axes.py::test_polar_interpolation_steps_variable_r[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_autoscale_tiny_sticky
+PASSED lib/matplotlib/tests/test_axes.py::test_xtickcolor_is_not_xticklabelcolor
+PASSED lib/matplotlib/tests/test_axes.py::test_ytickcolor_is_not_yticklabelcolor
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[xx-small]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[x-small]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[small]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[medium]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[large]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[x-large]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[xx-large]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[larger]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[smaller]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[8]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[10]
+PASSED lib/matplotlib/tests/test_axes.py::test_relative_ticklabel_sizes[12]
+PASSED lib/matplotlib/tests/test_axes.py::test_multiplot_autoscale
+PASSED lib/matplotlib/tests/test_axes.py::test_sharing_does_not_link_positions
+PASSED lib/matplotlib/tests/test_axes.py::test_2dcolor_plot[pdf]
+PASSED lib/matplotlib/tests/test_axes.py::test_shared_axes_clear[png]
+PASSED lib/matplotlib/tests/test_axes.py::test_shared_axes_retick
+PASSED lib/matplotlib/tests/test_axes.py::test_ylabel_ha_with_position[left]
+PASSED lib/matplotlib/tests/test_axes.py::test_ylabel_ha_with_position[center]
+PASSED lib/matplotlib/tests/test_axes.py::test_ylabel_ha_with_position[right]
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_vertical
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_vertical_yinverted
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_horizontal
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_horizontal_yinverted
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_horizontal_xinverted
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_horizontal_xyinverted
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_center
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_location_errorbars
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_fmt[%.2f]
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_fmt[{:.2f}]
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_fmt[format]
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_fmt_error
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_labels
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_nan_ydata
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_label_nan_ydata_inverted
+PASSED lib/matplotlib/tests/test_axes.py::test_nan_barlabels
+PASSED lib/matplotlib/tests/test_axes.py::test_patch_bounds
+PASSED lib/matplotlib/tests/test_axes.py::test_warn_ignored_scatter_kwargs
+PASSED lib/matplotlib/tests/test_axes.py::test_artist_sublists
+PASSED lib/matplotlib/tests/test_axes.py::test_empty_line_plots
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[None-f-'f' is not a valid format string \\(unrecognized character 'f'\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[None-o+-'o\\+' is not a valid format string \\(two marker symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[None-:--':-' is not a valid format string \\(two linestyle symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[None-rk-'rk' is not a valid format string \\(two color symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[None-:o-r-':o-r' is not a valid format string \\(two linestyle symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[data1-f-'f' is not a valid format string \\(unrecognized character 'f'\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[data1-o+-'o\\+' is not a valid format string \\(two marker symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[data1-:--':-' is not a valid format string \\(two linestyle symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[data1-rk-'rk' is not a valid format string \\(two color symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format_errors[data1-:o-r-':o-r' is not a valid format string \\(two linestyle symbols\\)]
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_format
+PASSED lib/matplotlib/tests/test_axes.py::test_automatic_legend
+PASSED lib/matplotlib/tests/test_axes.py::test_plot_errors
+PASSED lib/matplotlib/tests/test_axes.py::test_clim
+PASSED lib/matplotlib/tests/test_axes.py::test_bezier_autoscale
+PASSED lib/matplotlib/tests/test_axes.py::test_get_xticklabel
+PASSED lib/matplotlib/tests/test_axes.py::test_bar_leading_nan
+SKIPPED [10] lib/matplotlib/testing/compare.py:285: Don't know how to convert .svg files to png
+SKIPPED [54] ../opt/miniconda3/envs/testbed/lib/python3.11/contextlib.py:81: Cannot compare svg files because Inkscape is not installed
+FAILED lib/matplotlib/tests/test_axes.py::test_bar_all_nan[png] - RuntimeErro...
+================== 1 failed, 767 passed, 64 skipped in 49.65s ==================

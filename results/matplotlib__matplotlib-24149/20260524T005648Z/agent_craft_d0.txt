@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes `test_bar_all_nan[png]` pass by adding `StopIteration` to the exception handlers in `_convert_dx`. Gate shows 768 passed tests.
+
+---STDERR---

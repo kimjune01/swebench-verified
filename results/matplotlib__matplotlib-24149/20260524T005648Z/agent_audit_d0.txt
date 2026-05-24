@@ -1,0 +1,29 @@
+# Audit: matplotlib__matplotlib-24149
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_axes.py::test_bar_all_nan[png]`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None — gate ran 768 tests with 0 failures.
+
+Sample verification:
+- `test_invisible_axes[png]`: PASSED
+- `test_get_labels`: PASSED
+- `test_repr`: PASSED
+
+## Pre-existing (not counted, confirmed against base capture)
+None — no failures in patched run.
+
+## Verdict rationale
+The patch successfully resolves the issue:
+- Added `StopIteration` to exception handlers at lines 2183 and 2188 in `lib/matplotlib/axes/_axes.py`
+- The FAIL_TO_PASS test `test_bar_all_nan[png]` now passes
+- Zero regressions introduced (768 passed, 64 skipped, 0 failed)
+- Patch aligns with existing patterns in the codebase (`dates.py:1864`, `units.py:201`)
+
+The fix is minimal, targeted, and follows established exception handling patterns for `_safe_first_finite` calls elsewhere in matplotlib.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
