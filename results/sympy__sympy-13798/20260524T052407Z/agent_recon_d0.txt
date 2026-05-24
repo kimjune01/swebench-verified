@@ -1,0 +1,32 @@
+# Recon: sympy__sympy-13798
+
+## Failure summary
+The failing tests check whether the `latex()` function can accept arbitrary custom strings for the `mul_symbol` parameter. Currently, `mul_symbol` is restricted to 4 predefined values: None, "ldot", "dot", and "times". When a user passes `mul_symbol='\\,'` (a LaTeX thin space), the code raises `KeyError: '\\,'` because it performs a direct dictionary lookup.
+
+## Suspect set
+- `sympy/printing/latex.py` lines 152-163: The `LatexPrinter.__init__()` method hardcodes a `mul_symbol_table` dictionary and performs unconditional lookups
+- `sympy/printing/latex.py` lines 2157-2158: Documentation states only 4 values are allowed
+
+## Root cause
+The `LatexPrinter.__init__()` method creates a `mul_symbol_table` dictionary with only 4 predefined multiplication symbols. At lines 159-160 and 162-163, it performs direct dictionary lookups without checking if the key exists, causing a `KeyError` when users provide custom values like `'\\,'`.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/printing/latex.py:152-157` — `mul_symbol_table = {None: r" ", "ldot": r" \,.\, ", "dot": r" \cdot ", "times": r" \times "}`
+- `sympy/printing/latex.py:160` — `self._settings['mul_symbol_latex'] = mul_symbol_table[self._settings['mul_symbol']]` (raises KeyError for unlisted keys)
+- `sympy/printing/latex.py:163` — `self._settings['mul_symbol_latex_numbers'] = mul_symbol_table[self._settings['mul_symbol'] or 'dot']` (second lookup also fails)
+- Test verification: `python -c "from sympy import *; latex(3*x**2*y, mul_symbol='\\\\,')"` produces `KeyError: '\\,'`
+
+## Edit sites
+- `sympy/printing/latex.py` lines 159-163: Replace direct dictionary lookups with conditional logic. If `mul_symbol` is in the predefined table, use the table value (which includes surrounding spaces). If not, use the custom value as-is for `mul_symbol_latex`, and use `r" \cdot "` for `mul_symbol_latex_numbers` (numbers need visible separation even with custom symbols).
+
+- `sympy/printing/latex.py` lines 2157-2158: Update documentation to indicate that `mul_symbol` can accept arbitrary strings, not just the 4 predefined values. Mention that predefined values include automatic spacing, while custom values are used as-is.
+
+## Rejected hypotheses
+None — the root cause is clear from direct code inspection.
+
+## Open questions
+None — the fix is straightforward: allow custom values by checking table membership before lookup.
+
+---STDERR---

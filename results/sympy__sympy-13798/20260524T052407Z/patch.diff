@@ -1,0 +1,34 @@
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index ad4d7d961..a7607e8ec 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -156,11 +156,24 @@ def __init__(self, settings=None):
+             "times": r" \times "
+         }
+ 
+-        self._settings['mul_symbol_latex'] = \
+-            mul_symbol_table[self._settings['mul_symbol']]
+-
+-        self._settings['mul_symbol_latex_numbers'] = \
+-            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
++        mul_symbol = self._settings['mul_symbol']
++        
++        # Use predefined value if available, otherwise custom value as-is
++        if mul_symbol in mul_symbol_table:
++            self._settings['mul_symbol_latex'] = mul_symbol_table[mul_symbol]
++        else:
++            self._settings['mul_symbol_latex'] = mul_symbol
++        
++        # For numbers, use predefined value or handle spacing-like custom symbols
++        if mul_symbol in mul_symbol_table:
++            self._settings['mul_symbol_latex_numbers'] = \
++                mul_symbol_table[mul_symbol or 'dot']
++        else:
++            # Use \cdot for spacing-like symbols to avoid ambiguity with numbers
++            if mul_symbol in ['', '\\\\', '\\,', '\\:', '\\;', '\\quad']:
++                self._settings['mul_symbol_latex_numbers'] = r" \cdot "
++            else:
++                self._settings['mul_symbol_latex_numbers'] = mul_symbol
+ 
+         self._delim_dict = {'(': ')', '[': ']'}
+ 
