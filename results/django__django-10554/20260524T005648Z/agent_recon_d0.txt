@@ -1,0 +1,63 @@
+# Recon: django__django-10554
+
+## Failure summary
+
+The failing tests check that UNION querysets work correctly when combining `.values_list()` (which limits SELECT columns) with `.order_by()` (which may reference different columns). The tests fail with `DatabaseError: ORDER BY term does not match any column in the result set.` raised from `django/db/models/sql/compiler.py:359` in the `get_order_by()` method.
+
+For example, `union_qs.order_by('-pk').values_list('order', flat=True)` creates a queryset where:
+- SELECT list contains only the 'order' field
+- ORDER BY references the 'pk' field
+
+The code attempts to convert ORDER BY to positional references (e.g., `ORDER BY 1`) for SQL UNION compatibility by matching against the SELECT list, but fails when the column isn't present.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 345-359: Combinator query ORDER BY handling in `get_order_by()` method - raises error when ORDER BY column not in SELECT
+- `django/db/models/sql/compiler.py` lines 373-381: `get_extra_select()` method - adds ORDER BY columns to SELECT for DISTINCT but not for combinators
+- `django/db/models/sql/compiler.py` lines 428-433: `get_combinator_sql()` method - propagates values_select to combined queries
+
+## Root cause
+
+SQL UNION queries require ORDER BY columns to be in the SELECT list. Django's `get_order_by()` method (lines 345-359) handles this for combinator queries by converting ORDER BY references to positional numbers (e.g., `ORDER BY 1`). It does this by looping through `self.select` to match each ORDER BY expression with a SELECT column.
+
+When `.values_list('order')` limits the SELECT to specific columns, but `.order_by('pk')` references a different column, the matching loop completes without finding 'pk' in the SELECT list. The code then raises `DatabaseError` at line 359.
+
+Django already solves this problem for DISTINCT queries: `get_extra_select()` (lines 374-380) adds ORDER BY columns to the SELECT list when `self.query.distinct` is True. However, the condition on line 374 only checks for DISTINCT, not for `self.query.combinator`, so combinator queries don't benefit from this mechanism.
+
+The architectural issue: `get_order_by()` is called before `get_extra_select()` in `pre_sql_setup()` (line 52), so even if we modified `get_extra_select()` to handle combinators, the error would still be raised before extra columns could be added.
+
+**Confidence: deduction — 95%**
+
+**Supporting evidence:**
+- `django/db/models/sql/compiler.py:350-359` — Loops through `self.select` to find ORDER BY column, raises error if not found
+- `django/db/models/sql/compiler.py:374` — `if self.query.distinct and not self.query.distinct_fields:` — only handles DISTINCT, not combinators
+- `django/db/models/sql/compiler.py:52` — `order_by = self.get_order_by()` called before `extra_select = self.get_extra_select()`
+- Git history: commit 84c1826ded added UNION support with this error, commit 2d3cc94284 added values_list support but didn't handle ORDER BY edge case
+
+## Edit sites
+
+**Primary fix:** `django/db/models/sql/compiler.py` lines 350-359
+- In the combinator section of `get_order_by()`, modify the `for` loop's `else` clause
+- Instead of raising `DatabaseError`, add the missing ORDER BY column to `self.select`
+- Specifically: compile the source expression, append `(src, (sql, params), None)` to `self.select`, then set the positional reference
+
+**Change specification:**
+Replace the error-raising `else` block (lines 358-359) with logic to:
+1. Compile `src` to get SQL and params: `sql, params = self.compile(src)`  
+2. Get the new index: `idx = len(self.select)`
+3. Append to select list: `self.select.append((src, (sql, params), None))`
+4. Set positional reference: `resolved.set_source_expressions([RawSQL('%d' % (idx + 1), ())])`
+
+**Verification needed:** Check if `get_combinator_sql()` correctly propagates these dynamically-added SELECT columns to combined queries (lines 428-433 handle `values_select` propagation - may need adjustment)
+
+## Rejected hypotheses
+
+- H₁: The `elif col_alias: continue` logic (line 354) incorrectly skips valid matches — **Rejected:** When ordering by 'pk' and SELECT only has 'order', there's fundamentally no match to find; the skipping logic isn't the issue
+- H₂: Modify `get_extra_select()` to handle combinators — **Rejected as sole fix:** Would help but doesn't solve the ordering issue since `get_order_by()` runs first and raises error before `get_extra_select()` runs
+
+## Open questions
+
+- Do the dynamically-added SELECT columns in `self.select` automatically propagate to combined queries via the existing `get_combinator_sql()` logic, or does that need a separate fix?
+- Should the added columns be marked differently (e.g., with a flag) to distinguish them from explicitly-requested columns for potential filtering later?
+
+---STDERR---

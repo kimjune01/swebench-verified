@@ -1,0 +1,27 @@
+**RESOLVED**
+
+## Summary
+
+Fixed UNION queries with `.values_list()` and `.order_by()` on different columns by conditionally adding ORDER BY columns as hidden annotations when needed.
+
+**Root cause confirmed**: When `.values_list('order')` limits SELECT columns but `.order_by('pk')` references a different column, Django's combinator query handling raised `DatabaseError` because ORDER BY columns weren't in the SELECT list required for SQL UNION compatibility.
+
+**Solution**: Modified `django/db/models/sql/compiler.py:359-375` to:
+1. Check if child queries already have incompatible `.values()` selections
+2. If not, add ORDER BY column as hidden annotation (`__orderbycol1`) to parent and all child queries  
+3. Propagate via existing `annotation_select` mechanism in `get_combinator_sql()`
+4. If yes, preserve original error for incompatible column cases
+
+**Gate iterations**: 3
+- Iteration 1: Simple append to `self.select` → propagation failure  
+- Iteration 2: Annotation without condition → broke existing test
+- Iteration 3: Conditional annotation → **all tests pass**
+
+**Tests passing**: 
+- ✓ `test_union_with_values_list_and_order`
+- ✓ `test_union_with_values_list_on_annotated_and_unannotated`  
+- ✓ All 27 tests in `queries.test_qs_combinators` (2 skipped)
+
+The fix correctly distinguishes between `.values()` on individual queries (incompatible columns, should error) and `.values_list()` on UNION result (compatible columns, add ORDER BY column).
+
+---STDERR---

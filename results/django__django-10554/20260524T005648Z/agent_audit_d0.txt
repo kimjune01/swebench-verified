@@ -1,0 +1,25 @@
+# Audit: django__django-10554
+
+## FAIL_TO_PASS
+- `test_union_with_values_list_and_order`: **PASS** ✓
+- `test_union_with_values_list_on_annotated_and_unannotated`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 25 PASS_TO_PASS tests continue to pass with no failures.
+
+## Pre-existing (not counted, confirmed against base capture)
+The fail-on-base capture showed the test suite crashed with a traceback at `runtests.py:564` before completing any tests. With the patch applied, all 27 tests run cleanly with OK (skipped=2).
+
+## Patch summary
+The fix modifies `django/db/models/sql/compiler.py` lines 359-375 to conditionally add ORDER BY columns to the SELECT list for UNION queries when:
+1. The ORDER BY column is not already in SELECT
+2. Child queries don't have their own `values_select` (avoiding incompatible mixed-values cases)
+
+This enables `.union().order_by().values_list()` patterns while preserving the DatabaseError for truly incompatible queries.
+
+**Gate result**: 27 tests, OK (skipped=2), 0.026s, no errors
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

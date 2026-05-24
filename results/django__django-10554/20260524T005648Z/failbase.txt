@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 queries.test_qs_combinators
+
+    Creating table queries_tvchef
+    Creating table queries_fan
+    Creating table queries_leafa
+    Creating table queries_leafb
+    Creating table queries_join
+    Creating table queries_reservedname
+    Creating table queries_sharedconnection
+    Creating table queries_pointera
+    Creating table queries_pointerb
+    Creating table queries_singleobject
+    Creating table queries_relatedobject
+    Creating table queries_plaything
+    Creating table queries_article
+    Creating table queries_food
+    Creating table queries_eaten
+    Creating table queries_node
+    Creating table queries_objecta
+    Creating table queries_childobjecta
+    Creating table queries_objectb
+    Creating table queries_objectc
+    Creating table queries_simplecategory
+    Creating table queries_specialcategory
+    Creating table queries_categoryitem
+    Creating table queries_mixedcasefieldcategoryitem
+    Creating table queries_mixedcasedbcolumncategoryitem
+    Creating table queries_onetoonecategory
+    Creating table queries_categoryrelationship
+    Creating table queries_commonmixedcaseforeignkeys
+    Creating table queries_nullablename
+    Creating table queries_modeld
+    Creating table queries_modelc
+    Creating table queries_modelb
+    Creating table queries_modela
+    Creating table queries_job
+    Creating table queries_jobresponsibilities
+    Creating table queries_responsibility
+    Creating table queries_fk1
+    Creating table queries_fk2
+    Creating table queries_fk3
+    Creating table queries_basea
+    Creating table queries_identifier
+    Creating table queries_program
+    Creating table queries_channel
+    Creating table queries_book
+    Creating table queries_chapter
+    Creating table queries_paragraph
+    Creating table queries_page
+    Creating table queries_myobject
+    Creating table queries_order
+    Creating table queries_orderitem
+    Creating table queries_baseuser
+    Creating table queries_task
+    Creating table queries_staff
+    Creating table queries_staffuser
+    Creating table queries_ticket21203parent
+    Creating table queries_ticket21203child
+    Creating table queries_person
+    Creating table queries_company
+    Creating table queries_employment
+    Creating table queries_school
+    Creating table queries_student
+    Creating table queries_classroom
+    Creating table queries_teacher
+    Creating table queries_ticket23605aparent
+    Creating table queries_ticket23605a
+    Creating table queries_ticket23605b
+    Creating table queries_ticket23605c
+    Creating table Individual
+    Creating table RelatedIndividual
+    Creating table queries_customdbcolumn
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (1 silenced).
+Traceback (most recent call last):
+  File "./tests/runtests.py", line 564, in <module>
+    options.start_at, options.start_after,
+  File "./tests/runtests.py", line 310, in django_tests
+    extra_tests=extra_tests,
+  File "/testbed/django/test/runner.py", line 652, in run_tests
+    result = self.run_suite(suite)
+  File "/testbed/django/test/runner.py", line 594, in run_suite
+    return runner.run(suite)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/runner.py", line 183, in run
+    result.printErrors()
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/runner.py", line 109, in printErrors
+    self.printErrorList('ERROR', self.errors)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/runner.py", line 115, in printErrorList
+    self.stream.writeln("%s: %s" % (flavour,self.getDescription(test)))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/runner.py", line 49, in getDescription
+    return str(test)
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/case.py", line 1429, in __str__
+    return "{} {}".format(self.test_case, self._subDescription())
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/case.py", line 1415, in _subDescription
+    for (k, v) in sorted(self.params.items()))
+  File "/opt/miniconda3/envs/testbed/lib/python3.6/unittest/case.py", line 1415, in <genexpr>
+    for (k, v) in sorted(self.params.items()))
+  File "/testbed/django/db/models/query.py", line 252, in __repr__
+    data = list(self[:REPR_OUTPUT_SIZE + 1])
+  File "/testbed/django/db/models/query.py", line 276, in __iter__
+    self._fetch_all()
+  File "/testbed/django/db/models/query.py", line 1240, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/testbed/django/db/models/query.py", line 184, in __iter__
+    for row in compiler.results_iter(chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size):
+  File "/testbed/django/db/models/sql/compiler.py", line 1042, in results_iter
+    results = self.execute_sql(MULTI, chunked_fetch=chunked_fetch, chunk_size=chunk_size)
+  File "/testbed/django/db/models/sql/compiler.py", line 1077, in execute_sql
+    sql, params = self.as_sql()
+  File "/testbed/django/db/models/sql/compiler.py", line 475, in as_sql
+    extra_select, order_by, group_by = self.pre_sql_setup()
+  File "/testbed/django/db/models/sql/compiler.py", line 53, in pre_sql_setup
+    order_by = self.get_order_by()
+  File "/testbed/django/db/models/sql/compiler.py", line 359, in get_order_by
+    raise DatabaseError('ORDER BY term does not match any column in the result set.')
+django.db.utils.DatabaseError: ORDER BY term does not match any column in the result set.
