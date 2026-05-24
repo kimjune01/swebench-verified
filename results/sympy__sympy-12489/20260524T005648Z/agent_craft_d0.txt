@@ -1,0 +1,28 @@
+**RESOLVED**
+
+The fix successfully passes all tests. Here's a summary:
+
+## Changes made:
+
+1. **Primary fix**: Converted `_af_new` from `@staticmethod` to `@classmethod`
+   - Changed signature from `def _af_new(perm)` to `def _af_new(cls, perm)`
+   - Updated `Basic.__new__(Perm, perm)` to `Basic.__new__(cls, perm)`
+
+2. **Updated 20 `_af_new` call sites**:
+   - In `__new__`: use `cls._af_new(...)`
+   - In instance methods: use `self.__class__._af_new(...)`
+   - In classmethods: use `self._af_new(...)`
+
+3. **Fixed 4 additional hard-coded `Perm` references** (not in original recon):
+   - Line 868: `Perm(a.array_form, size=size)` → `cls(a.array_form, size=size)` in `__new__`
+   - Line 1242: `Perm(other)` → `self.__class__(other)` in `__rmul__`
+   - Line 1727: `Perm.unrank_nonlex(...)` → `self.__class__.unrank_nonlex(...)` in `next_nonlex`
+   - Line 2710: `Perm(perm)` → `self(perm)` in `josephus` classmethod
+
+## Gate results:
+- **Iteration 1**: Failed - found additional `Perm` references beyond `_af_new` sites
+- **Iteration 2**: **PASS** - All 10 tests pass including `test_Permutation_subclassing`
+
+The fix preserves subclass types in operations like `p * q`, `p ** n`, `~p`, `p ^ q`, and class methods like `random()`, `unrank_lex()`, etc. as expected by the test.
+
+---STDERR---

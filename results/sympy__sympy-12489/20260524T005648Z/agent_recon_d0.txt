@@ -1,0 +1,73 @@
+# Recon: sympy__sympy-12489
+
+## Failure summary
+
+The test `test_Permutation_subclassing` creates a `CustomPermutation` subclass of `Permutation` and verifies that operations on the subclass return instances of the subclass, not the base class. The test fails at line 251 with `AssertionError` when checking `assert type(p * q) == CustomPermutation`. When a `CustomPermutation` instance is multiplied with another permutation, the result is a `Permutation` instance instead of preserving the `CustomPermutation` type.
+
+## Suspect set
+
+- `sympy/combinatorics/permutations.py` lines 927-950: The `_af_new` static method that hard-codes `Perm` as the class
+- `sympy/combinatorics/permutations.py` line 2831: Module-level `_af_new` reference to `Perm._af_new`  
+- `sympy/combinatorics/permutations.py` lines 860, 862, 870, 872: Calls to `_af_new` in `__new__` that should use `cls`
+- `sympy/combinatorics/permutations.py` lines 1229, 1238, 1303, 1344, 1439, 1522, 1632, 1664, 2128, 2426, 2480, 2737, 2756, 2790: All methods that return `_af_new(...)` without class context
+
+## Root cause
+
+The `Permutation` class uses a static method `_af_new` (line 927) for internal instance creation. This method is hard-coded to create `Permutation` instances by calling `Basic.__new__(Perm, perm)` at line 947, where `Perm` is an alias for `Permutation` defined at line 2830. This breaks subclassing because operations like `__mul__`, `__pow__`, `__invert__`, etc. all call `_af_new` (via the module-level reference at line 2831) and always return `Permutation` instances rather than preserving the actual class type.
+
+When `p * q` is executed where `p` is a `CustomPermutation`:
+1. Python calls `p.__mul__(q)` 
+2. `CustomPermutation` inherits `__mul__` from `Permutation`
+3. `Permutation.__mul__` computes the result and returns `_af_new(perm)` at line 1303
+4. `_af_new` references `Perm._af_new` which creates `Basic.__new__(Perm, perm)`
+5. This returns a `Permutation`, not a `CustomPermutation`
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `permutations.py:927` — `@staticmethod` decorator (no class parameter available)
+- `permutations.py:947` — `p = Basic.__new__(Perm, perm)` hard-codes `Perm`
+- `permutations.py:1303` — `return _af_new(perm)` in `__mul__` has no class context
+- `permutations.py:2831` — `_af_new = Perm._af_new` creates module-level reference
+
+## Edit sites
+
+**Primary fix** - Make `_af_new` a classmethod that preserves the class:
+- `sympy/combinatorics/permutations.py` lines 927-950: Change `@staticmethod` to `@classmethod`, rename first parameter from `perm` to `cls`, add `perm` as second parameter, change line 947 from `Basic.__new__(Perm, perm)` to `Basic.__new__(cls, perm)`
+
+**In `__new__` method** - Use `cls._af_new` instead of module-level `_af_new`:
+- `sympy/combinatorics/permutations.py` lines 860, 862, 870, 872: Replace `_af_new(...)` with `cls._af_new(...)`
+
+**In instance methods** - Use `self.__class__._af_new` to preserve subclass type:
+- `sympy/combinatorics/permutations.py` line 1238 (`mul_inv`): Replace `_af_new(...)` with `self.__class__._af_new(...)`
+- `sympy/combinatorics/permutations.py` line 1303 (`__mul__`): Replace `_af_new(perm)` with `self.__class__._af_new(perm)`
+- `sympy/combinatorics/permutations.py` line 1344 (`__pow__`): Replace `_af_new(...)` with `self.__class__._af_new(...)`
+- `sympy/combinatorics/permutations.py` line 1439 (`__xor__`): Replace `_af_new(a)` with `self.__class__._af_new(a)`
+- `sympy/combinatorics/permutations.py` line 1522 (`__invert__`): Replace `_af_new(...)` with `self.__class__._af_new(...)`
+- `sympy/combinatorics/permutations.py` line 1632 (`next_lex`): Replace `_af_new(perm)` with `self.__class__._af_new(perm)`
+- `sympy/combinatorics/permutations.py` line 2128 (`commutator`): Replace `_af_new(...)` with `self.__class__._af_new(...)`
+- `sympy/combinatorics/permutations.py` line 2480 (`next_trotterjohnson`): Replace `_af_new(pi)` with `self.__class__._af_new(pi)`
+
+**In classmethods** - Use `cls._af_new` (note: these methods incorrectly use `self` as first param instead of `cls`, but that's a separate bug):
+- `sympy/combinatorics/permutations.py` line 1664 (`unrank_nonlex`): Replace `_af_new(id_perm)` with `self._af_new(id_perm)` (or `cls._af_new` if first param is fixed to `cls`)
+- `sympy/combinatorics/permutations.py` line 2426 (`unrank_trotterjohnson`): Replace `_af_new(perm)` with `self._af_new(perm)`
+- `sympy/combinatorics/permutations.py` line 2737 (`from_inversion_vector`): Replace `_af_new(perm)` with `self._af_new(perm)`
+- `sympy/combinatorics/permutations.py` line 2756 (`random`): Replace `_af_new(perm_array)` with `self._af_new(perm_array)`
+- `sympy/combinatorics/permutations.py` line 2790 (`unrank_lex`): Replace `_af_new(perm_array)` with `self._af_new(perm_array)`
+
+**In static methods** - These should likely remain using module-level `Perm` or be converted to classmethods:
+- `sympy/combinatorics/permutations.py` line 1229 (`rmul_with_af`): May need to convert to classmethod or keep as-is (returns base `Permutation` since it's a static method with no class context)
+
+**Module-level reference** - Can be removed or kept for backward compatibility:
+- `sympy/combinatorics/permutations.py` line 2831: The `_af_new = Perm._af_new` line can remain for backward compatibility with external code that may reference it
+
+## Rejected hypotheses
+
+None - the diagnosis is clear from reading the code path.
+
+## Open questions
+
+1. Should `rmul_with_af` (static method at line 1222) be converted to a classmethod, or should it continue returning base `Permutation` instances? It has no instance or class context currently.
+2. The classmethods (`unrank_nonlex`, `unrank_trotterjohnson`, `from_inversion_vector`, `random`, `unrank_lex`) all incorrectly use `self` as the first parameter instead of `cls` - should this be fixed as part of this change?
+
+---STDERR---

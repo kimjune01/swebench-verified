@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-12489
+
+## FAIL_TO_PASS
+- test_Permutation_subclassing: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The craft patch successfully resolves the subclassing issue by converting `_af_new` from a static method to a class method and updating all call sites to use `cls._af_new()` or `self.__class__._af_new()`. This ensures subclass instances are returned instead of base Permutation instances. All FAIL_TO_PASS tests now pass with zero PASS_TO_PASS regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
