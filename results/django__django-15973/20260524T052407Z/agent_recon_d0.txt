@@ -1,0 +1,53 @@
+# Recon: django__django-15973
+
+## Failure summary
+The test `test_create_with_through_model_separate_apps` creates a many-to-many relationship where the through model is in a different app than the model defining the M2M field. It expects the autodetector to generate 2 migrations for the authors app: (1) CreateModel for Author without the M2M field, and (2) AddField to add the M2M field after the through model's migration exists. However, the autodetector generates only 1 migration with the M2M field included directly in CreateModel, failing the assertion `assertNumberMigrations(changes, "authors", 2)`.
+
+## Suspect set
+- `django/db/migrations/autodetector.py` lines 1398-1431: `_get_dependencies_for_foreign_key` method - calculates dependencies for related fields including M2M with through models
+- `django/db/migrations/autodetector.py` lines 583-750: `generate_created_models` method - splits related fields into AddField operations
+- `django/db/migrations/autodetector.py` lines 266-370: `_build_migration_list` method - splits operations into separate migrations based on cross-app dependencies
+
+## Root cause
+Line 1426 in `_get_dependencies_for_foreign_key` uses the wrong model reference when calculating the through model dependency. It passes `remote_field_model` (the M2M target model) to `resolve_relation` instead of `field.remote_field.through` (the actual through model).
+
+**Bug**: When the M2M field `publishers` on Author (authors app) points to Publisher (testapp app) through Contract (contract app), the dependency calculation resolves to ("testapp", "publisher") instead of ("contract", "contract"). This causes the AddField operation to have an incorrect dependency, which prevents `_build_migration_list` from detecting that the AddField must be in a separate migration due to the cross-app dependency on the contract app.
+
+Confidence: **abduction** — 90%
+
+Supporting evidence:
+- Line 244 (`_generate_through_model_map`) correctly uses `field.remote_field.through` when resolving through model references
+- Test expects AddField to depend on all three apps (authors, contract, testapp) with migration at index 1 depending on {("authors", "auto_1"), ("contract", "auto_1"), ("testapp", "auto_1")}
+- With correct dependency, `_build_migration_list` would split operations; without it, optimizer merges AddField back into CreateModel
+
+## Edit sites
+- `django/db/migrations/autodetector.py` line 1426: Change `remote_field_model` to `field.remote_field.through` as the first argument to `resolve_relation`
+
+The fix is a one-line change:
+```python
+# Line 1424-1429: Current (buggy)
+if getattr(field.remote_field, "through", None):
+    through_app_label, through_object_name = resolve_relation(
+        remote_field_model,  # WRONG - target model instead of through model
+        app_label,
+        model_name,
+    )
+
+# Should be:
+if getattr(field.remote_field, "through", None):
+    through_app_label, through_object_name = resolve_relation(
+        field.remote_field.through,  # CORRECT - the through model
+        app_label,
+        model_name,
+    )
+```
+
+## Rejected hypotheses
+- H₀: M2M fields with through models not added to `related_fields` — killed by reading lines 614-615 which explicitly add them
+- Fields in different apps handled differently in `generate_created_models` — killed by code inspection showing no app-based filtering of related_fields
+- Optimizer has special logic for through models — killed by reading optimizer which only checks operation types and in-between operations, not field attributes
+
+## Open questions
+None - root cause is clear and fix is straightforward.
+
+---STDERR---

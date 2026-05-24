@@ -1,0 +1,25 @@
+# Audit: django__django-15973
+
+## FAIL_TO_PASS
+- `test_create_with_through_model_separate_apps (migrations.test_autodetector.AutodetectorTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 165 tests in the full suite passed.
+
+## Pre-existing failures (not counted)
+None confirmed against base capture.
+
+## Gate results
+- Full suite: 165 tests ran in 0.066s, all passed
+- Targeted FAIL_TO_PASS test: Verified passing in isolated run
+
+## Contract verification
+✅ All FAIL_TO_PASS tests pass (1/1)
+✅ Zero PASS_TO_PASS regressions
+
+The one-line fix in `django/db/migrations/autodetector.py` correctly resolved the through model dependency calculation bug. The autodetector now properly uses `field.remote_field.through` instead of `remote_field_model`, allowing it to generate correct cross-app dependencies and split ManyToManyField operations into separate migrations when the through model resides in a different app.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

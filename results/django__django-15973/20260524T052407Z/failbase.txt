@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 migrations.test_autodetector
+
+The autodetector correctly deals with proxy models. ... ok
+test_proxy_bases_first (migrations.test_autodetector.AutodetectorTests)
+Bases of proxies come first. ... ok
+test_proxy_custom_pk (migrations.test_autodetector.AutodetectorTests)
+#23415 - The autodetector must correctly deal with custom FK on proxy ... ok
+test_proxy_fk_dependency (migrations.test_autodetector.AutodetectorTests)
+FK dependencies still work on proxy models. ... ok
+test_proxy_non_model_parent (migrations.test_autodetector.AutodetectorTests) ... ok
+test_proxy_to_mti_with_fk_to_proxy (migrations.test_autodetector.AutodetectorTests) ... ok
+test_proxy_to_mti_with_fk_to_proxy_proxy (migrations.test_autodetector.AutodetectorTests) ... ok
+test_remove_alter_order_with_respect_to (migrations.test_autodetector.AutodetectorTests)
+Removing order_with_respect_to when removing the FK too does ... ok
+test_remove_constraints (migrations.test_autodetector.AutodetectorTests)
+Test change detection of removed constraints. ... ok
+test_remove_field (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of removed fields. ... ok
+test_remove_field_and_unique_together (migrations.test_autodetector.AutodetectorTests)
+Removed fields will be removed after updating unique_together. ... ok
+test_remove_indexes (migrations.test_autodetector.AutodetectorTests)
+Test change detection of removed indexes. ... ok
+test_remove_unique_together (migrations.test_autodetector.AutodetectorTests)
+Tests unique_together detection. ... ok
+test_rename_field (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed fields. ... ok
+test_rename_field_and_unique_together (migrations.test_autodetector.AutodetectorTests)
+Fields are renamed before updating unique_together. ... ok
+test_rename_field_foreign_key_to_field (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_field_preserved_db_column (migrations.test_autodetector.AutodetectorTests)
+RenameField is used if a field is renamed and db_column equal to the ... ok
+test_rename_field_with_renamed_model (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_foreign_object_fields (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_indexes (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_m2m_through_model (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models that are used in M2M relations as ... ok
+test_rename_model (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models. ... ok
+test_rename_model_case (migrations.test_autodetector.AutodetectorTests)
+Model name is case-insensitive. Changing case doesn't lead to any ... ok
+test_rename_model_reverse_relation_dependencies (migrations.test_autodetector.AutodetectorTests)
+The migration to rename a model pointed to by a foreign key in another ... ok
+test_rename_model_with_fks_in_different_position (migrations.test_autodetector.AutodetectorTests)
+#24537 - The order of fields in a model does not influence ... ok
+test_rename_model_with_renamed_rel_field (migrations.test_autodetector.AutodetectorTests)
+Tests autodetection of renamed models while simultaneously renaming one ... ok
+test_rename_referenced_primary_key (migrations.test_autodetector.AutodetectorTests) ... ok
+test_rename_related_field_preserved_db_column (migrations.test_autodetector.AutodetectorTests) ... ok
+test_renamed_referenced_m2m_model_case (migrations.test_autodetector.AutodetectorTests) ... ok
+test_replace_string_with_foreignkey (migrations.test_autodetector.AutodetectorTests)
+#22300 - Adding an FK in the same "spot" as a deleted CharField should ... ok
+test_same_app_circular_fk_dependency (migrations.test_autodetector.AutodetectorTests)
+A migration with a FK between two models of the same app does ... ok
+test_same_app_circular_fk_dependency_with_unique_together_and_indexes (migrations.test_autodetector.AutodetectorTests)
+#22275 - A migration with circular FK dependency does not try ... ok
+test_same_app_no_fk_dependency (migrations.test_autodetector.AutodetectorTests)
+A migration with a FK between two models of the same app ... ok
+test_set_alter_order_with_respect_to (migrations.test_autodetector.AutodetectorTests)
+Setting order_with_respect_to adds a field. ... ok
+test_set_alter_order_with_respect_to_index_constraint_unique_together (migrations.test_autodetector.AutodetectorTests) ... ok
+test_supports_functools_partial (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_changed (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_circular_multi_mti (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_first_inheritance (migrations.test_autodetector.AutodetectorTests)
+Swappable models get their CreateModel first. ... ok
+test_swappable_first_setting (migrations.test_autodetector.AutodetectorTests)
+Swappable models get their CreateModel first. ... ok
+test_swappable_lowercase (migrations.test_autodetector.AutodetectorTests) ... ok
+test_swappable_many_to_many_model_case (migrations.test_autodetector.AutodetectorTests) ... ok
+test_trim_apps (migrations.test_autodetector.AutodetectorTests)
+Trim does not remove dependencies but does remove unwanted apps. ... ok
+test_unique_together_no_changes (migrations.test_autodetector.AutodetectorTests)
+unique_together doesn't generate a migration if no ... ok
+test_unique_together_ordering (migrations.test_autodetector.AutodetectorTests)
+unique_together also triggers on ordering changes. ... ok
+test_unique_together_remove_fk (migrations.test_autodetector.AutodetectorTests)
+Tests unique_together and field removal detection & ordering ... ok
+test_unmanaged_create (migrations.test_autodetector.AutodetectorTests)
+The autodetector correctly deals with managed models. ... ok
+test_unmanaged_custom_pk (migrations.test_autodetector.AutodetectorTests)
+#23415 - The autodetector must correctly deal with custom FK on ... ok
+test_unmanaged_delete (migrations.test_autodetector.AutodetectorTests) ... ok
+test_unmanaged_to_managed (migrations.test_autodetector.AutodetectorTests) ... ok
+test_auto (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_many_operations_suffix (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_no_operations (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_no_operations_initial (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_none_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_none_name_with_initial_true (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_operation_with_no_suggested_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_single_operation (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_single_operation_long_name (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_create_models (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_create_models_with_initial_true (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+test_two_operations (migrations.test_autodetector.MigrationSuggestNameTests) ... ok
+
+======================================================================
+FAIL: test_create_with_through_model_separate_apps (migrations.test_autodetector.AutodetectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/migrations/test_autodetector.py", line 3616, in test_create_with_through_model_separate_apps
+    self.assertNumberMigrations(changes, "authors", 2)
+  File "/testbed/tests/migrations/test_autodetector.py", line 55, in assertNumberMigrations
+    self.fail(
+AssertionError: Incorrect number of migrations (1) for authors (expected 2)
+  authors:
+    auto_1
+      <CreateModel 'Author' fields=[('id', <django.db.models.fields.AutoField: id>), ('publishers', <django.db.models.fields.related.ManyToManyField: publishers>)], options={}, bases=(<class 'django.db.models.base.Model'>,), managers=[]>
+  contract:
+    auto_1
+      <CreateModel 'Contract' fields=[('id', <django.db.models.fields.AutoField: id>), ('author', <django.db.models.fields.related.ForeignKey: author>), ('publisher', <django.db.models.fields.related.ForeignKey: publisher>)], options={}, bases=(<class 'django.db.models.base.Model'>,), managers=[]>
+  testapp:
+    auto_1
+      <CreateModel  name='Publisher', fields=[('id', <django.db.models.fields.AutoField: id>), ('name', <django.db.models.fields.CharField: name>)], options={}, bases=(<class 'django.db.models.base.Model'>,), managers=[]>
+
+
+----------------------------------------------------------------------
+Ran 165 tests in 0.077s
+
+FAILED (failures=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
