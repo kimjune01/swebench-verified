@@ -1,0 +1,28 @@
+# Recon: pydata__xarray-3151
+
+## Failure summary
+The test `test_combine_leaving_bystander_dimensions` creates two datasets with identical non-monotonic y coordinates ['a', 'c', 'b'] and varying x coordinates. It expects `combine_by_coords` to concatenate along x (which varies) while leaving y as a bystander dimension. The test fails with `ValueError: Resulting object does not have monotonic global indexes along dimension y` raised at xarray/core/combine.py:509.
+
+## Suspect set
+- `xarray/core/combine.py` lines 503-509: Monotonicity check loop that validates all dimensions instead of only concatenated dimensions
+
+## Root cause
+The monotonicity check at lines 503-509 in `combine_by_coords` incorrectly validates ALL dimensions in the combined dataset, including bystander dimensions (dimensions with identical coordinates across all input datasets). According to the function's documentation (line 405-406), "coordinate dimensions which do not vary between each dataset" should be ignored. The `_infer_concat_order_from_coords` function correctly identifies varying dimensions and stores them in `concat_dims`, but the subsequent monotonicity check iterates over `concatenated.dims` instead of `concat_dims`.
+
+Confidence: deduction — 95%
+
+Supporting evidence:
+- `xarray/core/combine.py:69-72` — Bystander dimensions (identical coords) are NOT added to concat_dims: `if not all(index.equals(indexes[0]) for index in indexes[1:]): concat_dims.append(dim)`
+- `xarray/core/combine.py:503` — Bug site: `for dim in concatenated.dims:` should be `for dim in concat_dims:`
+- `xarray/core/combine.py:405-406` — Documentation states bystander dimensions should be ignored
+
+## Edit sites
+- `xarray/core/combine.py` line 503: Change loop from `for dim in concatenated.dims:` to `for dim in concat_dims:` to restrict monotonicity validation to only dimensions that were actually concatenated, excluding bystander dimensions with identical coordinates
+
+## Rejected hypotheses
+None — initial diagnosis; no competing explanations were considered
+
+## Open questions
+None — the fix is straightforward and localized to a single line change
+
+---STDERR---

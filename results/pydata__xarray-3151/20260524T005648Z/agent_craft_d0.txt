@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete. Changed line 503 in `xarray/core/combine.py` from `for dim in concatenated.dims:` to `for dim in concat_dims:` to restrict monotonicity validation to only dimensions that were actually concatenated, excluding bystander dimensions with identical coordinates.
+
+The FAIL_TO_PASS test `test_combine_leaving_bystander_dimensions` now passes, and all 67 tests in the test suite pass with no regressions.
+
+---STDERR---
