@@ -1,0 +1,18 @@
+# Audit: django__django-15930
+
+## FAIL_TO_PASS
+- `test_annotate_with_full_when (expressions_case.tests.CaseExpressionTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None. All 89 tests passed cleanly.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None. The only failure on base was `test_annotate_with_full_when` (ERROR), which is the FAIL_TO_PASS test that now passes.
+
+## Verification summary
+The gate ran all 89 tests in the expressions_case.tests suite. All passed without any failures or regressions. The patch adds 4 lines to `django/db/models/expressions.py` that handle empty condition SQL by replacing it with `"1=1"`, preventing invalid `WHEN THEN ...` SQL from being generated when using constructs like `When(~Q(pk__in=[]), then=...)`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

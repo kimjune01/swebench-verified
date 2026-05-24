@@ -1,0 +1,70 @@
+Now I'll output my diagnosis:
+
+```markdown
+# Recon: django__django-15930
+
+## Failure summary
+
+The test `test_annotate_with_full_when` creates a Case expression with `When(~Q(pk__in=[]), then=Value("selected"))`. The negated Q object `~Q(pk__in=[])` should match all rows (since "NOT(pk in empty list)" is always true). However, the queryset evaluation fails with `sqlite3.OperationalError: near "THEN": syntax error` because the generated SQL is `CASE WHEN THEN ...` with no condition between WHEN and THEN.
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 1296-1307: `When.as_sql` method - doesn't handle empty condition SQL
+- `django/db/models/sql/where.py` lines 86-142: `WhereNode.as_sql` - returns empty string for "matches everything"  
+- `django/db/models/lookups.py` lines 439-442: `In.process_rhs` - raises EmptyResultSet for empty list
+
+## Root cause
+
+When `~Q(pk__in=[])` compiles to SQL, it produces an empty string `""` which means "matches everything" (always true). The `When.as_sql` method doesn't handle this case and directly substitutes the empty string into the template `"WHEN %(condition)s THEN %(result)s"`, resulting in invalid SQL.
+
+**Call path:**
+1. `When(~Q(pk__in=[]), then=...)` is created with a negated Q object
+2. During resolution, `Q.resolve_expression` calls `query._add_q`
+3. `_add_q` creates a negated WhereNode and calls `build_filter` on child `('pk__in', [])`
+4. `In.process_rhs` raises `EmptyResultSet` for the empty list
+5. `WhereNode.as_sql` catches the exception and returns `"", []` (per line 125: when `empty_needed == 0` and `self.negated == True`)
+6. `When.as_sql` at line 1300 compiles the condition and gets empty string
+7. Template substitution produces invalid SQL: `"WHEN THEN ..."`
+
+Confidence: **deduction** — 95%
+
+**Supporting evidence:**
+- `django/db/models/lookups.py:439-442` — `if not rhs: raise EmptyResultSet`
+- `django/db/models/sql/where.py:86-88` — docstring says `Return '', [] if this node matches everything`
+- `django/db/models/sql/where.py:125-128` — returns `"", []` when negated node has no matching children
+- `django/db/models/expressions.py:1300` — `condition_sql, condition_params = compiler.compile(self.condition)` used without empty check
+
+## Edit sites
+
+- `django/db/models/expressions.py` lines 1296-1307: In `When.as_sql`, after compiling the condition (line 1300), check if `condition_sql` is empty. If empty (meaning "always true"), replace it with an appropriate always-true SQL expression.
+
+Pattern to follow exists in `Exists.as_sql` at lines 1494-1500:
+```python
+if not features.supports_boolean_expr_in_select_clause:
+    return "1=1", ()
+return compiler.compile(Value(True))
+```
+
+The fix should add similar logic after line 1300:
+```python
+condition_sql, condition_params = compiler.compile(self.condition)
+if not condition_sql:
+    # Empty condition means "matches everything" (always true)
+    features = connection.features
+    if not features.supports_boolean_expr_in_select_clause:
+        condition_sql = "1=1"
+        condition_params = ()
+    else:
+        condition_sql, condition_params = compiler.compile(Value(True))
+```
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and matches the error message.
+
+## Open questions
+
+None - the fix location and approach are confirmed by the existing `Exists.as_sql` pattern.
+```
+
+---STDERR---

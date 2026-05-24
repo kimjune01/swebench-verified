@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully handles the empty condition case in `When.as_sql`. When `~Q(pk__in=[])` compiles to an empty string (meaning "matches everything"), the fix replaces it with the SQL literal `1=1`, producing valid `WHEN 1=1 THEN ...` syntax. All 89 tests pass, including the previously failing `test_annotate_with_full_when`.
+
+---STDERR---
