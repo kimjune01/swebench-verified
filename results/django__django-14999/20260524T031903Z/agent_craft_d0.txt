@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Added an early return in `RenameModel.database_forwards` that skips all database operations when the table name hasn't actually changed (`old_model._meta.db_table == new_model._meta.db_table`). Gate confirms the FAIL_TO_PASS test now passes with 0 queries as expected.
+
+---STDERR---

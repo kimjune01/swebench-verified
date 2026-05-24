@@ -1,0 +1,22 @@
+# Audit: django__django-14999
+
+## FAIL_TO_PASS
+- test_rename_model_with_db_table_noop: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None - all 120 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None - base capture showed all tests passing (1 skipped for DB feature support).
+
+## Kill report
+Not applicable - patch is RESOLVED.
+
+**Gate summary**: Ran 120 tests in 0.793s - OK (skipped=1)
+
+The craft patch successfully resolved the issue. The FAIL_TO_PASS test now passes (0 queries executed as expected), and no PASS_TO_PASS tests regressed. The early return when `old_model._meta.db_table == new_model._meta.db_table` correctly prevents unnecessary database operations while preserving all existing functionality.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

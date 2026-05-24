@@ -1,0 +1,41 @@
+# Recon: django__django-14999
+
+## Failure summary
+
+The test `test_rename_model_with_db_table_noop` creates a model "Rider" with `db_table='rider'` and a model "Pony" with a ForeignKey to Rider. When renaming "Rider" to "Runner" via `RenameModel`, the test expects 0 database queries (a noop) since the db_table option is set and won't change. However, the operation executes 5 queries that recreate the Pony table in SQLite, failing the assertion "5 != 0 : 5 queries executed, 0 expected".
+
+## Suspect set
+
+- `django/db/migrations/operations/models.py` lines 318-362: `RenameModel.database_forwards` method - proceeds with database operations without checking if db_table actually changed
+- `django/db/migrations/operations/models.py` lines 364-371: `RenameModel.database_backwards` method - same issue in reverse direction
+
+## Root cause
+
+The `RenameModel.database_forwards` method unconditionally executes database operations even when the actual table name hasn't changed. When a model has `db_table` set in Meta options, renaming the model class preserves this option (the state's `rename_model` method clones the model and only changes the name). This means `old_model._meta.db_table == new_model._meta.db_table`.
+
+While the `alter_db_table()` call correctly returns early when old and new table names match (base/schema.py:470-472), the subsequent code (lines 328-346) unconditionally loops through related_objects and calls `alter_field()` on all foreign keys pointing to the renamed model. This triggers unnecessary table recreation in SQLite because the ForeignKey's deconstructed representation changes (model reference changes from 'Rider' to 'Runner'), causing `_field_should_be_altered` to return True even though no database schema actually changed.
+
+**Confidence: Deduction - 95%**
+
+**Supporting evidence:**
+- `django/db/migrations/operations/models.py:323-327` - calls `alter_db_table()` without checking result
+- `django/db/migrations/operations/models.py:328-346` - unconditionally alters related fields
+- `django/db/migrations/state.py:137` - `renamed_model.clone()` preserves all options including db_table
+- `django/db/backends/base/schema.py:470-472` - `alter_db_table` returns early if `old_db_table == new_db_table`
+- Experimental verification confirms: after rename, `old_model._meta.db_table == new_model._meta.db_table == 'rider'`
+
+## Edit sites
+
+- `django/db/migrations/operations/models.py` lines 318-320: Add early return at the start of `database_forwards` method. Check if `old_model._meta.db_table == new_model._meta.db_table` and return immediately if true, skipping all database operations.
+
+- `django/db/migrations/operations/models.py` lines 364-366: Add the same early return check at the start of `database_backwards` method.
+
+## Rejected hypotheses
+
+None - this is the initial diagnosis.
+
+## Open questions
+
+None - the root cause is clear and the fix is straightforward.
+
+---STDERR---
