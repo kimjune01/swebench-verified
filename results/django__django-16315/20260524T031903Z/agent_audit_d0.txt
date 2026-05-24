@@ -1,0 +1,23 @@
+# Audit: django__django-16315
+
+## FAIL_TO_PASS
+- `test_update_conflicts_unique_fields_update_fields_db_column`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 50 PASS_TO_PASS tests passed
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - no failures detected in either baseline or patched run
+
+## Summary
+The craft patch successfully resolves the issue. The fix converts field name strings to Field objects in `query.py` (lines after 797), then extracts `field.column` values in `compiler.py` (lines 1728-1729) before passing to backend operations. This ensures ON CONFLICT clauses use database column names instead of Python field names.
+
+**Gate result:** 51/51 tests passed (7 skipped)
+- Target test `test_update_conflicts_unique_fields_update_fields_db_column` now passes
+- Zero regressions in PASS_TO_PASS suite
+- No pre-existing failures
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

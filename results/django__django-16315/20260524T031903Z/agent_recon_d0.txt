@@ -1,0 +1,62 @@
+# Recon: django__django-16315
+
+## Failure summary
+The test `test_update_conflicts_unique_fields_update_fields_db_column` checks that `bulk_create()` with `update_conflicts=True` correctly handles models where fields have custom `db_column` values. The model `FieldsWithDbColumns` has `rank` (db_column="rAnK") and `name` (db_column="oTheRNaMe") with mixed case. The test fails with `sqlite3.OperationalError: no such column: EXCLUDED.name` because the ON CONFLICT clause uses the Python field name "name" instead of the database column name "oTheRNaMe".
+
+## Suspect set
+- `django/db/backends/postgresql/operations.py` lines 352-366: PostgreSQL's `on_conflict_suffix_sql()` implementation
+- `django/db/backends/sqlite3/operations.py` lines 415-429: SQLite's `on_conflict_suffix_sql()` implementation  
+- `django/db/backends/mysql/operations.py` lines 436-458: MySQL's `on_conflict_suffix_sql()` implementation
+
+## Root cause
+When `bulk_create()` is called with `update_conflicts=True`, the field names from `unique_fields` and `update_fields` parameters flow through the query chain unchanged. At compiler.py:1725, these field names are passed to the backend's `on_conflict_suffix_sql()` method. All three backend implementations (PostgreSQL, SQLite, MySQL) directly quote these field names without converting them to database column names.
+
+**PostgreSQL/SQLite code (nearly identical)**:
+```python
+return "ON CONFLICT(%s) DO UPDATE SET %s" % (
+    ", ".join(map(self.quote_name, unique_fields)),  # quotes field names
+    ", ".join([
+        f"{field} = EXCLUDED.{field}"
+        for field in map(self.quote_name, update_fields)  # quotes field names
+    ]),
+)
+```
+
+This generates `ON CONFLICT("rank") DO UPDATE SET "name" = EXCLUDED."name"` but should generate `ON CONFLICT("rAnK") DO UPDATE SET "oTheRNaMe" = EXCLUDED."oTheRNaMe"`.
+
+The `fields` parameter passed to `on_conflict_suffix_sql()` contains Field objects with both `.name` (Python name) and `.column` (database column name from `db_column` attribute or defaults to `.name`). The method should create a mapping `{field.name: field.column for field in fields}` and use it to convert field names to column names before quoting.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/models/fields/__init__.py:896` — `column = self.db_column or attname` sets the column attribute
+- `django/db/models/sql/compiler.py:1699` — INSERT clause correctly uses `f.column`: `", ".join(qn(f.column) for f in fields)`
+- `django/db/models/sql/compiler.py:1725` — calls `on_conflict_suffix_sql(fields, ..., update_fields, unique_fields)` where `update_fields` and `unique_fields` are field name strings
+- `django/db/backends/postgresql/operations.py:357-362` — directly quotes field names without column lookup
+- `django/db/backends/sqlite3/operations.py:421-426` — same pattern as PostgreSQL
+- `django/db/backends/mysql/operations.py:452-456` — same pattern, different SQL syntax
+
+## Edit sites
+All three backends need the same fix pattern:
+
+1. **django/db/backends/postgresql/operations.py** lines 356-362:
+   - Before line 356, create mapping: `field_map = {f.name: f.column for f in fields}`
+   - Replace `unique_fields` with column names: `[field_map.get(f, f) for f in unique_fields]`
+   - Replace `update_fields` with column names: `[field_map.get(f, f) for f in update_fields]`
+   - Then quote the column names
+
+2. **django/db/backends/sqlite3/operations.py** lines 420-426:
+   - Same changes as PostgreSQL (code is nearly identical)
+
+3. **django/db/backends/mysql/operations.py** lines 452-456:
+   - Before line 452, create mapping: `field_map = {f.name: f.column for f in fields}`
+   - Replace `update_fields` with column names in the list comprehension
+   - Note: MySQL ON DUPLICATE KEY UPDATE doesn't need unique_fields parameter
+
+## Rejected hypotheses
+None - this is the initial diagnosis.
+
+## Open questions
+None - the root cause is clear and the fix is straightforward.
+
+---STDERR---

@@ -1,0 +1,10 @@
+**RESOLVED**
+
+All tests pass! The fix required two coordinated changes:
+
+1. **django/db/models/query.py** (bulk_create, after line 797): Convert field name strings to Field objects using `opts.get_field()`
+2. **django/db/models/sql/compiler.py** (lines 1728-1729): Extract column names from Field objects using `f.column`
+
+The failing test `test_update_conflicts_unique_fields_update_fields_db_column` now passes along with all other tests (51 total, 7 skipped as expected).
+
+---STDERR---

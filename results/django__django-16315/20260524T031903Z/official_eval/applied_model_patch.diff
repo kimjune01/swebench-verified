@@ -1,0 +1,31 @@
+diff --git a/django/db/models/query.py b/django/db/models/query.py
+index be8580f2c4..56d6d49bbe 100644
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -795,6 +795,11 @@ class QuerySet(AltersData):
+             unique_fields,
+         )
+         self._for_write = True
++        # Convert field name strings to Field objects for conflict handling
++        if update_fields:
++            update_fields = [opts.get_field(name) for name in update_fields]
++        if unique_fields:
++            unique_fields = [opts.get_field(name) for name in unique_fields]
+         fields = opts.concrete_fields
+         objs = list(objs)
+         self._prepare_for_bulk_create(objs)
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index 0562a71dd1..8cd9b4a19c 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -1725,8 +1725,8 @@ class SQLInsertCompiler(SQLCompiler):
+         on_conflict_suffix_sql = self.connection.ops.on_conflict_suffix_sql(
+             fields,
+             self.query.on_conflict,
+-            self.query.update_fields,
+-            self.query.unique_fields,
++            [f.column for f in self.query.update_fields or ()],
++            [f.column for f in self.query.unique_fields or ()],
+         )
+         if (
+             self.returning_fields
