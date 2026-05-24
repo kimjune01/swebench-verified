@@ -1,0 +1,33 @@
+# Audit: django__django-13346
+
+## FAIL_TO_PASS
+
+- `test_key_in (model_fields.test_jsonfield.TestQuerying)`: **PASS** ✅
+- `test_key_iregex (model_fields.test_jsonfield.TestQuerying)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+
+**None** - All 75 tests passed (8 skipped)
+
+## Pre-existing (not counted, confirmed against base capture)
+
+**None** - The baseline showed 9 failures on the unpatched repo, all resolved by the patch
+
+## Gate summary
+
+```
+Ran 75 tests in 0.066s
+OK (skipped=8)
+```
+
+**Full contract satisfied**:
+- ✅ All FAIL_TO_PASS tests now pass
+- ✅ Zero PASS_TO_PASS regressions  
+- ✅ No new failures introduced
+
+The craft patch successfully implemented `KeyTransformIn` lookup class with database-specific JSON extraction for MySQL, Oracle, and SQLite, resolving both target tests without introducing any regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

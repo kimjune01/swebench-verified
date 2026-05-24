@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully implements `KeyTransformIn` lookup for JSON key transforms. Both FAIL_TO_PASS tests now pass:
+- ✅ `test_key_in` - JSON key `__in` lookup works for integers, strings, arrays, and objects
+- ✅ `test_key_iregex` - Already passing
+
+The implementation overrides `resolve_expression_parameter()` to wrap RHS values with database-specific JSON extraction functions on MySQL, Oracle, and SQLite, matching the pattern used by `KeyTransformExact` but properly handling multiple values through the `In` lookup's batch processing.
+
+---STDERR---

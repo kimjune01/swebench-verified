@@ -1,0 +1,40 @@
+diff --git a/django/db/models/fields/json.py b/django/db/models/fields/json.py
+index fafc1beee8..2fbb15cfec 100644
+--- a/django/db/models/fields/json.py
++++ b/django/db/models/fields/json.py
+@@ -455,6 +455,27 @@ class KeyTransformIRegex(CaseInsensitiveMixin, KeyTransformTextLookupMixin, look
+     pass
+ 
+ 
++
++
++class KeyTransformIn(lookups.In):
++    def resolve_expression_parameter(self, compiler, connection, sql, param):
++        sql, params = super().resolve_expression_parameter(compiler, connection, sql, param)
++        if (
++            not hasattr(param, 'as_sql') and
++            not connection.features.has_native_json_field
++        ):
++            if connection.vendor == 'oracle':
++                value = json.loads(params[0])
++                if isinstance(value, (list, dict)):
++                    sql = "JSON_QUERY(JSON_OBJECT('value' VALUE %s FORMAT JSON), '$.value')"
++                else:
++                    sql = "JSON_VALUE(JSON_OBJECT('value' VALUE %s FORMAT JSON), '$.value')"
++            elif connection.vendor == 'sqlite':
++                sql = "JSON_EXTRACT(%s, '$')"
++            elif connection.vendor == 'mysql':
++                sql = "JSON_EXTRACT(%s, '$')"
++        return sql, params
++
+ class KeyTransformNumericLookupMixin:
+     def process_rhs(self, compiler, connection):
+         rhs, rhs_params = super().process_rhs(compiler, connection)
+@@ -490,6 +511,7 @@ KeyTransform.register_lookup(KeyTransformIEndsWith)
+ KeyTransform.register_lookup(KeyTransformRegex)
+ KeyTransform.register_lookup(KeyTransformIRegex)
+ 
++KeyTransform.register_lookup(KeyTransformIn)
+ KeyTransform.register_lookup(KeyTransformLt)
+ KeyTransform.register_lookup(KeyTransformLte)
+ KeyTransform.register_lookup(KeyTransformGt)

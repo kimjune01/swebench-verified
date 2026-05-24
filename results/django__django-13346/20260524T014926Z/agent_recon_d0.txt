@@ -1,0 +1,54 @@
+# Recon: django__django-13346
+
+## Failure summary
+
+The `test_key_in` test checks that the `__in` lookup works on JSON key transforms for various value types (integers, strings, arrays, objects). All 9 subtests fail on SQLite (and the issue states this also affects MySQL and Oracle). The queries return empty QuerySets when they should return matching objects. For example, `NullableJSONModel.objects.filter(value__foo__in=['bar'])` returns 0 results when it should return 1 object where `value['foo'] == 'bar'`.
+
+Error: `AssertionError: Sequences differ: <QuerySet []> != [<NullableJSONModel: ...]`
+
+## Suspect set
+
+- `django/db/models/fields/json.py` lines 359-505: JSONField and KeyTransform lookup implementations
+- `django/db/models/fields/json.py` lines 482-496: KeyTransform lookup registrations
+
+## Root cause
+
+The `__in` lookup on JSON key transforms fails because there is no `KeyTransformIn` lookup class registered on `KeyTransform`. When `value__foo__in=['bar']` is used, Django creates a `KeyTransform` for `value__foo` and then applies the default `In` lookup from `django.db.models.lookups`. This default `In` lookup doesn't have the database-specific RHS value processing needed for MySQL, Oracle, and SQLite.
+
+On these databases, JSON values extracted from key transforms need to be compared against RHS values that are also wrapped in JSON extraction functions:
+- **MySQL**: Requires `JSON_EXTRACT(%s, '$')` wrapping (see `JSONExact.process_rhs` line 250-252)
+- **Oracle**: Requires `JSON_QUERY` (for arrays/objects) or `JSON_VALUE` (for scalars) wrapping (see `KeyTransformExact.process_rhs` line 394-401)
+- **SQLite**: Requires `JSON_EXTRACT(%s, '$')` wrapping (see `KeyTransformExact.process_rhs` line 403-404)
+
+Without this wrapping, the SQL comparison fails because the LHS is a JSON-extracted value but the RHS is a plain value.
+
+**Confidence**: abduction — 85%
+
+**Supporting evidence**:
+- `django/db/models/fields/json.py:482-496` — No `In` lookup in registered lookups list
+- `django/db/models/fields/json.py:380-406` — `KeyTransformExact.process_rhs()` shows Oracle/SQLite RHS wrapping pattern
+- `django/db/models/fields/json.py:240-254` — `JSONExact.process_rhs()` shows MySQL RHS wrapping with `JSON_EXTRACT`
+- `django/db/models/fields/json.py:473-478` — `KeyTransformNumericLookupMixin` demonstrates the mixin pattern for extending base lookups
+
+## Edit sites
+
+1. **django/db/models/fields/json.py lines 470-481** (after `KeyTransformIRegex`, before `KeyTransformNumericLookupMixin`):
+   - Add new `KeyTransformIn` class that extends `lookups.In`
+   - Override `process_rhs(self, compiler, connection)` method
+   - For `connection.vendor == 'mysql'`: wrap each value with `JSON_EXTRACT(%s, '$')`
+   - For `connection.vendor == 'oracle'`: wrap each value with `JSON_QUERY` or `JSON_VALUE` based on type (list/dict vs scalar)
+   - For `connection.vendor == 'sqlite'`: wrap each value with `JSON_EXTRACT(%s, '$')`
+   - Pattern should mirror `KeyTransformExact.process_rhs` but handle multiple RHS values
+
+2. **django/db/models/fields/json.py line 492** (between `KeyTransformIRegex` and `KeyTransformLt` registrations):
+   - Add: `KeyTransform.register_lookup(KeyTransformIn)`
+
+## Rejected hypotheses
+
+None — this is the first diagnosis.
+
+## Open questions
+
+- Should the implementation also handle the case where RHS is a queryset (not a direct value list)? The default `In` lookup has special handling for this in line 370-377 of `lookups.py`. Initial read suggests the superclass handles this, so we only need to override the direct-value case.
+
+---STDERR---
