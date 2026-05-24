@@ -1,0 +1,21 @@
+# Audit: pytest-dev__pytest-8399
+
+## FAIL_TO_PASS
+- `testing/test_unittest.py::test_fixtures_setup_setUpClass_issue8394`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_do_cleanups_on_setup_failure.py::MyTestCase::test_one`
+- `test_do_cleanups_on_setup_failure.py::MyTestCase::test_two`
+- `test_do_cleanups_on_teardown_failure.py::MyTestCase::test_one`
+- `test_do_cleanups_on_teardown_failure.py::MyTestCase::test_two`
+
+## Kill report
+N/A — fix is complete. The target test now passes with the underscore prefix causing pytest's fixture display logic to correctly hide xunit fixtures without `-v`. All 60 tests passed. No regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,56 @@
+Now I'll emit the complete diagnosis:
+
+# Recon: pytest-dev__pytest-8399
+
+## Failure summary
+
+The test `test_fixtures_setup_setUpClass_issue8394` verifies that unittest `setUpClass` and `tearDownClass` fixtures should be "private" (hidden from `--fixtures` output unless `-v` is used). The test creates a unittest TestCase with these methods, runs `pytest --fixtures` without verbose mode, and expects NOT to see "no docstring available" in the output. Then it runs with `-v` and expects to see the fixtures. The test is currently failing because the fixtures appear in the non-verbose output when they should be hidden.
+
+**Exact error**: The fixture `unittest_setUpClass_fixture_MyTestCase` is shown in `--fixtures` output without `-v`, violating the expected behavior that fixtures starting with underscore are private.
+
+## Suspect set
+
+- `src/_pytest/unittest.py` line 147: Where unittest fixture names are generated
+- `src/_pytest/python.py` lines 531, 560, 812, 841: Where nose-style xunit fixture names are generated  
+- `src/_pytest/python.py` lines 1429, 1511: Where fixture visibility is determined based on leading underscore
+
+## Root cause
+
+**Commits 50114d473 and 489f6f449 added explicit names to xunit fixtures to fix quadratic performance issues, but failed to prefix them with underscore.**
+
+The pytest fixture display logic checks `if verbose <= 0 and argname.startswith("_")` to hide private fixtures (src/_pytest/python.py:1429 and :1511). Before the performance fix, these autouse fixtures had no explicit name parameter, so they used the local function name `fixture` which would have been private by default in their scope. When explicit names were added for performance (to enable faster lookup), the names were made public by omitting the underscore prefix.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `src/_pytest/python.py:1429` — `if verbose <= 0 and argname.startswith("_"): return`
+- `src/_pytest/python.py:1511` — `if verbose <= 0 and argname[0] == "_": continue`
+- `src/_pytest/python.py:531` — `name=f"xunit_setup_module_fixture_{self.obj.__name__}"`
+- `src/_pytest/python.py:560` — `name=f"xunit_setup_function_fixture_{self.obj.__name__}"`
+- `src/_pytest/python.py:812` — `name=f"xunit_setup_class_fixture_{self.obj.__qualname__}"`
+- `src/_pytest/python.py:841` — `name=f"xunit_setup_method_fixture_{self.obj.__qualname__}"`
+- `src/_pytest/unittest.py:147` — `name=f"unittest_{setup_name}_fixture_{obj.__qualname__}"`
+
+## Edit sites
+
+All fixture name f-strings must be prefixed with underscore:
+
+1. **src/_pytest/python.py line 531**: Change `name=f"xunit_setup_module_fixture_{self.obj.__name__}"` to `name=f"_xunit_setup_module_fixture_{self.obj.__name__}"`
+
+2. **src/_pytest/python.py line 560**: Change `name=f"xunit_setup_function_fixture_{self.obj.__name__}"` to `name=f"_xunit_setup_function_fixture_{self.obj.__name__}"`
+
+3. **src/_pytest/python.py line 812**: Change `name=f"xunit_setup_class_fixture_{self.obj.__qualname__}"` to `name=f"_xunit_setup_class_fixture_{self.obj.__qualname__}"`
+
+4. **src/_pytest/python.py line 841**: Change `name=f"xunit_setup_method_fixture_{self.obj.__qualname__}"` to `name=f"_xunit_setup_method_fixture_{self.obj.__qualname__}"`
+
+5. **src/_pytest/unittest.py line 147**: Change `name=f"unittest_{setup_name}_fixture_{obj.__qualname__}"` to `name=f"_unittest_{setup_name}_fixture_{obj.__qualname__}"`
+
+## Rejected hypotheses
+
+None — the root cause is unambiguous from code inspection and git history.
+
+## Open questions
+
+None — the fix is straightforward and all edit sites have been enumerated via grep.
+
+---STDERR---

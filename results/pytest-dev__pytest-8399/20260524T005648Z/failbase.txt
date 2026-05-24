@@ -1,0 +1,122 @@
+$ pytest -rA testing/test_nose.py testing/test_unittest.py
+
+test_do_cleanups_on_setup_failure.py:8: AssertionError
+=========================== short test summary info ============================
+FAILED test_do_cleanups_on_setup_failure.py::MyTestCase::test_one - Assertion...
+FAILED test_do_cleanups_on_setup_failure.py::MyTestCase::test_two - Assertion...
+========================= 2 failed, 1 passed in 0.01s ==========================
+_____________________ test_do_cleanups_on_teardown_failure _____________________
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.3.0.dev229+g6e7dc8bac, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_do_cleanups_on_teardown_failure0
+collected 3 items
+
+test_do_cleanups_on_teardown_failure.py FF.                              [100%]
+
+=================================== FAILURES ===================================
+_____________________________ MyTestCase.test_one ______________________________
+
+self = <test_do_cleanups_on_teardown_failure.MyTestCase testMethod=test_one>
+
+    def tearDown(self):
+>       assert False
+E       AssertionError: assert False
+
+test_do_cleanups_on_teardown_failure.py:9: AssertionError
+_____________________________ MyTestCase.test_two ______________________________
+
+self = <test_do_cleanups_on_teardown_failure.MyTestCase testMethod=test_two>
+
+    def tearDown(self):
+>       assert False
+E       AssertionError: assert False
+
+test_do_cleanups_on_teardown_failure.py:9: AssertionError
+=========================== short test summary info ============================
+FAILED test_do_cleanups_on_teardown_failure.py::MyTestCase::test_one - Assert...
+FAILED test_do_cleanups_on_teardown_failure.py::MyTestCase::test_two - Assert...
+========================= 2 failed, 1 passed in 0.01s ==========================
+__________________ test_plain_unittest_does_not_support_async __________________
+----------------------------- Captured stdout call -----------------------------
+running: /opt/miniconda3/envs/testbed/bin/python -mpytest --basetemp=/tmp/pytest-of-root/pytest-0/test_plain_unittest_does_not_support_async0/runpytest-0
+     in: /tmp/pytest-of-root/pytest-0/test_plain_unittest_does_not_support_async0
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-6.3.0.dev229+g6e7dc8bac, py-1.11.0, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_plain_unittest_does_not_support_async0
+collected 1 item
+
+test_unittest_plain_async.py .                                           [100%]
+
+=============================== warnings summary ===============================
+test_unittest_plain_async.py::Test::test_foo
+  /opt/miniconda3/envs/testbed/lib/python3.9/unittest/case.py:550: RuntimeWarning: coroutine 'Test.test_foo' was never awaited
+    method()
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+========================= 1 passed, 1 warning in 0.01s =========================
+=========================== short test summary info ============================
+PASSED testing/test_unittest.py::test_simple_unittest
+PASSED testing/test_unittest.py::test_runTest_method
+PASSED testing/test_unittest.py::test_isclasscheck_issue53
+PASSED testing/test_unittest.py::test_setup
+PASSED testing/test_unittest.py::test_setUpModule
+PASSED testing/test_unittest.py::test_setUpModule_failing_no_teardown
+PASSED testing/test_unittest.py::test_new_instances
+PASSED testing/test_unittest.py::test_function_item_obj_is_instance
+PASSED testing/test_unittest.py::test_teardown
+PASSED testing/test_unittest.py::test_teardown_issue1649
+PASSED testing/test_unittest.py::test_unittest_skip_issue148
+PASSED testing/test_unittest.py::test_method_and_teardown_failing_reporting
+PASSED testing/test_unittest.py::test_setup_failure_is_shown
+PASSED testing/test_unittest.py::test_setup_setUpClass
+PASSED testing/test_unittest.py::test_setup_class
+PASSED testing/test_unittest.py::test_testcase_adderrorandfailure_defers[Error]
+PASSED testing/test_unittest.py::test_testcase_adderrorandfailure_defers[Failure]
+PASSED testing/test_unittest.py::test_testcase_custom_exception_info[Error]
+PASSED testing/test_unittest.py::test_testcase_custom_exception_info[Failure]
+PASSED testing/test_unittest.py::test_testcase_totally_incompatible_exception_info
+PASSED testing/test_unittest.py::test_module_level_pytestmark
+PASSED testing/test_unittest.py::test_djangolike_testcase
+PASSED testing/test_unittest.py::test_unittest_not_shown_in_traceback
+PASSED testing/test_unittest.py::test_unorderable_types
+PASSED testing/test_unittest.py::test_unittest_typerror_traceback
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_failing_test_is_xfail[pytest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_failing_test_is_xfail[unittest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_passing_test_is_fail[pytest]
+PASSED testing/test_unittest.py::test_unittest_expected_failure_for_passing_test_is_fail[unittest]
+PASSED testing/test_unittest.py::test_unittest_setup_interaction[return]
+PASSED testing/test_unittest.py::test_unittest_setup_interaction[yield]
+PASSED testing/test_unittest.py::test_non_unittest_no_setupclass_support
+PASSED testing/test_unittest.py::test_no_teardown_if_setupclass_failed
+PASSED testing/test_unittest.py::test_cleanup_functions
+PASSED testing/test_unittest.py::test_issue333_result_clearing
+PASSED testing/test_unittest.py::test_unittest_raise_skip_issue748
+PASSED testing/test_unittest.py::test_unittest_skip_issue1169
+PASSED testing/test_unittest.py::test_class_method_containing_test_issue1558
+PASSED testing/test_unittest.py::test_usefixtures_marker_on_unittest[builtins.object]
+PASSED testing/test_unittest.py::test_usefixtures_marker_on_unittest[unittest.TestCase]
+PASSED testing/test_unittest.py::test_testcase_handles_init_exceptions
+PASSED testing/test_unittest.py::test_error_message_with_parametrized_fixtures
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip.py-1 skipped]
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip_class.py-1 skipped]
+PASSED testing/test_unittest.py::test_setup_inheritance_skipping[test_setup_skip_module.py-1 error]
+PASSED testing/test_unittest.py::test_BdbQuit
+PASSED testing/test_unittest.py::test_exit_outcome
+PASSED testing/test_unittest.py::test_trace
+PASSED testing/test_unittest.py::test_pdb_teardown_called
+PASSED testing/test_unittest.py::test_pdb_teardown_skipped[@unittest.skip]
+PASSED testing/test_unittest.py::test_pdb_teardown_skipped[@pytest.mark.skip]
+PASSED testing/test_unittest.py::test_async_support
+PASSED testing/test_unittest.py::test_do_class_cleanups_on_success
+PASSED testing/test_unittest.py::test_do_class_cleanups_on_setupclass_failure
+PASSED testing/test_unittest.py::test_do_class_cleanups_on_teardownclass_failure
+PASSED testing/test_unittest.py::test_do_cleanups_on_success
+PASSED testing/test_unittest.py::test_do_cleanups_on_setup_failure
+PASSED testing/test_unittest.py::test_do_cleanups_on_teardown_failure
+PASSED testing/test_unittest.py::test_plain_unittest_does_not_support_async
+SKIPPED [21] testing/test_nose.py:6: could not import 'nose': No module named 'nose'
+SKIPPED [8] testing/test_unittest.py:448: could not import 'twisted.trial.unittest': No module named 'twisted'
+SKIPPED [1] testing/test_unittest.py:1277: could not import 'asynctest': No module named 'asynctest'
+FAILED testing/test_unittest.py::test_fixtures_setup_setUpClass_issue8394 - F...
+=================== 1 failed, 59 passed, 30 skipped in 1.71s ===================

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully made all FAIL_TO_PASS tests pass on the first gate iteration. The issue was that unittest and xunit fixture names were missing underscore prefixes, causing them to be visible in `--fixtures` output when they should have been hidden. Adding `_` prefix to all 5 fixture name locations aligns them with pytest's privacy convention, which hides fixtures starting with underscore unless `-v` is used.
+
+---STDERR---
