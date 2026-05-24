@@ -37,6 +37,29 @@ no-priors artifact, developed without ever seeing the held-out tests, graded by 
 upgrades the claim from Verified's "leaderboard, contaminated, can't isolate the method" to a genuine
 held-out generalization result — *provided we never leak private-set signal back into the artifact.*
 
+### Running tests yourself is legitimate — it is not "self-grading"
+
+A point worth pinning so a future reader doesn't mistake the local gate for cheating: **running the
+real, official test harness on your own box is legitimate attestation, not self-grading.** That is
+exactly what `grade_batch.sh` did all session on Verified — it runs the official
+`swebench.harness.run_evaluation` locally; the verdict counts because the *tests* are the official
+ones, regardless of where the harness executes. So on the public Pro set you may run the genuine
+F2P/P2P yourself, fail, iterate, and re-run freely; Phase A needs no remote grader at all.
+
+The forbidden "self-grading" is a different thing: the agent *declaring* a fix correct with no test,
+or synthesizing a proxy test from the problem statement and trusting it. The rule is "an official-
+*test* verdict is the only win," not "the grader must run on someone else's machine."
+
+**The line that actually governs leakage is not "can I run the tests" — it is "are these tests the
+held-out measure I am otherwise graded against."**
+- **Public set:** the tests are not the held-out measure → run them yourself freely, the methodeutics
+  loop is clean.
+- **Private set:** "held out" *means* you can't run the graded tests yourself — you submit and they
+  grade. That's the only place the one-shot / no-resubmit-on-feedback discipline bites.
+- **VERIFY what the private set actually withholds.** If you can run the private graded tests locally,
+  then there is no held-out measure, the public/private distinction collapses, and the clean-capability
+  framing must be rethought (it would no longer be a third-party-graded generalization claim).
+
 ---
 
 ## Step 0 — VERIFY before touching code (these gate everything)
