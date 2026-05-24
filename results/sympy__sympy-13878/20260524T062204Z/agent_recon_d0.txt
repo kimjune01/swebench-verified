@@ -1,0 +1,35 @@
+# Recon: sympy__sympy-13878
+
+## Failure summary
+The test `test_arcsin` checks that the CDF of an Arcsin distribution returns an explicit Piecewise formula with the mathematical CDF expression. Currently, it fails with an AssertionError because `cdf(X)(x)` returns an unevaluated Integral expression `Integral(1/sqrt(-_x**2 + _x*a + _x*b - a*b), (_x, -oo, x))/pi` instead of the expected `Piecewise((0, a > x), (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x), (1, True))`.
+
+## Suspect set
+- `sympy/stats/crv_types.py` lines 150-154: `ArcsinDistribution` class definition - lacks `_cdf` method
+- `sympy/stats/crv.py` lines 219-222: `SingleContinuousDistribution.cdf()` method - checks for `_cdf` before falling back to integration
+
+## Root cause
+The `ArcsinDistribution` class only defines a `pdf` method but no `_cdf` method. When computing the CDF, the inherited `cdf()` method from `SingleContinuousDistribution` (sympy/stats/crv.py:219-222) first checks if a `_cdf()` method exists. Since `ArcsinDistribution` doesn't define one, `_cdf()` returns None, and the code falls back to `compute_cdf()` which attempts to integrate the PDF. This integration doesn't evaluate cleanly for the Arcsin distribution, leaving an unevaluated Integral expression instead of the simple closed-form CDF formula.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `sympy/stats/crv_types.py:150-154` — ArcsinDistribution class only has `pdf` method, no `_cdf`
+- `sympy/stats/crv.py:219-222` — `cdf()` checks `_cdf()` first: "if cdf is not None: return cdf"
+- `sympy/stats/tests/test_continuous_rv.py:188-190` — test explicitly expects Piecewise formula with `2*asin(sqrt((-a + x)/(-a + b)))/pi`
+
+## Edit sites
+- `sympy/stats/crv_types.py` lines 150-154: Add a `_cdf` method to the `ArcsinDistribution` class that returns the precomputed CDF formula as a Piecewise expression. The method should follow the pattern of other distributions (e.g., LogNormalDistribution at line 1565) and return:
+  ```python
+  Piecewise((0, a > x),
+            (2*asin(sqrt((x - a)/(b - a)))/pi, b >= x),
+            (1, True))
+  ```
+  where `a` and `b` are accessed via `self.a` and `self.b`.
+
+## Rejected hypotheses
+None - this is the first diagnosis.
+
+## Open questions
+- The test shows the middle condition as `b >= x` which covers `a <= x <= b` after the first condition eliminates `x < a`. The mathematical correctness of the formula `2*asin(sqrt((x - a)/(b - a)))/pi` should be verified by differentiation, but the test itself provides the expected formula, giving high confidence this is correct.
+
+---STDERR---

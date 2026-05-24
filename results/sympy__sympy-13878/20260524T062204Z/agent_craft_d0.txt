@@ -1,0 +1,15 @@
+**RESOLVED**
+
+The fix has been successfully implemented. The `test_arcsin` test now passes.
+
+## Summary
+
+**Changes applied**:
+1. Added `asin` to imports (sympy/stats/crv_types.py:52)
+2. Added `_cdf` method to `ArcsinDistribution` class (sympy/stats/crv_types.py:156-161)
+
+**Result**: The CDF of the Arcsin distribution now returns the expected explicit Piecewise formula instead of an unevaluated Integral expression.
+
+**Verification**: test_arcsin passes - both assertions (density and cdf) succeed.
+
+---STDERR---

@@ -1,0 +1,73 @@
+2026-05-24 06:20:59,985 - INFO - Creating container for sympy__sympy-13878...
+2026-05-24 06:21:00,172 - INFO - Container for sympy__sympy-13878 created: 9f90e8f17b9793ce3899a1d1a6d9c51d4e4c6e19067e2f1f2cf6ff55efaad034
+2026-05-24 06:21:00,490 - INFO - Container for sympy__sympy-13878 started: 9f90e8f17b9793ce3899a1d1a6d9c51d4e4c6e19067e2f1f2cf6ff55efaad034
+2026-05-24 06:21:00,491 - INFO - Intermediate patch for sympy__sympy-13878 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13878/patch.diff, now applying to container...
+2026-05-24 06:21:00,597 - INFO - >>>>> Applied Patch:
+Checking patch sympy/stats/crv_types.py...
+Applied patch sympy/stats/crv_types.py cleanly.
+
+2026-05-24 06:21:00,813 - INFO - Git diff before:
+diff --git a/sympy/stats/crv_types.py b/sympy/stats/crv_types.py
+index fff7da80a..6ec80564f 100644
+--- a/sympy/stats/crv_types.py
++++ b/sympy/stats/crv_types.py
+@@ -49,7 +49,7 @@
+                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                    Lambda, Basic, lowergamma, erf, erfc, I)
+ from sympy import beta as beta_fn
+-from sympy import cos, exp, besseli
++from sympy import cos, exp, besseli, asin
+ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
+         ContinuousDistributionHandmade)
+ from sympy.stats.rv import _value_check
+@@ -153,6 +153,13 @@ class ArcsinDistribution(SingleContinuousDistribution):
+     def pdf(self, x):
+         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
+ 
++    def _cdf(self, x):
++        a, b = self.a, self.b
++        return Piecewise(
++            (0, a > x),
++            (2*asin(sqrt((x - a)/(b - a)))/pi, b >= x),
++            (1, True))
++
+ def Arcsin(name, a=0, b=1):
+     r"""
+     Create a Continuous Random Variable with an arcsin distribution.
+2026-05-24 06:21:00,813 - INFO - Eval script for sympy__sympy-13878 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13878/eval.sh; copying to container...
+2026-05-24 06:21:16,006 - INFO - Test runtime: 15.09 seconds
+2026-05-24 06:21:16,007 - INFO - Test output for sympy__sympy-13878 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13878/test_output.txt
+2026-05-24 06:21:16,072 - INFO - Git diff after:
+diff --git a/sympy/stats/crv_types.py b/sympy/stats/crv_types.py
+index fff7da80a..6ec80564f 100644
+--- a/sympy/stats/crv_types.py
++++ b/sympy/stats/crv_types.py
+@@ -49,7 +49,7 @@
+                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                    Lambda, Basic, lowergamma, erf, erfc, I)
+ from sympy import beta as beta_fn
+-from sympy import cos, exp, besseli
++from sympy import cos, exp, besseli, asin
+ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
+         ContinuousDistributionHandmade)
+ from sympy.stats.rv import _value_check
+@@ -153,6 +153,13 @@ class ArcsinDistribution(SingleContinuousDistribution):
+     def pdf(self, x):
+         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
+ 
++    def _cdf(self, x):
++        a, b = self.a, self.b
++        return Piecewise(
++            (0, a > x),
++            (2*asin(sqrt((x - a)/(b - a)))/pi, b >= x),
++            (1, True))
++
+ def Arcsin(name, a=0, b=1):
+     r"""
+     Create a Continuous Random Variable with an arcsin distribution.
+2026-05-24 06:21:16,072 - INFO - Grading answer for sympy__sympy-13878...
+2026-05-24 06:21:16,081 - INFO - report: {'sympy__sympy-13878': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_arcsin'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_ContinuousDomain', 'test_characteristic_function', 'test_benini', 'test_chi', 'test_chi_noncentral', 'test_chi_squared', 'test_gompertz', 'test_shiftedgompertz', 'test_trapezoidal', 'test_quadratic_u', 'test_von_mises', 'test_prefab_sampling', 'test_input_value_assertions', 'test_probability_unevaluated', 'test_density_unevaluated', 'test_random_parameters', 'test_random_parameters_given', 'test_conjugate_priors', 'test_issue_10003'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-13878: resolved: True
+2026-05-24 06:21:16,081 - INFO - Attempting to stop container sweb.eval.sympy__sympy-13878.batch...
+2026-05-24 06:21:31,509 - INFO - Attempting to remove container sweb.eval.sympy__sympy-13878.batch...
+2026-05-24 06:21:31,521 - INFO - Container sweb.eval.sympy__sympy-13878.batch removed.

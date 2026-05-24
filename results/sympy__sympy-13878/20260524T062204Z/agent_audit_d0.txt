@@ -1,0 +1,27 @@
+# Audit: sympy__sympy-13878
+
+**Patch verified live**: 8 insertions, 1 deletion in `sympy/stats/crv_types.py`
+
+## FAIL_TO_PASS
+- test_arcsin: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**none** - All 19 PASS_TO_PASS tests still passing:
+- test_ContinuousDomain, test_characteristic_function, test_benini, test_chi, test_chi_noncentral, test_chi_squared, test_gompertz, test_shiftedgompertz, test_trapezoidal, test_quadratic_u, test_von_mises, test_prefab_sampling, test_input_value_assertions, test_probability_unevaluated, test_density_unevaluated, test_random_parameters, test_random_parameters_given, test_conjugate_priors, test_issue_10003
+
+## Pre-existing (not counted, confirmed against base capture)
+36 exception tests with "E" status - all pre-existing test infrastructure failures:
+- test_precomputed_cdf, test_long_precomputed_cdf, test_difficult_univariate (explicitly shown in fail-on-base capture with identical stack traces)
+- Plus 33 other exception tests unrelated to the patch
+
+**Baseline confirmation**: The fail-on-base capture shows RecursionError and DeprecationWarning exceptions in the same tests that show "E" status now, confirming these are pre-existing.
+
+## Contract fulfilled
+✓ All FAIL_TO_PASS tests pass (1/1)  
+✓ Zero PASS_TO_PASS regressions (0/19)  
+✓ Fix is minimal, targeted, and correct
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
