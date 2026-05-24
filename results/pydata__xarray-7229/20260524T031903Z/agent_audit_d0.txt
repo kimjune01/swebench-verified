@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-7229
+
+## FAIL_TO_PASS
+- `xarray/tests/test_computation.py::test_where_attrs`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None — all PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+- 1 skipped test: `xarray/tests/test_computation.py:1309` (dask/dask#7669) — pre-existing skip confirmed in baseline, not a regression
+
+## Summary
+The craft patch successfully resolves the issue. Gate output shows 281 passed, 1 skipped, 0 failures. The target test `test_where_attrs` now passes, and no regressions were introduced across the PASS_TO_PASS suite.
+
+**Patch impact:** Modified `xarray/core/computation.py` (+37/-5) to implement post-processing attribute preservation in `where()`, fixing the coordinate attribute overwrite bug while maintaining compatibility with all existing tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

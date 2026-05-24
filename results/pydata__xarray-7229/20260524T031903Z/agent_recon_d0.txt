@@ -1,0 +1,38 @@
+# Recon: pydata__xarray-7229
+
+## Failure summary
+The test `test_where_attrs` validates that `xr.where(..., keep_attrs=True)` preserves both DataArray and coordinate attributes. The test creates DataArrays with distinct attributes for the main variable and its coordinate 'a', then checks that `xr.where(cond, x, y, keep_attrs=True)` preserves `x`'s attributes (both main and coordinate). The test fails because coordinate attributes are overwritten with the main DataArray's attributes. Expected: `result["a"].attrs == {"attr": "x_coord"}`, Actual: `result["a"].attrs == {"attr": "x_da"}`.
+
+## Suspect set
+- `xarray/core/computation.py` lines 1858-1863: The `where()` function's `keep_attrs` lambda that determines which attributes to preserve
+- `xarray/core/merge.py` lines 634-642: The `merge_attrs()` function that applies the callable
+- `xarray/core/merge.py` lines 297-300: Where coordinate attributes are merged in `merge_collected()`
+
+## Root cause
+The lambda created in `where()` at line 1863 always returns the top-level DataArray attributes (`x.attrs`), even when called to merge coordinate attributes. 
+
+**Code path:**
+1. `xr.where(cond, x, y, keep_attrs=True)` converts `keep_attrs=True` to a lambda: `lambda attrs, context: getattr(x, "attrs", {})`
+2. When processing coordinates, `merge_attrs()` is called with `attrs=[cond['a'].attrs, x['a'].attrs, y['a'].attrs]` 
+3. The lambda ignores this `attrs` parameter and returns `x.attrs` (main variable attributes) instead of `attrs[1]` (which would be `x['a'].attrs`, the coordinate attributes)
+
+**Why the current code exists:** PR #6461 changed from `lambda attrs, context: attrs[1]` to `lambda attrs, context: getattr(x, "attrs", {})` to handle the case where `x` is a scalar. When `x` is a scalar like in `xr.where(cond, 1, 0, keep_attrs=True)`, the attrs list is `[cond.attrs]` (length 1), making `attrs[1]` raise an IndexError. The fix handled scalars but broke coordinate attributes.
+
+**Confidence:** deduction — 98%
+
+**Supporting evidence:**
+- `xarray/core/computation.py:1863` — `keep_attrs = lambda attrs, context: getattr(x, "attrs", {})`
+- `xarray/core/merge.py:297-300` — coordinate attributes merged via `merge_attrs([var.attrs for var, _ in indexed_elements], combine_attrs=combine_attrs)`
+- `xarray/core/merge.py:641` — callable invoked as `return combine_attrs(variable_attrs, context=context)`
+- Manual test confirms: coordinate gets `{'attr': 'x_da'}` instead of `{'attr': 'x_coord'}`
+
+## Edit sites
+- `xarray/core/computation.py` line 1863: Change the lambda from `lambda attrs, context: getattr(x, "attrs", {})` to `lambda attrs, context: attrs[1] if len(attrs) > 1 else {}`. This preserves both coordinate attributes (when len > 1, return the second element which is x's attrs) and handles scalars (when len == 1, return empty dict since x has no attrs).
+
+## Rejected hypotheses
+None — the root cause was immediately apparent from tracing the code path and confirmed by manual testing.
+
+## Open questions
+None — the fix is straightforward and handles both the coordinate case and the scalar case that PR #6461 addressed.
+
+---STDERR---

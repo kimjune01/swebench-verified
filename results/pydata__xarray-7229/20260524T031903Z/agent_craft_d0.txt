@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix successfully makes all tests pass. The solution:
+1. Disable automatic attr merging (`keep_attrs=False`)
+2. Post-process to explicitly copy attrs from `x` based on type combinations (Dataset/DataArray/scalar)
+3. Handle coordinate attrs separately from data attrs
+4. Clear all attrs when `x` is scalar
+
+This avoids positional indexing brittleness and correctly preserves coordinate attributes while handling all edge cases.
+
+---STDERR---
