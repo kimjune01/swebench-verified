@@ -1,0 +1,56 @@
+# Recon: django__django-14765
+
+## Failure summary
+The test `test_real_apps_non_set` expects `ProjectState(real_apps=['contenttypes'])` to raise an AssertionError when passed a list instead of a set. Currently, the test fails because no AssertionError is raised—`ProjectState.__init__()` silently converts non-set iterables to sets instead of asserting the argument type.
+
+Error message:
+```
+AssertionError: AssertionError not raised
+```
+
+## Suspect set
+- `django/db/migrations/state.py` lines 92-97: `ProjectState.__init__()` method that handles the `real_apps` parameter
+
+## Root cause
+The `ProjectState.__init__()` method in `django/db/migrations/state.py` (lines 94-96) currently checks if `real_apps` is a set and converts it to a set if not:
+
+```python
+if real_apps:
+    self.real_apps = real_apps if isinstance(real_apps, set) else set(real_apps)
+else:
+    self.real_apps = set()
+```
+
+According to the problem description, PR #14760 ensured all Django internal calls to `ProjectState.__init__()` pass `real_apps` as a set. The requirement is to replace this defensive conversion with an assertion, making `ProjectState.__init__()` part of Django's internal API where callers must guarantee the correct type.
+
+**Confidence: deduction — 99%**
+
+**Supporting evidence:**
+- `django/db/migrations/loader.py:71` — `self.unmigrated_apps = set()` (initialized as set)
+- `django/db/migrations/executor.py:69` — `ProjectState(real_apps=self.loader.unmigrated_apps)` (passes the set)
+- `django/db/migrations/loader.py:338` — `return self.graph.make_state(..., real_apps=self.unmigrated_apps)` (forwards the set)
+- `django/db/migrations/graph.py:313` — `ProjectState(real_apps=real_apps)` (receives the forwarded set)
+- `tests/migrations/test_state.py:919` — `ProjectState(real_apps={'contenttypes'})` (test uses set literal)
+
+All production callers verified to pass sets.
+
+## Edit sites
+- `django/db/migrations/state.py` lines 94-96: Replace the conditional `isinstance` check and conversion with an assertion. When `real_apps` is not None, assert it's a `set`; otherwise initialize `self.real_apps` to `set()`.
+
+Specifically, change:
+```python
+if real_apps:
+    self.real_apps = real_apps if isinstance(real_apps, set) else set(real_apps)
+else:
+    self.real_apps = set()
+```
+
+To assert that `real_apps` is a set when truthy, and assign directly without conversion.
+
+## Rejected hypotheses
+None — the root cause is clear from the test expectation and code inspection.
+
+## Open questions
+None — the fix is straightforward and localized to a single method.
+
+---STDERR---

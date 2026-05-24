@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully replaced defensive conversion with assertion in `ProjectState.__init__()`. The implementation now requires callers to pass `real_apps` as a set (or None), making `test_real_apps_non_set` pass by raising AssertionError when given a list.
+
+---STDERR---
