@@ -1,0 +1,15 @@
+Perfect! The fix is complete and verified.
+
+---
+
+## **RESOLVED**
+
+✓ **FAIL_TO_PASS test passes**: `test_loc_dim_name_collision_with_sel_params` 
+✓ **No regressions**: All 6 `.loc` related tests pass
+✓ **Minimal fix applied**: One-line change in `xarray/core/dataarray.py:199`
+
+**Change**: `return self.data_array.sel(**key)` → `return self.data_array.sel(key)`
+
+**Why it works**: Passing the indexer dict directly to `sel(indexers=key)` instead of unpacking it as `sel(**key)` prevents dimension names like "method", "tolerance", and "drop" from colliding with `sel()`'s parameter names.
+
+---STDERR---

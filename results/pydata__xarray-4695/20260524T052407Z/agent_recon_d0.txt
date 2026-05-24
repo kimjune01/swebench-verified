@@ -1,0 +1,33 @@
+# Recon: pydata__xarray-4695
+
+## Failure summary
+
+The test `test_loc_dim_name_collision_with_sel_params` checks that a DataArray with a dimension named "method" can be indexed via `.loc` using a dict. The test fails with `TypeError: ``method`` must be a string` when calling `da.loc[dict(dim1=["x", "y"], method=["a"])]`. The error originates from `xarray/core/indexing.py:249` where the `remap_label_indexers` function validates that the `method` parameter is a string, but receives a list `['a']` instead.
+
+## Suspect set
+
+- `xarray/core/dataarray.py` line 199: The `_LocIndexer.__getitem__` method that unpacks the indexer dict as keyword arguments
+
+## Root cause
+
+When `_LocIndexer.__getitem__` receives a dict with dimension names as keys, it unpacks this dict as keyword arguments when calling `sel()`: `return self.data_array.sel(**key)`. This causes dimension names to collide with the `sel()` method's parameter names (`method`, `tolerance`, `drop`).
+
+When `key = {'dim1': ['x', 'y'], 'method': ['a']}`, the unpacking results in `sel(dim1=['x', 'y'], method=['a'])`, where `method=['a']` is interpreted as the fill method parameter (which expects a string like 'ffill' or 'bfill'), not as a dimension indexer.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `xarray/core/dataarray.py:199` — `return self.data_array.sel(**key)` unpacks the dict
+- `xarray/core/dataset.py:504` — Dataset's `_LocIndexer` correctly uses `return self.dataset.sel(key)` without unpacking
+- `xarray/core/dataarray.py:1118-1126` — `DataArray.sel()` signature accepts `indexers` as a dict parameter OR via `**indexers_kwargs`
+- Testing confirms: dimension named "method" causes `TypeError`, dimension named "tolerance" causes `ValueError`
+
+## Edit sites
+
+- `xarray/core/dataarray.py` line 199: Change `return self.data_array.sel(**key)` to `return self.data_array.sel(key)` to pass the indexer dict as the `indexers` parameter instead of unpacking it as keyword arguments. This matches the pattern used in Dataset's `_LocIndexer.__getitem__`.
+
+## Open questions
+
+None — the fix is straightforward and follows the existing pattern in Dataset.
+
+---STDERR---

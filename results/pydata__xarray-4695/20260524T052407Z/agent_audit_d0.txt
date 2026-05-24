@@ -1,0 +1,27 @@
+## Final Output
+
+# Audit: pydata__xarray-4695
+
+## FAIL_TO_PASS
+- test_loc_dim_name_collision_with_sel_params: **PASSED**
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_from_series_multiindex: ImportError from Pandas version check (rejects xarray dev version 0.16.3.dev23). Environmental issue, not related to the `_LocIndexer` code change.
+
+## Kill report
+Not applicable - task resolved successfully.
+
+**Patch summary**: Changed `xarray/core/dataarray.py:199` from `return self.data_array.sel(**key)` to `return self.data_array.sel(key)`, eliminating dimension name collision with sel() parameters by passing the indexer dict directly instead of unpacking as kwargs.
+
+**Contract satisfied**:
+✓ FAIL_TO_PASS test passes (dimension collision fixed)
+✓ All 12 PASS_TO_PASS tests pass (no regressions)
+✓ Single-line targeted fix matching Dataset pattern
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
