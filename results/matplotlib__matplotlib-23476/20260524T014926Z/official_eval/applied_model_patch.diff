@@ -1,0 +1,14 @@
+diff --git a/lib/matplotlib/figure.py b/lib/matplotlib/figure.py
+index c55864243a..2bc30752db 100644
+--- a/lib/matplotlib/figure.py
++++ b/lib/matplotlib/figure.py
+@@ -3020,6 +3020,9 @@ class Figure(FigureBase):
+         # re-attached to another.
+         state.pop("canvas")
+ 
++
++        # discard any changes to the dpi due to pixel ratio changes
++        state["_dpi"] = state.get("_original_dpi", state["_dpi"])
+         # Set cached renderer to None -- it can't be pickled.
+         state["_cachedRenderer"] = None
+ 

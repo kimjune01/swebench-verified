@@ -1,0 +1,3 @@
+Recon complete. The bug is in `FigureCanvasBase.__init__` which unconditionally overwrites `_original_dpi` during unpickling, causing the logical DPI (42) to be lost and replaced with the effective DPI (294). The fix requires a one-line change to preserve the pickled value.
+
+---STDERR---

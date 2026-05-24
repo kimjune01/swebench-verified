@@ -1,0 +1,32 @@
+# Audit: matplotlib__matplotlib-23476
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_figure.py::test_unpickle_with_device_pixel_ratio`: **PASSED** ✅
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Test Suite Summary
+- **Total results**: 105 passed, 7 skipped
+- **Gate execution time**: 9.08s
+- **All FAIL_TO_PASS requirements met**: Yes
+- **Regressions introduced**: 0
+
+## Patch Analysis
+The fix adds 3 lines to `lib/matplotlib/figure.py` in the `Figure.__getstate__` method:
+```python
+# discard any changes to the dpi due to pixel ratio changes
+state["_dpi"] = state.get("_original_dpi", state["_dpi"])
+```
+
+This ensures that when a Figure is pickled, the effective DPI (which may have been scaled by device pixel ratio) is replaced with the original logical DPI before serialization. On unpickling, the figure correctly restores its pre-scaling DPI value.
+
+The fix is minimal, targeted, and resolves the issue without affecting any other tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,3 @@
+The fix is complete and verified. The codex volley has also finished (though we already gated successfully). The working tree now contains the minimal one-line fix that makes the failing test pass without breaking any existing tests.
+
+---STDERR---
