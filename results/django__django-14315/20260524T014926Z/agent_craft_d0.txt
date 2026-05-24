@@ -1,0 +1,7 @@
+**RESOLVED** — All FAIL_TO_PASS tests pass on first gate run. 
+
+Both bugs fixed:
+- Base client now converts empty dict to None (ensures subprocess inherits parent environment)
+- PostgreSQL client returns None when no env vars needed (consistent with other backends)
+
+---STDERR---

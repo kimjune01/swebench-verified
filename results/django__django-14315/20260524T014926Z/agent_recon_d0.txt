@@ -1,0 +1,54 @@
+# Recon: django__django-14315
+
+## Failure summary
+
+The tests verify that database client's `runshell()` method correctly passes environment variables to subprocess. When no environment variables are needed, the tests expect `env=None` to be passed to `subprocess.run()` so that the subprocess inherits the parent process's environment (os.environ). However, the code incorrectly passes `env={}` (empty dict), which causes the subprocess to run with an empty environment instead.
+
+Three tests fail:
+- `test_runshell_use_environ`: expects that when `settings_to_cmd_args_env` returns either `None` or `{}`, the base client passes `env=None` to subprocess. Actual: passes `env={}`
+- `test_nopass`: expects PostgreSQL client to return `(args, None)` when no password is set. Actual: returns `(args, {})`
+- `test_parameters`: expects PostgreSQL client to return `(args, None)` when only dbname is set. Actual: returns `(args, {})`
+
+## Suspect set
+
+- `django/db/backends/base/client.py` lines 22-26: The `runshell()` method that handles env parameter and calls subprocess.run
+- `django/db/backends/postgresql/client.py` lines 39-54: The `settings_to_cmd_args_env()` method that initializes and returns env
+
+## Root cause
+
+**TWO bugs introduced in commit bbe6fbb876:**
+
+**Bug 1 (Base client):** Line 24-26 in `django/db/backends/base/client.py` treats empty dict differently than None. When env is `{}`, the condition `if env:` evaluates to False (empty dict is falsy), so env stays as `{}` and gets passed to subprocess.run. This creates an empty environment instead of inheriting os.environ.
+
+**Bug 2 (PostgreSQL client):** Line 39-54 in `django/db/backends/postgresql/client.py` initializes `env = {}` and returns it even when empty, instead of returning `None` like other backends (MySQL, SQLite, Oracle) do.
+
+Confidence: **deduction - 95%**
+
+Supporting evidence:
+- `django/db/backends/base/client.py:24-26` — `if env: env = {**os.environ, **env}` — empty dict is falsy so condition fails, env stays as `{}`
+- `django/db/backends/postgresql/client.py:39` — `env = {}` — always initializes as dict instead of None
+- `django/db/backends/postgresql/client.py:54` — `return args, env` — returns empty dict when no env vars set
+- `django/db/backends/mysql/client.py:10` — `env = None` — MySQL correctly initializes as None
+- Git history shows commit bbe6fbb876 changed from `subprocess_env = os.environ.copy()` pattern to the current broken pattern
+
+## Edit sites
+
+**Site 1:** `django/db/backends/base/client.py` lines 24-26
+- Current: `if env: env = {**os.environ, **env}` then pass env to subprocess
+- Fix: Convert empty dict to None: `env = {**os.environ, **env} if env else None`
+- This ensures both None and {} result in env=None being passed to subprocess.run
+
+**Site 2:** `django/db/backends/postgresql/client.py` line 54
+- Current: `return args, env` (where env might be empty dict)
+- Fix: `return args, env if env else None` or `return args, env or None`
+- This ensures consistency with other backends (MySQL, SQLite, Oracle) that return None when no env vars are needed
+
+## Rejected hypotheses
+
+None — both bugs are confirmed by reading the code and match the test failures exactly.
+
+## Open questions
+
+None — the root causes are clear and the fixes are straightforward.
+
+---STDERR---

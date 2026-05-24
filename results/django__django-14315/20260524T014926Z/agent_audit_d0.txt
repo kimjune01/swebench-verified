@@ -1,0 +1,32 @@
+# Audit: django__django-14315
+
+## FAIL_TO_PASS
+- test_runshell_use_environ: PASS ✓
+- test_settings_to_cmd_args_env: PASS ✓
+- test_accent: PASS ✓
+- test_basic: PASS ✓
+- test_column: PASS ✓
+- test_crash_password_does_not_leak: PASS ✓
+- test_nopass: PASS ✓
+- test_parameters: PASS ✓
+- test_passfile: PASS ✓
+- test_service: PASS ✓
+- test_ssl_certificate: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Gate summary
+All 12 tests passed (1 skipped). The patch correctly:
+1. Modified `django/db/backends/base/client.py` to normalize empty dict to `None` before passing to subprocess
+2. Modified `django/db/backends/postgresql/client.py` to return `None` instead of empty dict when no environment variables are set
+
+Both changes ensure `subprocess.run(args, env=None)` is called when no environment customization is needed, allowing proper inheritance of the parent process environment.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
