@@ -1,0 +1,36 @@
+# Recon: django__django-13109
+
+## Failure summary
+
+Two tests fail related to ForeignKey validation when models have custom default managers that filter records. In `test_FK_validates_using_base_manager`, an Article with an archived Author is created and `full_clean()` is called, which raises `ValidationError: {'author': ['author instance with id 1 does not exist.']}` instead of passing. In `test_validate_foreign_key_to_model_with_overridden_manager`, a ModelForm explicitly sets the field's queryset to `Writer._base_manager.all()` to allow archived writers, but `form.is_valid()` returns False instead of True because ForeignKey validation ignores the form's queryset and uses the model's default manager.
+
+Both tests create "archived" records (archived=True) which are filtered out by custom managers (AuthorManager and WriterManager filter by `archived=False`). The validation fails because it checks existence using the filtered default manager rather than the unfiltered base manager.
+
+## Suspect set
+
+- `django/db/models/fields/related.py` lines 909-920: ForeignKey.validate() method that performs the validation check
+
+## Root cause
+
+ForeignKey.validate() at line 917 uses `self.remote_field.model._default_manager` to check if the foreign key value exists. The default manager may have application-level filters (like excluding archived records) that should not affect referential integrity validation. A foreign key is valid if the referenced record exists in the database, regardless of manager filters. The validation should use `_base_manager` which returns all records without filters.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/fields/related.py:917` — `qs = self.remote_field.model._default_manager.using(using).filter(**{self.remote_field.field_name: value})`
+- `tests/validation/models.py` — AuthorManager filters `archived=False`, applied to Author.objects
+- `tests/model_forms/models.py` — WriterManager filters `archived=False`, applied to Writer.objects  
+- `django/db/models/base.py:377-378` — `_base_manager` property delegates to `cls._meta.base_manager` (unfiltered)
+- `django/db/models/base.py:380-381` — `_default_manager` property delegates to `cls._meta.default_manager` (may have filters)
+
+## Edit sites
+
+- `django/db/models/fields/related.py` line 917: Change `self.remote_field.model._default_manager.using(using)` to `self.remote_field.model._base_manager.using(using)`
+
+This is the only location that needs to change. The method validates referential integrity and should check database-level existence. OneToOneField inherits from ForeignKey so this fix applies to both field types.
+
+## Open questions
+
+None. The fix is straightforward — a single-word change from `_default_manager` to `_base_manager` that aligns validation with database-level referential integrity rather than application-level manager filters.
+
+---STDERR---

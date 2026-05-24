@@ -1,0 +1,19 @@
+# Audit: django__django-13109
+
+## FAIL_TO_PASS
+- `test_FK_validates_using_base_manager (validation.tests.BaseModelValidationTests)`: **PASS** ✅
+- `test_validate_foreign_key_to_model_with_overridden_manager (model_forms.tests.ModelFormBasicTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None - all 171 PASS_TO_PASS tests continued to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Resolution summary
+The single-line fix changing `_default_manager` to `_base_manager` in `django/db/models/fields/related.py:917` completely resolves the issue. Both FAIL_TO_PASS tests now pass, and zero regressions were introduced. The gate ran 173 tests in 0.358s with OK status, confirming full contract satisfaction.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
