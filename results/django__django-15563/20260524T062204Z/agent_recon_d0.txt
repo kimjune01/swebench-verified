@@ -1,0 +1,77 @@
+Now let me emit the final recon report:
+
+# Recon: django__django-15563
+
+## Failure summary
+
+The failing tests `test_mti_update_parent_through_child` and `test_mti_update_grand_parent_through_child` check that updating fields through a multi-table inheritance (MTI) child class correctly updates the parent table. The tests create instances and call `.update()` to modify fields from parent classes, then verify the changes persisted. Both tests fail with `AssertionError: '' != 'senator 1'` — the update has no effect, leaving the `title` field empty instead of "senator 1".
+
+The model hierarchy:
+- `Person` (base model with `name` field)
+- `Politician` (base model with `politician_id` PK and `title` field)  
+- `Congressman(Person, Politician)` (multi-table inheritance from two parents)
+- `Senator(Congressman)` (grandchild)
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 1820-1862: `SQLUpdateCompiler.pre_sql_setup()` — selects wrong IDs for parent table updates
+- `django/db/models/sql/subqueries.py` lines 125-139: `UpdateQuery.get_related_updates()` — uses wrong IDs to filter parent tables  
+- `django/db/models/sql/subqueries.py` line 63: `UpdateQuery._setup_query()` — initializes `related_ids` structure
+
+## Root cause
+
+When updating fields from a parent model through a multi-table inheritance child class with **multiple parents**, Django selects the wrong primary key values to identify which parent rows to update.
+
+In `SQLUpdateCompiler.pre_sql_setup()` (line 1841), the code selects only the child model's primary key:
+```python
+query.add_fields([query.get_meta().pk.name])
+```
+
+For `Congressman` (which inherits from both `Person` and `Politician`), the primary key is `person_ptr` — the link to the first parent. But when updating the `title` field (which belongs to `Politician`), Django needs the `politician_ptr` values, not `person_ptr` values.
+
+Example: If `Congressman` instance has `person_ptr_id=1` and `politician_ptr_id=5`, the current code executes:
+```sql
+UPDATE politician SET title='senator 1' WHERE politician_id IN (1)
+```
+
+But it should execute:
+```sql  
+UPDATE politician SET title='senator 1' WHERE politician_id IN (5)
+```
+
+The ID mismatch causes the update to affect zero rows (or wrong rows if IDs overlap).
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/sql/compiler.py:1841` — selects only PK, not parent link fields
+- `django/db/models/sql/compiler.py:1857` — stores single list `related_ids = idents`
+- `django/db/models/sql/subqueries.py:137` — applies same IDs to all parent models: `query.add_filter("pk__in", self.related_ids)`
+- Model inspection confirms: `Congressman._meta.pk.name == 'person_ptr'` but updating Politician requires `politician_ptr` values
+- Method `_meta.get_ancestor_link(model)` exists to retrieve the correct parent link field
+
+## Edit sites
+
+1. **django/db/models/sql/compiler.py** lines 1835-1862 (`pre_sql_setup` method in `SQLUpdateCompiler`):
+   - Instead of selecting only the primary key, select the parent link field for each model in `self.query.related_updates`
+   - Change `related_ids` from a simple list to a dict mapping each parent model to its list of parent link IDs
+   - Use `self.query.get_meta().get_ancestor_link(model)` to find the correct link field for each parent
+
+2. **django/db/models/sql/subqueries.py** lines 125-139 (`get_related_updates` method):
+   - Change from using `self.related_ids` (assumed to be a list) to `self.related_ids.get(model)` (dict lookup)
+   - Use the correct parent-specific IDs when filtering each parent table
+
+3. **django/db/models/sql/subqueries.py** line 63 (`_setup_query` method):
+   - Initialize `self.related_ids = {}` (empty dict) instead of `None`
+   - Update the None-check in `get_related_updates` accordingly
+
+## Rejected hypotheses
+
+- H₁: The update query construction is wrong — **Rejected**: The SQL template is correct; only the ID values are wrong
+- H₂: The field resolution in `add_update_values` is wrong — **Rejected**: Field correctly identified as belonging to parent model; the issue is downstream in ID collection
+
+## Open questions
+
+- None — the root cause is confirmed by code inspection and the fix is mechanical
+
+---STDERR---

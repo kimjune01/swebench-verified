@@ -1,0 +1,24 @@
+# Audit: django__django-15563
+
+## FAIL_TO_PASS
+- test_mti_update_grand_parent_through_child: **PASS** ✓
+- test_mti_update_parent_through_child: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**none**
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_inheritance_values_joins: expected failure (documented in baseline)
+
+## Summary
+The craft patch successfully resolves the issue. Both target tests that were failing on base now pass. All 32 tests in the suite pass with no regressions (one expected failure is pre-existing and documented).
+
+The fix correctly propagates parent model fields to the UPDATE query when using multi-table inheritance by:
+1. Adding parent fields to the compiler's update query values
+2. Ensuring proper join setup in UpdateQuery for MTI models  
+3. Handling both direct parent and grandparent relationships
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

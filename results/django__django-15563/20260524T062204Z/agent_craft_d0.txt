@@ -1,0 +1,3 @@
+Both FAIL_TO_PASS tests now pass. The fix correctly handles multi-table inheritance updates by building the full parent link chain (e.g., `congressman_ptr__politician_ptr` for grandparent cases) and mapping each parent model to its specific IDs. The solution maintains backward compatibility by handling both list and dict shapes for `related_ids`.
+
+---STDERR---
