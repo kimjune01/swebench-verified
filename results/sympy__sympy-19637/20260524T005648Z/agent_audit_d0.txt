@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-19637
+
+## FAIL_TO_PASS
+- test_kernS: **PASS** ✓ (was UnboundLocalError on base, now ok)
+
+## PASS_TO_PASS regressions
+None - all PASS_TO_PASS tests continue passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+- test_issue_16772 (f on base, f on patched)
+- test_evaluate_false (E on base, E on patched)
+- test_sympify_rational_numbers_set (f on base, f on patched)
+- test_issue_17811 (E on base, E on patched)
+
+## Patch analysis
+The fix indents line 516 (`hit = kern in s`) from 8 to 12 spaces, moving it inside the `if ' ' in s:` block where `kern` is defined. This resolves the `UnboundLocalError: local variable 'kern' referenced before assignment` that occurred when the input string had no spaces after initial transformations.
+
+All FAIL_TO_PASS requirements satisfied. Zero regressions. Four failures remain but all are pre-existing (confirmed against fail-on-base capture).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,40 @@
+# Recon: sympy__sympy-19637
+
+## Failure summary
+
+The test `test_kernS` in `sympy/core/tests/test_sympify.py:515` calls `kernS("(2*x)/(x-1)")` and expects it to return `2*x/(x-1)`. Instead, the function raises `UnboundLocalError: local variable 'kern' referenced before assignment` at line 516 of `sympy/core/sympify.py`. The error occurs because a variable is referenced outside the conditional block where it's defined.
+
+## Suspect set
+
+- `sympy/core/sympify.py` lines 503-516: The `if ' ' in s:` conditional block and the immediately following line that references a variable defined inside that block.
+
+## Root cause
+
+**Indentation error at line 516.** The variable `kern` is defined inside the `if ' ' in s:` block (lines 503-508) with 12-space indentation, but line 516 (`hit = kern in s`) has only 8-space indentation, placing it outside the conditional block at the same level as the `if` statement itself. When the input string contains no spaces after preprocessing (as with `"(2*x)/(x-1)"`), the conditional is False, `kern` is never defined, and line 516 triggers UnboundLocalError.
+
+**Confidence**: deduction — 99%
+
+**Supporting evidence**:
+- `sympy/core/sympify.py:503` — `if ' ' in s:` (8-space indent)
+- `sympy/core/sympify.py:505-508` — `kern = '_'; while kern in s: ...; s = s.replace(' ', kern)` (12-space indent, inside block)
+- `sympy/core/sympify.py:516` — `hit = kern in s` (8-space indent, OUTSIDE block)
+- Verified via `cat -A` that line 516 has 8 spaces, not 12
+- Traced test input `"(2*x)/(x-1)"`: no `*(` or `-(` patterns → no spaces added → `if ' ' in s:` is False → `kern` undefined
+
+## Edit sites
+
+- `sympy/core/sympify.py` line 516: Increase indentation from 8 spaces to 12 spaces (4 additional spaces) to move `hit = kern in s` inside the `if ' ' in s:` block. This ensures `hit` is only set to `kern in s` when `kern` has been defined.
+
+## Competing hypotheses
+
+None. The root cause is unambiguous.
+
+## Rejected hypotheses
+
+None considered — the stack trace directly identifies the failing line and the code inspection confirms the scoping error.
+
+## Open questions
+
+None. The fix is straightforward: correct the indentation of line 516.
+
+---STDERR---

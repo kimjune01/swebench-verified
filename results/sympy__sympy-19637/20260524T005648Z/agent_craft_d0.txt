@@ -1,0 +1,7 @@
+**RESOLVED**
+
+Fixed the indentation error in `sympy/core/sympify.py` line 516. The variable `kern` was defined inside the `if ' ' in s:` block but referenced outside it. Moving `hit = kern in s` inside the conditional (from 8-space to 12-space indent) ensures it only executes when `kern` is defined.
+
+Gate result: `test_kernS` passes. No regressions (the two exceptions in the gate output were pre-existing in the baseline).
+
+---STDERR---
