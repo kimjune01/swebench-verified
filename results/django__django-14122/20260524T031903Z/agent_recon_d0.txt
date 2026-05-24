@@ -1,0 +1,59 @@
+Now I'll print the handoff to stdout:
+
+# Recon: django__django-14122
+
+## Failure summary
+
+The test `test_default_ordering_does_not_affect_group_by` verifies that Meta.ordering fields don't affect GROUP BY clauses in aggregation queries. The test creates 4 articles (3 with author_1, 1 with author_2), then groups by author and counts. It expects 2 groups: `{'author': 1, 'count': 3}` and `{'author': 2, 'count': 1}`. Instead, it gets 3+ groups each with `count: 1`, indicating the GROUP BY clause includes extra fields beyond `author_id`.
+
+The failure occurs because Django generates SQL with `GROUP BY "ordering_article"."author_id", "ordering_article"."pub_date", "ordering_article"."headline", "ordering_author"."name", T3."name"` instead of just `GROUP BY "ordering_article"."author_id"`. The extra fields (`pub_date`, `headline`, `author__name`, `second_author__name`) all come from the Article model's Meta.ordering, splitting what should be 2 groups into multiple groups.
+
+## Suspect set
+
+- `django/db/models/sql/compiler.py` lines 128-132: Loop that adds ORDER BY expressions to GROUP BY clause without checking if they're from Meta.ordering
+- `django/db/models/sql/compiler.py` lines 63-148: Full `get_group_by` method that builds the GROUP BY clause
+- `django/db/models/sql/compiler.py` line 288: Where `self._meta_ordering` flag is set (this flag exists but isn't used in `get_group_by`)
+- `django/db/models/sql/compiler.py` line 600: Where ORDER BY is cleared for Meta.ordering (partial fix from commit 0ddb4ebf)
+
+## Root cause
+
+Commit 0ddb4ebf (Refs #14357) fixed only half the problem: it removed Meta.ordering from the ORDER BY clause but failed to prevent those same fields from being added to the GROUP BY clause.
+
+The bug is in `get_group_by()` at lines 128-132. This code unconditionally adds all ORDER BY expressions to the GROUP BY clause:
+
+```python
+for expr, (sql, params, is_ref) in order_by:
+    # Skip References to the select clause, as all expressions in the
+    # select clause are already part of the group by.
+    if not is_ref:
+        expressions.extend(expr.get_group_by_cols())
+```
+
+When `Article.objects.values('author').annotate(count=Count('author'))` executes:
+1. `get_order_by()` (line 286-288) includes Meta.ordering fields and sets `self._meta_ordering = ordering`
+2. `get_group_by()` receives this order_by and adds all Meta.ordering fields to GROUP BY expressions (lines 128-132)
+3. The final SQL generation clears the ORDER BY at line 600, but GROUP BY was already polluted
+
+The `self._meta_ordering` flag exists and correctly identifies when ordering comes from Meta.ordering, but `get_group_by()` doesn't check it.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `django/db/models/sql/compiler.py:128-132` — unconditional addition of order_by to GROUP BY
+- `django/db/models/sql/compiler.py:288` — `self._meta_ordering` flag is set but not used in `get_group_by`
+- `django/db/models/sql/compiler.py:600` — ORDER BY cleared for Meta.ordering (partial fix)
+- Generated SQL debug output confirms all Meta.ordering fields in GROUP BY
+
+## Edit sites
+
+- `django/db/models/sql/compiler.py` lines 128-132: Wrap the loop that adds order_by to GROUP BY in a conditional that checks `self._meta_ordering`. When `self._meta_ordering` is set, all order_by expressions come from Meta.ordering and should not affect GROUP BY. Add check: `if not (hasattr(self, '_meta_ordering') and self._meta_ordering):` before the loop at line 128.
+
+## Rejected hypotheses
+
+None — the code path is straightforward and the root cause is clear from tracing execution.
+
+## Open questions
+
+None — the fix is localized to a single location in `get_group_by()`.
+
+---STDERR---

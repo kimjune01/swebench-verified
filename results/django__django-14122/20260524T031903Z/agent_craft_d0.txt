@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes `test_default_ordering_does_not_affect_group_by` pass. The issue was that `get_group_by()` unconditionally added ORDER BY expressions to the GROUP BY clause, even when those expressions came from Meta.ordering. 
+
+The fix wraps the order_by loop with a check for `self._meta_ordering`, which is only set when all ordering comes from `Meta.ordering` (not from explicit `.order_by()` calls). This prevents Meta.ordering fields from polluting the GROUP BY clause while preserving correct behavior for explicit ordering.
+
+Gate result: All 27 tests pass, including the previously failing test.
+
+---STDERR---

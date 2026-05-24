@@ -1,0 +1,23 @@
+# Audit: django__django-14122
+
+## FAIL_TO_PASS
+- `test_default_ordering_does_not_affect_group_by`: ✅ PASS
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing failures (not counted)
+None
+
+## Verification summary
+- Patch is live: 11 lines changed in `django/db/models/sql/compiler.py`
+- Gate result: All 27 tests pass (0.032s)
+- Target test now passes: Was FAIL on base, now PASS
+- No regressions introduced
+
+The craft patch successfully resolved the issue by preventing Meta.ordering fields from being added to the GROUP BY clause when `_meta_ordering` flag is set.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
