@@ -1,0 +1,44 @@
+# Recon: django__django-14434
+
+## Failure summary
+
+The test `test_unique_constraint` creates a `UniqueConstraint` with fields `['name']`, calls `constraint.create_sql(Author, editor)`, and expects the returned SQL statement to correctly report that it references the column `'name'` via `sql.references_column(table, 'name')`. However, this call returns `False` instead of `True`, causing the assertion to fail.
+
+Error: `AssertionError: False is not True` at `tests/schema/tests.py:2211`
+
+## Suspect set
+
+- `django/db/backends/base/schema.py` lines 1225-1262 (`_create_unique_sql` method): Creates incorrect Table object reference
+- `django/db/backends/base/schema.py` line 1069 (`_index_columns` method): Receives Table object but expects string
+- `django/db/backends/ddl_references.py` lines 60-73 (`TableColumns` class): Assumes `self.table` is a string
+
+## Root cause
+
+In `django/db/backends/base/schema.py`, the `_create_unique_sql` method creates a `Table` object on line 1244 and passes it to `_index_columns` on line 1254. However, `_index_columns` (line 1069) creates a `Columns` object which inherits from `TableColumns`, and `TableColumns` expects its `table` attribute to be a **string**, not a `Table` object.
+
+When the test calls `sql.references_column(table, 'name')`, the `Statement.references_column` method delegates to `Columns.references_column`, which inherits from `TableColumns.references_column` (line 66 of `ddl_references.py`). This method performs `self.table == table`, which compares a `Table` object to a string and returns `False`.
+
+The correct pattern is demonstrated in `_create_index_sql` (line 1038), which stores the table name as a string first, passes the string to `_index_columns`, and only creates the `Table` object when constructing the `Statement`. Notably, even within `_create_unique_sql`, line 1256 correctly passes `model._meta.db_table` (a string) to `Expressions`, showing an inconsistency within the same method.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/backends/base/schema.py:1244` — `table = Table(model._meta.db_table, self.quote_name)`
+- `django/db/backends/base/schema.py:1254` — `columns = self._index_columns(table, columns, col_suffixes=(), opclasses=opclasses)`
+- `django/db/backends/base/schema.py:1069` — `return Columns(table, columns, self.quote_name, col_suffixes=col_suffixes)`
+- `django/db/backends/ddl_references.py:66` — `def references_column(self, table, column): return self.table == table and column in self.columns`
+
+## Edit sites
+
+- `django/db/backends/base/schema.py` line 1244: Change `table = Table(model._meta.db_table, self.quote_name)` to `table = model._meta.db_table` to store the table name as a string instead of creating a Table object
+- `django/db/backends/base/schema.py` line 1257-1259 (Statement constructor): Change `table=table,` to `table=Table(table, self.quote_name),` to create the Table object only when constructing the Statement, matching the pattern in `_create_index_sql`
+
+## Rejected hypotheses
+
+None - the root cause was identified on first analysis through code comparison with the working `_create_index_sql` method.
+
+## Open questions
+
+None - the fix is straightforward and follows the established pattern in `_create_index_sql`.
+
+---STDERR---

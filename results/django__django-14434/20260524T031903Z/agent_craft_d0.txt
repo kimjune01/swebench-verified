@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. The `test_unique_constraint` test now passes. The two-line change makes `_create_unique_sql` follow the same pattern as `_create_index_sql`: store the table name as a string, pass it to `_index_columns`, and only wrap it in a `Table()` object when constructing the `Statement`. This allows `references_column()` to correctly compare string table names.
+
+---STDERR---
