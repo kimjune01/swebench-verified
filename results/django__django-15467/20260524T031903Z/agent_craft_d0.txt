@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed line 272 in `django/contrib/admin/options.py` from unconditional assignment to `setdefault`, preserving custom `empty_label` values from `formfield_overrides` when `radio_fields` is also configured. The FAIL_TO_PASS test now passes, and all existing tests remain green.
+
+---STDERR---

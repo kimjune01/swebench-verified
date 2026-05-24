@@ -1,0 +1,25 @@
+# Audit: django__django-15467
+
+## FAIL_TO_PASS
+- `test_radio_fields_foreignkey_formfield_overrides_empty_label`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 77 tests passed (14 skipped Selenium tests).
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** — the base capture showed all tests passing except the FAIL_TO_PASS test.
+
+## Verdict Details
+
+The patch successfully resolves the issue:
+1. **Patch applied**: Changed line 272 in `django/contrib/admin/options.py` from `kwargs["empty_label"] = ...` to `kwargs.setdefault("empty_label", ...)`
+2. **FAIL_TO_PASS test now passes**: The custom `empty_label` from `formfield_overrides` is preserved when `radio_fields` is specified
+3. **Zero regressions**: All 76 other tests continue to pass
+4. **Full gate output**: Ran 77 tests in 0.191s - OK (skipped=14)
+
+The fix correctly uses `setdefault()` to only set the default empty_label if one hasn't already been provided via `formfield_overrides`, preserving the expected precedence of explicit admin configuration over implicit defaults.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

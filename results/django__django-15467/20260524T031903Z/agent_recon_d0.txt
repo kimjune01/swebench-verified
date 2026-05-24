@@ -1,0 +1,36 @@
+# Recon: django__django-15467
+
+## Failure summary
+The test `test_radio_fields_foreignkey_formfield_overrides_empty_label` checks that when a ModelAdmin specifies both `radio_fields` for a ForeignKey and a custom `empty_label` via `formfield_overrides`, the custom label is respected. The test fails with `AssertionError: 'None' != 'Custom empty label'` — the custom empty_label is being overwritten with the default "None".
+
+## Suspect set
+- `django/contrib/admin/options.py` lines 251-278: `formfield_for_foreignkey` method that handles radio_fields
+- `django/contrib/admin/options.py` lines 149-200: `formfield_for_dbfield` method that merges formfield_overrides
+
+## Root cause
+When a ForeignKey field is both in `radio_fields` and has settings in `formfield_overrides`, the custom `empty_label` from `formfield_overrides` is unconditionally overwritten. This happens because:
+
+1. `formfield_for_dbfield` (line 167) correctly merges `formfield_overrides` into kwargs: `kwargs = {**self.formfield_overrides[db_field.__class__], **kwargs}`
+2. It then calls `formfield_for_foreignkey` (line 172) with the merged kwargs
+3. Inside `formfield_for_foreignkey`, when the field name is in `radio_fields`, line 272 unconditionally sets: `kwargs["empty_label"] = _("None") if db_field.blank else None`
+
+This unconditional assignment overwrites any custom `empty_label` that was already in kwargs.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/contrib/admin/options.py:167` — `kwargs = {**self.formfield_overrides[db_field.__class__], **kwargs}` merges custom empty_label into kwargs
+- `django/contrib/admin/options.py:272` — `kwargs["empty_label"] = _("None") if db_field.blank else None` unconditionally overwrites it
+- `tests/admin_widgets/models.py:84` — Inventory.parent has `blank=True`, so `_("None")` is set
+- Test output — expects "Custom empty label", gets "None"
+
+## Edit sites
+- `django/contrib/admin/options.py` line 272: Change from unconditional assignment to conditional — only set `empty_label` if not already present in kwargs. Replace `kwargs["empty_label"] = _("None") if db_field.blank else None` with `kwargs.setdefault("empty_label", _("None") if db_field.blank else None)` or check if `"empty_label"` is not in kwargs before setting.
+
+## Rejected hypotheses
+None — the root cause is clear from code reading and the single assignment location.
+
+## Open questions
+None — the fix is straightforward: preserve existing empty_label values in kwargs when radio_fields is used.
+
+---STDERR---
