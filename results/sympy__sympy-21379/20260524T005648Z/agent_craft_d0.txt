@@ -1,0 +1,11 @@
+**RESOLVED** ✓
+
+The fix successfully makes `test_Mod` pass. Applied the exception-based approach suggested by codex:
+
+**Change:** `sympy/core/mod.py`
+- Added `from sympy.polys.polyerrors import PolynomialError` import
+- Wrapped `gcd(p, q)` call in try/except block, setting `G = S.One` on PolynomialError
+
+This handles all non-polynomial expressions (not just Piecewise), avoids layering violations, and preserves GCD simplification whenever possible. Gate shows 93 tests passed with no regressions.
+
+---STDERR---

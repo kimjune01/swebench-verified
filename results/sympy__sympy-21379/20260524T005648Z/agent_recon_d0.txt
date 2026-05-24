@@ -1,0 +1,3 @@
+Diagnosis complete. The issue is in `sympy/core/mod.py` where `Mod.eval()` unconditionally calls `gcd(p, q)` without checking for Piecewise expressions. When Piecewise is present, the polynomial conversion fails because Piecewise cannot be a polynomial generator. The fix is to guard the gcd call with `p.has(Piecewise) or q.has(Piecewise)` and skip the GCD extraction when Piecewise is detected.
+
+---STDERR---

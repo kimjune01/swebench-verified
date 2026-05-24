@@ -1,0 +1,25 @@
+# Audit: sympy__sympy-21379
+
+## FAIL_TO_PASS
+- test_Mod: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_evenness_in_ternary_integer_product_with_odd (marked `f` in both base and gate)
+- test_oddness_in_ternary_integer_product_with_odd (marked `f` in both base and gate)
+
+## Summary
+
+The craft patch successfully resolved the issue. The gate shows:
+- **93 tests passed** (all PASS_TO_PASS tests remain passing)
+- **test_Mod now passes** (was failing with PolynomialError on base)
+- **2 expected failures** (pre-existing, not regressions)
+
+The fix wraps the `gcd(p, q)` call in a try/except block to catch PolynomialError when encountering non-polynomial expressions like Piecewise. When the exception occurs, G is set to S.One, skipping GCD extraction without breaking the Mod evaluation logic.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
