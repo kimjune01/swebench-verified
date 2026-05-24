@@ -1,0 +1,26 @@
+# Audit: django__django-16560
+
+## FAIL_TO_PASS
+- test_custom_violation_code_message (constraints.tests.BaseConstraintTests.test_custom_violation_code_message): PASS ✓
+- test_deconstruction (constraints.tests.BaseConstraintTests.test_deconstruction): PASS ✓
+- test_eq (constraints.tests.CheckConstraintTests.test_eq): PASS ✓
+- test_repr_with_violation_error_code (constraints.tests.CheckConstraintTests.test_repr_with_violation_error_code): PASS ✓
+- test_validate_custom_error (constraints.tests.CheckConstraintTests.test_validate_custom_error): PASS ✓
+- test_eq (constraints.tests.UniqueConstraintTests.test_eq): PASS ✓
+- test_repr_with_violation_error_code (constraints.tests.UniqueConstraintTests.test_repr_with_violation_error_code): PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None — all 54 skipped tests are PostgreSQL-specific, expected behavior on SQLite
+
+## Gate results
+Ran 128 tests in 0.043s — OK (skipped=54)
+
+All FAIL_TO_PASS tests now pass. Zero regressions. The patch successfully implements the `violation_error_code` parameter across BaseConstraint, CheckConstraint, and UniqueConstraint by mirroring the existing `violation_error_message` pattern.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests pass. The `violation_error_code` feature has been successfully implemented across BaseConstraint, CheckConstraint, and UniqueConstraint, following the same pattern as the existing `violation_error_message` attribute.
+
+---STDERR---

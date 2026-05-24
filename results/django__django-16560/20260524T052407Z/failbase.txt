@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 constraints.tests postgres_tests.test_constraints
+
+test_range_adjacent_initially_deferred_with_condition (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_initially_deferred_with_condition) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_opclass (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_opclass) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_opclass_condition (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_opclass_condition) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_opclass_deferrable (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_opclass_deferrable) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_spgist_include (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_spgist_include) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_spgist_include_condition (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_spgist_include_condition) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_spgist_include_deferrable (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_spgist_include_deferrable) ... skipped 'PostgreSQL specific tests'
+test_range_adjacent_spgist_opclass_include (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_adjacent_spgist_opclass_include) ... skipped 'PostgreSQL specific tests'
+test_range_equal_cast (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_equal_cast) ... skipped 'PostgreSQL specific tests'
+test_range_overlaps (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_overlaps) ... skipped 'PostgreSQL specific tests'
+test_range_overlaps_custom (postgres_tests.test_constraints.ExclusionConstraintTests.test_range_overlaps_custom) ... skipped 'PostgreSQL specific tests'
+test_repr (postgres_tests.test_constraints.ExclusionConstraintTests.test_repr) ... skipped 'PostgreSQL specific tests'
+test_spgist_include_not_supported (postgres_tests.test_constraints.ExclusionConstraintTests.test_spgist_include_not_supported) ... skipped 'PostgreSQL specific tests'
+test_table_create (postgres_tests.test_constraints.ExclusionConstraintTests.test_table_create) ... skipped 'PostgreSQL specific tests'
+test_validate_range_adjacent (postgres_tests.test_constraints.ExclusionConstraintTests.test_validate_range_adjacent) ... skipped 'PostgreSQL specific tests'
+test_validate_with_custom_code_and_condition (postgres_tests.test_constraints.ExclusionConstraintTests.test_validate_with_custom_code_and_condition) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_array_contains (postgres_tests.test_constraints.SchemaTests.test_check_constraint_array_contains) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_array_length (postgres_tests.test_constraints.SchemaTests.test_check_constraint_array_length) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_daterange_contains (postgres_tests.test_constraints.SchemaTests.test_check_constraint_daterange_contains) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_datetimerange_contains (postgres_tests.test_constraints.SchemaTests.test_check_constraint_datetimerange_contains) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_range_contains (postgres_tests.test_constraints.SchemaTests.test_check_constraint_range_contains) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_range_lower_upper (postgres_tests.test_constraints.SchemaTests.test_check_constraint_range_lower_upper) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_range_lower_with_nulls (postgres_tests.test_constraints.SchemaTests.test_check_constraint_range_lower_with_nulls) ... skipped 'PostgreSQL specific tests'
+test_check_constraint_range_value (postgres_tests.test_constraints.SchemaTests.test_check_constraint_range_value) ... skipped 'PostgreSQL specific tests'
+test_opclass (postgres_tests.test_constraints.SchemaTests.test_opclass) ... skipped 'PostgreSQL specific tests'
+test_opclass_func (postgres_tests.test_constraints.SchemaTests.test_opclass_func) ... skipped 'PostgreSQL specific tests'
+test_opclass_include (postgres_tests.test_constraints.SchemaTests.test_opclass_include) ... skipped 'PostgreSQL specific tests'
+test_opclass_multiple_columns (postgres_tests.test_constraints.SchemaTests.test_opclass_multiple_columns) ... skipped 'PostgreSQL specific tests'
+test_opclass_partial (postgres_tests.test_constraints.SchemaTests.test_opclass_partial) ... skipped 'PostgreSQL specific tests'
+test_constraint_sql (constraints.tests.BaseConstraintTests.test_constraint_sql) ... ok
+test_contains_expressions (constraints.tests.BaseConstraintTests.test_contains_expressions) ... ok
+test_create_sql (constraints.tests.BaseConstraintTests.test_create_sql) ... ok
+test_custom_violation_code_message (constraints.tests.BaseConstraintTests.test_custom_violation_code_message) ... ERROR
+test_custom_violation_error_message (constraints.tests.BaseConstraintTests.test_custom_violation_error_message) ... ok
+test_custom_violation_error_message_clone (constraints.tests.BaseConstraintTests.test_custom_violation_error_message_clone) ... ok
+test_deconstruction (constraints.tests.BaseConstraintTests.test_deconstruction) ... ERROR
+test_default_violation_error_message (constraints.tests.BaseConstraintTests.test_default_violation_error_message) ... ok
+test_deprecation (constraints.tests.BaseConstraintTests.test_deprecation) ... ok
+test_name_required (constraints.tests.BaseConstraintTests.test_name_required) ... ok
+test_positional_arguments (constraints.tests.BaseConstraintTests.test_positional_arguments) ... ok
+test_remove_sql (constraints.tests.BaseConstraintTests.test_remove_sql) ... ok
+test_validate (constraints.tests.BaseConstraintTests.test_validate) ... ok
+
+======================================================================
+ERROR: test_eq (constraints.tests.CheckConstraintTests.test_eq)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 162, in test_eq
+    models.CheckConstraint(
+TypeError: CheckConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_repr_with_violation_error_code (constraints.tests.CheckConstraintTests.test_repr_with_violation_error_code)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 199, in test_repr_with_violation_error_code
+    constraint = models.CheckConstraint(
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: CheckConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_validate_custom_error (constraints.tests.CheckConstraintTests.test_validate_custom_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 277, in test_validate_custom_error
+    constraint = models.CheckConstraint(
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: CheckConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_eq (constraints.tests.UniqueConstraintTests.test_eq)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 395, in test_eq
+    models.UniqueConstraint(
+TypeError: UniqueConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_repr_with_violation_error_code (constraints.tests.UniqueConstraintTests.test_repr_with_violation_error_code)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 590, in test_repr_with_violation_error_code
+    constraint = models.UniqueConstraint(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: UniqueConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_custom_violation_code_message (constraints.tests.BaseConstraintTests.test_custom_violation_code_message)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 81, in test_custom_violation_code_message
+    c = BaseConstraint(name="base_name", violation_error_code="custom_code")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BaseConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+ERROR: test_deconstruction (constraints.tests.BaseConstraintTests.test_deconstruction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/constraints/tests.py", line 85, in test_deconstruction
+    constraint = BaseConstraint(
+                 ^^^^^^^^^^^^^^^
+TypeError: BaseConstraint.__init__() got an unexpected keyword argument 'violation_error_code'
+
+======================================================================
+FAIL: test_validate_conditon_custom_error (constraints.tests.UniqueConstraintTests.test_validate_conditon_custom_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/django/test/testcases.py", line 1428, in skip_wrapper
+    return test_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/testbed/tests/constraints/tests.py", line 823, in test_validate_conditon_custom_error
+    self.assertEqual(cm.exception.code, "custom_code")
+AssertionError: None != 'custom_code'
+
+----------------------------------------------------------------------
+Ran 128 tests in 0.045s
+
+FAILED (failures=1, errors=7, skipped=54)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

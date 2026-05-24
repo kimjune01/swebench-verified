@@ -1,0 +1,55 @@
+Now let me output the structured diagnosis to stdout:
+
+# Recon: django__django-16560
+
+## Failure summary
+The tests expect a new `violation_error_code` parameter to be added to Django's constraint classes (BaseConstraint, CheckConstraint, UniqueConstraint). This parameter should allow customizing the `code` attribute of ValidationError raised during constraint validation. Currently, all tests fail because:
+1. The parameter doesn't exist in `__init__` methods (TypeError: unexpected keyword argument)
+2. ValidationError is raised without a code parameter (AssertionError: None != 'custom_code')
+
+## Suspect set
+- `django/db/models/constraints.py` lines 25-46: BaseConstraint.__init__() - missing violation_error_code parameter
+- `django/db/models/constraints.py` lines 68-76: BaseConstraint.deconstruct() - missing violation_error_code in kwargs
+- `django/db/models/constraints.py` lines 85-91: CheckConstraint.__init__() - missing violation_error_code parameter
+- `django/db/models/constraints.py` line 115: CheckConstraint.validate() - ValidationError raised without code
+- `django/db/models/constraints.py` lines 119-131: CheckConstraint.__repr__() - missing violation_error_code in output
+- `django/db/models/constraints.py` lines 132-140: CheckConstraint.__eq__() - missing violation_error_code in comparison
+- `django/db/models/constraints.py` lines 157-228: UniqueConstraint.__init__() - missing violation_error_code parameter
+- `django/db/models/constraints.py` lines 295-312: UniqueConstraint.__repr__() - missing violation_error_code in output
+- `django/db/models/constraints.py` lines 313-326: UniqueConstraint.__eq__() - missing violation_error_code in comparison
+- `django/db/models/constraints.py` lines 388, 394, 403: UniqueConstraint.validate() - ValidationError raised without code
+
+## Root cause
+The codebase lacks the `violation_error_code` feature entirely. Similar to how `violation_error_message` was added (visible at line 21), the feature request asks for a parallel `violation_error_code` attribute that gets passed to ValidationError's `code` parameter during constraint validation.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/constraints.py:25` — `def __init__(self, *args, name=None, violation_error_message=None):` — only accepts violation_error_message, not violation_error_code
+- `django/db/models/constraints.py:115` — `raise ValidationError(self.get_violation_error_message())` — no code parameter passed
+- `django/core/exceptions.py` — `def __init__(self, message, code=None, params=None):` — ValidationError accepts code parameter that we need to use
+
+## Edit sites
+
+### BaseConstraint class
+- `lines 25-46`: Add `violation_error_code=None` parameter to `__init__()`, store as `self.violation_error_code = violation_error_code`
+- `lines 68-76`: In `deconstruct()`, add violation_error_code to kwargs dict if not None (following same pattern as violation_error_message)
+
+### CheckConstraint class
+- `lines 85-91`: Add `violation_error_code=None` parameter to `__init__()`, pass to `super().__init__()`
+- `line 115`: Change `raise ValidationError(self.get_violation_error_message())` to `raise ValidationError(self.get_violation_error_message(), code=self.violation_error_code)`
+- `lines 119-131`: In `__repr__()`, add violation_error_code to output string if not None (following same pattern as violation_error_message)
+- `lines 132-140`: In `__eq__()`, add `and self.violation_error_code == other.violation_error_code` to the comparison
+
+### UniqueConstraint class
+- `lines 157-228`: Add `violation_error_code=None` parameter to `__init__()`, pass to `super().__init__()`
+- `line 388`: Change `raise ValidationError(self.get_violation_error_message())` to `raise ValidationError(self.get_violation_error_message(), code=self.violation_error_code)`
+- `line 394`: Change `raise ValidationError(instance.unique_error_message(model, self.fields))` to `raise ValidationError(instance.unique_error_message(model, self.fields), code=self.violation_error_code)`
+- `line 403`: Change `raise ValidationError(self.get_violation_error_message())` to `raise ValidationError(self.get_violation_error_message(), code=self.violation_error_code)`
+- `lines 295-312`: In `__repr__()`, add violation_error_code to output string if not None
+- `lines 313-326`: In `__eq__()`, add `and self.violation_error_code == other.violation_error_code` to the comparison
+
+## Pattern
+This follows the exact same pattern as `violation_error_message` which was previously added. The implementation should mirror how that attribute is handled: default to None, store as instance variable, include in deconstruct/eq/repr, and pass to the exception constructor.
+
+---STDERR---
