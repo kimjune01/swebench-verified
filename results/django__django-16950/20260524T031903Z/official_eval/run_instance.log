@@ -1,0 +1,45 @@
+2026-05-24 03:17:11,454 - INFO - Creating container for django__django-16950...
+2026-05-24 03:17:11,766 - INFO - Container for django__django-16950 created: efb90b27e888b62e41cbd964d6cdeaa0d1f7f49b5be6dca8ebb4e4b9877117c0
+2026-05-24 03:17:12,058 - INFO - Container for django__django-16950 started: efb90b27e888b62e41cbd964d6cdeaa0d1f7f49b5be6dca8ebb4e4b9877117c0
+2026-05-24 03:17:12,058 - INFO - Intermediate patch for django__django-16950 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16950/patch.diff, now applying to container...
+2026-05-24 03:17:12,181 - INFO - >>>>> Applied Patch:
+Checking patch django/forms/models.py...
+Applied patch django/forms/models.py cleanly.
+
+2026-05-24 03:17:12,758 - INFO - Git diff before:
+diff --git a/django/forms/models.py b/django/forms/models.py
+index 3fa04b821f..a500c99680 100644
+--- a/django/forms/models.py
++++ b/django/forms/models.py
+@@ -1177,7 +1177,7 @@ class BaseInlineFormSet(BaseModelFormSet):
+                 to_field = self.instance._meta.get_field(kwargs["to_field"])
+             else:
+                 to_field = self.instance._meta.pk
+-            if to_field.has_default():
++            if to_field.has_default() and (to_field.primary_key or not self.is_bound):
+                 setattr(self.instance, to_field.attname, None)
+ 
+         form.fields[name] = InlineForeignKeyField(self.instance, **kwargs)
+2026-05-24 03:17:12,758 - INFO - Eval script for django__django-16950 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16950/eval.sh; copying to container...
+2026-05-24 03:17:17,384 - INFO - Test runtime: 4.55 seconds
+2026-05-24 03:17:17,384 - INFO - Test output for django__django-16950 written to logs/run_evaluation/batch/recon-craft-audit/django__django-16950/test_output.txt
+2026-05-24 03:17:17,484 - INFO - Git diff after:
+diff --git a/django/forms/models.py b/django/forms/models.py
+index 3fa04b821f..a500c99680 100644
+--- a/django/forms/models.py
++++ b/django/forms/models.py
+@@ -1177,7 +1177,7 @@ class BaseInlineFormSet(BaseModelFormSet):
+                 to_field = self.instance._meta.get_field(kwargs["to_field"])
+             else:
+                 to_field = self.instance._meta.pk
+-            if to_field.has_default():
++            if to_field.has_default() and (to_field.primary_key or not self.is_bound):
+                 setattr(self.instance, to_field.attname, None)
+ 
+         form.fields[name] = InlineForeignKeyField(self.instance, **kwargs)
+2026-05-24 03:17:17,484 - INFO - Grading answer for django__django-16950...
+2026-05-24 03:17:17,484 - INFO - report: {'django__django-16950': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ["If form data is provided, a parent's auto-generated alternate key is"], 'failure': []}, 'PASS_TO_PASS': {'success': ['#24377 - Inlines with a model field default should ignore that default', "#24377 - If we're adding a new object, a parent's auto-generated pk", '#24958 - Variant of test_inlineformset_factory_nulls_default_pks for'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-16950: resolved: True
+2026-05-24 03:17:17,484 - INFO - Attempting to stop container sweb.eval.django__django-16950.batch...
+2026-05-24 03:17:32,944 - INFO - Attempting to remove container sweb.eval.django__django-16950.batch...
+2026-05-24 03:17:32,959 - INFO - Container sweb.eval.django__django-16950.batch removed.

@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix is complete and all tests pass. The issue was in `django/forms/models.py` line 1180 where the code unconditionally set any field with a default to None, without distinguishing between:
+
+1. **Primary key fields** - should always be set to None (auto-generated on save)
+2. **Non-primary key fields** - should only be set to None when the formset is unbound (no data); when bound (data provided), they need to preserve their default value so child forms can establish foreign key relationships
+
+The minimal fix adds a condition to check `to_field.primary_key or not self.is_bound`, ensuring non-PK UUID alternate keys are preserved when form data is provided, allowing inline formsets to work correctly with alternate key relationships.
+
+---STDERR---

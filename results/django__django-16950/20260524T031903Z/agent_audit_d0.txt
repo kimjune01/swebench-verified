@@ -1,0 +1,32 @@
+# Audit: django__django-16950
+
+## FAIL_TO_PASS
+- `test_inlineformset_factory_nulls_default_pks_alternate_key_relation_data`: PASS ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+
+The craft patch is live and resolves the issue completely:
+```python
+-            if to_field.has_default():
++            if to_field.has_default() and (to_field.primary_key or not self.is_bound):
+```
+
+All 7 tests in the gate passed:
+- The FAIL_TO_PASS test now passes
+- All 3 PASS_TO_PASS tests continue to pass
+- No regressions introduced
+
+The fix correctly distinguishes between:
+- **Primary key fields with defaults**: always nulled (auto-generated on save)
+- **Non-primary key fields with defaults**: nulled only when formset is unbound, preserved when bound
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
