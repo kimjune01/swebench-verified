@@ -1,0 +1,36 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 aggregation.tests
+
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')\u2026
+Testing against Django installed in '/testbed/django'
+Importing application aggregation
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: aggregation, auth, contenttypes, messages, sessions, staticfiles
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+Traceback (most recent call last):
+  File "./tests/runtests.py", line 503, in <module>
+    options.exclude_tags,
+  File "./tests/runtests.py", line 290, in django_tests
+    extra_tests=extra_tests,
+  File "/testbed/django/test/runner.py", line 629, in run_tests
+    old_config = self.setup_databases(aliases=databases)
+  File "/testbed/django/test/runner.py", line 554, in setup_databases
+    self.parallel, **kwargs
+  File "/testbed/django/test/utils.py", line 174, in setup_databases
+    serialize=connection.settings_dict.get('TEST', {}).get('SERIALIZE', True),
+  File "/testbed/django/db/backends/base/creation.py", line 72, in create_test_db
+    run_syncdb=True,
+  File "/testbed/django/core/management/__init__.py", line 148, in call_command
+    return command.execute(*args, **defaults)
+  File "/testbed/django/core/management/base.py", line 364, in execute
+    output = self.handle(*args, **options)
+  File "/testbed/django/core/management/base.py", line 83, in wrapped
+    res = handle_func(*args, **kwargs)
+  File "/testbed/django/core/management/commands/migrate.py", line 203, in handle
+    self.sync_apps(connection, executor.loader.unmigrated_apps)
+  File "/testbed/django/core/management/commands/migrate.py", line 324, in sync_apps
+    self.stdout.write("  Creating tables\u2026\n")
+  File "/testbed/django/core/management/base.py", line 145, in write
+    self._out.write(style_func(msg))
+UnicodeEncodeError: 'ascii' codec can't encode character '\u2026' in position 17: ordinal not in range(128)

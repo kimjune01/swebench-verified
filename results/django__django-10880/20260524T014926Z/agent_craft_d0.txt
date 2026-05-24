@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix is complete:
+- Added trailing space after `'DISTINCT'` in `django/db/models/aggregates.py:71`
+- FAIL_TO_PASS test passes: `test_count_distinct_expression`
+- All 56 aggregation tests pass (no regressions)
+- One-shot fix validated by codex and gate
+
+---STDERR---
