@@ -1,0 +1,31 @@
+# Recon: django__django-15315
+
+## Failure summary
+The test `test_hash_immutability` creates an `IntegerField`, stores its hash, assigns the field to a model class, and verifies the hash remains the same. The test fails with `AssertionError: 8113426018888112013 != 4738423687416990223`, showing that `hash(field)` changes after the field is assigned to a model class.
+
+## Suspect set
+- `django/db/models/fields/__init__.py` lines 544-550: The `__hash__` method includes mutable model attributes in the hash calculation
+- `django/db/models/fields/__init__.py` line 783: The `contribute_to_class` method sets `self.model = cls`, triggering the hash change
+
+## Root cause
+The `__hash__` method calculates a hash based on `(creation_counter, app_label, model_name)`, where `app_label` and `model_name` are `None` before the field is assigned to a model (when `not hasattr(self, 'model')`), but have actual string values after `contribute_to_class()` sets `self.model = cls` at line 783. This violates Python's requirement that an object's hash must not change during its lifetime, breaking the field's use in dictionaries and sets.
+
+The bug was introduced in commit 502e75f9ed (ticket #31750), which added model information to `__hash__` to distinguish inherited fields from abstract models. However, this approach conflicts with hash immutability. The correct solution is to allow hash collisions (revert to hashing only `creation_counter`) while keeping the enhanced `__eq__` method that compares both `creation_counter` and `model`.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/fields/__init__.py:544-550` — `__hash__` includes `self.model._meta.app_label if hasattr(self, 'model') else None` and `self.model._meta.model_name if hasattr(self, 'model') else None`
+- `django/db/models/fields/__init__.py:783` — `self.model = cls` is set in `contribute_to_class`, called when field is assigned to a model
+- `git show 502e75f9ed` — shows that before this commit, `__hash__` returned only `hash(self.creation_counter)`
+
+## Edit sites
+- `django/db/models/fields/__init__.py` lines 544-550: Change `__hash__` to return `hash(self.creation_counter)` instead of `hash((self.creation_counter, self.model._meta.app_label if hasattr(self, 'model') else None, self.model._meta.model_name if hasattr(self, 'model') else None))`. This reverts to the pre-#31750 implementation, making the hash immutable while preserving the fixed equality behavior.
+
+## Rejected hypotheses
+None — the failure mode directly points to the mutable hash implementation, and the git history confirms this was the intentional but problematic change from #31750.
+
+## Open questions
+None — the fix is straightforward and well-understood from the problem statement and code analysis.
+
+---STDERR---

@@ -1,0 +1,24 @@
+## Phase 4: Final Verdict
+
+# Audit: django__django-15315
+
+## FAIL_TO_PASS
+- `test_hash_immutability (model_fields.tests.BasicFieldTests)`: ✅ PASS
+
+## PASS_TO_PASS regressions
+None — all 34 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Gate summary
+All tests passed. The patch successfully resolves the hash immutability issue by simplifying `Field.__hash__()` to return `hash(self.creation_counter)`, removing the dependency on mutable model attributes (`self.model._meta.app_label`, `self.model._meta.model_name`) that were causing the hash to change when fields were assigned to model classes.
+
+**Contract fulfilled:**
+- ✅ All FAIL_TO_PASS tests now pass (1/1)
+- ✅ Zero PASS_TO_PASS regressions (34/34 passing)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
