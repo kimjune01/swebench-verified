@@ -1,0 +1,18 @@
+# Audit: pytest-dev__pytest-6202
+
+## FAIL_TO_PASS
+- `testing/test_collection.py::Test_genitems::test_example_items1`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `testing/test_collection.py::TestPrunetraceback::test_collect_report_postprocessing`: XFAIL (present in baseline)
+
+## Summary
+Patch live: `src/_pytest/python.py` modified (1 insertion, 1 deletion). The craft edit removed the problematic `.replace(".[", "[")` call from `getmodpath()` at line 289. Gate ran successfully with 73 passed, 1 xfailed. All FAIL_TO_PASS tests now pass. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

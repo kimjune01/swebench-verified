@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully removed the naive string replacement in `getmodpath()` that was corrupting parameter values containing `".[["`. The FAIL_TO_PASS test now passes along with all other tests in the suite.
+
+---STDERR---

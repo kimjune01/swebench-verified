@@ -1,0 +1,56 @@
+# Recon: pytest-dev__pytest-6202
+
+## Failure summary
+
+The failing test `testing/test_collection.py::Test_genitems::test_example_items1` checks that parametrized tests with special characters in parameter values are handled correctly. It creates a parametrized test with parameter value `".[["` and expects the test's module path to preserve this value. However, `getmodpath()` incorrectly returns `"TestY.testmethod_two[[]"` instead of `"TestY.testmethod_two[.[]"` because it performs a naive string replacement that corrupts parameter values containing the substring `".[["`.
+
+The test fails with:
+```
+AssertionError: assert 'TestY.testmethod_two[[]' == 'TestY.testmethod_two[.[]'
+  - TestY.testmethod_two[[]
+  + TestY.testmethod_two[.[]
+  ?                      +
+```
+
+## Suspect set
+
+- `src/_pytest/python.py` lines 271-289: The `getmodpath()` method that builds the python path and performs the problematic string replacement
+- `src/_pytest/python.py` line 289 specifically: `return s.replace(".[", "[")` — the exact line causing the bug
+
+## Root cause
+
+The `getmodpath()` method in `PyobjMixin` class unconditionally replaces all occurrences of the substring `".[["` with `"["` in the final module path string. This replacement is intended to normalize paths, but it incorrectly mangles parameter values that happen to contain this substring.
+
+**Call path:**
+1. Parametrized test created with name `"testmethod_two[.[]"` (at line 416: `subname = "{}[{}]".format(name, callspec.id)`)
+2. `getmodpath()` joins parts with dots: `["TestY", "testmethod_two[.[]"]` → `"TestY.testmethod_two[.[]"`
+3. The naive `replace(".[", "[")` transforms `"TestY.testmethod_two[.[]"` → `"TestY.testmethod_two[[]"` 
+4. This mangled path is returned and used in test reports via `reportinfo()` → `location` → `head_line`
+
+The replacement appears to be legacy code from 2008 (commit abc8cf09aa). Modern pytest includes parameter IDs directly in the test item name, so there is no legitimate `".[["` junction between class and parameter that needs collapsing.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `src/_pytest/python.py:289` — `return s.replace(".[", "[")` performs the problematic replacement
+- `src/_pytest/python.py:416` — `subname = "{}[{}]".format(name, callspec.id)` shows parameters are already formatted into the name with `"["` directly adjacent to the method name
+- `testing/test_collection.py:715` — Test assertion that fails: `assert items[3].getmodpath() == "TestY.testmethod_two[.[]"`
+- Grep search confirms no other code in `src/_pytest/` uses or expects the `".[["` pattern
+
+## Edit sites
+
+- `src/_pytest/python.py` line 289: Remove the `.replace(".[", "[")` call
+  - Current: `return s.replace(".[", "[")`
+  - Fixed: `return s`
+
+This single-line change removes the naive string replacement that corrupts parameter values.
+
+## Rejected hypotheses
+
+None — the bug is clearly localized to this single line of legacy code.
+
+## Open questions
+
+None — the fix is straightforward and well-isolated. The only risk would be if some obscure code path generates test names with `".[["` junctions that need collapsing, but grep search found no such patterns in the codebase.
+
+---STDERR---
