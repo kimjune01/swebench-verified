@@ -1,0 +1,61 @@
+# Recon: django__django-12713
+
+## Failure summary
+
+The test `test_formfield_overrides_m2m_filter_widget` verifies that `formfield_overrides` can override the widget for ManyToManyFields, even when special admin widgets like `filter_vertical` are configured. The test sets both `filter_vertical = ['members']` and `formfield_overrides = {ManyToManyField: {'widget': forms.CheckboxSelectMultiple}}`, expecting the override to win.
+
+The test fails with:
+```
+AssertionError: <django.contrib.admin.widgets.FilteredSelectMultiple object at 0x7f644bc766d8> is not an instance of <class 'django.forms.widgets.CheckboxSelectMultiple'>
+```
+
+The formfield_overrides widget is being ignored, and the FilteredSelectMultiple widget from filter_vertical is used instead.
+
+## Suspect set
+
+- `django/contrib/admin/options.py` lines 242-273: The `formfield_for_manytomany` method unconditionally sets widget when filter_vertical/filter_horizontal is configured, overwriting any widget from formfield_overrides.
+
+## Root cause
+
+In `formfield_for_manytomany`, the method unconditionally assigns `kwargs['widget']` when the field name appears in autocomplete_fields, raw_id_fields, filter_vertical, or filter_horizontal (lines 252-260). This overwrites any widget previously set via formfield_overrides.
+
+By contrast, `formfield_for_foreignkey` (line 224) checks `if 'widget' not in kwargs:` before setting special admin widgets, allowing formfield_overrides to take precedence.
+
+**Confidence:** Deduction — 98%
+
+**Supporting evidence:**
+- `django/contrib/admin/options.py:252-260` — Unconditional widget assignment in formfield_for_manytomany:
+```python
+autocomplete_fields = self.get_autocomplete_fields(request)
+if db_field.name in autocomplete_fields:
+    kwargs['widget'] = AutocompleteSelectMultiple(...)
+elif db_field.name in self.raw_id_fields:
+    kwargs['widget'] = widgets.ManyToManyRawIdWidget(...)
+elif db_field.name in [*self.filter_vertical, *self.filter_horizontal]:
+    kwargs['widget'] = widgets.FilteredSelectMultiple(...)
+```
+
+- `django/contrib/admin/options.py:224` — Conditional widget assignment in formfield_for_foreignkey (correct behavior):
+```python
+if 'widget' not in kwargs:
+    if db_field.name in self.get_autocomplete_fields(request):
+        kwargs['widget'] = AutocompleteSelect(...)
+    elif db_field.name in self.raw_id_fields:
+        kwargs['widget'] = widgets.ForeignKeyRawIdWidget(...)
+    elif db_field.name in self.radio_fields:
+        kwargs['widget'] = widgets.AdminRadioSelect(...)
+```
+
+## Edit sites
+
+- `django/contrib/admin/options.py` lines 252-260: Add `if 'widget' not in kwargs:` guard before the autocomplete_fields/raw_id_fields/filter_vertical/filter_horizontal widget assignments. This matches the pattern in formfield_for_foreignkey and allows formfield_overrides to take precedence over special admin widgets.
+
+## Rejected hypotheses
+
+None — the root cause is directly observable by comparing formfield_for_foreignkey (working) with formfield_for_manytomany (broken).
+
+## Open questions
+
+None — the fix is straightforward: add the missing conditional check.
+
+---STDERR---

@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix is complete. The FAIL_TO_PASS test `test_formfield_overrides_m2m_filter_widget` now passes, along with all other tests (73 tests, 0 failures).
+
+**What changed:** Added `if 'widget' not in kwargs:` guard in `formfield_for_manytomany` (django/contrib/admin/options.py) before special admin widget assignments. This allows `formfield_overrides` to take precedence, matching the existing behavior in `formfield_for_foreignkey`.
+
+---STDERR---

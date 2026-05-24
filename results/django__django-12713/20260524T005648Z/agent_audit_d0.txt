@@ -1,0 +1,22 @@
+# Audit: django__django-12713
+
+## FAIL_TO_PASS
+- `test_formfield_overrides_m2m_filter_widget` — **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all 22 PASS_TO_PASS tests continue to pass.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None — gate shows clean OK with 73/73 tests passing.
+
+## Contract verification
+✅ **All FAIL_TO_PASS tests pass** (1/1)  
+✅ **Zero PASS_TO_PASS regressions** (22/22 passing)  
+✅ **Clean gate:** 73 tests run, 0 failures, 14 skipped (Selenium tests without browsers)
+
+The patch successfully resolves the issue by adding `if 'widget' not in kwargs:` guard to `formfield_for_manytomany`, allowing `formfield_overrides` to take precedence over special admin widgets (filter_vertical/filter_horizontal), matching the existing behavior for ForeignKeys.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
