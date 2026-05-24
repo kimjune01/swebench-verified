@@ -1,0 +1,38 @@
+# Recon: pydata__xarray-3677
+
+## Failure summary
+
+The test `test_merge_dataarray` verifies that `Dataset.merge(dataarray)` produces the same result as the top-level `xr.merge([dataset, dataarray])`. The test fails with `AttributeError: 'DataArray' object has no attribute 'items'` when `dataset_merge_method` tries to call `other.items()` at line 829, because DataArray doesn't implement the dict-like interface.
+
+## Suspect set
+
+- `xarray/core/merge.py` lines 797-837 (`dataset_merge_method`): Accepts a DataArray as `other` parameter but doesn't convert it to Dataset before processing
+- `xarray/core/merge.py` lines 369-402 (`coerce_pandas_values`): Assumes all non-Dataset objects have `.items()` method
+
+## Root cause
+
+The `dataset_merge_method` function does not handle DataArray objects, but the API contract (as documented in `Dataset.merge` docstring at dataset.py:3558) states that `other` can be "Dataset or castable to Dataset", which includes DataArray. The top-level `merge()` function (line 790) explicitly converts DataArray to Dataset via `obj.to_dataset() if isinstance(obj, DataArray) else obj` before passing to `merge_core()`, but `dataset_merge_method` skips this conversion and passes the DataArray directly.
+
+When `dataset_merge_method` processes the `overwrite_vars` logic at line 829, it calls `other.items()`, which fails because DataArray doesn't implement this method. Even if it skipped that branch, the DataArray would still fail later in `coerce_pandas_values` (line 394) which also expects `.items()`.
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `xarray/core/merge.py:790` — Top-level merge converts DataArray: `obj = obj.to_dataset() if isinstance(obj, DataArray) else obj`
+- `xarray/core/merge.py:829` — dataset_merge_method calls `other.items()` without checking type
+- `xarray/core/merge.py:394` — coerce_pandas_values calls `obj.items()` on non-Dataset objects
+- `xarray/core/dataset.py:3558` — Dataset.merge docstring: `other : Dataset or castable to Dataset`
+
+## Edit sites
+
+- `xarray/core/merge.py` lines 797-810: Add DataArray to Dataset conversion at the beginning of `dataset_merge_method`, immediately after the function signature. Import `DataArray` if not already imported, then convert: `other = other.to_dataset() if isinstance(other, DataArray) else other`
+
+## Rejected hypotheses
+
+None — the diagnosis is straightforward by comparing the working top-level `merge()` with the failing `dataset_merge_method`.
+
+## Open questions
+
+None — the fix location and approach are clear.
+
+---STDERR---

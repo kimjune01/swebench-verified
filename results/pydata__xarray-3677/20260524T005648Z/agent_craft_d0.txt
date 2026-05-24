@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully converted DataArray to Dataset in `dataset_merge_method` (mirroring the top-level `merge()` pattern), making `ds.merge(da)` work correctly. Gate passed on first attempt: 22/22 tests pass including the target `test_merge_dataarray`.
+
+---STDERR---

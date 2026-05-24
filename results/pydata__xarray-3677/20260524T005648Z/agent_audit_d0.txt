@@ -1,0 +1,28 @@
+# Audit: pydata__xarray-3677
+
+## FAIL_TO_PASS
+- `xarray/tests/test_merge.py::TestMergeMethod::test_merge_dataarray`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None — all 22 tests passed
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully resolves the issue. The fix adds 4 lines to `xarray/core/merge.py` to convert DataArray to Dataset before processing in `dataset_merge_method`:
+
+```python
+from .dataarray import DataArray
+
+other = other.to_dataset() if isinstance(other, DataArray) else other
+```
+
+This mirrors the pattern from the top-level `merge()` function and fixes the AttributeError where `coerce_pandas_values` was calling `.items()` on a DataArray.
+
+**Gate results:** 22/22 tests passed with zero failures and zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
