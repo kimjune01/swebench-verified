@@ -1,0 +1,302 @@
+$ pytest -rA xarray/tests/test_computation.py xarray/tests/test_units.py
+
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-data-method_coarsen]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-data-method_weighted]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_groupby]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_groupby_bins]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_coarsen]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_weighted]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_groupby]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_groupby_bins]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_coarsen]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_weighted]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_groupby]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_groupby_bins]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_coarsen]
+PASSED xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_weighted]
+PASSED xarray/tests/test_units.py::TestDataset::test_resample[float64-data]
+PASSED xarray/tests/test_units.py::TestDataset::test_resample[float64-coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_resample[int64-data]
+PASSED xarray/tests/test_units.py::TestDataset::test_resample[int64-coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_first]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_last]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_quantile]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-coords-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-coords-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-coords-method_first]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-coords-method_last]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-coords-method_quantile]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-data-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-data-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-data-method_first]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-data-method_last]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-data-method_quantile]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-coords-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-coords-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-coords-method_first]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-coords-method_last]
+PASSED xarray/tests/test_units.py::TestDataset::test_grouped_operations[int64-coords-method_quantile]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_pipe]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_assign_attrs]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_rename]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_rename_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_rename_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_swap_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_drop_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_drop_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_set_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_reset_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_copy]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_pipe]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_assign_attrs]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_rename]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_rename_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_rename_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_swap_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_drop_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_drop_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_set_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_reset_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_copy]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_pipe]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_assign_attrs]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_rename]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_rename_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_rename_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_swap_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_drop_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_drop_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_set_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_reset_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_copy]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_pipe]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_assign]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_assign_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_assign_attrs]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_rename]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_rename_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_rename_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_swap_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_drop_vars]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_drop_dims]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_set_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_reset_coords]
+PASSED xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_copy]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-data-no_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-data-dimensionless]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-data-incompatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-data-compatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-data-identical_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-no_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-dimensionless]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-incompatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-compatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-identical_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-data-no_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-data-dimensionless]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-data-incompatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-data-compatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-data-identical_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-no_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-dimensionless]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-incompatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-compatible_unit]
+PASSED xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-identical_unit]
+PASSED xarray/tests/test_units.py::TestPlots::test_units_in_line_plot_labels[1-coord_attrs0]
+PASSED xarray/tests/test_units.py::TestPlots::test_units_in_slice_line_plot_labels_sel[1-coord_attrs0]
+PASSED xarray/tests/test_units.py::TestPlots::test_units_in_slice_line_plot_labels_isel[1-coord_attrs0]
+PASSED xarray/tests/test_units.py::TestPlots::test_units_in_2d_plot_colorbar_label
+PASSED xarray/tests/test_units.py::TestPlots::test_units_facetgrid_plot_labels
+PASSED xarray/tests/test_units.py::TestPlots::test_units_facetgrid_2d_imshow_plot_colorbar_labels
+PASSED xarray/tests/test_units.py::TestPlots::test_units_facetgrid_2d_contourf_plot_colorbar_labels
+SKIPPED [1] xarray/tests/test_computation.py:1308: dask/dask#7669: can no longer pass output_dtypes and meta
+SKIPPED [2] xarray/tests/test_units.py:374: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:407: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:449: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:553: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:715: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:792: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:898: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:966: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:1032: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:1136: indexes don't support units
+SKIPPED [4] xarray/tests/test_units.py:1226: indexes don't support units
+SKIPPED [4] xarray/tests/test_units.py:1262: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:1307: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:1350: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:1746: behavior of identical is undecided
+SKIPPED [2] xarray/tests/test_units.py:1984: rank not implemented for non-ndarray
+SKIPPED [2] xarray/tests/test_units.py:2249: indexes don't support units
+SKIPPED [4] xarray/tests/test_units.py:2283: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:2315: calling np.argmax as a function on xarray objects is not supported
+SKIPPED [2] xarray/tests/test_units.py:2315: calling np.argmin as a function on xarray objects is not supported
+SKIPPED [2] xarray/tests/test_units.py:2315: median does not work with dataarrays yet
+SKIPPED [10] xarray/tests/test_units.py:2965: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:2965: the behavior of identical is undecided
+SKIPPED [10] xarray/tests/test_units.py:3042: indexes don't support units
+SKIPPED [28] xarray/tests/test_units.py:3142: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:3257: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:3302: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:3347: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:3471: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:3547: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:3615: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:3639: rank not implemented for non-ndarray
+SKIPPED [6] xarray/tests/test_units.py:3678: indexes don't support units
+SKIPPED [8] xarray/tests/test_units.py:3737: indexes don't support units
+SKIPPED [12] xarray/tests/test_units.py:3789: indexes don't support units
+SKIPPED [8] xarray/tests/test_units.py:3864: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:3923: indexes don't support units
+SKIPPED [4] xarray/tests/test_units.py:3998: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:4423: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:4488: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:4488: behaviour of identical is unclear
+SKIPPED [10] xarray/tests/test_units.py:4581: indexes don't support units
+SKIPPED [6] xarray/tests/test_units.py:4678: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:4748: rank not implemented for non-ndarray
+SKIPPED [30] xarray/tests/test_units.py:4816: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:4869: indexes don't support units
+SKIPPED [30] xarray/tests/test_units.py:4922: indexes don't support units
+SKIPPED [6] xarray/tests/test_units.py:4975: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:5103: indexes don't support units
+SKIPPED [20] xarray/tests/test_units.py:5178: indexes don't support units
+SKIPPED [12] xarray/tests/test_units.py:5218: indexes don't support units
+SKIPPED [12] xarray/tests/test_units.py:5270: indexes don't support units
+SKIPPED [2] xarray/tests/test_units.py:5326: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:5368: indexes don't support units
+SKIPPED [32] xarray/tests/test_units.py:5424: indexes don't support units
+SKIPPED [10] xarray/tests/test_units.py:5508: indexes don't support units
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-10-coords-no_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-10-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-10-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-10-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-10-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-value1-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-value1-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-value1-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[float64-value1-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-10-coords-no_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-10-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-10-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-10-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-10-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-value1-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-value1-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-value1-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataarray[int64-value1-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-10-coords-no_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-10-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-10-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-10-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-10-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-value1-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-value1-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-value1-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[float64-value1-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-10-coords-no_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-10-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-10-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-10-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-10-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-value1-coords-dimensionless] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-value1-coords-incompatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-value1-coords-compatible_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_align_dataset[int64-value1-coords-identical_unit] - reason: fill_value is used for both data variables and coords. See https://github.com/pydata/xarray/issues/4165
+XFAIL xarray/tests/test_units.py::test_replication_full_like_dataarray[float64-coords] - can't copy quantity into non-quantity
+XFAIL xarray/tests/test_units.py::test_replication_full_like_dataarray[int64-coords] - can't copy quantity into non-quantity
+XFAIL xarray/tests/test_units.py::test_replication_full_like_dataset[float64-coords] - can't copy quantity into non-quantity
+XFAIL xarray/tests/test_units.py::test_replication_full_like_dataset[int64-coords] - can't copy quantity into non-quantity
+XFAIL xarray/tests/test_units.py::TestVariable::test_aggregation[float64-method_prod] - reason: nanprod is not supported, yet
+XFAIL xarray/tests/test_units.py::TestDataArray::test_aggregation[float64-function_prod] - reason: nanprod is not supported, yet
+XFAIL xarray/tests/test_units.py::TestDataArray::test_aggregation[float64-method_prod] - reason: nanprod is not supported, yet
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[float64-dimensionless] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[float64-incompatible_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[float64-compatible_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[float64-identical_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[int64-dimensionless] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[int64-incompatible_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[int64-compatible_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[int64-identical_unit] - needs the type register system for __array_ufunc__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[float64-function_searchsorted-no_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[float64-function_searchsorted-dimensionless] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[float64-function_searchsorted-incompatible_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[float64-function_searchsorted-compatible_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[float64-function_searchsorted-identical_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[int64-function_searchsorted-no_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[int64-function_searchsorted-dimensionless] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[int64-function_searchsorted-incompatible_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[int64-function_searchsorted-compatible_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_searchsorted[int64-function_searchsorted-identical_unit] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[float64-no_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[float64-dimensionless-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[float64-incompatible_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[float64-compatible_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[float64-identical_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[int64-no_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[int64-dimensionless-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[int64-incompatible_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[int64-compatible_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_numpy_methods_with_args[int64-identical_unit-function_clip] - xarray does not implement __array_function__
+XFAIL xarray/tests/test_units.py::TestDataArray::test_missing_value_filling[float64-method_ffill] - ffill and bfill lose units in data
+XFAIL xarray/tests/test_units.py::TestDataArray::test_missing_value_filling[float64-method_bfill] - ffill and bfill lose units in data
+XFAIL xarray/tests/test_units.py::TestDataArray::test_missing_value_filling[int64-method_ffill] - ffill and bfill lose units in data
+XFAIL xarray/tests/test_units.py::TestDataArray::test_missing_value_filling[int64-method_bfill] - ffill and bfill lose units in data
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interpolate_na - uses numpy.vectorize
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex[float64-method_interp-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex[float64-method_interp-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex[int64-method_interp-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex[int64-method_interp-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex_like[float64-method_interp_like-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex_like[float64-method_interp_like-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex_like[int64-method_interp_like-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_interp_reindex_like[int64-method_interp_like-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataArray::test_computation_objects[float64-method_rolling-data] - numpy.lib.stride_tricks.as_strided converts to ndarray
+XFAIL xarray/tests/test_units.py::TestDataArray::test_computation_objects[float64-method_rolling_exp-data] - numbagg functions are not supported by pint
+XFAIL xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_rolling-data] - numpy.lib.stride_tricks.as_strided converts to ndarray
+XFAIL xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_rolling_exp-data] - numbagg functions are not supported by pint
+XFAIL xarray/tests/test_units.py::TestDataset::test_aggregation[float64-method_prod] - reason: nanprod is not supported, yet
+XFAIL xarray/tests/test_units.py::TestDataset::test_missing_value_filling[float64-method_ffill] - ffill and bfill lose the unit
+XFAIL xarray/tests/test_units.py::TestDataset::test_missing_value_filling[float64-method_bfill] - ffill and bfill lose the unit
+XFAIL xarray/tests/test_units.py::TestDataset::test_missing_value_filling[int64-method_ffill] - ffill and bfill lose the unit
+XFAIL xarray/tests/test_units.py::TestDataset::test_missing_value_filling[int64-method_bfill] - ffill and bfill lose the unit
+XFAIL xarray/tests/test_units.py::TestDataset::test_interpolate_na[float64] - interpolate_na uses numpy.vectorize
+XFAIL xarray/tests/test_units.py::TestDataset::test_interpolate_na[int64] - interpolate_na uses numpy.vectorize
+XFAIL xarray/tests/test_units.py::TestDataset::test_to_stacked_array[float64] - stacked dimension's labels have to be hashable, but is a numpy.array
+XFAIL xarray/tests/test_units.py::TestDataset::test_to_stacked_array[int64] - stacked dimension's labels have to be hashable, but is a numpy.array
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex[float64-method_interp-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex[float64-method_interp-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex[int64-method_interp-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex[int64-method_interp-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex_like[float64-method_interp_like-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex_like[float64-method_interp_like-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex_like[int64-method_interp_like-data] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_interp_reindex_like[int64-method_interp_like-coords] - uses scipy
+XFAIL xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-data-method_rolling] - strips units
+XFAIL xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-data-method_rolling_exp] - numbagg functions are not supported by pint
+XFAIL xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_rolling] - strips units
+XFAIL xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-data-method_rolling_exp] - numbagg functions are not supported by pint
+XFAIL xarray/tests/test_units.py::TestPlots::test_units_in_line_plot_labels[coord_unit1-coord_attrs1] - indexes don't support units
+XFAIL xarray/tests/test_units.py::TestPlots::test_units_in_slice_line_plot_labels_sel[coord_unit1-coord_attrs1] - indexes don't support units
+XFAIL xarray/tests/test_units.py::TestPlots::test_units_in_slice_line_plot_labels_isel[coord_unit1-coord_attrs1] - pint.errors.UnitStrippedWarning
+XPASS xarray/tests/test_units.py::TestVariable::test_computation[float64-method_rolling_window] converts to ndarray
+XPASS xarray/tests/test_units.py::TestVariable::test_computation[int64-method_rolling_window] converts to ndarray
+XPASS xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[float64-without_unit] needs the type register system for __array_ufunc__
+XPASS xarray/tests/test_units.py::TestDataArray::test_bivariate_ufunc[int64-without_unit] needs the type register system for __array_ufunc__
+XPASS xarray/tests/test_units.py::TestDataArray::test_computation_objects[float64-method_rolling-coords] numpy.lib.stride_tricks.as_strided converts to ndarray
+XPASS xarray/tests/test_units.py::TestDataArray::test_computation_objects[float64-method_rolling_exp-coords] numbagg functions are not supported by pint
+XPASS xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_rolling-coords] numpy.lib.stride_tricks.as_strided converts to ndarray
+XPASS xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_rolling_exp-coords] numbagg functions are not supported by pint
+XPASS xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_rolling] strips units
+XPASS xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_rolling_exp] numbagg functions are not supported by pint
+XPASS xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_rolling] strips units
+XPASS xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_rolling_exp] numbagg functions are not supported by pint
+FAILED xarray/tests/test_units.py::TestPintWrappingDask::test_duck_array_ops
+= 1 failed, 1760 passed, 693 skipped, 112 xfailed, 12 xpassed, 365 warnings in 31.52s =

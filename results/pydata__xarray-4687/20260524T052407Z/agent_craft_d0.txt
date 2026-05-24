@@ -1,0 +1,3 @@
+**RESOLVED** - The FAIL_TO_PASS test `test_where_attrs` now passes. The fix adds `keep_attrs` parameter support to `xr.where()`, correctly preserving attributes from the `x` argument (not `cond`) when `keep_attrs=True`.
+
+---STDERR---

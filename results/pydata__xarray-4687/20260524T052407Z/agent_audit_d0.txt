@@ -1,0 +1,26 @@
+# Audit: pydata__xarray-4687
+
+## FAIL_TO_PASS
+- `xarray/tests/test_computation.py::test_where_attrs`: **PASS**
+
+## PASS_TO_PASS regressions
+**None**
+
+## Pre-existing (not counted, confirmed against base capture)
+- `xarray/tests/test_units.py::TestPintWrappingDask::test_duck_array_ops` — Pint type comparison failure in `mean()` test, unrelated to `where()` changes. Already documented in hypothesis graph as pre-existing.
+
+## Summary
+
+**Patch applied**: 18 insertions, 1 deletion in `xarray/core/computation.py`
+
+**Gate results**: 
+- FAIL_TO_PASS: 1/1 passed ✅
+- PASS_TO_PASS: 248/248 passed (all test_computation.py tests) ✅
+- Regressions: 0 ✅
+
+The fix adds `keep_attrs` parameter to `xr.where()` with proper handling to preserve attributes from the `x` argument (not `cond`), resolving the failing test. All regression tests pass. The single failure in test_units.py is pre-existing and unrelated to the `where()` function changes.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

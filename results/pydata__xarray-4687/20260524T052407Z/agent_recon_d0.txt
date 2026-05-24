@@ -1,0 +1,61 @@
+Now let me output the recon handoff to stdout:
+
+# Recon: pydata__xarray-4687
+
+## Failure summary
+
+The test `test_where_attrs` checks that `xr.where(cond, x, y, keep_attrs=True)` preserves attributes from the input DataArrays. The test creates three DataArrays with different attributes:
+- `cond` with `attrs={"attr": "cond"}`
+- `x` with `attrs={"attr": "x"}`
+- `y` with `attrs={"attr": "y"}`
+
+It expects the result to have `attrs={"attr": "x"}` (attributes from the "true" values). The test fails with:
+```
+TypeError: where() got an unexpected keyword argument 'keep_attrs'
+```
+
+The `xr.where()` function doesn't currently accept a `keep_attrs` parameter.
+
+## Suspect set
+
+- `xarray/core/computation.py` lines 1730-1817: The `where` function definition and implementation
+
+## Root cause
+
+The `where` function at `xarray/core/computation.py:1730` is missing support for the `keep_attrs` parameter. The function currently has signature `def where(cond, x, y):` and calls `apply_ufunc` without any `keep_attrs` argument.
+
+The test expects that when `keep_attrs=True`, attributes should be preserved from `x` (the second argument, representing values when condition is True), not from `cond` (the first argument).
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `xarray/core/computation.py:1730` — Function signature: `def where(cond, x, y):` (no `keep_attrs` parameter)
+- `xarray/core/computation.py:1810-1817` — The `apply_ufunc` call has no `keep_attrs` argument
+- `xarray/tests/test_computation.py:1925-1930` — Test expects `attrs={"attr": "x"}` when `keep_attrs=True`
+- `xarray/core/computation.py:819` — `apply_ufunc` does accept a `keep_attrs` parameter
+- `xarray/core/merge.py:526-527` — When `combine_attrs="override"`, takes `variable_attrs[0]`, meaning first argument's attrs
+- This means passing `keep_attrs=True` (which becomes `"override"`) directly to `apply_ufunc` would incorrectly use `cond.attrs` instead of `x.attrs`
+
+## Edit sites
+
+- `xarray/core/computation.py` line 1730: Add `keep_attrs=None` parameter to function signature
+- `xarray/core/computation.py` lines 1744-1808: Add documentation for `keep_attrs` parameter in docstring
+- `xarray/core/computation.py` lines 1810-1817: Add logic before the `apply_ufunc` call to handle `keep_attrs`:
+  - When `keep_attrs=True`, create a custom callable that returns `variable_attrs[1]` (attrs from `x`, the second argument) instead of the default `variable_attrs[0]`
+  - When `keep_attrs=False`, use `"drop"`
+  - Otherwise, pass through as-is
+  - Pass the processed value as `keep_attrs` parameter to `apply_ufunc`
+
+## Competing hypotheses
+
+None — the root cause is clear from the error message and code inspection.
+
+## Rejected hypotheses
+
+None — this is a straightforward missing feature.
+
+## Open questions
+
+None — the implementation approach is validated by examining how `apply_ufunc`, `merge_attrs`, and the callable combine_attrs mechanism work together.
+
+---STDERR---
