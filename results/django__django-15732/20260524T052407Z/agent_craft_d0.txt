@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. The `_delete_composed_index` method now correctly handles the case where a field has both `unique=True` and is in `unique_together` by filtering to the Django-generated composed constraint name (ending in `_uniq` or `_idx`) rather than failing when multiple constraints are found.
+
+---STDERR---

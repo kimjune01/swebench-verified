@@ -1,0 +1,23 @@
+# Audit: django__django-15732
+
+## FAIL_TO_PASS
+- `test_remove_unique_together_on_unique_field (migrations.test_operations.OperationTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 132 tests passed (1 skipped)
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None applicable — the FAIL_TO_PASS test was ERROR on base (`ValueError: Found wrong number (2) of constraints`), now passes cleanly
+
+## Gate output summary
+```
+Ran 132 tests in 1.033s
+OK (skipped=1)
+```
+
+The fix successfully resolves the issue. The test `test_remove_unique_together_on_unique_field` now passes, and no regressions were introduced. The patch correctly handles the case where a field has both `unique=True` and is part of `unique_together` by distinguishing between field-level constraints and composed constraints using Django's naming convention (`_uniq` suffix for unique_together).
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

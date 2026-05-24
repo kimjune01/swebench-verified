@@ -1,0 +1,58 @@
+# Recon: django__django-15732
+
+## Failure summary
+The test `test_remove_unique_together_on_unique_field` creates a model with a field `name` that has both `unique=True` (creating a field-level unique constraint) and `unique_together={("name",)}` (creating a separate unique_together constraint). This results in two unique constraints on the same column. When attempting to remove the unique_together constraint via `AlterUniqueTogether("Pony", set())`, the operation fails with:
+
+```
+ValueError: Found wrong number (2) of constraints for test_rutouf_pony(name)
+```
+
+The test expects the operation to delete only the unique_together constraint (`test_rutouf_pony_name_694f3b9f_uniq`) while preserving the field-level unique constraint (`test_rutouf_pony_name_key`).
+
+## Suspect set
+- `django/db/backends/base/schema.py` lines 559-580: `_delete_composed_index` method — raises the ValueError
+- `django/db/backends/base/schema.py` lines 520-537: `alter_unique_together` method — calls `_delete_composed_index`
+- `django/db/backends/base/schema.py` lines 1259-1280: `_create_index_name` method — generates constraint names
+- `django/db/backends/base/schema.py` lines 1539-1590: `_create_unique_sql` method — creates unique_together constraints with `_uniq` suffix
+
+## Root cause
+In `_delete_composed_index` (lines 559-580), the method finds ALL unique constraints on the specified columns using `_constraint_names`, then enforces that exactly one constraint must exist. When a field has both `unique=True` and is in `unique_together`, two constraints are found, triggering the ValueError.
+
+The method cannot distinguish between:
+1. Field-level unique constraints (created by `unique=True`, with database-generated names like `{table}_{column}_key`)
+2. Composed unique constraints from unique_together (created with Django-generated names like `{table}_{columns}_{hash}_uniq`)
+
+The root issue: `_delete_composed_index` should identify and delete ONLY the composed index (unique_together/index_together) by matching the expected Django-generated constraint name, not all constraints on those columns.
+
+**Confidence: deduction — 98%**
+
+Supporting evidence:
+- `_create_unique_sql`:1572 — unique_together constraints use suffix `_uniq`
+- `alter_index_together`:557 — index_together constraints use suffix `_idx`  
+- `_create_index_name`:1273 — constraint name pattern: `{table}_{columns}_{hash}{suffix}`
+- Test assertion — expects one constraint deleted, one preserved
+
+## Edit sites
+- `django/db/backends/base/schema.py` lines 559-580 (`_delete_composed_index` method):
+  
+  **Change the constraint selection logic:**
+  - When multiple constraints are found, compute the expected Django-generated constraint name using `_create_index_name` with the appropriate suffix (`_uniq` for unique_together, `_idx` for index_together)
+  - Filter the found constraints to match the expected name
+  - Delete only the matching constraint, leaving other constraints (field-level unique) intact
+  
+  **Determine suffix from constraint_kwargs:**
+  - If `{"unique": True}` → suffix is `"_uniq"`
+  - If `{"index": True, "unique": False}` → suffix is `"_idx"`
+  
+  **Implementation pattern:**
+  When `len(constraint_names) != 1`, instead of immediately raising ValueError:
+  1. Compute `suffix` based on `constraint_kwargs`
+  2. Generate `expected_name = self._create_index_name(model._meta.db_table, columns, suffix)`
+  3. Filter to find matching constraint
+  4. Delete if found; handle appropriately if not found
+
+## Open questions
+- Should the fix handle the case where the expected name is not found among the multiple constraints? (Defensive: could raise a more informative error)
+- Should it validate that exactly one constraint matches the expected name, or just take the first match?
+
+---STDERR---

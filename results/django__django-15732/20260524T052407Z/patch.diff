@@ -1,0 +1,32 @@
+diff --git a/django/db/backends/base/schema.py b/django/db/backends/base/schema.py
+index f2ca8c8df9..979e0e7eff 100644
+--- a/django/db/backends/base/schema.py
++++ b/django/db/backends/base/schema.py
+@@ -569,7 +569,26 @@ class BaseDatabaseSchemaEditor:
+             **constraint_kwargs,
+         )
+         if len(constraint_names) != 1:
+-            raise ValueError(
++            # When not exactly one constraint found, try filtering to Django-generated name
++            if constraint_kwargs.get("unique"):
++                suffix = "_uniq"
++            elif constraint_kwargs.get("index"):
++                suffix = "_idx"
++            else:
++                suffix = ""
++            
++            expected_name = self._create_index_name(
++                model._meta.db_table, columns, suffix=suffix
++            )
++            
++            matching_constraints = [
++                name for name in constraint_names if name == expected_name
++            ]
++            
++            if len(matching_constraints) == 1:
++                constraint_names = matching_constraints
++            else:
++                raise ValueError(
+                 "Found wrong number (%s) of constraints for %s(%s)"
+                 % (
+                     len(constraint_names),
