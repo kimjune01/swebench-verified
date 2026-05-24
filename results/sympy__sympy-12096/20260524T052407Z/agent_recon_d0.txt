@@ -1,0 +1,35 @@
+# Recon: sympy__sympy-12096
+
+## Failure summary
+The test `test_issue_12092` checks that when `f` is an implemented function (`implemented_function('f', lambda x: x**2)`), the nested composition `f(f(2)).evalf()` should evaluate to `Float(16)`. Currently, it returns the unevaluated symbolic expression `f(f(2))`, causing an assertion failure. The test expects: `f(2).evalf() == 4.0` (works) and `f(f(2)).evalf() == 16.0` (fails).
+
+## Suspect set
+- `sympy/core/function.py` lines 500-513: `Function._eval_evalf` method, specifically the `_imp_` fallback path at line 510
+
+## Root cause
+The `Function._eval_evalf` method has two paths: (1) lookup an mpmath function and use it, or (2) fall back to the `_imp_` attribute if the function has an implementation attached via `implemented_function`. The mpmath path (lines 519-520) properly converts arguments using `arg._to_mpmath(prec + 5)`, which handles nested evaluation. However, the `_imp_` fallback path at line 510 passes `self.args` directly to `_imp_` without evaluating them first:
+
+```python
+return Float(self._imp_(*self.args), prec)
+```
+
+When `f(f(2)).evalf()` is called, `self.args` contains `(f(2),)` where `f(2)` is still a symbolic UndefinedFunction application, not the numerical value `4`. The lambda `lambda x: x**2` receives the symbolic `f(2)` and returns `f(2)**2`, which cannot be converted to Float, causing the exception handler to return None and leaving the expression unevaluated.
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `sympy/core/function.py:510` — `return Float(self._imp_(*self.args), prec)` passes unevaluated args
+- Manual test confirms: `f(2).evalf()` returns `4.0` (single level works), `f(f(2)).evalf()` returns `f(f(2))` (nested fails)
+- Test `sympy/utilities/tests/test_lambdify.py:756` expects `Float(16)`
+
+## Edit sites
+- `sympy/core/function.py` line 510: Change from `return Float(self._imp_(*self.args), prec)` to evaluate arguments recursively before passing to `_imp_`. Specifically, evaluate each argument in `self.args` using `evalf(prec)` before passing them to the implementation function.
+
+## Rejected hypotheses
+- H₁: The problem is in `implemented_function` construction — killed because `f(2).evalf()` works correctly, proving the function is properly constructed; the issue is only with nested evaluation
+- H₂: The printing code needs fixing — killed because `codeprinter.py:326` and `lambdarepr.py:306` are for symbolic code generation, not numerical evaluation; they correctly keep args symbolic
+
+## Open questions
+None — the fix is straightforward: evaluate arguments before passing to `_imp_`.
+
+---STDERR---

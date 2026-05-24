@@ -1,0 +1,28 @@
+# Audit: sympy__sympy-12096
+
+## FAIL_TO_PASS
+- test_issue_12092: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_sym_integral: RecursionError in _eval_is_prime (identical to fail-on-base capture; craft notes confirm present on base with 43 passed + 1 failed + 1 exception vs. 44 passed + 1 exception with fix)
+
+## Gate Summary
+The patch successfully resolves the issue:
+- **FAIL_TO_PASS**: test_issue_12092 now passes (was failing on base)
+- **PASS_TO_PASS**: All 40 explicitly listed tests pass with no regressions
+- **Exception**: test_sym_integral RecursionError is pre-existing (confirmed in base capture showing identical RecursionError stack trace)
+
+The fix changes `sympy/core/function.py:510` to evaluate arguments recursively before passing to `_imp_`:
+```python
+return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
+```
+
+This enables nested implemented functions like `f(f(2)).evalf()` to evaluate correctly to `16.0`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

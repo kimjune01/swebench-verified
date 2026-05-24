@@ -1,0 +1,15 @@
+## RESOLVED
+
+The fix successfully makes `test_issue_12092` pass. Changed line 510 in `sympy/core/function.py` to evaluate arguments before passing to `_imp_`:
+
+```python
+return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
+```
+
+**Test results**:
+- Without fix: 43 passed, 1 failed (test_issue_12092), 1 exception
+- With fix: 44 passed, 0 failed, 1 exception
+
+The RecursionError in an unrelated test is pre-existing (occurs both with and without the fix). The FAIL_TO_PASS test `test_issue_12092` now passes.
+
+---STDERR---
