@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully preserves query strings in AdminSite catch_all_view redirects. Changed line 456 in `django/contrib/admin/sites.py` from `request.path` to `request.get_full_path(force_append_slash=True)`. Both FAIL_TO_PASS tests now pass with zero regressions.
+
+---STDERR---

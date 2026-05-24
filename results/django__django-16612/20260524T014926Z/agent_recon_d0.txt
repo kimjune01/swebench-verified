@@ -1,0 +1,33 @@
+# Recon: django__django-16612
+
+## Failure summary
+The tests check that `AdminSite.catch_all_view()` properly redirects URLs missing a trailing slash to URLs with a trailing slash when `APPEND_SLASH=True`. Two tests verify that query strings are preserved during this redirect: `test_missing_slash_append_slash_true_query_string` expects `/admin/admin_views/article?id=1` to redirect to `/admin/admin_views/article/?id=1`, and `test_missing_slash_append_slash_true_script_name_query_string` tests the same with `SCRIPT_NAME` prefix. Both fail with `AssertionError` showing the redirect drops the query string (`?id=1`), redirecting to `/admin/admin_views/article/` instead of `/admin/admin_views/article/?id=1`.
+
+## Suspect set
+- `django/contrib/admin/sites.py` lines 447-457: The `catch_all_view` method that handles trailing slash redirects for admin URLs
+- Specifically line 456: The `HttpResponsePermanentRedirect` construction that uses only `request.path`
+
+## Root cause
+The redirect at line 456 uses `request.path` to build the redirect URL: `HttpResponsePermanentRedirect("%s/" % request.path)`. The `request.path` attribute contains only the path component without query strings. Django's request object stores query strings separately in `request.META['QUERY_STRING']`. The correct pattern is to use `request.get_full_path(force_append_slash=True)`, which constructs the full URL including the path, the appended slash, and the query string—exactly what Django's `CommonMiddleware` does for the same APPEND_SLASH behavior at `django/middleware/common.py:83`.
+
+**Confidence:** deduction — 98%
+
+**Supporting evidence:**
+- `django/contrib/admin/sites.py:456` — Current code: `return HttpResponsePermanentRedirect("%s/" % request.path)` uses only the path
+- `django/http/request.py:183-193` — `_get_full_path(path, force_append_slash)` implementation shows it returns `path + "/" + "?" + QUERY_STRING` when query string exists
+- `django/middleware/common.py:83` — CommonMiddleware uses `request.get_full_path(force_append_slash=True)` for identical APPEND_SLASH redirect behavior
+- Git history shows catch_all_view was introduced in ba31b01034 (2021) without query string support, then modified in f7691d4812 (2021) to respect SCRIPT_NAME by changing from `request.path_info` to `request.path`, but query strings were never added
+
+## Edit sites
+- `django/contrib/admin/sites.py` line 456: Change `return HttpResponsePermanentRedirect("%s/" % request.path)` to `return HttpResponsePermanentRedirect(request.get_full_path(force_append_slash=True))`. This uses the same pattern as CommonMiddleware and will preserve both SCRIPT_NAME (via `request.path` internally) and query strings (via `request.META['QUERY_STRING']`).
+
+## Competing hypotheses
+None — the fix is a single-line change with clear precedent from CommonMiddleware.
+
+## Rejected hypotheses
+None — code inspection and middleware comparison directly confirm the root cause.
+
+## Open questions
+- Whether `escape_leading_slashes()` from `django.utils.http` should be added for defense against scheme-relative URL attacks (as CommonMiddleware does at line 85). The current code doesn't use it and the tests don't require it, so this would be a separate security hardening consideration rather than part of fixing the query string bug.
+
+---STDERR---
