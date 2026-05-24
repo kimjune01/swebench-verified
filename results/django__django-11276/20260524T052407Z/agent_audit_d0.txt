@@ -1,0 +1,25 @@
+# Audit: django__django-11276
+
+## FAIL_TO_PASS
+- test_make_list02 (template_tests.filter_tests.test_make_list.MakeListTests): **PASS** ✓
+- test_password_help_text (auth_tests.test_forms.UserCreationFormTest): **PASS** ✓
+- test_url_split_chars (template_tests.filter_tests.test_urlize.FunctionTests): **PASS** ✓
+- test_wrapping_characters (template_tests.filter_tests.test_urlize.FunctionTests): **PASS** ✓
+- test_addslashes02 (template_tests.filter_tests.test_addslashes.AddslashesTests): **PASS** ✓
+- test_title1 (template_tests.filter_tests.test_title.TitleTests): **PASS** ✓
+- test_urlize01 (template_tests.filter_tests.test_urlize.UrlizeTests): **PASS** ✓
+- test_urlize06 (template_tests.filter_tests.test_urlize.UrlizeTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. Gate shows 0 failures (baseline had 28 failures + 1 error, now 0 failures + 1 error).
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_strip_tags_files (utils_tests.test_html.TestUtilsHtml): UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 257 (existed in baseline as "errors=1")
+
+## Patch summary
+Replaced Django's custom `_html_escapes` dictionary with Python's stdlib `html.escape()`. Stdlib uses hexadecimal entity `&#x27;` for single quotes instead of decimal `&#39;`. Added backward-compatible handling for both entity formats in the `unescape()` helper.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

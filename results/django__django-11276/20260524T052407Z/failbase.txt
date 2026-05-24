@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 admin_docs.test_views auth_tests.test_forms forms_tests.tests.test_forms forms_tests.widget_tests.base forms_tests.widget_tests.test_clearablefileinput model_forms.tests template_tests.filter_tests.test_addslashes template_tests.filter_tests.test_make_list template_tests.filter_tests.test_title template_tests.filter_tests.test_urlize template_tests.syntax_tests.test_url utils_tests.test_html view_tests.tests.test_csrf view_tests.tests.test_debug
+
+    self.assertTrue(real_count != 0, msg_prefix + "Couldn't find '%s' in response" % needle)
+AssertionError: False is not true : Couldn't find '<td>
+items
+</td><td class="code">
+<pre>
+&x27;Oops&x27;
+</pre>
+</td>' in response
+
+----------------------------------------------------------------------
+Ran 580 tests in 4.661s
+
+FAILED (failures=28, errors=1)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application admin_docs
+Importing application auth_tests
+Importing application forms_tests
+Importing application model_forms
+Importing application template_tests
+Importing application utils_tests
+Importing application view_tests
+Skipping setup of unused database(s): other.
+Operations to perform:
+  Synchronize unmigrated apps: admin_docs, auth, auth_tests, contenttypes, forms_tests, messages, model_forms, sessions, staticfiles, template_tests, utils_tests, view_tests
+  Apply all migrations: admin, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table admin_docs_company
+    Creating table admin_docs_group
+    Creating table admin_docs_family
+    Creating table admin_docs_person
+    Creating table auth_tests_customuser
+    Creating table auth_tests_customuserwithoutisactivefield
+    Creating table auth_tests_extensionuser
+    Creating table auth_tests_custompermissionsuser
+    Creating table auth_tests_customusernonuniqueusername
+    Creating table auth_tests_isactivetestuser1
+    Creating table auth_tests_minimaluser
+    Creating table auth_tests_nopassworduser
+    Creating table auth_tests_concrete
+    Creating table auth_tests_uuiduser
+    Creating table auth_tests_email
+    Creating table auth_tests_customuserwithfk
+    Creating table auth_tests_integerusernameuser
+    Creating table auth_tests_userwithdisabledlastloginfield
+    Creating table auth_tests_customemailfield
+    Creating table forms_tests_boundarymodel
+    Creating table forms_tests_defaults
+    Creating table forms_tests_choicemodel
+    Creating table forms_tests_choiceoptionmodel
+    Creating table forms_tests_choicefieldmodel
+    Creating table forms_tests_optionalmultichoicemodel
+    Creating table forms_tests_filemodel
+    Creating table forms_tests_article
+    Creating table model_forms_person
+    Creating table model_forms_category
+    Creating table model_forms_writer
+    Creating table model_forms_article
+    Creating table model_forms_improvedarticle
+    Creating table model_forms_improvedarticlewithparentlink
+    Creating table model_forms_betterwriter
+    Creating table model_forms_publication
+    Creating table model_forms_publicationdefaults
+    Creating table model_forms_author
+    Creating table model_forms_author1
+    Creating table model_forms_writerprofile
+    Creating table model_forms_document
+    Creating table model_forms_textfile
+    Creating table model_forms_customff
+    Creating table model_forms_filepathmodel
+    Creating table model_forms_imagefile
+    Creating table model_forms_optionalimagefile
+    Creating table model_forms_noextensionimagefile
+    Creating table model_forms_homepage
+    Creating table model_forms_product
+    Creating table model_forms_price
+    Creating table model_forms_triple
+    Creating table model_forms_articlestatus
+    Creating table model_forms_inventory
+    Creating table model_forms_book
+    Creating table model_forms_derivedbook
+    Creating table model_forms_explicitpk
+    Creating table model_forms_post
+    Creating table model_forms_datetimepost
+    Creating table model_forms_derivedpost
+    Creating table model_forms_bigint
+    Creating table model_forms_customfieldforexclusionmodel
+    Creating table model_forms_flexibledatepost
+    Creating table model_forms_colour
+    Creating table model_forms_colourfulitem
+    Creating table model_forms_customerrormessage
+    Creating table model_forms_character
+    Creating table model_forms_stumpjoke
+    Creating table model_forms_student
+    Creating table model_forms_photo
+    Creating table model_forms_uuidpk
+    Creating table model_forms_strictassignmentfieldspecific
+    Creating table model_forms_strictassignmentall
+    Creating table model_forms_award
+    Creating table model_forms_nullableuniquecharfieldmodel
+    Creating table utils_tests_category
+    Creating table utils_tests_categoryinfo
+    Creating table view_tests_author
+    Creating table view_tests_article
+    Creating table view_tests_urlarticle
+    Creating table view_tests_datearticle
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).

@@ -1,0 +1,84 @@
+Now outputting the diagnosis handoff:
+
+# Recon: django__django-11276
+
+## Failure summary
+
+The failing tests expect single quotes to be HTML-escaped as `&#x27;` (hexadecimal HTML entity), but the current Django implementation escapes them as `&#39;` (decimal HTML entity). This discrepancy causes 28 test failures across multiple modules including template filters, forms, views, and utils.
+
+The issue is straightforward: Python's stdlib `html.escape()` function uses `&#x27;` for single quotes, while Django's custom implementation uses `&#39;`. Both are functionally equivalent HTML, but the literal string output differs. The tests have been updated to expect the stdlib format (`&#x27;`), but the implementation in `django/utils/html.py` still uses the old custom escape logic.
+
+Example failure:
+```
+AssertionError: '&#39;' != '&#x27;'
+```
+
+## Suspect set
+
+- `django/utils/html.py` lines 27-33: The `_html_escapes` dictionary defining single quote escape as `&#39;`
+- `django/utils/html.py` lines 38-46: The `escape()` function using `_html_escapes` via `.translate()`
+- `django/utils/html.py` line 269: The `unescape()` helper in `urlize()` that converts `&#39;` back to literal quote
+- `django/utils/html.py` line 7 (imports): Need to import `html.escape` from stdlib
+
+## Root cause
+
+The `escape()` function in `django/utils/html.py` uses a custom character translation table (`_html_escapes` dictionary) that maps single quote to the decimal HTML entity `&#39;`. The task requires replacing this with Python's stdlib `html.escape()` function, which produces the hexadecimal entity `&#x27;` for single quotes.
+
+Current implementation:
+```python
+_html_escapes = {
+    ord('&'): '&amp;',
+    ord('<'): '&lt;',
+    ord('>'): '&gt;',
+    ord('"'): '&quot;',
+    ord("'"): '&#39;',
+}
+
+@keep_lazy(str, SafeString)
+def escape(text):
+    return mark_safe(str(text).translate(_html_escapes))
+```
+
+The stdlib `html.escape()` performs the same escaping but uses `&#x27;` for single quotes, making it faster (as noted in the problem statement: 2.45 μs vs 4.03 μs) and aligning with community-standard implementation.
+
+**Confidence: deduction — 99%**
+
+Supporting evidence:
+- `django/utils/html.py:32` — `ord("'"): '&#39;',` in the `_html_escapes` dictionary
+- `django/utils/html.py:46` — `return mark_safe(str(text).translate(_html_escapes))` uses the custom dict
+- Verified via test run: `AssertionError: '&#39;' != '&#x27;'` across 28 test failures
+- Verified stdlib behavior: `html.escape(chr(39))` returns `'&#x27;'`
+- `_html_escapes` usage confirmed to only 2 locations (definition + usage in escape())
+
+## Edit sites
+
+1. **django/utils/html.py line ~7** (import section): Add import statement
+   - Add: `from html import escape as html_escape`
+   - This imports Python's stdlib escape function
+
+2. **django/utils/html.py lines 27-33** (dictionary definition): Remove `_html_escapes` dictionary entirely
+   - The dictionary becomes unused after switching to stdlib function
+   - Confirmed via grep: only used in definition and escape() function
+
+3. **django/utils/html.py lines 38-46** (escape function): Replace function body
+   - Current: `return mark_safe(str(text).translate(_html_escapes))`
+   - Change to: `return mark_safe(html_escape(str(text)))`
+   - Preserve the `@keep_lazy(str, SafeString)` decorator
+   - Preserve the docstring
+   - The `mark_safe()` wrapper is still needed as `html.escape()` returns plain str
+
+4. **django/utils/html.py line 269** (unescape helper in urlize): Update entity replacement
+   - Current: `.replace('&#39;', "'")`
+   - Change to: `.replace('&#x27;', "'")`
+   - This helper function converts HTML entities back to characters for URL processing
+   - Must match the new escape format to properly unescape URLs
+
+## Rejected hypotheses
+
+None. The root cause is unambiguous — direct inspection of the code and test failures confirm that the escape format differs between current implementation (`&#39;`) and expected output (`&#x27;`). The stdlib function is available, tested, and confirmed to produce the expected format.
+
+## Open questions
+
+None. The change is localized, the edit sites are enumerated via grep, and the behavior is deterministic.
+
+---STDERR---

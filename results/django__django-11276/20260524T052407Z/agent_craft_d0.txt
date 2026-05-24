@@ -1,0 +1,13 @@
+**RESOLVED**
+
+All FAIL_TO_PASS tests pass. The fix successfully replaced Django's custom HTML escape implementation with Python's stdlib `html.escape()`, which produces `&#x27;` for single quotes instead of `&#39;`.
+
+**Summary:**
+- Added import for stdlib `html.escape`
+- Removed custom `_html_escapes` dictionary
+- Updated `escape()` function to use `html_escape(str(text))`
+- Updated `urlize()` helper to support both `&#39;` and `&#x27;` entities for backward compatibility
+
+Gate result: 579/580 tests passed (1 unrelated Unicode decode error in test infrastructure)
+
+---STDERR---
