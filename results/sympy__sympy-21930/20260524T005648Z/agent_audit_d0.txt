@@ -1,0 +1,28 @@
+# Audit: sympy__sympy-21930
+
+## FAIL_TO_PASS
+- test_create: PASS ✓
+- test_commutation: PASS ✓
+- test_create_f: PASS ✓
+- test_NO: PASS ✓
+- test_Tensors: PASS ✓
+- test_issue_19661: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch wraps LaTeX output in curly braces for three operator classes (`AntiSymmetricTensor`, `CreateBoson`, `CreateFermion`). All six FAIL_TO_PASS tests now pass, with zero regressions in the PASS_TO_PASS suite. Gate ran 52 tests successfully with 1 skipped (slow test). Total execution time: 11.20 seconds.
+
+**Patch changes:**
+- `sympy/physics/secondquant.py:221` - AntiSymmetricTensor._latex: `"%s^{%s}_{%s}"` → `"{%s^{%s}_{%s}}"`
+- `sympy/physics/secondquant.py:481` - CreateBoson._latex: `"b^\dagger_{%s}"` → `"{b^\dagger_{%s}}"`
+- `sympy/physics/secondquant.py:942` - CreateFermion._latex: `"a^\dagger_{%s}"` → `"{a^\dagger_{%s}}"`
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

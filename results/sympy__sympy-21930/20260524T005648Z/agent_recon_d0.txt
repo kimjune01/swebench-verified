@@ -1,0 +1,11 @@
+Recon complete. The issue is in the `_latex` methods for three classes in `sympy/physics/secondquant.py`:
+
+1. **CreateBoson** (line 480) - returns `b^\dagger_{i}` instead of `{b^\dagger_{i}}`
+2. **CreateFermion** (line 941) - returns `a^\dagger_{p}` instead of `{a^\dagger_{p}}`  
+3. **AntiSymmetricTensor** (line 220-224) - returns `t^{ab}_{ij}` instead of `{t^{ab}_{ij}}`
+
+The missing curly braces cause LaTeX to misinterpret expressions when operators are raised to powers (e.g., `b^\dagger_{0}^{2}` is invalid LaTeX - it should be `{b^\dagger_{0}}^{2}`). The fix is to wrap each return value in curly braces `{...}`.
+
+Diagnosis written to stdout and hypothesis appended to the graph document.
+
+---STDERR---
