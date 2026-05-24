@@ -1,0 +1,29 @@
+# Audit: scikit-learn__scikit-learn-10297
+
+## FAIL_TO_PASS
+- `test_ridge_classifier_cv_store_cv_values`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_dense_sparse`: XFAIL (expected failure — same in baseline and current run)
+
+## Contract verification
+
+**Baseline (fail-on-base capture):**
+- `test_ridge_classifier_cv_store_cv_values` → FAIL with `TypeError: __init__() got an unexpected keyword argument 'store_cv_values'`
+- 28 other tests → PASS
+- 1 test → XFAIL
+
+**Current gate (with patch):**
+- `test_ridge_classifier_cv_store_cv_values` → **PASS** (fixed)
+- 28 other tests → PASS (no regressions)
+- 1 test → XFAIL (unchanged)
+
+The patch adds `store_cv_values=False` parameter to `RidgeClassifierCV.__init__()` and passes it through to the parent `_BaseRidgeCV.__init__()`, which already implements all the necessary logic. The fix is minimal, targeted, and resolves the issue cleanly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

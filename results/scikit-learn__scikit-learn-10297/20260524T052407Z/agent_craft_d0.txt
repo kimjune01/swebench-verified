@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully passes the gate. The `store_cv_values` parameter has been threaded through `RidgeClassifierCV.__init__()` to the parent class, enabling the feature that was already fully implemented in `_BaseRidgeCV`. The FAIL_TO_PASS test now passes with no regressions.
+
+---STDERR---

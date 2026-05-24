@@ -1,0 +1,41 @@
+# Recon: scikit-learn__scikit-learn-10297
+
+## Failure summary
+
+The test `test_ridge_classifier_cv_store_cv_values` attempts to instantiate `RidgeClassifierCV(alphas=alphas, store_cv_values=True)` and expects it to store cross-validation values in the `cv_values_` attribute. The test fails immediately at instantiation with `TypeError: __init__() got an unexpected keyword argument 'store_cv_values'`. This occurs because `RidgeClassifierCV.__init__()` does not accept the `store_cv_values` parameter, even though the class documentation mentions the `cv_values_` attribute depends on `store_cv_values=True`.
+
+## Suspect set
+
+- `sklearn/linear_model/ridge.py` lines 1335-1340: RidgeClassifierCV.__init__() method — missing store_cv_values parameter in signature and parent call
+- `sklearn/linear_model/ridge.py` lines 1257-1300: RidgeClassifierCV docstring Parameters section — missing store_cv_values parameter documentation
+
+## Root cause
+
+RidgeClassifierCV overrides `__init__()` without including the `store_cv_values` parameter, even though the parent class `_BaseRidgeCV` already implements full support for it. The parent `_BaseRidgeCV.__init__()` accepts `store_cv_values=False` (line 1093), and `_BaseRidgeCV.fit()` handles storing cv_values when the flag is True (lines 1128-1131). Since `RidgeClassifierCV.fit()` delegates to `_BaseRidgeCV.fit()` (line 1374), all the necessary logic exists — the parameter just needs to be threaded through the child class's `__init__()`.
+
+The sibling class `RidgeCV` works correctly because it doesn't override `__init__`, so it inherits the parameter directly from `_BaseRidgeCV`.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `sklearn/linear_model/ridge.py:1335-1336` — `def __init__(self, alphas=(0.1, 1.0, 10.0), fit_intercept=True, normalize=False, scoring=None, cv=None, class_weight=None):` — no store_cv_values
+- `sklearn/linear_model/ridge.py:1337-1339` — `super(RidgeClassifierCV, self).__init__(alphas=alphas, fit_intercept=fit_intercept, normalize=normalize, scoring=scoring, cv=cv)` — not passing store_cv_values
+- `sklearn/linear_model/ridge.py:1093` — `_BaseRidgeCV.__init__()` signature includes `store_cv_values=False`
+- `sklearn/linear_model/ridge.py:1128-1131` — `if self.store_cv_values: self.cv_values_ = estimator.cv_values_` — parent already handles the logic
+- `sklearn/linear_model/ridge.py:1374` — `_BaseRidgeCV.fit(self, X, Y, sample_weight=sample_weight)` — RidgeClassifierCV delegates to parent fit
+
+## Edit sites
+
+1. `sklearn/linear_model/ridge.py` lines 1335-1336: Add `store_cv_values=False` parameter to the `__init__()` signature, after `cv=None` and before `class_weight=None`
+2. `sklearn/linear_model/ridge.py` lines 1337-1339: Pass `store_cv_values=self.store_cv_values` (or just `store_cv_values`) to the `super().__init__()` call
+3. `sklearn/linear_model/ridge.py` lines 1257-1300 (Parameters section of docstring): Add documentation for the `store_cv_values` parameter, similar to RidgeCV's documentation at lines 1207-1210
+
+## Rejected hypotheses
+
+None — the failure is unambiguous and the code path is clear.
+
+## Open questions
+
+None — the fix is straightforward parameter threading.
+
+---STDERR---
