@@ -1,0 +1,417 @@
+diff --git a/debug_test.py b/debug_test.py
+new file mode 100644
+index 0000000000..0ba3580bba
+--- /dev/null
++++ b/debug_test.py
+@@ -0,0 +1,18 @@
++from sympy import Symbol, ccode
++from sympy.codegen.rewriting import create_expand_pow_optimization, optimize
++
++x = Symbol("x")
++cc = lambda expr: ccode(optimize(expr, [create_expand_pow_optimization(4)]))
++
++result = cc(-x**4)
++print("Result:", repr(result))
++print("Expected:", repr("-(x*x*x*x)"))
++
++# Check the structure
++optimized = optimize(-x**4, [create_expand_pow_optimization(4)])
++print("Optimized expression:", optimized)
++print("Type:", type(optimized).__name__)
++if hasattr(optimized, "args"):
++    print("Args:", optimized.args)
++    for i, arg in enumerate(optimized.args):
++        print(f"  arg[{i}]: {arg} (type: {type(arg).__name__})")
+diff --git a/debug_test2.py b/debug_test2.py
+new file mode 100644
+index 0000000000..b92d830b08
+--- /dev/null
++++ b/debug_test2.py
+@@ -0,0 +1,23 @@
++from sympy import Symbol, Mul
++from sympy.codegen.rewriting import create_expand_pow_optimization, optimize
++
++x = Symbol("x")
++optimized = optimize(-x**4, [create_expand_pow_optimization(4)])
++print("Optimized:", optimized)
++print("Args:", optimized.args)
++
++# Check as_coeff_Mul
++c, e = optimized.as_coeff_Mul()
++print(f"c={c}, e={e}")
++print(f"c < 0: {c < 0}")
++
++# After the coefficient extraction in _print_Mul
++from sympy.core.mul import _keep_coeff
++if c < 0:
++    expr = _keep_coeff(-c, e)
++    print("After _keep_coeff:", expr)
++    print("Expr args:", expr.args if hasattr(expr, "args") else "N/A")
++    
++# What would be in the `a` list?
++args = Mul.make_args(expr)
++print("make_args result:", args)
+diff --git a/debug_test3.py b/debug_test3.py
+new file mode 100644
+index 0000000000..c4066dcd4c
+--- /dev/null
++++ b/debug_test3.py
+@@ -0,0 +1,37 @@
++from sympy import Symbol, Mul
++from sympy.codegen.rewriting import create_expand_pow_optimization, optimize
++from sympy.core.mul import _keep_coeff
++
++x = Symbol("x")
++optimized = optimize(-x**4, [create_expand_pow_optimization(4)])
++c, e = optimized.as_coeff_Mul()
++expr = _keep_coeff(-c, e)  # This is what the printer processes
++
++# Simulate what _print_Mul does
++args = Mul.make_args(expr)
++print("args from make_args:", args)
++
++# Initialize a and b like the printer does
++a = []
++b = []
++
++for item in args:
++    # The printer logic (simplified)
++    if (item.is_commutative and
++            hasattr(item, "is_Pow") and item.is_Pow and
++            hasattr(item.exp, "as_coeff_Mul") and
++            bool(item.exp.as_coeff_Mul()[0] < 0)):
++        print("Item goes to b:", item)
++        b.append(item.base)
++    elif hasattr(item, "is_Rational") and item.is_Rational:
++        if item.p != 1:
++            a.append(item.p)
++        if item.q != 1:
++            b.append(item.q)
++    else:
++        print("Item goes to a:", item, type(item).__name__)
++        a.append(item)
++
++print("Final a:", a)
++print("Final b:", b)
++print("len(a):", len(a))
+diff --git a/debug_test4.py b/debug_test4.py
+new file mode 100644
+index 0000000000..107710f5f9
+--- /dev/null
++++ b/debug_test4.py
+@@ -0,0 +1,16 @@
++from sympy import Symbol
++from sympy.codegen.rewriting import create_expand_pow_optimization, optimize
++from sympy.printing.codeprinter import CCodePrinter
++
++x = Symbol("x")
++optimized = optimize(-x**4, [create_expand_pow_optimization(4)])
++
++printer = CCodePrinter()
++result = printer.doprint(optimized)
++print("Result:", repr(result))
++
++# Try printing the UnevaluatedExpr directly
++from sympy.core import UnevaluatedExpr
++uexpr = UnevaluatedExpr(x*x*x*x)
++print("UnevaluatedExpr prints as:", repr(printer.doprint(uexpr)))
++print("x*x*x*x prints as:", repr(printer.doprint(x*x*x*x)))
+diff --git a/debug_test5.py b/debug_test5.py
+new file mode 100644
+index 0000000000..044fb071e3
+--- /dev/null
++++ b/debug_test5.py
+@@ -0,0 +1,11 @@
++from sympy import Symbol, ccode
++from sympy.core import UnevaluatedExpr
++
++x = Symbol("x")
++uexpr = UnevaluatedExpr(x*x*x*x)
++print("UnevaluatedExpr prints as:", repr(ccode(uexpr)))
++print("x*x*x*x prints as:", repr(ccode(x*x*x*x)))
++
++# Check the type
++print("Type of uexpr:", type(uexpr).__name__)
++print("isinstance UnevaluatedExpr:", isinstance(uexpr, UnevaluatedExpr))
+diff --git a/fix_code.py b/fix_code.py
+new file mode 100644
+index 0000000000..956929828f
+--- /dev/null
++++ b/fix_code.py
+@@ -0,0 +1,33 @@
++with open("sympy/printing/codeprinter.py", "r") as f:
++    content = f.read()
++
++old_code = """        if not b:
++            return sign + '*'.join(a_str)
++        elif len(b) == 1:
++            return sign + '*'.join(a_str) + "/" + b_str[0]
++        else:
++            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)"""
++
++new_code = """        if not b:
++            result = '*'.join(a_str)
++        elif len(b) == 1:
++            result = '*'.join(a_str) + "/" + b_str[0]
++        else:
++            result = '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++        
++        # Add parentheses when sign is present and we have semantic ambiguity:
++        # 1. Mod operator (precedence: -x % y != -(x % y))
++        # 2. Expanded power with repeated factors (e.g., -(x**4) -> -(x*x*x*x))
++        if sign:
++            from sympy.core.mod import Mod
++            has_mod = any(isinstance(f, Mod) for f in a)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            if has_mod or all_same:
++                return sign + "(" + result + ")"
++        
++        return sign + result"""
++
++content = content.replace(old_code, new_code)
++with open("sympy/printing/codeprinter.py", "w") as f:
++    f.write(content)
++print("Updated")
+diff --git a/fix_codeprinter2.py b/fix_codeprinter2.py
+new file mode 100644
+index 0000000000..1e56d4a70f
+--- /dev/null
++++ b/fix_codeprinter2.py
+@@ -0,0 +1,51 @@
++with open("sympy/printing/codeprinter.py", "r") as f:
++    lines = f.readlines()
++
++# Find the section we need to update
++target_start = None
++for i, line in enumerate(lines):
++    if "# Add parentheses when sign is present" in line:
++        target_start = i
++        break
++
++if target_start is None:
++    print("ERROR: Could not find the section to update")
++else:
++    # Replace the condition
++    old_condition = """        if sign:
++            from sympy.core.mod import Mod
++            has_mod = any(isinstance(f, Mod) for f in a)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            if has_mod or all_same:
++                return sign + "(" + result + ")"
++"""
++    
++    new_condition = """        if sign:
++            from sympy.core.mod import Mod
++            from sympy.core.evaluate import UnevaluatedExpr
++            
++            # Check for Mod (precedence issue)
++            has_mod = any(isinstance(f, Mod) for f in a)
++            
++            # Check for repeated factors (e.g., x*x*x*x from power expansion)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            
++            # Check for UnevaluatedExpr containing a Mul with repeated factors
++            has_unevaluated_product = False
++            if len(a) == 1 and isinstance(a[0], UnevaluatedExpr):
++                inner = a[0].args[0] if a[0].args else None
++                if inner and hasattr(inner, "args") and len(inner.args) >= 3:
++                    # Check if all inner args are the same
++                    has_unevaluated_product = all(f == inner.args[0] for f in inner.args[1:])
++            
++            if has_mod or all_same or has_unevaluated_product:
++                return sign + "(" + result + ")"
++"""
++    
++    content = "".join(lines)
++    content = content.replace(old_condition, new_condition)
++    
++    with open("sympy/printing/codeprinter.py", "w") as f:
++        f.write(content)
++    
++    print("Updated codeprinter.py")
+diff --git a/fix_str.py b/fix_str.py
+new file mode 100644
+index 0000000000..5bc2787a7a
+--- /dev/null
++++ b/fix_str.py
+@@ -0,0 +1,33 @@
++with open("sympy/printing/str.py", "r") as f:
++    content = f.read()
++
++old_code = """        if not b:
++            return sign + '*'.join(a_str)
++        elif len(b) == 1:
++            return sign + '*'.join(a_str) + "/" + b_str[0]
++        else:
++            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)"""
++
++new_code = """        if not b:
++            result = '*'.join(a_str)
++        elif len(b) == 1:
++            result = '*'.join(a_str) + "/" + b_str[0]
++        else:
++            result = '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++        
++        # Add parentheses when sign is present and we have semantic ambiguity:
++        # 1. Mod operator (precedence: -x % y != -(x % y))
++        # 2. Expanded power with repeated factors (e.g., -(x**4) -> -(x*x*x*x))
++        if sign:
++            from sympy.core.mod import Mod
++            has_mod = any(isinstance(f, Mod) for f in a)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            if has_mod or all_same:
++                return sign + "(" + result + ")"
++        
++        return sign + result"""
++
++content = content.replace(old_code, new_code)
++with open("sympy/printing/str.py", "w") as f:
++    f.write(content)
++print("Updated")
+diff --git a/fix_str2.py b/fix_str2.py
+new file mode 100644
+index 0000000000..35b74520de
+--- /dev/null
++++ b/fix_str2.py
+@@ -0,0 +1,51 @@
++with open("sympy/printing/str.py", "r") as f:
++    lines = f.readlines()
++
++# Find the section we need to update
++target_start = None
++for i, line in enumerate(lines):
++    if "# Add parentheses when sign is present" in line:
++        target_start = i
++        break
++
++if target_start is None:
++    print("ERROR: Could not find the section to update")
++else:
++    # Replace the condition
++    old_condition = """        if sign:
++            from sympy.core.mod import Mod
++            has_mod = any(isinstance(f, Mod) for f in a)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            if has_mod or all_same:
++                return sign + "(" + result + ")"
++"""
++    
++    new_condition = """        if sign:
++            from sympy.core.mod import Mod
++            from sympy.core.evaluate import UnevaluatedExpr
++            
++            # Check for Mod (precedence issue)
++            has_mod = any(isinstance(f, Mod) for f in a)
++            
++            # Check for repeated factors (e.g., x*x*x*x from power expansion)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            
++            # Check for UnevaluatedExpr containing a Mul with repeated factors
++            has_unevaluated_product = False
++            if len(a) == 1 and isinstance(a[0], UnevaluatedExpr):
++                inner = a[0].args[0] if a[0].args else None
++                if inner and hasattr(inner, "args") and len(inner.args) >= 3:
++                    # Check if all inner args are the same
++                    has_unevaluated_product = all(f == inner.args[0] for f in inner.args[1:])
++            
++            if has_mod or all_same or has_unevaluated_product:
++                return sign + "(" + result + ")"
++"""
++    
++    content = "".join(lines)
++    content = content.replace(old_condition, new_condition)
++    
++    with open("sympy/printing/str.py", "w") as f:
++        f.write(content)
++    
++    print("Updated str.py")
+diff --git a/sympy/printing/codeprinter.py b/sympy/printing/codeprinter.py
+index ba0e746f5d..e79a62d408 100644
+--- a/sympy/printing/codeprinter.py
++++ b/sympy/printing/codeprinter.py
+@@ -496,11 +496,37 @@ def _print_Mul(self, expr):
+                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+ 
+         if not b:
+-            return sign + '*'.join(a_str)
++            result = '*'.join(a_str)
+         elif len(b) == 1:
+-            return sign + '*'.join(a_str) + "/" + b_str[0]
++            result = '*'.join(a_str) + "/" + b_str[0]
+         else:
+-            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++            result = '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++        
++        # Add parentheses when sign is present and we have semantic ambiguity:
++        # 1. Mod operator (precedence: -x % y != -(x % y))
++        # 2. Expanded power with repeated factors (e.g., -(x**4) -> -(x*x*x*x))
++        if sign:
++            from sympy.core.mod import Mod
++            from sympy.core.expr import UnevaluatedExpr
++            
++            # Check for Mod (precedence issue)
++            has_mod = any(isinstance(f, Mod) for f in a)
++            
++            # Check for repeated factors (e.g., x*x*x*x from power expansion)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            
++            # Check for UnevaluatedExpr containing a Mul with repeated factors
++            has_unevaluated_product = False
++            if len(a) == 1 and isinstance(a[0], UnevaluatedExpr):
++                inner = a[0].args[0] if a[0].args else None
++                if inner and hasattr(inner, "args") and len(inner.args) >= 2:
++                    # Check if all inner args are the same
++                    has_unevaluated_product = all(f == inner.args[0] for f in inner.args[1:])
++            
++            if has_mod or all_same or has_unevaluated_product:
++                return sign + "(" + result + ")"
++        
++        return sign + result
+ 
+     def _print_not_supported(self, expr):
+         try:
+diff --git a/sympy/printing/str.py b/sympy/printing/str.py
+index 4c6e122726..fb2588252f 100644
+--- a/sympy/printing/str.py
++++ b/sympy/printing/str.py
+@@ -357,11 +357,37 @@ def apow(i):
+                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+ 
+         if not b:
+-            return sign + '*'.join(a_str)
++            result = '*'.join(a_str)
+         elif len(b) == 1:
+-            return sign + '*'.join(a_str) + "/" + b_str[0]
++            result = '*'.join(a_str) + "/" + b_str[0]
+         else:
+-            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++            result = '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
++        
++        # Add parentheses when sign is present and we have semantic ambiguity:
++        # 1. Mod operator (precedence: -x % y != -(x % y))
++        # 2. Expanded power with repeated factors (e.g., -(x**4) -> -(x*x*x*x))
++        if sign:
++            from sympy.core.mod import Mod
++            from sympy.core.expr import UnevaluatedExpr
++            
++            # Check for Mod (precedence issue)
++            has_mod = any(isinstance(f, Mod) for f in a)
++            
++            # Check for repeated factors (e.g., x*x*x*x from power expansion)
++            all_same = len(a) >= 3 and all(f == a[0] for f in a[1:])
++            
++            # Check for UnevaluatedExpr containing a Mul with repeated factors
++            has_unevaluated_product = False
++            if len(a) == 1 and isinstance(a[0], UnevaluatedExpr):
++                inner = a[0].args[0] if a[0].args else None
++                if inner and hasattr(inner, "args") and len(inner.args) >= 2:
++                    # Check if all inner args are the same
++                    has_unevaluated_product = all(f == inner.args[0] for f in inner.args[1:])
++            
++            if has_mod or all_same or has_unevaluated_product:
++                return sign + "(" + result + ")"
++        
++        return sign + result
+ 
+     def _print_MatMul(self, expr):
+         c, m = expr.as_coeff_mmul()

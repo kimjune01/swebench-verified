@@ -1,0 +1,58 @@
+# Recon: sympy__sympy-22080
+
+## Failure summary
+
+Three tests fail due to incorrect code generation for negated expressions:
+1. `test_empty_modules`: `lambdify([x, y], -(x % y), modules=[])` generates `-x % y` which evaluates to `4` instead of expected `-3` for inputs (3, 7)
+2. `test_PythonCodePrinter`: `doprint(-Mod(x, y))` returns `'-x % y'` instead of `'-(x % y)'`
+3. `test_create_expand_pow_optimization`: `ccode(-x**4)` after optimization returns `'-x*x*x*x'` instead of `'-(x*x*x*x)'`
+
+The core issue is operator precedence: in Python, `-x % y` means `(-x) % y` due to unary minus binding tighter than modulo, producing wrong results.
+
+## Suspect set
+
+- `sympy/printing/str.py` lines 250-364: `StrPrinter._print_Mul` method
+- `sympy/printing/codeprinter.py` lines 454-503: `CodePrinter._print_Mul` method
+
+Both methods share the same flawed pattern for handling negative coefficients.
+
+## Root cause
+
+When printing `Mul(-1, expr)` (negated expressions), the `_print_Mul` method:
+1. Extracts negative coefficient: `c, e = expr.as_coeff_Mul()` yields `c=-1, e=expr`
+2. Sets `sign = "-"` and transforms `expr = _keep_coeff(-c, e)` to just `e`
+3. Processes `e` and builds result string
+4. Returns `sign + result` without parentheses
+
+For `-Mod(x, y)`:
+- `Mod(x, y)` prints as `"x % y"`
+- Return value: `"-" + "x % y"` = `"-x % y"`
+- Python evaluates this as `(-x) % y` not `-(x % y)`
+
+The missing logic: when `sign = "-"`, we must wrap the result in parentheses if it's not a single atom, because unary minus has different precedence than the operators in the result.
+
+Confidence: **Deduction — 98%**
+
+Supporting evidence:
+- `sympy/printing/str.py:297-301` — coefficient extraction without precedence adjustment
+- `sympy/printing/str.py:360-364` — three return statements that prepend `sign` without parens
+- `sympy/printing/codeprinter.py:458-462` — same coefficient extraction
+- `sympy/printing/codeprinter.py:499-503` — same return pattern
+
+## Edit sites
+
+**File**: `sympy/printing/str.py`
+**Location**: lines 358-365 (the final return statements in `_print_Mul`)
+**Change**: Before returning `sign + result`, check if parentheses are needed. Add parens when:
+- `sign != ""` AND
+- NOT (single atom: `len(a) == 1 and len(b) == 0 and precedence(a[0]) == PRECEDENCE["Atom"]`)
+
+**File**: `sympy/printing/codeprinter.py`
+**Location**: lines 497-504 (the final return statements in `_print_Mul`)
+**Change**: Same logic as above — wrap result in parens when sign is present and expression is not a single atom.
+
+## Open questions
+
+None — the issue is deterministic and fully localized.
+
+---STDERR---

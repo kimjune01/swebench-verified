@@ -1,0 +1,20 @@
+# Audit: sympy__sympy-22080
+
+## FAIL_TO_PASS
+- test_create_expand_pow_optimization: **PASS**
+- test_PythonCodePrinter: **PASS**
+- test_empty_modules: **PASS**
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none (baseline had test_empty_modules failing, now fixed)
+
+## Kill report
+N/A — all FAIL_TO_PASS tests pass, zero regressions, contract fully satisfied.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
