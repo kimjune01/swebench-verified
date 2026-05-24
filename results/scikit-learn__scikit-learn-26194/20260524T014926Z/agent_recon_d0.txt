@@ -1,0 +1,43 @@
+# Recon: scikit-learn__scikit-learn-26194
+
+## Failure summary
+The tests fail because `roc_curve` returns thresholds greater than 1.0 when provided with probability estimates (scores in the range [0, 1]). The test `test_roc_curve_drop_intermediate` expects the first threshold to be `np.inf` but receives `2.0`. The test `test_roc_curve_with_probablity_estimates[42]` expects `np.isinf(thresholds[0])` to be `True` but receives `1.9699...` instead. Both tests use probability estimates as input scores.
+
+## Suspect set
+- `sklearn/metrics/_ranking.py` lines 1086: The line that constructs the first threshold value using `thresholds[0] + 1`
+- `sklearn/metrics/_ranking.py` lines 1022: The docstring that documents the current (incorrect) behavior
+- `sklearn/metrics/_ranking.py` lines 1058: The example that shows the current (incorrect) output
+
+## Root cause
+The root cause is the calculation at line 1086 in `sklearn/metrics/_ranking.py`:
+```python
+thresholds = np.r_[thresholds[0] + 1, thresholds]
+```
+
+This line adds an extra threshold by computing `max(y_score) + 1` to ensure the ROC curve starts at (0, 0) (no instances predicted positive). However, when `y_score` contains probability estimates with `max(y_score) ≤ 1`, this produces threshold values > 1, which is semantically incorrect for probabilities. The value should be `np.inf` to represent "no instances being predicted" regardless of the score range.
+
+Confidence: **deduction — 99%**
+
+Supporting evidence:
+- `sklearn/metrics/_ranking.py:1086` — `thresholds = np.r_[thresholds[0] + 1, thresholds]`
+- `sklearn/metrics/_ranking.py:1022` — docstring states "`thresholds[0]` represents no instances being predicted and is arbitrarily set to `max(y_score) + 1`"
+- Verified behavior: when `y_score = [0.0, 0.2, 0.5, 0.6, 0.7, 1.0]` (max = 1.0), current code produces `thresholds[0] = 2.0`, but tests expect `np.inf`
+- Only one occurrence of this pattern in the entire codebase (confirmed via grep)
+
+## Edit sites
+1. `sklearn/metrics/_ranking.py` line 1086: Replace `thresholds = np.r_[thresholds[0] + 1, thresholds]` with `thresholds = np.r_[np.inf, thresholds]`
+   
+2. `sklearn/metrics/_ranking.py` line 1022: Update docstring from "is arbitrarily set to `max(y_score) + 1`" to "is arbitrarily set to `np.inf`"
+   
+3. `sklearn/metrics/_ranking.py` line 1058: Update example output from `array([1.8 , 0.8 , 0.4 , 0.35, 0.1 ])` to `array([inf, 0.8 , 0.4 , 0.35, 0.1 ])`
+
+## Competing hypotheses
+None — the diagnosis is unambiguous.
+
+## Rejected hypotheses
+None — initial hypothesis confirmed on first inspection.
+
+## Open questions
+None — the fix is straightforward and all edit sites have been identified.
+
+---STDERR---

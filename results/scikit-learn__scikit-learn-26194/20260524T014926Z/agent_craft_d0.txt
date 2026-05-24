@@ -1,0 +1,5 @@
+**RESOLVED**
+
+Both FAIL_TO_PASS tests now pass. The fix replaced `thresholds[0] + 1` with `np.inf` at line 1086 in `sklearn/metrics/_ranking.py`, ensuring that probability estimates (values in [0, 1]) produce semantically correct threshold values. The docstring and doctest example were updated to match.
+
+---STDERR---

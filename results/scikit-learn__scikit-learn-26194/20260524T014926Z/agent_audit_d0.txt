@@ -1,0 +1,27 @@
+# Audit: scikit-learn__scikit-learn-26194
+
+## FAIL_TO_PASS
+- `sklearn/metrics/tests/test_ranking.py::test_roc_curve_drop_intermediate`: PASS ✓
+- `sklearn/metrics/tests/test_ranking.py::test_roc_curve_with_probablity_estimates[42]`: PASS ✓
+
+## PASS_TO_PASS regressions
+None — all 205 tests in the suite passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — baseline showed all tests passing.
+
+## Patch summary
+
+The fix changes `roc_curve` to use `np.inf` as the first threshold (representing "no instances being predicted") instead of computing `thresholds[0] + 1`. This resolves the issue where probability estimates (scores in [0, 1]) would produce semantically incorrect thresholds > 1.
+
+Changed 3 lines in `sklearn/metrics/_ranking.py`:
+1. Implementation (line 1086): `thresholds = np.r_[np.inf, thresholds]`
+2. Docstring (line 1022): Updated to document `np.inf` instead of `max(y_score) + 1`
+3. Example (line 1058): Updated doctest output to show `inf` instead of `1.8`
+
+Gate run: 205 passed, 0 failed, 3 warnings (0.85s)
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
