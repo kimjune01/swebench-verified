@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `FILE_UPLOAD_PERMISSIONS` from `None` to `0o644` in `django/conf/global_settings.py:307`. The FAIL_TO_PASS test `test_override_file_upload_permissions` now passes.
+
+---STDERR---

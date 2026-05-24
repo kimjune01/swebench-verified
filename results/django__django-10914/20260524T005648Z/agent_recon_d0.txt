@@ -1,0 +1,36 @@
+# Recon: django__django-10914
+
+## Failure summary
+The test `test_override_file_upload_permissions` in `tests/test_utils/tests.py` checks that `default_storage.file_permissions_mode` defaults to `0o644` when the `FILE_UPLOAD_PERMISSIONS` setting is not explicitly configured. The test fails with `AssertionError: None != 420` (where 420 is the decimal representation of 0o644), indicating that the property currently returns `None` instead of the expected default value.
+
+## Suspect set
+- `django/conf/global_settings.py` line 307: Defines `FILE_UPLOAD_PERMISSIONS = None`
+- `django/core/files/storage.py` lines 215-217: The `file_permissions_mode` cached property that returns the setting value
+
+## Root cause
+The default value of `FILE_UPLOAD_PERMISSIONS` is set to `None` in `django/conf/global_settings.py` line 307. When `FileSystemStorage.file_permissions_mode` accesses this setting via the `_value_or_setting()` helper, it returns `None` because both the instance variable and the global setting are `None`.
+
+This causes a permission inconsistency issue: when saving files in `FileSystemStorage._save()` (lines 301-302), the code only applies `os.chmod()` if `file_permissions_mode is not None`. Without an explicit default:
+- Small files uploaded via `MemoryUploadedFile` get permissions based on the system umask
+- Large files uploaded via `TemporaryUploadedFile` retain the restrictive 0o600 permissions from `tempfile.NamedTemporaryFile()`
+
+The problem statement explicitly requests setting a default of 0o644 to ensure consistent permissions regardless of the upload path.
+
+**Confidence:** Deduction — 99%
+
+**Supporting evidence:**
+- `django/conf/global_settings.py:307` — `FILE_UPLOAD_PERMISSIONS = None`
+- `django/core/files/storage.py:217` — `return self._value_or_setting(self._file_permissions_mode, settings.FILE_UPLOAD_PERMISSIONS)`
+- `django/core/files/storage.py:301-302` — `if self.file_permissions_mode is not None: os.chmod(full_path, self.file_permissions_mode)`
+- `tests/test_utils/tests.py:1102` — `self.assertEqual(default_storage.file_permissions_mode, 0o644)`
+
+## Edit sites
+- `django/conf/global_settings.py` line 307: Change `FILE_UPLOAD_PERMISSIONS = None` to `FILE_UPLOAD_PERMISSIONS = 0o644`
+
+## Rejected hypotheses
+None — the failure mode is straightforward and the code path is unambiguous.
+
+## Open questions
+None — the fix is a single-line change with clear semantics.
+
+---STDERR---
