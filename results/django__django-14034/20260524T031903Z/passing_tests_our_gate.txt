@@ -1,0 +1,28 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 forms_tests.field_tests.test_multivaluefield
+
+test_bad_choice (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_clean (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_clean_disabled_multivalue (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_disabled_has_changed (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_form_as_table (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_form_as_table_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_form_cleaned_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_has_changed_first_widget (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)
+Test when the first widget's data has changed. ... ok
+test_has_changed_last_widget (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)
+Test when the last widget's data has changed. This ensures that it is ... ok
+test_has_changed_no_initial (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_has_changed_same (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+test_no_value (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)
+If insufficient data is provided, None is substituted. ... ok
+test_render_required_attributes (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.010s
+
+OK
+Testing against Django installed in '/testbed/django'
+Importing application forms_tests
+Found 13 test(s).
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

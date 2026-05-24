@@ -1,0 +1,48 @@
+# Recon: django__django-14034
+
+## Failure summary
+The test `test_render_required_attributes` checks that when a `MultiValueField` has `require_all_fields=False` with mixed required/non-required subfields, only the required subfields should render with the HTML `required` attribute. The test fails because both subwidgets are rendered with `required`, when only the first (required=True) should have it.
+
+Expected HTML: `<input type="text" name="f_1" id="id_f_1">` (no required)
+Actual HTML: `<input type="text" name="f_1" required id="id_f_1">` (has required)
+
+## Suspect set
+- `django/forms/widgets.py` lines 819-850: `MultiWidget.get_context()` - distributes parent attrs to all subwidgets without distinguishing which should be required
+- `django/forms/boundfield.py` lines 232-239: `BoundField.build_widget_attrs()` - adds `required=True` based on parent field's required attribute
+- `django/forms/fields.py` lines 988-1001: `MultiValueField.__init__()` - stores field instances but doesn't communicate their required status to the widget
+
+## Root cause
+The rendering flow is:
+1. `BoundField.build_widget_attrs()` adds `required=True` to attrs because `MultiValueField.required=True`
+2. These attrs are passed to `MultiWidget.get_context()`  
+3. `MultiWidget.get_context()` copies `final_attrs` (including `required=True`) to ALL subwidgets via `widget_attrs = final_attrs.copy()` at line 845
+4. Each subwidget inherits the parent's required attribute, ignoring the individual field's required status stored in `MultiValueField.fields[i].required`
+
+The individual field required information exists (`MultiValueField.fields` stores CharField instances with their required attributes) but is never consulted during widget rendering.
+
+Confidence: **abduction** — 85%
+
+Supporting evidence:
+- `django/forms/boundfield.py:235` — `attrs['required'] = True` set based on `self.field.required` (parent MultiValueField)
+- `django/forms/widgets.py:845` — `widget_attrs = final_attrs.copy()` propagates required to all subwidgets
+- `django/forms/fields.py:1001` — `self.fields = fields` preserves individual field required status but widget has no access to it
+
+## Edit sites
+1. **django/forms/widgets.py lines 819-850** (`MultiWidget.get_context`): 
+   - Remove `required` from `final_attrs` before distributing to subwidgets
+   - For each subwidget, determine if it should be required and add the attribute accordingly
+   - Requires access to which subwidgets should be required (stored per-widget or accessed from field)
+
+2. **django/forms/fields.py lines 988-1001** (`MultiValueField.__init__`):
+   - After `self.fields = fields`, communicate required status to the widget
+   - E.g., set `self.widget._required_widgets = [f.required for f in self.fields]` if widget is a MultiWidget
+   - Must capture required status before lines 997-1000 potentially modify it (though in test case require_all_fields=False so fields preserve their required attribute)
+
+## Rejected hypotheses
+None yet - first diagnosis
+
+## Open questions
+- Should the widget store the required status, or should there be another mechanism for MultiWidget to access the field information at render time?
+- Should `MultiWidget.use_required_attribute()` return False to prevent the parent from adding required to final_attrs?
+
+---STDERR---

@@ -1,0 +1,167 @@
+2026-05-24 03:16:55,440 - INFO - Creating container for django__django-14034...
+2026-05-24 03:16:55,735 - INFO - Container for django__django-14034 created: 6496a9f4b9d8472a2073839a6a4ceb0f48d2722e342c2b74c8b5176adfc3fe75
+2026-05-24 03:16:56,016 - INFO - Container for django__django-14034 started: 6496a9f4b9d8472a2073839a6a4ceb0f48d2722e342c2b74c8b5176adfc3fe75
+2026-05-24 03:16:56,016 - INFO - Intermediate patch for django__django-14034 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14034/patch.diff, now applying to container...
+2026-05-24 03:16:56,132 - INFO - >>>>> Applied Patch:
+Checking patch django/forms/fields.py...
+Checking patch django/forms/widgets.py...
+Applied patch django/forms/fields.py cleanly.
+Applied patch django/forms/widgets.py cleanly.
+
+2026-05-24 03:16:56,712 - INFO - Git diff before:
+diff --git a/django/forms/fields.py b/django/forms/fields.py
+index 65d6a9ec82..12a4d3de33 100644
+--- a/django/forms/fields.py
++++ b/django/forms/fields.py
+@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
+ from django.forms.boundfield import BoundField
+ from django.forms.utils import from_current_timezone, to_current_timezone
+ from django.forms.widgets import (
++    MultiWidget,
+     FILE_INPUT_CONTRADICTION, CheckboxInput, ClearableFileInput, DateInput,
+     DateTimeInput, EmailInput, FileInput, HiddenInput, MultipleHiddenInput,
+     NullBooleanSelect, NumberInput, Select, SelectMultiple,
+@@ -988,6 +989,11 @@ class MultiValueField(Field):
+     def __init__(self, fields, *, require_all_fields=True, **kwargs):
+         self.require_all_fields = require_all_fields
+         super().__init__(**kwargs)
++        # Capture required status for widget rendering
++        if self.require_all_fields:
++            required_status = [True] * len(fields)  # All required when require_all_fields=True
++        else:
++            required_status = [f.required for f in fields]
+         for f in fields:
+             f.error_messages.setdefault('incomplete',
+                                         self.error_messages['incomplete'])
+@@ -999,6 +1005,9 @@ class MultiValueField(Field):
+                 # by those individual fields.
+                 f.required = False
+         self.fields = fields
++        # Store required status for widget rendering (private attribute)
++        if isinstance(self.widget, MultiWidget):
++            self.widget._required_fields = required_status
+ 
+     def __deepcopy__(self, memo):
+         result = super().__deepcopy__(memo)
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 00c19e2c55..29beb33e46 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -812,6 +812,7 @@ class MultiWidget(Widget):
+             self.widgets_names = ['_%s' % i for i in range(len(widgets))]
+         self.widgets = [w() if isinstance(w, type) else w for w in widgets]
+         super().__init__(attrs)
++        self._required_fields = None  # Internal: set by MultiValueField
+ 
+     @property
+     def is_hidden(self):
+@@ -829,6 +830,8 @@ class MultiWidget(Widget):
+ 
+         final_attrs = context['widget']['attrs']
+         input_type = final_attrs.pop('type', None)
++        # Remove required to distribute selectively
++        parent_required = final_attrs.pop('required', None) if self._required_fields is not None else final_attrs.get('required')
+         id_ = final_attrs.get('id')
+         subwidgets = []
+         for i, (widget_name, widget) in enumerate(zip(self.widgets_names, self.widgets)):
+@@ -839,11 +842,14 @@ class MultiWidget(Widget):
+                 widget_value = value[i]
+             except IndexError:
+                 widget_value = None
++            # Always copy to avoid mutations
++            widget_attrs = final_attrs.copy()
+             if id_:
+-                widget_attrs = final_attrs.copy()
+                 widget_attrs['id'] = '%s_%s' % (id_, i)
+-            else:
+-                widget_attrs = final_attrs
++            # Distribute required selectively
++            if self._required_fields is not None and parent_required:
++                if i < len(self._required_fields) and self._required_fields[i]:
++                    widget_attrs['required'] = True
+             subwidgets.append(widget.get_context(widget_name, widget_value, widget_attrs)['widget'])
+         context['widget']['subwidgets'] = subwidgets
+         return context
+2026-05-24 03:16:56,712 - INFO - Eval script for django__django-14034 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14034/eval.sh; copying to container...
+2026-05-24 03:17:01,647 - INFO - Test runtime: 4.82 seconds
+2026-05-24 03:17:01,648 - INFO - Test output for django__django-14034 written to logs/run_evaluation/batch/recon-craft-audit/django__django-14034/test_output.txt
+2026-05-24 03:17:01,726 - INFO - Git diff after:
+diff --git a/django/forms/fields.py b/django/forms/fields.py
+index 65d6a9ec82..12a4d3de33 100644
+--- a/django/forms/fields.py
++++ b/django/forms/fields.py
+@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
+ from django.forms.boundfield import BoundField
+ from django.forms.utils import from_current_timezone, to_current_timezone
+ from django.forms.widgets import (
++    MultiWidget,
+     FILE_INPUT_CONTRADICTION, CheckboxInput, ClearableFileInput, DateInput,
+     DateTimeInput, EmailInput, FileInput, HiddenInput, MultipleHiddenInput,
+     NullBooleanSelect, NumberInput, Select, SelectMultiple,
+@@ -988,6 +989,11 @@ class MultiValueField(Field):
+     def __init__(self, fields, *, require_all_fields=True, **kwargs):
+         self.require_all_fields = require_all_fields
+         super().__init__(**kwargs)
++        # Capture required status for widget rendering
++        if self.require_all_fields:
++            required_status = [True] * len(fields)  # All required when require_all_fields=True
++        else:
++            required_status = [f.required for f in fields]
+         for f in fields:
+             f.error_messages.setdefault('incomplete',
+                                         self.error_messages['incomplete'])
+@@ -999,6 +1005,9 @@ class MultiValueField(Field):
+                 # by those individual fields.
+                 f.required = False
+         self.fields = fields
++        # Store required status for widget rendering (private attribute)
++        if isinstance(self.widget, MultiWidget):
++            self.widget._required_fields = required_status
+ 
+     def __deepcopy__(self, memo):
+         result = super().__deepcopy__(memo)
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 00c19e2c55..29beb33e46 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -812,6 +812,7 @@ class MultiWidget(Widget):
+             self.widgets_names = ['_%s' % i for i in range(len(widgets))]
+         self.widgets = [w() if isinstance(w, type) else w for w in widgets]
+         super().__init__(attrs)
++        self._required_fields = None  # Internal: set by MultiValueField
+ 
+     @property
+     def is_hidden(self):
+@@ -829,6 +830,8 @@ class MultiWidget(Widget):
+ 
+         final_attrs = context['widget']['attrs']
+         input_type = final_attrs.pop('type', None)
++        # Remove required to distribute selectively
++        parent_required = final_attrs.pop('required', None) if self._required_fields is not None else final_attrs.get('required')
+         id_ = final_attrs.get('id')
+         subwidgets = []
+         for i, (widget_name, widget) in enumerate(zip(self.widgets_names, self.widgets)):
+@@ -839,11 +842,14 @@ class MultiWidget(Widget):
+                 widget_value = value[i]
+             except IndexError:
+                 widget_value = None
++            # Always copy to avoid mutations
++            widget_attrs = final_attrs.copy()
+             if id_:
+-                widget_attrs = final_attrs.copy()
+                 widget_attrs['id'] = '%s_%s' % (id_, i)
+-            else:
+-                widget_attrs = final_attrs
++            # Distribute required selectively
++            if self._required_fields is not None and parent_required:
++                if i < len(self._required_fields) and self._required_fields[i]:
++                    widget_attrs['required'] = True
+             subwidgets.append(widget.get_context(widget_name, widget_value, widget_attrs)['widget'])
+         context['widget']['subwidgets'] = subwidgets
+         return context
+2026-05-24 03:17:01,726 - INFO - Grading answer for django__django-14034...
+2026-05-24 03:17:01,726 - INFO - report: {'django__django-14034': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_render_required_attributes (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_bad_choice (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_clean (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_clean_disabled_multivalue (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_disabled_has_changed (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_form_as_table (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_form_as_table_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_form_cleaned_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', "Test when the first widget's data has changed.", "Test when the last widget's data has changed. This ensures that it is", 'test_has_changed_no_initial (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'test_has_changed_same (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)', 'If insufficient data is provided, None is substituted.'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-14034: resolved: True
+2026-05-24 03:17:01,726 - INFO - Attempting to stop container sweb.eval.django__django-14034.batch...
+2026-05-24 03:17:17,102 - INFO - Attempting to remove container sweb.eval.django__django-14034.batch...
+2026-05-24 03:17:17,114 - INFO - Container sweb.eval.django__django-14034.batch removed.

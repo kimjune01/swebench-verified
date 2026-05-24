@@ -1,0 +1,18 @@
+# Audit: django__django-14034
+
+## FAIL_TO_PASS
+- test_render_required_attributes: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 12 PASS_TO_PASS tests still passing.
+
+## Pre-existing (not counted)
+None.
+
+## Summary
+The patch successfully fixes the failing test. MultiValueField now correctly propagates the `required=False` attribute to its subfields, preventing the required attribute from appearing on HTML widgets when the field is optional. All 13 tests passed cleanly.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
