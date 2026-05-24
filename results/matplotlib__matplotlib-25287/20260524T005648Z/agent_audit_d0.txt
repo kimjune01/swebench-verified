@@ -1,0 +1,25 @@
+# Audit: matplotlib__matplotlib-25287
+
+## FAIL_TO_PASS
+- lib/matplotlib/tests/test_axes.py::test_xaxis_offsetText_color: **PASS** ✓
+- lib/matplotlib/tests/test_axes.py::test_yaxis_offsetText_color: **PASS** ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Gate results
+- Total: 788 passed, 66 skipped, 0 failed
+- All FAIL_TO_PASS tests now pass
+- No new failures introduced
+- No regressions in PASS_TO_PASS tests
+
+## Analysis
+The craft patch successfully resolved the issue. The fix modified `lib/matplotlib/axis.py` (lines 2258 and 2518) to use conditional logic that checks if `labelcolor == 'inherit'` before falling back to `color`, matching the pattern already used in `Tick.__init__`. Both target tests now pass, and the full gate shows zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

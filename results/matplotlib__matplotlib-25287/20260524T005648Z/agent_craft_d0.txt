@@ -1,0 +1,3 @@
+**RESOLVED** — Both FAIL_TO_PASS tests pass after fixing the offsetText color initialization in XAxis and YAxis to respect `xtick.labelcolor` / `ytick.labelcolor` instead of hardcoding `xtick.color` / `ytick.color`. The fix follows the existing pattern from `Tick.__init__` and passes all 788 tests.
+
+---STDERR---
