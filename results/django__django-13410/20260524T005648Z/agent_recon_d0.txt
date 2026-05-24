@@ -1,0 +1,39 @@
+# Recon: django__django-13410
+
+## Failure summary
+
+The tests `test_exclusive_lock` and `test_shared_lock` verify that `locks.lock()` returns `True` when successfully acquiring a file lock and `False` when a non-blocking lock cannot be acquired. Both tests fail with `AssertionError: False is not True` because the posix implementation of `locks.lock()` always returns `False`, even when the lock is successfully acquired. The root cause is a logic error in how the return value of `fcntl.flock()` is interpreted.
+
+## Suspect set
+
+- `django/core/files/locks.py` lines 109-115: The posix implementation of `lock()` and `unlock()` functions within the `else` block that handles systems with the `fcntl` module available
+
+## Root cause
+
+The posix implementation checks if `fcntl.flock()` returns `0` to determine success (`return ret == 0`), but `fcntl.flock()` actually returns `None` on success according to Python's fcntl documentation and confirmed by experimental testing. Since `None == 0` evaluates to `False`, successful lock acquisitions incorrectly return `False`.
+
+Furthermore, `fcntl.flock()` does not return an error code on failure—it raises `OSError` (or `BlockingIOError`, a subclass). The current code never catches these exceptions, so when a non-blocking lock fails, an exception propagates instead of returning `False` as intended.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/core/files/locks.py:110-111` — `ret = fcntl.flock(_fd(f), flags); return ret == 0` checks if `None == 0`
+- `django/core/files/locks.py:114-115` — Same pattern in `unlock()`
+- Experimental verification showed `fcntl.flock()` returns `None` on success and raises `BlockingIOError` on non-blocking failure
+- Git history shows this bug was introduced in commit `6fe26bd3ee` when switching from `fcntl.lockf()` to `fcntl.flock()`
+
+## Edit sites
+
+- `django/core/files/locks.py` lines 109-111: Replace the `lock()` function body with a try/except block. Call `fcntl.flock(_fd(f), flags)` in the try block and return `True`. Catch `OSError` in the except block and return `False`.
+
+- `django/core/files/locks.py` lines 113-115: Replace the `unlock()` function body with a try/except block. Call `fcntl.flock(_fd(f), fcntl.LOCK_UN)` in the try block and return `True`. Catch `OSError` in the except block and return `False`.
+
+## Rejected hypotheses
+
+None — this is the initial diagnosis.
+
+## Open questions
+
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---

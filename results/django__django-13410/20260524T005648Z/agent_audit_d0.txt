@@ -1,0 +1,23 @@
+# Audit: django__django-13410
+
+## FAIL_TO_PASS
+- `test_exclusive_lock (files.tests.FileTests)`: **PASS** ✓
+- `test_shared_lock (files.tests.FileTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 40 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None.
+
+## Summary
+The patch successfully resolves the issue. Both failing tests now pass after the fix changed the Unix implementation of `lock()` and `unlock()` to properly handle `fcntl.flock()` behavior:
+- `fcntl.flock()` returns `None` on success (not `0`)
+- `fcntl.flock()` raises `OSError` on failure (doesn't return error codes)
+
+The fix wraps both functions in try/except blocks that return `True` on success and `False` when `OSError` is caught, replacing the broken `ret == 0` check.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

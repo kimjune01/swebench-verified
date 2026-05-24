@@ -1,0 +1,11 @@
+**RESOLVED**
+
+The fix has been successfully applied and verified. The issue was that the posix implementation of `lock()` and `unlock()` in `django/core/files/locks.py` incorrectly checked if `fcntl.flock()` returned `0`, when it actually returns `None` on success and raises `OSError` on failure.
+
+**Changes made:**
+- Replaced `lock()` with try/except: calls `fcntl.flock()`, returns `True` on success, catches `OSError` and returns `False`
+- Replaced `unlock()` with try/except: calls `fcntl.flock()`, returns `True` on success, catches `OSError` and returns `False`
+
+**Gate result:** All 42 tests passed, including both FAIL_TO_PASS tests (`test_exclusive_lock` and `test_shared_lock`) on the first attempt.
+
+---STDERR---
