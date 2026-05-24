@@ -1,0 +1,42 @@
+# Recon: django__django-13344
+
+## Failure summary
+The test `test_coroutine` in `deprecation.test_middleware_mixin.MiddlewareMixinTests` verifies that middleware instances appear as coroutine functions when instantiated with an async `get_response` callable. Four middlewares fail this test: `CacheMiddleware`, `FetchFromCacheMiddleware`, `UpdateCacheMiddleware`, and `SecurityMiddleware`. The assertion `self.assertIs(asyncio.iscoroutinefunction(middleware_instance), True)` fails with `AssertionError: False is not True`.
+
+## Suspect set
+- `django/utils/deprecation.py` lines 104-117: `MiddlewareMixin.__init__()` and `_async_check()` method that sets the coroutine marker
+- `django/middleware/cache.py` lines 65-72: `UpdateCacheMiddleware.__init__()`
+- `django/middleware/cache.py` lines 132-137: `FetchFromCacheMiddleware.__init__()`
+- `django/middleware/cache.py` lines 168-195: `CacheMiddleware.__init__()`
+- `django/middleware/security.py` lines 10-23: `SecurityMiddleware.__init__()`
+
+## Root cause
+The four failing middlewares override `__init__()` but neither call `super().__init__()` nor explicitly call `self._async_check()`. The `_async_check()` method is responsible for setting `self._is_coroutine = asyncio.coroutines._is_coroutine` when `get_response` is a coroutine function. Without this marker, `asyncio.iscoroutinefunction(middleware_instance)` returns False even when the middleware should operate in async mode.
+
+The code path:
+1. `MiddlewareMixin.__init__()` calls `self._async_check()` (line 109 in django/utils/deprecation.py)
+2. `_async_check()` checks if `self.get_response` is a coroutine function and sets the marker (lines 115-117)
+3. Middlewares that override `__init__()` without calling super or `_async_check()` skip this step
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `django/utils/deprecation.py:109` — `self._async_check()` called in base `__init__()`
+- `django/utils/deprecation.py:115-117` — `if asyncio.iscoroutinefunction(self.get_response): self._is_coroutine = asyncio.coroutines._is_coroutine`
+- `django/contrib/sessions/middleware.py:18` — SessionMiddleware (which passes) explicitly calls `self._async_check()`
+- `django/contrib/redirects/middleware.py:20` — RedirectFallbackMiddleware (which passes) calls `super().__init__(get_response)`
+- Git commit fc0fa72ff4 added async support, updated SessionMiddleware but not cache/security middlewares
+
+## Edit sites
+- `django/middleware/cache.py` line 71 (after `self.get_response = get_response`): Add `self._async_check()` call in `UpdateCacheMiddleware.__init__()`
+- `django/middleware/cache.py` line 137 (after `self.get_response = get_response`): Add `self._async_check()` call in `FetchFromCacheMiddleware.__init__()`
+- `django/middleware/cache.py` line 173 (after `self.get_response = get_response`): Add `self._async_check()` call in `CacheMiddleware.__init__()`
+- `django/middleware/security.py` line 23 (after `self.get_response = get_response`): Add `self._async_check()` call in `SecurityMiddleware.__init__()`
+
+## Rejected hypotheses
+None — the diagnosis is straightforward from reading the test requirements and tracing the initialization path.
+
+## Open questions
+None — the fix is mechanical and follows the established pattern from SessionMiddleware.
+
+---STDERR---

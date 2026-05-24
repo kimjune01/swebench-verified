@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass by adding `self._async_check()` calls to four middlewares that override `__init__()` but don't call the parent implementation. The minimal fix adds exactly one line to each of the four failing middlewares (`UpdateCacheMiddleware`, `FetchFromCacheMiddleware`, `CacheMiddleware`, `SecurityMiddleware`), restoring the coroutine marker behavior without affecting any other functionality. All 487 tests pass with no regressions.
+
+---STDERR---

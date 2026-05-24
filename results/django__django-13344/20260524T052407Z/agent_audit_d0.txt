@@ -1,0 +1,25 @@
+# Audit: django__django-13344
+
+## FAIL_TO_PASS
+- `test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests)` - **PASS** ✓
+- `test_deprecation (deprecation.test_middleware_mixin.MiddlewareMixinTests)` - **PASS** ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch successfully adds `self._async_check()` calls to four middleware `__init__()` methods:
+- `UpdateCacheMiddleware` 
+- `FetchFromCacheMiddleware`
+- `CacheMiddleware`
+- `SecurityMiddleware`
+
+This restores the coroutine marker behavior required for async middleware support. All 487 tests pass with no regressions. The fix is minimal, targeted, and complete.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

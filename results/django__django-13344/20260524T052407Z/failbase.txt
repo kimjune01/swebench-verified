@@ -1,0 +1,122 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 cache.tests deprecation.test_middleware_mixin runtests
+
+Nonexistent keys aren't found in the dummy cache backend ... ok
+test_set_many (cache.tests.DummyCacheTests)
+set_many does nothing for the dummy cache backend ... ok
+test_set_many_invalid_key (cache.tests.DummyCacheTests) ... ok
+test_simple (cache.tests.DummyCacheTests)
+Dummy cache backend ignores cache set calls ... ok
+test_touch (cache.tests.DummyCacheTests)
+Dummy cache can't do touch(). ... ok
+test_unicode (cache.tests.DummyCacheTests)
+Unicode values are ignored by the dummy cache ... ok
+test_cache_key_i18n_timezone (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_i18n_translation (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_i18n_translation_accept_language (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_no_i18n (cache.tests.PrefixedCacheI18nTest) ... ok
+test_middleware (cache.tests.PrefixedCacheI18nTest) ... ok
+test_middleware_doesnt_cache_streaming_response (cache.tests.PrefixedCacheI18nTest) ... ok
+test_cache_key_varies_by_url (cache.tests.PrefixedCacheUtils) ... ok
+test_get_cache_key (cache.tests.PrefixedCacheUtils) ... ok
+test_get_cache_key_with_query (cache.tests.PrefixedCacheUtils) ... ok
+test_learn_cache_key (cache.tests.PrefixedCacheUtils) ... ok
+test_patch_cache_control (cache.tests.PrefixedCacheUtils) ... ok
+test_patch_vary_headers (cache.tests.PrefixedCacheUtils) ... ok
+test_long_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_proper_escaping (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_ints_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_many_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_one_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_with_unicode_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_without_vary_on (cache.tests.TestMakeTemplateFragmentKey) ... ok
+test_get_cache_key (cache.tests.TestWithTemplateResponse) ... ok
+test_get_cache_key_with_query (cache.tests.TestWithTemplateResponse) ... ok
+test_patch_vary_headers (cache.tests.TestWithTemplateResponse) ... ok
+test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests) ... test_deprecation (deprecation.test_middleware_mixin.MiddlewareMixinTests) ... ok
+test_passing_explicit_none (deprecation.test_middleware_mixin.MiddlewareMixinTests) ... ok
+test_sync_to_async_uses_base_thread_and_connection (deprecation.test_middleware_mixin.MiddlewareMixinTests) ... ok
+
+======================================================================
+FAIL: test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests) (middleware='CacheMiddleware')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/deprecation/test_middleware_mixin.py", line 85, in test_coroutine
+    self.assertIs(asyncio.iscoroutinefunction(middleware_instance), True)
+AssertionError: False is not True
+
+======================================================================
+FAIL: test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests) (middleware='FetchFromCacheMiddleware')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/deprecation/test_middleware_mixin.py", line 85, in test_coroutine
+    self.assertIs(asyncio.iscoroutinefunction(middleware_instance), True)
+AssertionError: False is not True
+
+======================================================================
+FAIL: test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests) (middleware='SecurityMiddleware')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/deprecation/test_middleware_mixin.py", line 85, in test_coroutine
+    self.assertIs(asyncio.iscoroutinefunction(middleware_instance), True)
+AssertionError: False is not True
+
+======================================================================
+FAIL: test_coroutine (deprecation.test_middleware_mixin.MiddlewareMixinTests) (middleware='UpdateCacheMiddleware')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/deprecation/test_middleware_mixin.py", line 85, in test_coroutine
+    self.assertIs(asyncio.iscoroutinefunction(middleware_instance), True)
+AssertionError: False is not True
+
+----------------------------------------------------------------------
+Ran 487 tests in 71.830s
+
+FAILED (failures=4, skipped=117)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Destroying test database for alias 'other' ('file:memorydb_other?mode=memory&cache=shared')...
+Testing against Django installed in '/testbed/django'
+Importing application cache
+Importing application deprecation
+Operations to perform:
+  Synchronize unmigrated apps: auth, cache, contenttypes, deprecation, messages, sessions, staticfiles
+  Apply all migrations: admin, flatpages, redirects, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table cache_poll
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying flatpages.0001_initial... OK
+  Applying redirects.0001_initial... OK
+  Applying redirects.0002_alter_redirect_new_path_help_text... OK
+  Applying sites.0002_alter_domain_unique... OK
+Operations to perform:
+  Synchronize unmigrated apps: auth, cache, contenttypes, deprecation, messages, sessions, staticfiles
+  Apply all migrations: admin, flatpages, redirects, sites
+Synchronizing apps without migrations:
+  Creating tables...
+    Creating table django_content_type
+    Creating table auth_permission
+    Creating table auth_group
+    Creating table auth_user
+    Creating table django_session
+    Creating table cache_poll
+    Running deferred SQL...
+Running migrations:
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sites.0001_initial... OK
+  Applying flatpages.0001_initial... OK
+  Applying redirects.0001_initial... OK
+  Applying redirects.0002_alter_redirect_new_path_help_text... OK
+  Applying sites.0002_alter_domain_unique... OK
+System check identified no issues (0 silenced).
