@@ -1,0 +1,2 @@
+{"instance": "sympy__sympy-13878", "stage": "start"}
+{"instance": "sympy__sympy-13878", "stage": "ERROR", "msg": "TimeoutExpired: Command '['claude', '--print', '--model', 'claude-sonnet-4-5', '--dangerously-skip-permissions', '--disallowedTools', 'WebSearch,WebFetch,Task']' timed out after 2000 seconds"}
