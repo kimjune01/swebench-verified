@@ -1,0 +1,33 @@
+Now I'll emit the structured recon handoff:
+
+```markdown
+# Recon: sympy__sympy-16886
+
+## Failure summary
+The test `test_encode_morse` checks that the function correctly encodes digits into Morse code. It fails on the assertion `assert encode_morse('12345') == '.----|..---|...--|....-|.....'` because the actual output is `'----|..---|...--|....-|.....'` (missing the leading dot for digit "1"). The error is an assertion mismatch where the Morse encoding for "1" returns `"----"` instead of the correct `".----"`.
+
+## Suspect set
+- `sympy/crypto/crypto.py` lines 1509-1534: The `morse_char` dictionary definition, specifically line 1523 which contains the incorrect mapping `"----": "1"` instead of `".----": "1"`
+
+## Root cause
+The `morse_char` dictionary at line 1523 in `sympy/crypto/crypto.py` contains an incorrect Morse code mapping for the digit "1". The current mapping is `"----": "1"` (four dashes), but standard Morse code for "1" is `".----"` (one dot followed by four dashes). The `char_morse` mapping used by `encode_morse` is automatically derived from `morse_char` via dictionary comprehension at line 1536, so the wrong value propagates to encoding. All other digit mappings (0, 2-9) are correct and follow the standard Morse pattern.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `sympy/crypto/crypto.py:1523` — `"-----": "0", "----": "1",` (wrong: should be `".----": "1"`)
+- `sympy/crypto/crypto.py:1536` — `char_morse = {v: k for k, v in morse_char.items()}` (reverse mapping inherits the error)
+- Verified current behavior: `char_morse["1"]` returns `"----"` instead of `".----"`
+- Standard Morse digits 1-5 follow pattern: 1=`.----`, 2=`..---`, 3=`...--`, 4=`....-`, 5=`.....`
+
+## Edit sites
+- `sympy/crypto/crypto.py` line 1523: Change the Morse mapping from `"----": "1"` to `".----": "1"` in the `morse_char` dictionary. This single change fixes both encoding (via `char_morse`) and decoding (via `morse_char`) since they reference the same source data.
+
+## Rejected hypotheses
+None — the error is directly observable in the code and confirmed by execution trace.
+
+## Open questions
+None — root cause is definitively identified with a single required fix.
+```
+
+---STDERR---

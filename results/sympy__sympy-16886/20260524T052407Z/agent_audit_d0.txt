@@ -1,0 +1,18 @@
+# Audit: sympy__sympy-16886
+
+## FAIL_TO_PASS
+- test_encode_morse: PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The craft patch successfully fixed the `test_encode_morse` failure without introducing any regressions. All 44 tests in the crypto test suite pass.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

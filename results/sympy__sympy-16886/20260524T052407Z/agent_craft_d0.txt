@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed the Morse code mapping for digit "1" from the incorrect `"----"` to the standard ITU Morse `".----"` in line 1523 of `sympy/crypto/crypto.py`. All tests pass, including the target `test_encode_morse` which now correctly encodes `'12345'` as `'.----|..---|...--|....-|.....'`.
+
+---STDERR---
