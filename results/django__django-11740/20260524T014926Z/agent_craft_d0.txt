@@ -1,0 +1,5 @@
+**RESOLVED** — The FAIL_TO_PASS test now passes. All 113 tests green in a single gate iteration.
+
+The fix adds FK dependency checking to `AlterField` operations in `django/db/migrations/autodetector.py`, mirroring the existing pattern from `AddField`. When a field is altered to become a ForeignKey pointing to another app, the migration now correctly includes the dependency on that app.
+
+---STDERR---

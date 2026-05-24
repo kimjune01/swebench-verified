@@ -1,0 +1,69 @@
+# Recon: django__django-11740
+
+## Failure summary
+The test `test_alter_field_to_fk_dependency_other_app` verifies that when a field is altered from a regular field (IntegerField) to a ForeignKey pointing to a model in another app, the generated AlterField migration operation should include a dependency on that other app. The test fails because the AlterField operation is created with no dependencies (`Dependencies: None`) instead of the expected dependency `[('testapp', '__first__')]`.
+
+**Error message**:
+```
+AssertionError: Migration dependencies mismatch for otherapp.auto_1 (expected [('testapp', '__first__')]):
+  otherapp:
+    auto_1
+      <AlterField  model_name='book', name='author', field=<django.db.models.fields.related.ForeignKey: author>, preserve_default=True>
+      Dependencies:
+        None
+```
+
+## Suspect set
+- `django/db/migrations/autodetector.py` lines 906-978: The `generate_altered_fields` method, specifically where AlterField operations are created (lines 966-973)
+
+## Root cause
+When the autodetector creates an `AlterField` operation, it does not check whether the new field has a foreign key relationship and therefore never adds the required dependencies. This is in stark contrast to the `_generate_added_field` method (lines 852-881), which explicitly checks for FK relationships and adds dependencies:
+
+```python
+# From _generate_added_field (line 856-858):
+if field.remote_field and field.remote_field.model:
+    dependencies.extend(self._get_dependencies_for_foreign_key(field))
+```
+
+In `generate_altered_fields`, the AlterField operation is created at line 966 without any dependency calculation:
+
+```python
+# From generate_altered_fields (line 966-973):
+self.add_operation(
+    app_label,
+    operations.AlterField(
+        model_name=model_name,
+        name=field_name,
+        field=field,
+        preserve_default=preserve_default,
+    )
+)
+```
+
+The `add_operation` method accepts an optional `dependencies` parameter, but it's never provided when creating AlterField operations, even though the new field may have a foreign key relationship that requires a dependency on another app's model.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/migrations/autodetector.py:856-858` — Shows the FK dependency pattern used in AddField
+- `django/db/migrations/autodetector.py:966-973` — Shows AlterField creation without dependencies
+- `django/db/migrations/autodetector.py:1060-1077` — The `_get_dependencies_for_foreign_key` helper method that should be called
+- `tests/migrations/test_autodetector.py:2248-2258` — Existing test showing AddField correctly creates dependencies for FK to other app
+
+## Edit sites
+- `django/db/migrations/autodetector.py` lines 954-973: In the `generate_altered_fields` method, before the `self.add_operation` call that creates the AlterField operation, add:
+  1. Initialize a `dependencies = []` list
+  2. Check if the new field (stored in variable `field`) has a `remote_field` attribute with a `model`
+  3. If yes, call `dependencies.extend(self._get_dependencies_for_foreign_key(field))`
+  4. Pass `dependencies=dependencies` to the `self.add_operation()` call
+
+The pattern should mirror exactly what `_generate_added_field` does at lines 854-858.
+
+## Rejected hypotheses
+None — the diagnosis is straightforward from code inspection and comparison with working AddField logic.
+
+## Open questions
+- Should we also check if the OLD field had a FK relationship that is being removed? (Likely no — dependencies are for ensuring the referenced model exists when the operation runs, not for removal)
+- Are there other field types (M2M with through models) that might also need dependency handling in AlterField? (The FK dependency method at line 1070-1076 already handles M2M through models, so this should be covered)
+
+---STDERR---
