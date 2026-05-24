@@ -1,0 +1,5 @@
+RESOLVED
+
+The fix is complete. The `test_templates` test now passes by preventing Django's template system from auto-calling enum classes. The solution sets `do_not_call_in_templates = True` on each enum class via the `ChoicesMeta.__new__` metaclass method, avoiding the enum member creation issue that would have broken inheritance.
+
+---STDERR---

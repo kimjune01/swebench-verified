@@ -1,0 +1,36 @@
+# Recon: django__django-12304
+
+## Failure summary
+
+The test `test_templates` attempts to use Django enumeration types in templates by accessing enum class attributes (`Suit.DIAMOND.label` and `Suit.DIAMOND.value`). The test expects the output `'Diamond|1'` but receives `'|'` (empty string for both lookups). This occurs because Django's template variable resolution system automatically calls callable objects, and enum classes are callable. When resolving `Suit.DIAMOND`, Django first retrieves the `Suit` class from context, detects it's callable, and attempts to call `Suit()` with no arguments. This call fails (enums require a value argument), causing the resolution to return an empty string, making all subsequent attribute lookups fail.
+
+## Suspect set
+
+- `django/db/models/enums.py` lines 61-69: The `Choices` class definition lacks the `do_not_call_in_templates` attribute that would prevent Django templates from attempting to call enum classes
+- `django/template/base.py` lines 851-866: Template variable resolution logic that calls callables (this is working as designed, not a bug)
+
+## Root cause
+
+Enum classes defined with `Choices`, `IntegerChoices`, or `TextChoices` are callable (being classes), and Django's template system at `django/template/base.py:851-858` automatically calls any callable object unless it has `do_not_call_in_templates = True`. When templates try to resolve `{{ Suit.DIAMOND }}`, the resolution logic calls `Suit()` which fails because enum constructors require arguments. The resolution then returns `string_if_invalid` (empty string), preventing access to enum members.
+
+**Confidence:** Deduction — 95%
+
+**Supporting evidence:**
+- `django/template/base.py:852` — checks `getattr(current, 'do_not_call_in_templates', False)` before calling
+- `django/template/base.py:857-858` — calls `current()` if callable and not marked with `do_not_call_in_templates`
+- `django/template/base.py:863-864` — on TypeError from required arguments, sets `current = context.template.engine.string_if_invalid`
+- Verified: `callable(Suit)` → `True`, `callable(Suit.DIAMOND)` → `False`
+
+## Edit sites
+
+- `django/db/models/enums.py` lines 61-69: Add `do_not_call_in_templates = True` as a class attribute to the `Choices` class. This should be placed after the docstring (line 62) and before the `__str__` method (line 64). The attribute will be inherited by `IntegerChoices` and `TextChoices` subclasses, and subsequently by all user-defined enum classes like `Suit` and `YearInSchool`.
+
+## Rejected hypotheses
+
+None — the root cause is clear from reading the template resolution code and the enum class definitions.
+
+## Open questions
+
+None — the fix is straightforward and follows Django's established pattern for preventing template auto-calling (same mechanism used for methods with `alters_data`).
+
+---STDERR---

@@ -1,0 +1,43 @@
+2026-05-24 00:53:10,839 - INFO - Creating container for django__django-12304...
+2026-05-24 00:53:11,255 - INFO - Container for django__django-12304 created: f7c942e7542e54f551b3eae447cdef3dcfe37f3690e6e3d7bb172ac843a03f39
+2026-05-24 00:53:11,745 - INFO - Container for django__django-12304 started: f7c942e7542e54f551b3eae447cdef3dcfe37f3690e6e3d7bb172ac843a03f39
+2026-05-24 00:53:11,745 - INFO - Intermediate patch for django__django-12304 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12304/patch.diff, now applying to container...
+2026-05-24 00:53:11,825 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/enums.py...
+Applied patch django/db/models/enums.py cleanly.
+
+2026-05-24 00:53:12,455 - INFO - Git diff before:
+diff --git a/django/db/models/enums.py b/django/db/models/enums.py
+index f48143ddaf..51821a2b45 100644
+--- a/django/db/models/enums.py
++++ b/django/db/models/enums.py
+@@ -31,6 +31,7 @@ class ChoicesMeta(enum.EnumMeta):
+         # that is passed in as "self" as the value to use when looking up the
+         # label in the choices.
+         cls.label = property(lambda self: cls._value2label_map_.get(self.value))
++        cls.do_not_call_in_templates = True
+         return enum.unique(cls)
+ 
+     def __contains__(cls, member):
+2026-05-24 00:53:12,455 - INFO - Eval script for django__django-12304 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12304/eval.sh; copying to container...
+2026-05-24 00:53:17,224 - INFO - Test runtime: 4.73 seconds
+2026-05-24 00:53:17,224 - INFO - Test output for django__django-12304 written to logs/run_evaluation/batch/recon-craft-audit/django__django-12304/test_output.txt
+2026-05-24 00:53:17,304 - INFO - Git diff after:
+diff --git a/django/db/models/enums.py b/django/db/models/enums.py
+index f48143ddaf..51821a2b45 100644
+--- a/django/db/models/enums.py
++++ b/django/db/models/enums.py
+@@ -31,6 +31,7 @@ class ChoicesMeta(enum.EnumMeta):
+         # that is passed in as "self" as the value to use when looking up the
+         # label in the choices.
+         cls.label = property(lambda self: cls._value2label_map_.get(self.value))
++        cls.do_not_call_in_templates = True
+         return enum.unique(cls)
+ 
+     def __contains__(cls, member):
+2026-05-24 00:53:17,304 - INFO - Grading answer for django__django-12304...
+2026-05-24 00:53:17,305 - INFO - report: {'django__django-12304': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_templates (model_enums.tests.ChoicesTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_integerchoices (model_enums.tests.ChoicesTests)', 'test_integerchoices_auto_label (model_enums.tests.ChoicesTests)', 'test_integerchoices_containment (model_enums.tests.ChoicesTests)', 'test_integerchoices_empty_label (model_enums.tests.ChoicesTests)', 'test_integerchoices_functional_api (model_enums.tests.ChoicesTests)', 'test_invalid_definition (model_enums.tests.ChoicesTests)', 'test_str (model_enums.tests.ChoicesTests)', 'test_textchoices (model_enums.tests.ChoicesTests)', 'test_textchoices_auto_label (model_enums.tests.ChoicesTests)', 'test_textchoices_blank_value (model_enums.tests.ChoicesTests)', 'test_textchoices_containment (model_enums.tests.ChoicesTests)', 'test_textchoices_empty_label (model_enums.tests.ChoicesTests)', 'test_textchoices_functional_api (model_enums.tests.ChoicesTests)', 'test_bool_unsupported (model_enums.tests.CustomChoicesTests)', 'test_labels_valid (model_enums.tests.CustomChoicesTests)', 'test_timezone_unsupported (model_enums.tests.CustomChoicesTests)', 'test_uuid_unsupported (model_enums.tests.CustomChoicesTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-12304: resolved: True
+2026-05-24 00:53:17,305 - INFO - Attempting to stop container sweb.eval.django__django-12304.batch...
+2026-05-24 00:53:32,871 - INFO - Attempting to remove container sweb.eval.django__django-12304.batch...
+2026-05-24 00:53:32,889 - INFO - Container sweb.eval.django__django-12304.batch removed.

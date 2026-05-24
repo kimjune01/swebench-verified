@@ -1,0 +1,25 @@
+# Audit: django__django-12304
+
+## FAIL_TO_PASS
+- `test_templates (model_enums.tests.ChoicesTests)`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** - all 17 PASS_TO_PASS tests remain passing
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Summary
+
+The patch adds a single line (`cls.do_not_call_in_templates = True`) to `ChoicesMeta.__new__()` in `django/db/models/enums.py`. This prevents Django's template system from attempting to call enum classes.
+
+**Gate results:** All 18 tests pass in 0.003s
+
+- FAIL_TO_PASS test now passes (was failing with `AssertionError: '|' != 'Diamond|1'`)
+- Zero regressions in PASS_TO_PASS tests
+- Clean, minimal, surgical fix
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
