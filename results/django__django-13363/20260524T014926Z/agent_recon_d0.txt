@@ -1,0 +1,33 @@
+# Recon: django__django-13363
+
+## Failure summary
+The test `test_trunc_timezone_applied_before_truncation` verifies that TruncDate and TruncTime respect the `tzinfo` parameter when truncating datetime values. The test creates a UTC datetime `2016-01-01 01:30:50` and truncates it with Pacific timezone (UTC-8), expecting date `2015-12-31` (since Pacific time would be `2015-12-31 17:30:50`). The test fails with `AssertionError: datetime.date(2016, 1, 1) != datetime.date(2015, 12, 31)` — the timezone conversion is not applied before truncation.
+
+## Suspect set
+- `django/db/models/functions/datetime.py` lines 287-297: TruncDate class
+- `django/db/models/functions/datetime.py` lines 300-311: TruncTime class
+
+## Root cause
+TruncDate and TruncTime override the `as_sql` method and hardcode `tzname = timezone.get_current_timezone_name()` instead of using the inherited `self.get_tzname()` method from TimezoneMixin. This completely discards the `tzinfo` parameter passed to the constructor.
+
+The TimezoneMixin provides `get_tzname()` (lines 17-27) which checks `self.tzinfo` and returns either the custom timezone name or falls back to `get_current_timezone_name()`. TruncBase properly uses this method at line 195 for DateTimeField truncations, but TruncDate and TruncTime bypass it entirely.
+
+Confidence: **Deduction** — 95%
+
+Supporting evidence:
+- `django/db/models/functions/datetime.py:17-27` — TimezoneMixin.get_tzname() properly handles tzinfo parameter
+- `django/db/models/functions/datetime.py:195` — TruncBase.as_sql() correctly uses `self.get_tzname()` for DateTimeField
+- `django/db/models/functions/datetime.py:295` — TruncDate.as_sql() hardcodes `timezone.get_current_timezone_name()`
+- `django/db/models/functions/datetime.py:308` — TruncTime.as_sql() hardcodes `timezone.get_current_timezone_name()`
+
+## Edit sites
+- `django/db/models/functions/datetime.py` line 295: Replace `tzname = timezone.get_current_timezone_name() if settings.USE_TZ else None` with `tzname = self.get_tzname()`
+- `django/db/models/functions/datetime.py` line 308: Replace `tzname = timezone.get_current_timezone_name() if settings.USE_TZ else None` with `tzname = self.get_tzname()`
+
+## Rejected hypotheses
+None — the code clearly shows the bug on first read.
+
+## Open questions
+None — the fix is a direct replacement matching the pattern already used in TruncBase.
+
+---STDERR---

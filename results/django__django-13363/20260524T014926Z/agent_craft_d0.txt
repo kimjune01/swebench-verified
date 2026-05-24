@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass by replacing hardcoded `timezone.get_current_timezone_name()` calls with `self.get_tzname()` in both TruncDate and TruncTime classes, allowing them to respect the `tzinfo` parameter.
+
+---STDERR---
