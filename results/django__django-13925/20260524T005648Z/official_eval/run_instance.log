@@ -1,0 +1,53 @@
+2026-05-24 00:53:19,363 - INFO - Creating container for django__django-13925...
+2026-05-24 00:53:23,751 - INFO - Container for django__django-13925 created: 565c615123da6b0c9756ffe929c43ecabfe8a2569f25df55241d8d429d8d3b6a
+2026-05-24 00:53:24,451 - INFO - Container for django__django-13925 started: 565c615123da6b0c9756ffe929c43ecabfe8a2569f25df55241d8d429d8d3b6a
+2026-05-24 00:53:24,451 - INFO - Intermediate patch for django__django-13925 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13925/patch.diff, now applying to container...
+2026-05-24 00:53:24,541 - INFO - >>>>> Applied Patch:
+Checking patch django/db/models/base.py...
+Applied patch django/db/models/base.py cleanly.
+
+2026-05-24 00:53:25,284 - INFO - Git diff before:
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 4038859cfa..beace0f326 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -1297,6 +1297,12 @@ class Model(metaclass=ModelBase):
+ 
+     @classmethod
+     def _check_default_pk(cls):
++        # Skip the check for child models in multi-table inheritance.
++        # Their pk is an auto-created parent link, but the warning should
++        # only appear on the parent that introduces the pk.
++        if cls._meta.pk.auto_created and isinstance(cls._meta.pk, OneToOneField) and cls._meta.pk.remote_field.parent_link:
++            return []
++
+         if (
+             cls._meta.pk.auto_created and
+             not settings.is_overridden('DEFAULT_AUTO_FIELD') and
+2026-05-24 00:53:25,284 - INFO - Eval script for django__django-13925 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13925/eval.sh; copying to container...
+2026-05-24 00:53:28,283 - INFO - Test runtime: 2.95 seconds
+2026-05-24 00:53:28,283 - INFO - Test output for django__django-13925 written to logs/run_evaluation/batch/recon-craft-audit/django__django-13925/test_output.txt
+2026-05-24 00:53:28,381 - INFO - Git diff after:
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 4038859cfa..beace0f326 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -1297,6 +1297,12 @@ class Model(metaclass=ModelBase):
+ 
+     @classmethod
+     def _check_default_pk(cls):
++        # Skip the check for child models in multi-table inheritance.
++        # Their pk is an auto-created parent link, but the warning should
++        # only appear on the parent that introduces the pk.
++        if cls._meta.pk.auto_created and isinstance(cls._meta.pk, OneToOneField) and cls._meta.pk.remote_field.parent_link:
++            return []
++
+         if (
+             cls._meta.pk.auto_created and
+             not settings.is_overridden('DEFAULT_AUTO_FIELD') and
+2026-05-24 00:53:28,381 - INFO - Grading answer for django__django-13925...
+2026-05-24 00:53:28,382 - INFO - report: {'django__django-13925': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_auto_created_inherited_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_explicit_inherited_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests)'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_app_default_auto_field (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_auto_created_inherited_parent_link (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_auto_created_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_default_auto_field_setting (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_explicit_inherited_parent_link (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_explicit_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests)', 'test_collision_abstract_model (check_framework.test_model_checks.IndexNameTests)', 'test_collision_across_apps (check_framework.test_model_checks.IndexNameTests)', 'test_collision_in_different_models (check_framework.test_model_checks.IndexNameTests)', 'test_collision_in_same_model (check_framework.test_model_checks.IndexNameTests)', 'test_no_collision_abstract_model_interpolation (check_framework.test_model_checks.IndexNameTests)', 'test_no_collision_across_apps_interpolation (check_framework.test_model_checks.IndexNameTests)', 'test_collision_abstract_model (check_framework.test_model_checks.ConstraintNameTests)', 'test_collision_across_apps (check_framework.test_model_checks.ConstraintNameTests)', 'test_collision_in_different_models (check_framework.test_model_checks.ConstraintNameTests)', 'test_collision_in_same_model (check_framework.test_model_checks.ConstraintNameTests)', 'test_no_collision_abstract_model_interpolation (check_framework.test_model_checks.ConstraintNameTests)', 'test_no_collision_across_apps_interpolation (check_framework.test_model_checks.ConstraintNameTests)', 'test_collision_across_apps (check_framework.test_model_checks.DuplicateDBTableTests)', 'test_collision_across_apps_database_routers_installed (check_framework.test_model_checks.DuplicateDBTableTests)', 'test_collision_in_same_app (check_framework.test_model_checks.DuplicateDBTableTests)', 'test_collision_in_same_app_database_routers_installed (check_framework.test_model_checks.DuplicateDBTableTests)', 'test_no_collision_for_proxy_models (check_framework.test_model_checks.DuplicateDBTableTests)', 'test_no_collision_for_unmanaged_models (check_framework.test_model_checks.DuplicateDBTableTests)'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for django__django-13925: resolved: True
+2026-05-24 00:53:28,383 - INFO - Attempting to stop container sweb.eval.django__django-13925.batch...
+2026-05-24 00:53:43,826 - INFO - Attempting to remove container sweb.eval.django__django-13925.batch...
+2026-05-24 00:53:43,835 - INFO - Container sweb.eval.django__django-13925.batch removed.

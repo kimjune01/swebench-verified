@@ -1,0 +1,56 @@
+# Recon: django__django-13925
+
+## Failure summary
+
+The failing tests check that Django's W042 warning (about auto-created primary keys) is raised appropriately in model inheritance scenarios. Two tests fail:
+
+1. **test_explicit_inherited_pk**: Parent has explicit `id = models.AutoField(primary_key=True)`, Child inherits. Expected: no warnings. Actual: W042 raised on Child class.
+
+2. **test_auto_created_inherited_pk**: Parent has auto-created pk (no explicit id field), Child inherits. Expected: W042 only on Parent. Actual: W042 on both Parent and Child.
+
+Error message: Child models are incorrectly flagged with W042 even though they inherit their primary key from the parent.
+
+## Suspect set
+
+- `django/db/models/base.py` lines 1299-1320: `_check_default_pk` method - raises W042 without checking if the model is a child in multi-table inheritance
+
+## Root cause
+
+In multi-table inheritance, when a child model inherits from a non-abstract parent, Django creates a OneToOneField with `auto_created=True` and `parent_link=True` that links the child to the parent. This parent link field becomes the child's primary key. 
+
+The `_check_default_pk` method only checks `cls._meta.pk.auto_created` to decide whether to raise W042. For child models, this is always `True` (because the parent_ptr OneToOneField is auto-created), even when the parent has an explicit primary key. The check doesn't distinguish between:
+1. A model that introduces its own auto-created pk (should warn)
+2. A child model whose pk is a parent link (should NOT warn - inherited from parent)
+
+Confidence: **deduction** — 98%
+
+Supporting evidence:
+- `django/db/models/base.py:1301` — condition checks only `cls._meta.pk.auto_created`
+- `django/db/models/base.py:253-257` — parent_ptr created with `auto_created=True, parent_link=True`
+- `django/db/models/options.py:274-284` — parent link promoted to be child's pk
+- Empirical verification: `Child._meta.pk.auto_created == True` and `Child._meta.pk.remote_field.parent_link == True`
+
+## Edit sites
+
+- `django/db/models/base.py` lines 1299-1302: Add a check at the start of `_check_default_pk` to return early (empty list) if the model's primary key is a parent link field. Detection: check if `cls._meta.pk` is a OneToOneField with `cls._meta.pk.remote_field.parent_link == True`. This skips the warning for child models in multi-table inheritance.
+
+Specific implementation: Insert after line 1299 (after the method definition), before line 1300 (before the existing condition):
+```python
+# Skip the check for child models in multi-table inheritance.
+# Their pk is a parent link (auto-created OneToOneField), but the
+# warning should only appear on the parent that introduces the pk.
+if isinstance(cls._meta.pk, OneToOneField) and cls._meta.pk.remote_field.parent_link:
+    return []
+```
+
+Note: OneToOneField is already imported in base.py line 25.
+
+## Rejected hypotheses
+
+None - the root cause is clear from code inspection and empirical testing.
+
+## Open questions
+
+None - the fix is straightforward and localized to one method.
+
+---STDERR---

@@ -1,0 +1,24 @@
+# Audit: django__django-13925
+
+## FAIL_TO_PASS
+- test_auto_created_inherited_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests): **PASS** ✅
+- test_explicit_inherited_pk (check_framework.test_model_checks.ModelDefaultAutoFieldTests): **PASS** ✅
+
+## PASS_TO_PASS regressions
+None — all PASS_TO_PASS tests continue to pass.
+
+## Pre-existing (not counted, confirmed against base capture)
+None — the base capture showed test_auto_created_inherited_pk and test_explicit_inherited_pk failing on the unpatched repo, which is expected. These now pass with the fix. All other tests passed both on base and with the patch.
+
+## Summary
+The craft patch adds a 6-line early return in `_check_default_pk` to skip the W042 warning for child models whose primary key is an auto-created parent link. This correctly targets the root cause identified in H₁: child models in multi-table inheritance shouldn't generate the warning since their pk is inherited, not introduced.
+
+**Gate results**: 26/26 tests passed in 0.040s
+- Both FAIL_TO_PASS tests now pass
+- Zero PASS_TO_PASS regressions
+- Clean resolution
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

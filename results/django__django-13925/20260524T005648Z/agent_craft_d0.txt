@@ -1,0 +1,14 @@
+## RESOLVED
+
+The fix successfully addresses the W042 warning issue in Django's multi-table inheritance. The minimal patch adds an early return in `_check_default_pk` to skip child models whose primary key is an auto-created parent link field.
+
+**Fix summary:**
+- Location: `django/db/models/base.py:1299`
+- Added 4 lines: early return condition checking for auto-created parent-link OneToOneField pk
+- Gate result: All 26 tests pass, including both FAIL_TO_PASS tests
+
+The condition correctly distinguishes between:
+1. Models that introduce their own auto-created pk (still warns)
+2. Child models in multi-table inheritance whose pk is inherited via parent link (no warning)
+
+---STDERR---
