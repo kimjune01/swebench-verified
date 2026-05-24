@@ -1,0 +1,26 @@
+# Audit: matplotlib__matplotlib-25960
+
+## FAIL_TO_PASS
+- `lib/matplotlib/tests/test_figure.py::test_subfigures_wspace_hspace`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 138 tests passed.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. The 7 skipped tests (SVG comparison requiring Inkscape) were also skipped on base.
+
+## Kill report
+Not applicable — patch is RESOLVED.
+
+**Gate summary:** 138 passed, 7 skipped in 12.34s
+
+**Patch verification:**
+- The fix adds wspace/hspace-aware positioning to SubFigure layout
+- GridSpec created with full-figure bounds (left=0, right=1, bottom=0, top=1)
+- Spacing bbox updates applied when wspace/hspace explicitly provided and no layout engine active
+- No regressions introduced; all PASS_TO_PASS tests continue passing
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

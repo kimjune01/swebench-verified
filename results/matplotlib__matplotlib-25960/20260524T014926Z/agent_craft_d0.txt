@@ -1,0 +1,13 @@
+**RESOLVED**
+
+The fix successfully makes the `test_subfigures_wspace_hspace` test pass. The solution required two complementary changes to the `subfigures()` method:
+
+1. **GridSpec bounds**: Added `left=0, right=1, bottom=0, top=1` to ensure the grid spans the full figure without default subplot margins.
+
+2. **Spacing-aware positioning**: When `wspace` or `hspace` are explicitly provided (not `None`) and no layout engine is active, the code now:
+   - Calls `gs.get_grid_positions(self)` to get positions that properly account for spacing
+   - Explicitly updates each subfigure's bbox via `_redo_transform_rel_fig(bbox=bbox)`
+
+This matches the implementation in newer matplotlib versions and preserves backward compatibility while enabling proper spacing support.
+
+---STDERR---

@@ -1,0 +1,47 @@
+# Recon: matplotlib__matplotlib-25960
+
+## Failure summary
+
+The test `test_subfigures_wspace_hspace` creates a 2x3 grid of subfigures with `hspace=0.5` and `wspace=1/6`, then verifies that the subfigures are positioned with appropriate spacing between them. The test fails because the actual bounding boxes do not match expected positions. For example, `sub_figs[0,0].bbox.min` y-coordinate is 240 (0.5 * 480) instead of the expected 288 (0.6 * 480), indicating that the vertical spacing is not being applied.
+
+## Suspect set
+
+- `lib/matplotlib/figure.py` lines 2261-2286: `SubFigure._redo_transform_rel_fig()` method - calculates subfigure bounding box from gridspec without incorporating wspace/hspace
+- `lib/matplotlib/figure.py` lines 1545-1601: `Figure.subfigures()` method - creates GridSpec with spacing parameters but they get ignored downstream
+
+## Root cause
+
+`SubFigure._redo_transform_rel_fig()` manually calculates the relative bounding box from the GridSpec's width_ratios and height_ratios, but completely ignores the wspace and hspace spacing parameters stored in the GridSpec. 
+
+The method divides space proportionally based only on ratios (lines 2273-2282), whereas it should use the GridSpec's `get_grid_positions()` method which properly accounts for spacing. Regular Axes correctly use `subplotspec.get_position(figure)` which internally calls `get_grid_positions()` to get proper spacing (see `lib/matplotlib/axes/_base.py:793`). SubFigure should follow the same pattern.
+
+Confidence: **abduction** — **90%**
+
+Supporting evidence:
+- `lib/matplotlib/figure.py:2273-2282` — Manual calculation using only ratios:
+  ```python
+  gs = self._subplotspec.get_gridspec()
+  wr = np.asarray(gs.get_width_ratios())
+  hr = np.asarray(gs.get_height_ratios())
+  dx = wr[self._subplotspec.colspan].sum() / wr.sum()
+  dy = hr[self._subplotspec.rowspan].sum() / hr.sum()
+  x0 = wr[:self._subplotspec.colspan.start].sum() / wr.sum()
+  y0 = 1 - hr[:self._subplotspec.rowspan.stop].sum() / hr.sum()
+  ```
+- `lib/matplotlib/gridspec.py:145-202` — `GridSpecBase.get_grid_positions()` properly calculates positions with spacing using formulas like `cell_h = tot_height / (nrows + hspace*(nrows-1))`
+- `lib/matplotlib/gridspec.py:692-700` — `SubplotSpec.get_position()` uses `get_grid_positions()` and returns proper Bbox with spacing
+- `lib/matplotlib/axes/_base.py:793` — Regular Axes use `subplotspec.get_position(self.figure)` to respect spacing
+
+## Edit sites
+
+- `lib/matplotlib/figure.py` lines 2273-2282: Replace the manual ratio-based position calculation with a call to `self._subplotspec.get_position(self.figure)` to obtain a Bbox that respects wspace and hspace. Extract the coordinates from the returned Bbox to set bbox_relative.
+
+## Rejected hypotheses
+
+None — first-pass diagnosis with clear code path from failing test to root cause.
+
+## Open questions
+
+None — the fix pattern is well-established in the codebase (used by regular Axes).
+
+---STDERR---
