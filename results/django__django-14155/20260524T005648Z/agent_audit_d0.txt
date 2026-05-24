@@ -1,0 +1,24 @@
+# Audit: django__django-14155
+
+## FAIL_TO_PASS
+- test_repr (urlpatterns_reverse.tests.ResolverMatchTests): **PASS** ✓
+- test_repr_functools_partial (urlpatterns_reverse.tests.ResolverMatchTests): **PASS** ✓
+- test_resolver_match_on_request (urlpatterns_reverse.tests.ResolverMatchTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 92 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None detected in gate run.
+
+## Summary
+The craft patch successfully resolved the issue. The fix modifies `ResolverMatch.__repr__()` to:
+1. Detect `functools.partial` instances and use `repr(self.func)` to preserve full representation
+2. Quote all string values using `%r` format specifier for proper repr output
+
+All 95 tests passed with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

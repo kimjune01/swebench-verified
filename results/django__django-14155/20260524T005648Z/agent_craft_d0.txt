@@ -1,0 +1,14 @@
+**RESOLVED**
+
+All three FAIL_TO_PASS tests now pass:
+- ✓ test_repr
+- ✓ test_repr_functools_partial  
+- ✓ test_resolver_match_on_request
+
+The fix modified `ResolverMatch.__repr__()` in `django/urls/resolvers.py` to:
+1. Detect `functools.partial` objects and use `repr(self.func)` to show the full representation
+2. Use `%r` format specifier to properly quote string values like `url_name` and `route`
+
+Gate result: All 95 tests passed in 1 iteration.
+
+---STDERR---

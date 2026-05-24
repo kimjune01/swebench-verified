@@ -1,0 +1,15 @@
+Diagnosis complete. I've identified that ResolverMatch.__repr__() has two issues:
+
+1. **Missing quotes**: String values (url_name, route) aren't quoted in the output
+2. **Functools.partial handling**: When func is a functools.partial, it shows just "functools.partial" instead of the full representation including the wrapped function and keyword arguments
+
+The root cause is in `django/urls/resolvers.py:61-65` where `__repr__` uses `self._func_path` (a computed string) instead of checking if `self.func` is a functools.partial object and formatting it appropriately.
+
+The fix requires modifying `__repr__` to:
+- Check if `self.func` is an instance of `functools.partial`
+- If yes, format it as `functools.partial(repr(p.func), **keywords)`
+- Use `%r` format specifier to quote string values
+
+The hypothesis has been appended to the graph document for the outer loop.
+
+---STDERR---
