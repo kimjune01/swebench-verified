@@ -1,0 +1,10 @@
+**RESOLVED**
+
+The fix successfully makes `DataArray.quantile(..., keep_attrs=True)` preserve attributes. Two changes to `xarray/core/dataarray.py`:
+
+1. **`_to_dataset_whole` (line 473)**: Pass `attrs=self.attrs` when creating the temporary Dataset
+2. **`_from_temp_dataset` (lines 430-432)**: Extract attrs from the result Dataset back to the DataArray
+
+The FAIL_TO_PASS test `xarray/tests/test_dataarray.py::TestDataArray::test_quantile` now passes.
+
+---STDERR---

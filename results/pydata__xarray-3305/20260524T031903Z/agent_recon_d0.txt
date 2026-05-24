@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is that DataArray attrs are not transferred through the temporary dataset conversion, causing `keep_attrs=True` to have no effect. Two locations need fixing: `_to_dataset_whole` must pass attrs to the temp dataset, and `_from_temp_dataset` must extract attrs from the result dataset back to the DataArray.
+
+---STDERR---
