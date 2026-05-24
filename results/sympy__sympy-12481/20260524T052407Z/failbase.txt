@@ -1,0 +1,40 @@
+$ PYTHONWARNINGS='ignore::UserWarning,ignore::SyntaxWarning' bin/test -C --verbose sympy/combinatorics/tests/test_permutations.py
+
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+/testbed/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Mapping
+/testbed/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+  from collections import Callable
+============================= test process starts ==============================
+executable:         /opt/miniconda3/envs/testbed/bin/python  (3.9.20-final-0) [CPython]
+architecture:       64-bit
+cache:              no
+ground types:       python 
+random seed:        46869257
+hash randomization: on (PYTHONHASHSEED=2948508954)
+
+sympy/combinatorics/tests/test_permutations.py[9] 
+test_Permutation ok
+test_josephus ok
+test_ranking ok
+test_mul ok
+test_args E
+test_Cycle ok
+test_from_sequence ok
+test_printing_cyclic ok
+test_printing_non_cyclic ok                                               [FAIL]
+
+
+________________________________________________________________________________
+___________ sympy/combinatorics/tests/test_permutations.py:test_args ___________
+  File "/testbed/sympy/combinatorics/tests/test_permutations.py", line 342, in test_args
+    assert Permutation([[0, 1], [0, 2]]) == Permutation(0, 1, 2)
+  File "/testbed/sympy/combinatorics/permutations.py", line 900, in __new__
+    raise ValueError('there were repeated elements; to resolve '
+ValueError: there were repeated elements; to resolve cycles use Cycle(0, 1)(0, 2).
+
+=========== tests finished: 8 passed, 1 exceptions, in 0.10 seconds ============
+DO *NOT* COMMIT!

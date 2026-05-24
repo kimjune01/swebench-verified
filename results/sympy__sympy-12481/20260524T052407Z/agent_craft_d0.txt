@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. The overly restrictive duplicate check for cycle arguments has been removed, allowing non-disjoint cycles like `[[0, 1], [0, 2]]` to be composed correctly by the existing Cycle composition logic. The FAIL_TO_PASS test `test_args` now passes, and all other tests remain passing.
+
+---STDERR---

@@ -1,0 +1,23 @@
+# Audit: sympy__sympy-12481
+
+## FAIL_TO_PASS
+- test_args: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 7 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The patch successfully resolved the issue. The test_args test was failing on base with:
+```
+ValueError: there were repeated elements; to resolve cycles use Cycle(0, 1)(0, 2).
+```
+
+After applying the craft patch, all 9 tests pass. The fix correctly handles overlapping cycles by merging them, allowing `Permutation([[0, 1], [0, 2]])` to evaluate to `Permutation(0, 1, 2)` as expected.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
