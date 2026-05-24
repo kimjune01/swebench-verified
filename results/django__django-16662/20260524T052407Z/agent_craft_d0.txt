@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully sorts migration imports by statement type first (`import` before `from`), then alphabetically by module name. The FAIL_TO_PASS test `test_sorted_imports` now passes along with all 52 other tests in the suite.
+
+---STDERR---

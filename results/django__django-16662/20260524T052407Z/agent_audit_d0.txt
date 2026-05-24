@@ -1,0 +1,18 @@
+# Audit: django__django-16662
+
+## FAIL_TO_PASS
+- `test_sorted_imports` (#24155 - Tests ordering of imports): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 52 tests passed.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully fixes the import ordering issue. The modified sort key `(i.startswith("from "), i.split()[1])` correctly groups `import` statements before `from` statements, then sorts alphabetically by module name within each group. All 52 tests pass with no regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

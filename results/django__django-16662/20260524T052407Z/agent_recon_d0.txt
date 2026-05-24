@@ -1,0 +1,56 @@
+# Recon: django__django-16662
+
+## Failure summary
+
+Test `test_sorted_imports` creates a migration with operations that reference `datetime.datetime(...)` and `time.time`, expecting the generated migration file to have imports ordered per Django coding style: all `import X` statements before all `from X import Y` statements. The test expects:
+```
+import datetime
+import time
+from django.db import migrations, models
+```
+
+But the actual output is:
+```
+import datetime
+from django.db import migrations, models
+import time
+```
+
+The test fails with assertion error showing the expected import order is not found in the generated migration file.
+
+## Suspect set
+
+- `django/db/migrations/writer.py` lines 199-200: Import sorting logic that determines the order of imports in generated migration files
+
+## Root cause
+
+The migration writer sorts imports alphabetically by module name only, without distinguishing between `import X` and `from X import Y` statement types. When the import set contains `{import datetime, import time, from django.db import migrations, models}`, the current sorting key `lambda i: i.split()[1]` extracts:
+- `import datetime` → `"datetime"`
+- `from django.db import migrations, models` → `"django.db"`  
+- `import time` → `"time"`
+
+Alphabetically sorted: `"datetime"` < `"django.db"` < `"time"`, which places the `from` import in the middle—violating Django's coding style that requires all `import` statements before all `from` statements.
+
+**Confidence**: 85% deduction — traced the call path from test → MigrationWriter.as_string() → import sorting at line 199. The sorting key directly determines output order, and the test failure demonstrates the consequence.
+
+**Supporting evidence**:
+- `django/db/migrations/writer.py:199-200` — `sorted_imports = sorted(imports, key=lambda i: i.split()[1])`
+- Test output shows `from django.db` appearing between `import datetime` and `import time`
+- Previous issue #24155 added this sorting in 2015, but only tested with modules that alphabetically sorted correctly by accident (`datetime` < `django.db` < `django.utils.timezone`)
+
+## Edit sites
+
+- `django/db/migrations/writer.py:199` — Change the sort key from `lambda i: i.split()[1]` to a tuple-based key that groups by import type first (`import` vs `from`), then by module name. The key should be `lambda i: (i.startswith('from '), i.split()[1])` which produces:
+  - `import X` → `(False, module_name)` → sorted first  
+  - `from X import Y` → `(True, module_name)` → sorted second
+  - Within each group, sorted alphabetically by module name
+
+## Rejected hypotheses
+
+None — this is the first diagnosis.
+
+## Open questions
+
+None — the root cause is clear and the fix is straightforward.
+
+---STDERR---
