@@ -1,0 +1,3 @@
+Diagnosis complete. The root cause is in the `__promise__` method in `django/utils/functional.py` — it creates wrappers for magic methods but doesn't force evaluation of Promise arguments, causing TypeError when lazy proxies are used as operands in arithmetic operations. The fix is to check args/kwargs for Promise instances and force their evaluation using `__cast()` before calling the underlying method, following the pattern already used in the explicitly defined `__eq__` and `__lt__` methods.
+
+---STDERR---

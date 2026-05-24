@@ -1,0 +1,26 @@
+diff --git a/django/utils/functional.py b/django/utils/functional.py
+index 6d38f932f9..92c2b45e72 100644
+--- a/django/utils/functional.py
++++ b/django/utils/functional.py
+@@ -132,7 +132,10 @@ def lazy(func, *resultclasses):
+             def __wrapper__(self, *args, **kw):
+                 # Automatically triggers the evaluation of a lazy value and
+                 # applies the given magic method of the result type.
+-                res = func(*self.__args, **self.__kw)
++                res = self.__cast()
++                # Force evaluation of Promise arguments
++                args = tuple(arg.__cast() if isinstance(arg, Promise) else arg for arg in args)
++                kw = {k: v.__cast() if isinstance(v, Promise) else v for k, v in kw.items()}
+                 return getattr(res, method_name)(*args, **kw)
+             return __wrapper__
+ 
+@@ -171,6 +174,9 @@ def lazy(func, *resultclasses):
+         def __hash__(self):
+             return hash(self.__cast())
+ 
++        def __radd__(self, other):
++            return other + self.__cast()
++
+         def __mod__(self, rhs):
+             if self._delegate_text:
+                 return str(self) % rhs

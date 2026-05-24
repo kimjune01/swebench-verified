@@ -1,0 +1,10 @@
+## RESOLVED
+
+All FAIL_TO_PASS tests now pass:
+- ✓ test_lazy_add (utils_tests.test_functional.FunctionalTests)
+- ✓ test_add08 (template_tests.filter_tests.test_add.AddTests)  
+- ✓ test_add09 (template_tests.filter_tests.test_add.AddTests)
+
+**Fix summary**: Modified `__promise__` to force evaluation of Promise arguments, and added explicit `__radd__` method to handle reflected addition when a non-Promise object is the left operand.
+
+---STDERR---

@@ -1,0 +1,20 @@
+# Audit: django__django-13794
+
+## FAIL_TO_PASS
+- test_lazy_add (utils_tests.test_functional.FunctionalTests): **PASS** ✓
+- test_add08 (template_tests.filter_tests.test_add.AddTests): **PASS** ✓
+- test_add09 (template_tests.filter_tests.test_add.AddTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 24 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None. All previously failing tests are now passing.
+
+## Kill report
+N/A — patch fully resolves the issue with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
