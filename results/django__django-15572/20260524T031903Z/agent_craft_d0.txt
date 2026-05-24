@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully addresses the root cause identified in recon. By filtering out empty strings before Path normalization in both `backend.engine.dirs` and `loader.get_dirs()`, the project root is no longer incorrectly added to template directories when `DIRS: [""]` is configured. All 11 tests pass including the target `test_template_dirs_ignore_empty_path`.
+
+---STDERR---
