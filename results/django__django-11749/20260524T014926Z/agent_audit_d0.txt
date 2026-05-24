@@ -1,0 +1,23 @@
+# Audit: django__django-11749
+
+## FAIL_TO_PASS
+- test_mutually_exclusive_group_required_options (user_commands.tests.CommandTests): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+The patch successfully resolves the issue. The `call_command()` function now properly handles mutually exclusive required groups by:
+1. Recursively collecting mutually exclusive groups from parsers and subparsers
+2. Adding options from required mutually exclusive groups to parse_args
+3. Tracking which dests have been added to avoid duplicates
+
+All 35 tests pass, including the target FAIL_TO_PASS test that was ERROR on base. Zero regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

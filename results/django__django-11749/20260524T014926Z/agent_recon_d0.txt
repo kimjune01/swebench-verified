@@ -1,0 +1,37 @@
+# Recon: django__django-11749
+
+## Failure summary
+The test `test_mutually_exclusive_group_required_options` calls `call_command('mutually_exclusive_required', foo_id=1)` where `foo_id` is part of a required mutually exclusive group. The test expects this to work, but it fails with `CommandError: Error: one of the arguments --foo-id --foo-name is required`. The parser never sees the `foo_id=1` kwarg because `call_command` only passes arguments that have `action.required=True`, but arguments in a mutually exclusive group have `action.required=False` (only the group has `required=True`).
+
+## Suspect set
+- `django/core/management/__init__.py` lines 132-138: Logic that builds `parse_args` list for the parser, only checking individual action's `required` attribute
+
+## Root cause
+The `call_command` function filters which kwargs should be passed to `parser.parse_args()` by checking if individual actions have `required=True` (line 137). In argparse, when you create a mutually exclusive group with `required=True`, the **group** is marked as required, but the **individual arguments** within that group have `required=False`. 
+
+This means when a user calls `call_command('cmd', foo_id=1)` where `foo_id` is in a required mutually exclusive group:
+1. Line 137's check `opt.required and opt.dest in options` evaluates to `False` because `opt.required=False`
+2. The `foo_id=1` is not added to `parse_args`
+3. The parser runs without seeing `foo_id`
+4. The parser sees the required mutually exclusive group still unsatisfied
+5. argparse raises "one of the arguments ... is required"
+
+**Confidence**: deduction — 95%
+
+**Supporting evidence**:
+- `django/core/management/__init__.py:135-138` — the filter condition only checks `opt.required`
+- Verified in Python shell: `group.required == True` but `group._group_actions[0].required == False`
+- Parser exposes groups via `parser._mutually_exclusive_groups`, each group has `group.required` and `group._group_actions`
+
+## Edit sites
+- `django/core/management/__init__.py` lines 132-138: After building `parse_args` with regular required arguments, add a second pass that checks `parser._mutually_exclusive_groups`. For each group where `group.required == True`, check if any action in `group._group_actions` has its `dest` in the `options` dict. If yes, format and append it to `parse_args` (same format as line 136: `'--option-name={}'.format(value)`).
+
+The logic should handle both the main parser and subparsers (similar to the existing `get_actions` helper that recursively processes `_SubParsersAction` choices).
+
+## Rejected hypotheses
+None — this is the first diagnosis pass.
+
+## Open questions
+None — the code path is clear and the fix is straightforward.
+
+---STDERR---

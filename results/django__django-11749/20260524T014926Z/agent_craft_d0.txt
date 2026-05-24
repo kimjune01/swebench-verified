@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully handles required mutually exclusive groups in `call_command()`. The issue was that individual actions in such groups have `required=False` (only the group has `required=True`), so they were never added to `parse_args`. The solution adds a second pass after the existing required-args logic to check all required mutually exclusive groups and add any matching options from `arg_options` to `parse_args`, properly handling both value-taking actions and flags.
+
+---STDERR---
