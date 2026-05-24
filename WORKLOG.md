@@ -110,6 +110,14 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-24 — batch_013 archived: 30/30 (perfect batch, 9-wide)
+
+batch_013 (seed=13, 30 disjoint: 14 django, 9 sympy, 3 matplotlib, 2 xarray, 1 pytest, 1 sklearn; pool=122, excluded=344). RUNID 20260524T005648Z. **Official 30/30** — first perfect batch this session (cf. batches 007/008 prior session). 30/30 captured, 0 empty, 0 DNF, 0 box-death, 0 reasoning loss. Scoreboard now **334/346**, 350 runs.
+
+- **Noticeably faster (~57 min start→30/30 vs batch_012's ~2h+).** Two drivers: (1) warm Docker image cache across 012→013 — base/conda layers and previously-pulled images cached, so the `setup` image-pull that dominated cold fresh-box runs (batch_010) is cheap; (2) lighter, more even tail — no single box stuck with several queued heavy/outer-loop instances (batch_012's b_8 paced that batch).
+- **`/retro` lever — duration-aware sharding.** `shard_batch.py` only does categorical heavy-isolation (matplotlib solo) + blind round-robin of the rest, so a box can draw several slow instances and pace the whole batch (the makespan = slowest box's total wall-time). Better: estimate per-instance duration and longest-processing-time-first bin-pack across boxes to balance *total wall-time per box*, not instance counts. We now have the data to seed duration priors — every archived `ledger.jsonl` has per-stage `wall_s`, clustered by repo (sympy import-tax, django runtests.py, matplotlib render). Worth it only if tail-drag costs more than warm-box reprovisioning; clean lever for a round 2.
+- **`/retro` lever — oversized-patch backoff (now 4-for-4 across 010-012).** Every genuine reasoning loss this session whose patch ballooned past ~3KB graded UNRESOLVED; median winning patch is ~400-2000 bytes. Treat patch-size blowup (>~5KB) or a 2nd consecutive `wants_rediagnose` as a soft "diagnosis is wrong" signal — back off and re-diagnose rather than adding code. batch_013 had no such blowups and lost nothing.
+
 ## 2026-05-23 — batch_012 archived: 28/30 (2 reasoning losses, 0 DNF, 9-wide)
 
 batch_012 (seed=12, 30 disjoint: 14 django, 5 matplotlib, 4 sklearn, 4 sympy, 2 astropy, 1 xarray; pool=152, excluded=314). RUNID 20260523T235420Z. **Official 28/30.** Scoreboard now **304/316**, 320 runs. 9-wide on the same boxes (b_4 still unreplaced — vCPU limit). 30/30 captured, 0 empty, 0 DNF, 0 box-death (the liveness lesson from batch_010 held — clean run).
