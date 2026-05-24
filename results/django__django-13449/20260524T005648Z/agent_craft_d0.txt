@@ -1,0 +1,14 @@
+Great! The fix is complete and verified. All 50 tests pass, including the previously failing `test_lag_decimalfield`.
+
+## Summary
+
+Fixed the SQLite syntax error when using window functions (like `Lag`) on `DecimalField` columns. The issue was that `SQLiteNumericMixin` was wrapping expressions in `CAST(...AS NUMERIC)` before the window `OVER` clause, producing invalid SQL.
+
+**Solution**: Three coordinated changes that move the CAST wrapper to the correct position:
+- Added flag support to `SQLiteNumericMixin.as_sqlite()` to allow suppression
+- Made `Window` inherit from `SQLiteNumericMixin` 
+- Added `Window.as_sqlite()` to compile source expressions without premature CAST, then let inherited behavior wrap the complete window expression
+
+The fix preserves all SQLite-specific compilation behavior while ensuring DecimalField window functions generate syntactically correct SQL.
+
+---STDERR---

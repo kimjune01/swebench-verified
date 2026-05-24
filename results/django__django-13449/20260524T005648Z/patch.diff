@@ -1,0 +1,61 @@
+diff --git a/django/db/models/expressions.py b/django/db/models/expressions.py
+index 90d90119d0..7b9f331aea 100644
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -23,7 +23,8 @@ class SQLiteNumericMixin:
+     def as_sqlite(self, compiler, connection, **extra_context):
+         sql, params = self.as_sql(compiler, connection, **extra_context)
+         try:
+-            if self.output_field.get_internal_type() == 'DecimalField':
++            if (self.output_field.get_internal_type() == 'DecimalField' and
++                not extra_context.get('suppress_numeric_cast', False)):
+                 sql = 'CAST(%s AS NUMERIC)' % sql
+         except FieldError:
+             pass
+@@ -1253,7 +1254,7 @@ class OrderBy(BaseExpression):
+         self.descending = True
+ 
+ 
+-class Window(Expression):
++class Window(SQLiteNumericMixin, Expression):
+     template = '%(expression)s OVER (%(window)s)'
+     # Although the main expression may either be an aggregate or an
+     # expression with an aggregate function, the GROUP BY that will
+@@ -1298,11 +1299,14 @@ class Window(Expression):
+     def set_source_expressions(self, exprs):
+         self.source_expression, self.partition_by, self.order_by, self.frame = exprs
+ 
+-    def as_sql(self, compiler, connection, template=None):
++    def as_sql(self, compiler, connection, template=None, source_expression=None):
+         connection.ops.check_expression_support(self)
+         if not connection.features.supports_over_clause:
+             raise NotSupportedError('This backend does not support window expressions.')
+-        expr_sql, params = compiler.compile(self.source_expression)
++        if source_expression is None:
++            expr_sql, params = compiler.compile(self.source_expression)
++        else:
++            expr_sql, params = source_expression
+         window_sql, window_params = [], []
+ 
+         if self.partition_by is not None:
+@@ -1332,6 +1336,20 @@ class Window(Expression):
+             'window': ''.join(window_sql).strip()
+         }, params
+ 
++    def as_sqlite(self, compiler, connection, **extra_context):
++        if isinstance(self.source_expression, SQLiteNumericMixin):
++            expr_sql, params = self.source_expression.as_sqlite(
++                compiler, connection, suppress_numeric_cast=True,
++            )
++        else:
++            expr_sql, params = compiler.compile(self.source_expression)
++        return super().as_sqlite(
++            compiler,
++            connection,
++            source_expression=(expr_sql, params),
++            **extra_context
++        )
++
+     def __str__(self):
+         return '{} OVER ({}{}{})'.format(
+             str(self.source_expression),

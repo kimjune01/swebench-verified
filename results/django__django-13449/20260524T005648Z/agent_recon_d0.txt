@@ -1,0 +1,42 @@
+# Recon: django__django-13449
+
+## Failure summary
+
+The test `test_lag_decimalfield` creates a window query using `Lag()` on a `DecimalField` named `bonus`. When executed on SQLite, the query raises `sqlite3.OperationalError: near "OVER": syntax error`. The test works correctly with an `IntegerField` (`salary`) but fails with `DecimalField`.
+
+## Suspect set
+
+- `django/db/models/expressions.py` lines 18-30: `SQLiteNumericMixin.as_sqlite()` - wraps DecimalField expressions in `CAST(...AS NUMERIC)` without checking if the expression is window-compatible
+
+## Root cause
+
+The `SQLiteNumericMixin` class provides an `as_sqlite()` method that wraps any expression with a `DecimalField` output in `CAST(%s AS NUMERIC)`. The `Func` class inherits from `SQLiteNumericMixin`, so all function expressions (including window functions like `Lag`) get this CAST wrapping.
+
+For window functions, this creates invalid SQL syntax. The `Window` class compiles the window function expression first, then wraps it with the `OVER (...)` clause. When `Lag` has a `DecimalField` output, the compilation produces:
+```sql
+CAST(LAG(bonus, 1) AS NUMERIC) OVER (PARTITION BY department ORDER BY bonus, name)
+```
+
+This is syntactically incorrect. In SQL, the `OVER` clause must immediately follow the function call. The correct syntax would be either:
+```sql
+CAST(LAG(bonus, 1) OVER (...) AS NUMERIC)
+```
+or cast the input field instead of the function result.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/db/models/expressions.py:633` — `class Func(SQLiteNumericMixin, Expression)` establishes inheritance
+- `django/db/models/expressions.py:23-30` — `as_sqlite()` unconditionally wraps DecimalField outputs in CAST
+- `django/db/models/expressions.py:1096-1098` — `Window.as_sql()` calls `compiler.compile(self.source_expression)` which invokes `as_sqlite()` on SQLite, then wraps result with OVER clause
+- `django/db/models/functions/window.py:24-25` — `LagLeadFunction` has `window_compatible = True` but no override to prevent CAST wrapping
+
+## Edit sites
+
+- `django/db/models/expressions.py` lines 23-30 (`SQLiteNumericMixin.as_sqlite` method): Add a check to skip CAST wrapping for window-compatible functions. Window functions should not be wrapped in CAST at the function level; if CAST is needed for DecimalField window functions, it should be applied at the Window expression level (after the OVER clause).
+
+## Open questions
+
+None - the root cause is clear and the fix location is precise.
+
+---STDERR---

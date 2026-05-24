@@ -1,0 +1,26 @@
+---
+
+# Audit: django__django-13449
+
+## FAIL_TO_PASS
+- `test_lag_decimalfield (expressions_window.tests.WindowFunctionTests)`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+**None** - All 49 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+**None** - The only pre-existing failure was `test_lag_decimalfield` with ERROR status, which is now fixed.
+
+## Summary
+The craft patch successfully resolves the issue. The gate shows clean results:
+- 50 tests ran
+- 0 failures 
+- 3 skipped (expected: database feature limitations)
+- Target test `test_lag_decimalfield` now passes
+
+The fix correctly moves CAST application from the inner Lag() expression to the outer Window expression, producing valid SQLite syntax: `CAST(LAG(bonus, 1) OVER (...) AS NUMERIC)` instead of the broken `CAST(LAG(bonus, 1) AS NUMERIC) OVER (...)`.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
