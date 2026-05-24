@@ -1,0 +1,78 @@
+# Recon: django__django-15277
+
+## Failure summary
+
+The test `test_output_field_does_not_create_broken_validators` fails when calling `field.clean(value, model_instance=None)` on CharField instances created by `Value._resolve_output_field()`. The error is:
+
+```
+TypeError: '>' not supported between instances of 'int' and 'NoneType'
+  File django/db/models/fields/__init__.py:672, in clean
+  File django/db/models/fields/__init__.py:624, in run_validators
+  File django/core/validators.py:330, in __call__
+  File django/core/validators.py:391, in compare (MaxLengthValidator)
+```
+
+The test creates `Value` objects with various types (str, int, bool, datetime, etc.), calls `_resolve_output_field()` to get the corresponding field type, then calls `field.clean()` to verify validators don't throw exceptions.
+
+## Suspect set
+
+- `django/db/models/fields/__init__.py` lines 1007-1014 (CharField.__init__)
+- `django/db/models/expressions.py` lines 785-786 (Value._resolve_output_field for strings)
+- `django/core/validators.py` lines 383-394 (MaxLengthValidator)
+
+## Root cause
+
+When `Value._resolve_output_field()` detects a string value, it returns `fields.CharField()` with no arguments (line 785-786). This results in `max_length=None` (the Field base class default from line 119).
+
+However, `CharField.__init__` (line 1013) **unconditionally** appends `MaxLengthValidator(self.max_length)` to validators:
+
+```python
+def __init__(self, *args, db_collation=None, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.db_collation = db_collation
+    self.validators.append(validators.MaxLengthValidator(self.max_length))  # line 1013
+```
+
+When `MaxLengthValidator(None)` is invoked during `field.clean()`:
+1. `clean(x)` returns `len(x)` (an integer)
+2. `compare(a, b)` executes `return a > b` where `a=len(x)` (int) and `b=None`
+3. Python raises `TypeError: '>' not supported between instances of 'int' and 'NoneType'`
+
+The validator is both **broken** (throws TypeError) and **unnecessary** (output fields from Value expressions are never used for validation, only for type coercion in SQL generation).
+
+**Confidence:** Deduction — 99%
+
+**Supporting evidence:**
+- `django/db/models/expressions.py:785-786` — creates CharField with no max_length
+- `django/db/models/fields/__init__.py:1013` — unconditionally adds broken validator
+- `django/db/models/fields/__init__.py:2324-2325` — BinaryField uses conditional pattern as precedent
+- `django/core/validators.py:391` — MaxLengthValidator.compare fails on None
+
+## Edit sites
+
+**Single change required:**
+
+`django/db/models/fields/__init__.py` lines 1013-1014: Change from unconditional append to conditional append (matching BinaryField pattern at lines 2324-2325).
+
+Current:
+```python
+self.validators.append(validators.MaxLengthValidator(self.max_length))
+```
+
+Change to:
+```python
+if self.max_length is not None:
+    self.validators.append(validators.MaxLengthValidator(self.max_length))
+```
+
+This prevents instantiating a broken validator when `max_length=None`, while preserving existing behavior for all normal CharField usage (which requires max_length and is enforced by system checks).
+
+## Rejected hypotheses
+
+None — root cause is unambiguous from code trace.
+
+## Open questions
+
+None — fix is localized, has precedent in BinaryField, and all existing tests pass per problem statement.
+
+---STDERR---
