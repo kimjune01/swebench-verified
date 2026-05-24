@@ -1,0 +1,71 @@
+2026-05-24 01:47:57,212 - INFO - Creating container for sympy__sympy-13852...
+2026-05-24 01:47:57,302 - INFO - Container for sympy__sympy-13852 created: 9b625a2e4edfd641bb2918d04a68dc4088c57c9608c9f818ea9c965da7eb8f25
+2026-05-24 01:47:57,619 - INFO - Container for sympy__sympy-13852 started: 9b625a2e4edfd641bb2918d04a68dc4088c57c9608c9f818ea9c965da7eb8f25
+2026-05-24 01:47:57,619 - INFO - Intermediate patch for sympy__sympy-13852 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13852/patch.diff, now applying to container...
+2026-05-24 01:47:57,703 - INFO - >>>>> Applied Patch:
+Checking patch sympy/functions/special/zeta_functions.py...
+Applied patch sympy/functions/special/zeta_functions.py cleanly.
+
+2026-05-24 01:47:57,915 - INFO - Git diff before:
+diff --git a/sympy/functions/special/zeta_functions.py b/sympy/functions/special/zeta_functions.py
+index b8e2b6619..8717246a5 100644
+--- a/sympy/functions/special/zeta_functions.py
++++ b/sympy/functions/special/zeta_functions.py
+@@ -1,7 +1,7 @@
+ """ Riemann zeta and related function. """
+ from __future__ import print_function, division
+ 
+-from sympy.core import Function, S, sympify, pi
++from sympy.core import Function, S, sympify, pi, I
+ from sympy.core.function import ArgumentIndexError
+ from sympy.core.compatibility import range
+ from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+@@ -271,6 +271,12 @@ class polylog(Function):
+ 
+     @classmethod
+     def eval(cls, s, z):
++        if s == 2:
++            if z == 2:
++                return pi**2/4 - I*pi*log(2)
++            elif z == S.Half:
++                return pi**2/12 - log(2)**2/2
++
+         if z == 1:
+             return zeta(s)
+         elif z == -1:
+2026-05-24 01:47:57,915 - INFO - Eval script for sympy__sympy-13852 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13852/eval.sh; copying to container...
+2026-05-24 01:48:00,311 - INFO - Test runtime: 2.29 seconds
+2026-05-24 01:48:00,312 - INFO - Test output for sympy__sympy-13852 written to logs/run_evaluation/batch/recon-craft-audit/sympy__sympy-13852/test_output.txt
+2026-05-24 01:48:00,420 - INFO - Git diff after:
+diff --git a/sympy/functions/special/zeta_functions.py b/sympy/functions/special/zeta_functions.py
+index b8e2b6619..8717246a5 100644
+--- a/sympy/functions/special/zeta_functions.py
++++ b/sympy/functions/special/zeta_functions.py
+@@ -1,7 +1,7 @@
+ """ Riemann zeta and related function. """
+ from __future__ import print_function, division
+ 
+-from sympy.core import Function, S, sympify, pi
++from sympy.core import Function, S, sympify, pi, I
+ from sympy.core.function import ArgumentIndexError
+ from sympy.core.compatibility import range
+ from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+@@ -271,6 +271,12 @@ class polylog(Function):
+ 
+     @classmethod
+     def eval(cls, s, z):
++        if s == 2:
++            if z == 2:
++                return pi**2/4 - I*pi*log(2)
++            elif z == S.Half:
++                return pi**2/12 - log(2)**2/2
++
+         if z == 1:
+             return zeta(s)
+         elif z == -1:
+2026-05-24 01:48:00,420 - INFO - Grading answer for sympy__sympy-13852...
+2026-05-24 01:48:00,421 - INFO - report: {'sympy__sympy-13852': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['test_polylog_values'], 'failure': []}, 'PASS_TO_PASS': {'success': ['test_zeta_eval', 'test_dirichlet_eta_eval', 'test_stieltjes', 'test_stieltjes_evalf'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-13852: resolved: True
+2026-05-24 01:48:00,421 - INFO - Attempting to stop container sweb.eval.sympy__sympy-13852.batch...
+2026-05-24 01:48:15,838 - INFO - Attempting to remove container sweb.eval.sympy__sympy-13852.batch...
+2026-05-24 01:48:15,849 - INFO - Container sweb.eval.sympy__sympy-13852.batch removed.

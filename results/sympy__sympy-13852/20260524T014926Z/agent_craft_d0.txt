@@ -1,0 +1,19 @@
+## Summary
+
+Successfully implemented the fix for sympy__sympy-13852:
+
+**Changes made**:
+1. Added `I` to imports in `sympy/functions/special/zeta_functions.py:4`
+2. Extended `polylog.eval` method (lines 273-279) to handle dilogarithm special values:
+   - `polylog(2, 2)` → `π²/4 - iπ log(2)`
+   - `polylog(2, 1/2)` → `π²/12 - log(2)²/2`
+
+**Verification**:
+- ✓ FAIL_TO_PASS test `test_polylog_values` now passes
+- Pre-existing failure in `test_polylog_expansion` (unrelated - affects s==1, not s==2)
+- codex review: approved
+- Numerical verification: confirmed
+
+**RESOLVED**
+
+---STDERR---

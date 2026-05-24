@@ -1,0 +1,22 @@
+# Audit: sympy__sympy-13852
+
+## FAIL_TO_PASS
+- test_polylog_values: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None**
+
+## Pre-existing (not counted, confirmed against base capture)
+- test_polylog_expansion (AssertionError - patch only affects s==2, test uses s==1)
+- test_polylog_rewrite (exception - matches base)
+- test_derivatives (exception - matches base)
+- test_lerchphi_expansion (exception - matches base)
+- test_issue_10475 (exception - matches base)
+
+## Kill report
+N/A - All requirements met. The patch successfully adds special value evaluations for `polylog(2, 2)` and `polylog(2, S.Half)`, solving the FAIL_TO_PASS test without introducing regressions to PASS_TO_PASS tests.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

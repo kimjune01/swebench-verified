@@ -1,0 +1,48 @@
+# Recon: sympy__sympy-13852
+
+## Failure summary
+
+The test `test_polylog_values` expects the polylogarithm function to evaluate specific special values symbolically. Currently, `polylog(2, 2)` and `polylog(2, S.Half)` return unevaluated expressions instead of their known closed forms. The first assertion fails: `assert polylog(2, 2) == pi**2/4 - I*pi*log(2)` because `polylog(2, 2)` returns `polylog(2, 2)` unchanged. The second assertion for `polylog(2, S.Half)` would similarly fail expecting `pi**2/12 - log(2)**2/2`.
+
+## Suspect set
+
+- `sympy/functions/special/zeta_functions.py` lines 234-243: The `polylog.eval` classmethod handles only three special z values (0, 1, -1) but lacks evaluation for dilogarithm special values like z=2 and z=1/2 when s=2.
+
+## Root cause
+
+The `polylog` class's `eval` method only implements symbolic evaluation for three cases: z=0 (returns 0), z=1 (returns zeta(s)), and z=-1 (returns -dirichlet_eta(s)). When s=2 (the dilogarithm), there are well-known closed forms for additional z values that should be evaluated, specifically:
+- polylog(2, 2) = π²/4 - iπ log(2)
+- polylog(2, 1/2) = π²/12 - log(2)²/2
+
+These are standard mathematical identities for the dilogarithm function Li₂(z), but the current implementation returns unevaluated expressions for these inputs.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `sympy/functions/special/zeta_functions.py:237-243` — The eval method's current implementation:
+```python
+@classmethod
+def eval(cls, s, z):
+    if z == 1:
+        return zeta(s)
+    elif z == -1:
+        return -dirichlet_eta(s)
+    elif z == 0:
+        return 0
+```
+- Numerical verification confirms: `(pi**2/4 - I*pi*log(2)).evalf()` equals `polylog(2, 2).evalf()` (both yield `2.467... - 2.178...I`)
+- The test file explicitly expects these symbolic forms at line 140-141
+
+## Edit sites
+
+- `sympy/functions/special/zeta_functions.py` lines 237-243: Add conditional branches in the `polylog.eval` classmethod to handle s==2 with z==2 and z==S.Half. The method should check if s equals 2, then check specific z values and return their corresponding closed forms using `pi`, `log()`, and `I`.
+
+## Rejected hypotheses
+
+None — the issue is straightforward missing functionality in the eval method.
+
+## Open questions
+
+- Whether additional dilogarithm special values (e.g., golden ratio related values) should also be added for completeness, though the test only requires z=1/2 and z=2.
+
+---STDERR---

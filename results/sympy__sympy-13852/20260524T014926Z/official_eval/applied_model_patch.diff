@@ -1,0 +1,26 @@
+diff --git a/sympy/functions/special/zeta_functions.py b/sympy/functions/special/zeta_functions.py
+index b8e2b6619..8717246a5 100644
+--- a/sympy/functions/special/zeta_functions.py
++++ b/sympy/functions/special/zeta_functions.py
+@@ -1,7 +1,7 @@
+ """ Riemann zeta and related function. """
+ from __future__ import print_function, division
+ 
+-from sympy.core import Function, S, sympify, pi
++from sympy.core import Function, S, sympify, pi, I
+ from sympy.core.function import ArgumentIndexError
+ from sympy.core.compatibility import range
+ from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+@@ -271,6 +271,12 @@ class polylog(Function):
+ 
+     @classmethod
+     def eval(cls, s, z):
++        if s == 2:
++            if z == 2:
++                return pi**2/4 - I*pi*log(2)
++            elif z == S.Half:
++                return pi**2/12 - log(2)**2/2
++
+         if z == 1:
+             return zeta(s)
+         elif z == -1:
