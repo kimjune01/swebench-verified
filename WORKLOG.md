@@ -110,6 +110,42 @@ batch_008 (seed=8, 30 disjoint: 15 django, 7 sympy, +spread), subscription, fres
 
 **Scoreboard before batch_009:** 193/196 (batches 5-8 archived). 3 standing losses: django-15987, sympy-19040, matplotlib-25311. Re-runs deferred to campaign end.
 
+## 2026-05-24 — batch_016 archived: 30/32 — ELIGIBLE POOL EXHAUSTED (422/438, ~84% of 500)
+
+batch_016 (seed=16, all 32 remaining eligible: 18 django, 7 sympy, 2 matplotlib, 2 xarray, 2 sklearn,
+1 pytest). RUNID 20260524T052407Z. **Official 30/32.** Fresh 9 boxes (re-provisioned after the
+batch_015 teardown). Two losses: `sympy__sympy-13878` (DNF, recon-stage hang) and `sympy__sympy-17139`
+(reasoning loss, heavy sympy, applied but graded unresolved).
+
+**Campaign total: scoreboard 422/438 attempted (~96.3% of eligible, ~84.4% of the full 500), 16 not-won,
+442 runs. The eligible Verified pool is now exhausted** — every instance is sphinx-doc (44, offline-
+infeasible), KNOWN_BAD (18 non-sphinx defects), or attempted (438). 44 + 18 + 438 = 500.
+
+**The 16 not-won, classified (for the README Sankey):**
+- *Reasoning (9, NOT rerun — genuine no-solve):* recon-ceiling django-11734, django-14351 · genuinely-hard
+  astropy-13398, django-16263 · gate-divergence django-14170, pytest-5787 · craft-overfit sympy-13091 ·
+  other-sympy sympy-20438, sympy-17139.
+- *Infra/timeout DNF (6, rerun-eligible only if external):* box-death django-14404, django-15563
+  (rerun_002, clean) · heavy-suite stage-hang django-15957, matplotlib-25311, sympy-19040, sympy-13878.
+- *Contamination (1):* django-15987 (serialization fixed, rerun-pending — clean).
+
+**Retro items from this session (other half of the /retro):**
+- **Recon-stage hang is real** (sympy-13878, 2000s) — heavy-suite hangs aren't craft-only; the stage-cap
+  /suite-selection lever must cover recon. (Folded into [[project_swebench_craft_hang]].)
+- **vCPU ceiling ~32** capped concurrent m7i.xlarge: 10 provisioned cold at session start but a mid-session
+  10th-box *add* failed `VcpuLimitExceeded` (9 already up = 36); terminated boxes free the quota, so a
+  fresh re-provision of 9 succeeds. Plan box count around it.
+- **Grading gotcha (self-inflicted, caught):** graded only b_1–b_3,b_5–b_9 out of habit (prior batches
+  aliased b_4→b_10); this batch had a *real* fresh b_4, so its 5 instances were briefly ungraded. Caught
+  at the tally (count didn't reconcile), graded b_4 (5/5), re-archived. Lesson: the grade box-list must
+  match the actual shard, not a remembered one.
+- **`cmd & echo` orphan** + **subscription-cache metering unknown** captured as memories
+  ([[feedback_background_proc_orphan]], [[feedback_subscription_cache_unverified]]).
+
+**Teardown:** per operator, keep ONE box alive for the clean (external-fault-only) reruns — rerun_002
+(box-death) + django-15987 (serialization) + a probationary solo rerun of sympy-13878. Reasoning losses
+are NOT rerun. Terminate the other 8.
+
 ## 2026-05-24 — batch_015 archived: 28/30 + SESSION CLOSE (6 batches, 171/180)
 
 batch_015 (seed=15, 30 disjoint: 21 django, 3 sympy, 3 xarray, 1 each astropy/matplotlib/sklearn; pool=62, excluded=404). RUNID 20260524T031903Z. **Official 28/30.** 30/30 captured, 0 empty, 0 DNF, 0 box-death. 2 reasoning losses: `django__django-14170` and `sympy__sympy-13091` (the latter went to outer-loop recon d2 and never converged — fits the "2nd consecutive `wants_rediagnose` = wrong diagnosis" signal).
