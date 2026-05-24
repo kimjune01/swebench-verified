@@ -1,0 +1,20 @@
+# Audit: pydata__xarray-4629
+
+## FAIL_TO_PASS
+- test_merge_attrs_override_copy: PASSED ✓
+
+## PASS_TO_PASS regressions
+None
+
+## Pre-existing (not counted, confirmed against base capture)
+None
+
+## Summary
+The craft patch correctly fixes the attrs copy issue by changing line 504 in xarray/core/merge.py from `return variable_attrs[0]` to `return dict(variable_attrs[0])`. This ensures that when `combine_attrs="override"`, the returned attrs dict is a copy rather than a reference to the original, preventing inadvertent mutation of source dataset attrs when the merged result is modified.
+
+All 33 tests passed. No regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,31 @@
+# Recon: pydata__xarray-4629
+
+## Failure summary
+The test `test_merge_attrs_override_copy` verifies that when merging datasets with `combine_attrs='override'`, the merged result's attributes should be a copy, not a reference to the first input's attributes. The test fails because modifying `ds3.attrs["x"] = 2` after merging also changes `ds1.attrs["x"]` from 0 to 2, demonstrating that both datasets share the same dict object. The assertion `assert ds1.x == 0` fails with `ds1.x == 2`.
+
+## Suspect set
+- `xarray/core/merge.py` lines 495-527: `merge_attrs()` function handles attribute combination logic
+- `xarray/core/merge.py` line 504: The "override" branch returns a dict reference instead of a copy
+
+## Root cause
+The `merge_attrs()` function's "override" branch returns the first object's attrs dict directly (`return variable_attrs[0]`) instead of creating a copy. This causes the merged result to share the same dict reference with the first input object. When the merged object's attrs are modified, the changes are reflected in the original input object because they point to the same dict in memory.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `xarray/core/merge.py:504` — `return variable_attrs[0]` (returns reference)
+- `xarray/core/merge.py:506-507` — `result = dict(variable_attrs[0])` (creates copy for "no_conflicts")
+- `xarray/core/merge.py:518` — `result = dict(variable_attrs[0])` (creates copy for "identical")
+
+The other combine_attrs modes ("no_conflicts" and "identical") correctly use `dict(variable_attrs[0])` to create a shallow copy before returning, ensuring the merged result has its own independent attrs dict.
+
+## Edit sites
+- `xarray/core/merge.py` line 504: Change `return variable_attrs[0]` to `return dict(variable_attrs[0])` to create a copy of the attrs dict instead of returning a reference
+
+## Rejected hypotheses
+None — this is the initial diagnosis with high confidence based on direct code reading and comparison with other branches in the same function.
+
+## Open questions
+None — the fix is straightforward and matches the pattern used by other combine_attrs modes in the same function.
+
+---STDERR---

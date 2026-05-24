@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `xarray/core/merge.py:504` from `return variable_attrs[0]` to `return dict(variable_attrs[0])` to create a copy of the attrs dict instead of returning a reference. The FAIL_TO_PASS test `test_merge_attrs_override_copy` now passes, along with all 33 tests in the merge test suite.
+
+---STDERR---
