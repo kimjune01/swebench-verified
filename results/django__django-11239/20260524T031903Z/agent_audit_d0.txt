@@ -1,0 +1,18 @@
+# Audit: django__django-11239
+
+## FAIL_TO_PASS
+- test_ssl_certificate (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase): PASS ✓
+
+## PASS_TO_PASS regressions
+none
+
+## Pre-existing (not counted, confirmed against base capture)
+none
+
+## Summary
+All 6 tests passed. The craft patch successfully implemented SSL certificate environment variable handling in the PostgreSQL dbshell client. The FAIL_TO_PASS test `test_ssl_certificate` now passes, and all PASS_TO_PASS tests remain green with zero regressions.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

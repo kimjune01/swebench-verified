@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. The PostgreSQL client now extracts SSL parameters from `conn_params` and sets the corresponding environment variables (`PGSSLMODE`, `PGSSLROOTCERT`, `PGSSLCERT`, `PGSSLKEY`) when calling `psql`, following the same pattern as the existing `PGPASSWORD` handling.
+
+---STDERR---

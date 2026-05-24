@@ -1,0 +1,51 @@
+# Recon: django__django-11239
+
+## Failure summary
+
+The test `test_ssl_certificate` in `tests/dbshell/test_postgresql.py` verifies that PostgreSQL SSL client certificate parameters (`sslmode`, `sslrootcert`, `sslcert`, `sslkey`) are correctly passed to the `psql` command via environment variables. The test expects these parameters to be set as `PGSSLMODE`, `PGSSLROOTCERT`, `PGSSLCERT`, and `PGSSLKEY` environment variables when calling `subprocess.run()`. However, the current implementation returns an empty dictionary `{}` instead of the expected environment variables, causing the assertion to fail: `{} != {'PGSSLCERT': 'client.crt', 'PGSSLKEY': 'client.key', 'PGSSLMODE': 'verify-ca', 'PGSSLROOTCERT': 'root.crt'}`.
+
+## Suspect set
+
+- `django/db/backends/postgresql/client.py` lines 12-36: The `runshell_db` classmethod that constructs the psql command and environment variables. Currently only handles `PGPASSWORD` (line 31-32) but omits SSL environment variables.
+
+## Root cause
+
+The `DatabaseClient.runshell_db()` method in `django/db/backends/postgresql/client.py` extracts connection parameters (host, port, database, user, password) from `conn_params` and sets the `PGPASSWORD` environment variable when a password is present (lines 31-32). However, it does not extract or set environment variables for SSL parameters that PostgreSQL's `psql` command supports via environment variables.
+
+PostgreSQL's `psql` client accepts SSL configuration through environment variables:
+- `sslmode` → `PGSSLMODE`
+- `sslrootcert` → `PGSSLROOTCERT`
+- `sslcert` → `PGSSLCERT`
+- `sslkey` → `PGSSLKEY`
+
+These parameters can be passed in `conn_params` (as shown in the test), but the implementation never reads them or sets the corresponding environment variables.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `django/db/backends/postgresql/client.py:31-32` — Only `PGPASSWORD` is set: `if passwd: subprocess_env['PGPASSWORD'] = str(passwd)`
+- `tests/dbshell/test_postgresql.py:60-73` — Test passes SSL params in `dbinfo` dict and expects them as `PG*` environment variables
+- Lines 15-19 extract standard connection params, but SSL params are never extracted
+- Lines 30-32 build `subprocess_env`, but only add `PGPASSWORD`, not SSL variables
+
+## Edit sites
+
+- `django/db/backends/postgresql/client.py` lines 19-20: After extracting `passwd`, add extraction of SSL parameters from `conn_params`:
+  - Extract `sslmode`, `sslrootcert`, `sslcert`, `sslkey` using `conn_params.get()` pattern (same as lines 15-19)
+
+- `django/db/backends/postgresql/client.py` lines 32-33: After setting `PGPASSWORD`, add conditional logic to set SSL environment variables in `subprocess_env`:
+  - Set `PGSSLMODE` if `sslmode` is present
+  - Set `PGSSLROOTCERT` if `sslrootcert` is present
+  - Set `PGSSLCERT` if `sslcert` is present
+  - Set `PGSSLKEY` if `sslkey` is present
+  - Follow the same pattern as `PGPASSWORD`: check if value exists, then set with `str()` conversion
+
+## Rejected hypotheses
+
+None. The root cause is directly observable from the code and test failure.
+
+## Open questions
+
+None. The fix is straightforward: extract SSL parameters and set their corresponding environment variables following the existing `PGPASSWORD` pattern.
+
+---STDERR---
