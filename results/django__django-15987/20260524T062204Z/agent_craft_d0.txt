@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes the failing test pass. The issue was that `settings.FIXTURE_DIRS` validation checks happened before normalizing pathlib.Path objects to strings, causing:
+- Duplicate detection to miss mixed str/Path duplicates
+- Default directory check to fail when comparing string paths against Path objects
+
+The fix normalizes all paths immediately after retrieval from settings (line 365) and compares normalized paths (line 371), while preserving the original path format in error messages.
+
+---STDERR---

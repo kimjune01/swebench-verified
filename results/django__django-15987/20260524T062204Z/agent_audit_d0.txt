@@ -1,0 +1,23 @@
+---
+
+# Audit: django__django-15987
+
+## FAIL_TO_PASS
+- `test_fixture_dirs_with_default_fixture_path`: **PASS** ✓
+- `test_fixture_dirs_with_default_fixture_path_as_pathlib`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+**None** — all 58 tests passed (1 skipped for database feature support, expected).
+
+## Pre-existing (not counted, confirmed against base capture)
+**None**
+
+## Kill report
+Not applicable — patch is RESOLVED.
+
+The fix correctly normalizes both `fixture_dirs` (which may contain `pathlib.Path` objects from settings) and `app_dir` (string from `os.path.join`) to canonical string paths using `os.path.realpath()` before comparison. This ensures the duplicate detection and default directory validation work correctly regardless of whether paths are specified as strings or Path objects.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

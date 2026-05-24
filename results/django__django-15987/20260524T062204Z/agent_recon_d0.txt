@@ -1,0 +1,41 @@
+# Recon: django__django-15987
+
+## Failure summary
+The test `test_fixture_dirs_with_default_fixture_path_as_pathlib` verifies that Django's `loaddata` command raises `ImproperlyConfigured` when `settings.FIXTURE_DIRS` contains a default fixture directory (app/fixtures) to prevent duplicate fixture loading. The test configures `FIXTURE_DIRS=[Path(_cur_dir) / "fixtures"]` using a `pathlib.Path` instance and expects the duplicate detection to trigger. However, the exception is not raised—the test fails with `AssertionError: ImproperlyConfigured not raised`.
+
+## Suspect set
+- `django/core/management/commands/loaddata.py` lines 364-383: The `fixture_dirs` cached property method that validates `settings.FIXTURE_DIRS` and checks for duplicates/default directories
+
+## Root cause
+The `fixture_dirs` property (lines 354-383) retrieves `settings.FIXTURE_DIRS` and performs two validation checks before building the fixture directory list:
+1. **Line 365**: Duplicate detection using `len(fixture_dirs) != len(set(fixture_dirs))`
+2. **Line 370**: Default directory check using `if app_dir in fixture_dirs:`
+
+Both checks fail when `fixture_dirs` contains `pathlib.Path` objects because:
+- `app_dir` at line 369 is constructed as a string: `os.path.join(app_config.path, "fixtures")`
+- The `in` operator returns `False` when comparing a string to a Path object, even for identical paths
+- The `set()` operation treats strings and Path objects as distinct, missing mixed-type duplicates
+
+The method's final return (line 383) correctly normalizes all paths with `os.path.realpath(d)`, converting Path objects to strings, but this happens **after** the validation checks. The validation logic assumes all paths are strings but doesn't enforce this invariant.
+
+**Confidence:** deduction — 95%
+
+**Supporting evidence:**
+- `loaddata.py:364` — `fixture_dirs = settings.FIXTURE_DIRS` (raw retrieval, no normalization)
+- `loaddata.py:369` — `app_dir = os.path.join(app_config.path, "fixtures")` (always string)
+- `loaddata.py:370` — `if app_dir in fixture_dirs:` (fails when fixture_dirs contains Path)
+- `loaddata.py:383` — `return [os.path.realpath(d) for d in dirs]` (normalizes after checks)
+- Python: `"/tmp/fixtures" in [Path("/tmp/fixtures")]` → `False`
+- Python: `{"/tmp/fixtures", Path("/tmp/fixtures")}` → 2 distinct elements
+
+## Edit sites
+- `django/core/management/commands/loaddata.py` line 364: After `fixture_dirs = settings.FIXTURE_DIRS`, add normalization: `fixture_dirs = [os.path.realpath(d) for d in fixture_dirs]`. This converts all Path objects to canonical string paths before validation checks.
+- `django/core/management/commands/loaddata.py` line 369: Change `app_dir = os.path.join(app_config.path, "fixtures")` to `app_dir = os.path.realpath(os.path.join(app_config.path, "fixtures"))` to ensure consistent canonical form for comparison against normalized `fixture_dirs`.
+
+## Rejected hypotheses
+None—the root cause is directly observable from code inspection and Python's type comparison behavior.
+
+## Open questions
+None—the fix is localized to the `fixture_dirs` method's normalization timing.
+
+---STDERR---
