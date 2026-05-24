@@ -1,0 +1,62 @@
+Now let me output the handoff report:
+
+```markdown
+# Recon: matplotlib__matplotlib-20676
+
+## Failure summary
+
+The tests `test_span_selector_bound[horizontal]` and `test_span_selector_bound[vertical]` verify that creating a SpanSelector with `interactive=True` should not modify the axes limits. The tests plot data in the range [10, 20] × [10, 30], then create an interactive SpanSelector, and assert that the axes bounds remain unchanged.
+
+**Actual failure**: 
+- Horizontal test: x_bound changes from (10.0, 20.0) to (0.0, 20.0)  
+- Vertical test: y_bound changes from (10.0, 30.0) to (0.0, 30.0)
+
+Both cases show the axes expanding to include 0, which violates the expected behavior.
+
+## Suspect set
+
+- `lib/matplotlib/widgets.py` lines 2158-2163: `_setup_edge_handle` method that initializes interactive handles
+- `lib/matplotlib/widgets.py` lines 2321-2329: `extents` property that reads rectangle position
+- `lib/matplotlib/widgets.py` lines 2140-2156: `new_axes` method that creates the rectangle at (0, 0)
+- `lib/matplotlib/widgets.py` lines 2342-2371: `ToolLineHandles.__init__` that creates axvline/axhline
+
+## Root cause
+
+When `SpanSelector` is created with `interactive=True`, the initialization sequence is:
+
+1. `new_axes(ax)` creates a `Rectangle` at position (0, 0) with width/height 0
+2. `_setup_edge_handle(props)` is called to create interactive handles
+3. At line 2159, it passes `self.extents` to `ToolLineHandles`
+4. The `extents` property reads from the rectangle (which is at (0, 0)), returning (0, 0)
+5. `ToolLineHandles.__init__` creates `axvline(0)` or `axhline(0)` for each position
+6. **Even with `visible=False`**, `axvline`/`axhline` trigger axes autoscaling and expand the limits to include 0
+
+The bug was introduced in PR #20113 which added the interactive SpanSelector feature. The edge handles should be initialized at the current axes bounds, not at (0, 0).
+
+**Confidence**: Deduction — 99%
+
+Supporting evidence:
+- `lib/matplotlib/widgets.py:2159` — `self._edge_handles = ToolLineHandles(self.ax, self.extents, ...)`
+  - Passes `self.extents` which returns (0, 0)
+- `lib/matplotlib/widgets.py:2368` — `self.artists = [line_fun(p, **line_props) for p in positions]`
+  - Creates axvline/axhline at each position
+- Experimental proof: `axvline(0, visible=False)` changes bounds from (9.5, 20.5) to (-1.0, 21.0)
+
+## Edit sites
+
+- `lib/matplotlib/widgets.py` lines 2158-2163: In `_setup_edge_handle` method, replace the line that passes `self.extents` with code that passes the current axes bounds instead:
+  - For horizontal direction: use `self.ax.get_xbound()`
+  - For vertical direction: use `self.ax.get_ybound()`
+  
+  This ensures edge handles are initialized at the current axes limits rather than at (0, 0), preventing unwanted axes expansion.
+
+## Rejected hypotheses
+
+None — first diagnosis converged directly to root cause via code trace and experimental verification.
+
+## Open questions
+
+None — the fix is straightforward and matches the test expectation that `tool._edge_handles.positions == list(bound)`.
+```
+
+---STDERR---

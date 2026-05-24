@@ -1,0 +1,6 @@
+{"instance": "matplotlib__matplotlib-20676", "stage": "start"}
+{"instance": "matplotlib__matplotlib-20676", "stage": "recon", "depth": 0, "wall_s": 237, "fixed_point": false}
+{"instance": "matplotlib__matplotlib-20676", "stage": "craft", "depth": 0, "wall_s": 196, "claim": true, "wants_rediagnose": false}
+{"instance": "matplotlib__matplotlib-20676", "stage": "audit", "depth": 0, "wall_s": 54, "verdict": "RESOLVED", "route": "none"}
+{"instance": "matplotlib__matplotlib-20676", "stage": "verify_gate", "agent_verdict": "RESOLVED", "driver_f2p_pass": true, "passgate_file": "/tmp/swebench-abduction/r4_passgate_matplotlib__matplotlib-20676.txt"}
+{"instance": "matplotlib__matplotlib-20676", "stage": "done", "final_verdict": "RESOLVED", "driver_f2p_pass": true, "patch_bytes": 804, "patch_file": "/tmp/swebench-abduction/r4_patch_matplotlib__matplotlib-20676.diff", "hgraph": "/tmp/swebench-abduction/r4_hgraph_matplotlib__matplotlib-20676.md"}

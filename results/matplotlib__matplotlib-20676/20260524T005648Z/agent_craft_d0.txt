@@ -1,0 +1,9 @@
+**RESOLVED**
+
+The fix successfully makes both FAIL_TO_PASS tests pass:
+- ✅ `test_span_selector_bound[horizontal]`
+- ✅ `test_span_selector_bound[vertical]`
+
+**Summary**: Replaced `self.extents` with `self.ax.get_xbound()`/`self.ax.get_ybound()` in `SpanSelector._setup_edge_handle()` so edge handles initialize at current axes bounds instead of (0, 0), preventing unwanted autoscaling.
+
+---STDERR---

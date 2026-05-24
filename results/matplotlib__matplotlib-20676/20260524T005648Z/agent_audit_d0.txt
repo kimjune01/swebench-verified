@@ -1,0 +1,21 @@
+# Audit: matplotlib__matplotlib-20676
+
+## FAIL_TO_PASS
+- `test_span_selector_bound[horizontal]`: **PASSED**
+- `test_span_selector_bound[vertical]`: **PASSED**
+
+## PASS_TO_PASS regressions
+**None** — all PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures (not counted, confirmed against base capture)
+- `test_rectangle_selector`: Failed on base with MatplotlibDeprecationWarning, still fails now (unrelated to SpanSelector fix)
+
+## Summary
+The patch correctly initializes edge handles with current axes bounds (`ax.get_xbound()`/`ax.get_ybound()`) instead of `self.extents` (which returns (0, 0) from the just-initialized rectangle). This prevents unwanted axis limit expansion when creating SpanSelector with `interactive=True`.
+
+Both FAIL_TO_PASS tests now pass. No PASS_TO_PASS regressions introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
