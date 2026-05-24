@@ -1,0 +1,7 @@
+**RESOLVED**
+
+The fix successfully makes `test_subparser_error_formatting` pass. The issue was that CommandParser didn't propagate `called_from_command_line` to subparsers. Added an `add_subparsers()` override that creates a dynamic subclass to inject this parameter when the parser_class is CommandParser, while preserving compatibility with custom parser classes like vanilla ArgumentParser.
+
+Gate: ✓ All 46 tests pass (0.795s)
+
+---STDERR---

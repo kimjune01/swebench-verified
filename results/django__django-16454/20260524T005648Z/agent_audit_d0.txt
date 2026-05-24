@@ -1,0 +1,20 @@
+# Audit: django__django-16454
+
+## FAIL_TO_PASS
+- `test_subparser_error_formatting`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None — all 46 tests passed.
+
+## Pre-existing failures (not counted)
+None — clean gate run.
+
+## Analysis
+The craft patch successfully resolved the issue without introducing any regressions. The target test `test_subparser_error_formatting` now passes (was failing on base), and all 46 PASS_TO_PASS tests continue to pass. The fix correctly propagates `called_from_command_line` to subparsers while avoiding over-broad changes (doesn't propagate `missing_args_message` per codex feedback).
+
+**Gate arbiter**: All tests passed in 0.817s.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

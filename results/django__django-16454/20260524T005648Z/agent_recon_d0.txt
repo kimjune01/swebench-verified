@@ -1,0 +1,39 @@
+# Recon: django__django-16454
+
+## Failure summary
+The test `test_subparser_error_formatting` verifies that management command subparsers produce clean error messages (2 lines: usage + error) instead of tracebacks. The test calls `manage.py subparser foo twelve` where `twelve` is an invalid integer for the `bar` argument. Currently it produces a 65-line traceback instead of the expected 2-line error message: "manage.py subparser foo: error: argument bar: invalid int value: 'twelve'".
+
+## Suspect set
+- `django/core/management/base.py` lines 46-72: CommandParser class, specifically the `__init__` method (lines 53-58) and `error` method (lines 68-72)
+- `django/core/management/base.py`: Missing override of `add_subparsers()` method in CommandParser
+
+## Root cause
+CommandParser customizes error handling via the `called_from_command_line` parameter. When True, `error()` calls the parent ArgumentParser.error() which prints a nice message to stderr. When False/None, it raises CommandError (causing a traceback). The parent parser is created with `called_from_command_line=True` in `create_parser()` (line 293).
+
+However, CommandParser doesn't override `add_subparsers()`, so it inherits ArgumentParser.add_subparsers(). While argparse correctly sets `parser_class=type(self)` (making subparsers use CommandParser), the _SubParsersAction.add_parser() method instantiates the parser as `self._parser_class(**kwargs)` where kwargs only contains arguments passed to add_parser(), not the parent's special `called_from_command_line` and `missing_args_message` values.
+
+Experimental confirmation: creating a subparser from a CommandParser with `called_from_command_line=True` results in a subparser with `called_from_command_line=None`.
+
+Confidence: **deduction — 95%**
+
+Supporting evidence:
+- `base.py:68-72` — CommandParser.error() raises CommandError when called_from_command_line is falsy
+- `base.py:53-58` — __init__ stores missing_args_message and called_from_command_line
+- `base.py:293` — create_parser() sets called_from_command_line from _called_from_command_line attribute
+- Python argparse source: add_subparsers() defaults parser_class to type(self), but add_parser() doesn't propagate custom __init__ kwargs
+
+## Edit sites
+- `django/core/management/base.py` lines 46-72: Add an `add_subparsers()` method to CommandParser that:
+  1. Calls `super().add_subparsers(**kwargs)` to get the _SubParsersAction
+  2. Wraps or modifies the action to ensure that when `add_parser()` is called, it passes `missing_args_message=self.missing_args_message` and `called_from_command_line=self.called_from_command_line` to the CommandParser constructor
+  3. The implementation needs to intercept the subparser creation to inject these kwargs
+
+Most likely approach: Override add_subparsers() to wrap the returned action's parser_class or to return a custom _SubParsersAction subclass that injects the kwargs when creating parsers.
+
+## Rejected hypotheses
+None — the root cause is clear from code inspection and experimental verification.
+
+## Open questions
+- Should the fix also handle the case where a user explicitly passes `parser_class=SomeOtherClass` to add_subparsers()? Current test with `parser_class=argparse.ArgumentParser` passes because vanilla ArgumentParser.error() always prints nice messages (doesn't have the called_from_command_line conditional).
+
+---STDERR---
