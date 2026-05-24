@@ -1,0 +1,63 @@
+# Recon: matplotlib__matplotlib-23412
+
+## Failure summary
+The test `test_dash_offset_patch_draw[png]` checks whether patch objects (specifically Rectangle) respect the dash offset parameter in linestyles. It compares two approaches: (1) using actual offset like `linestyle=(6, [6, 6])` versus (2) simulating the offset by modifying the dash pattern like `linestyle=(0, [0, 6, 6, 0])`. The test fails with image comparison RMS error of 24.315, indicating the images are significantly different - the actual offset is not being applied.
+
+## Suspect set
+- `lib/matplotlib/patches.py` lines 585-601: `Patch.draw()` method - explicitly zeros out dash offset before rendering
+- `lib/matplotlib/patches.py` lines 533-582: `Patch._bind_draw_path_function()` - sets up graphics context with dash pattern
+- `lib/matplotlib/patches.py` lines 398-429: `Patch.set_linestyle()` - parses and stores the dash pattern
+
+## Root cause
+The dash offset is correctly parsed and stored by `set_linestyle()` in the `_unscaled_dash_pattern` and `_dash_pattern` attributes (line 427-429). However, the `draw()` method deliberately ignores this offset by temporarily overriding `_dash_pattern` to `(0, self._dash_pattern[1])` using a context manager (lines 590-591). This zeros out the offset component while preserving the dash sequence. The code even includes an explicit comment: "Patch has traditionally ignored the dashoffset." (line 589).
+
+The flow is:
+1. `set_linestyle((6, [6, 6]))` correctly stores `_dash_pattern = (6_scaled, [6_scaled, 6_scaled])`
+2. `draw()` temporarily overrides to `_dash_pattern = (0, [6_scaled, 6_scaled])`
+3. `_bind_draw_path_function()` calls `gc.set_dashes(*self._dash_pattern)` with the zeroed offset (line 552)
+4. Backend renders with offset=0, ignoring user's requested offset
+
+Git history shows this was intentional for backwards compatibility (commits 5c564d4007, 9c0fa9ed83).
+
+Confidence: **deduction** — 95%
+
+Supporting evidence:
+- `lib/matplotlib/patches.py:589-591` — Comment and code explicitly zero the offset:
+  ```python
+  # Patch has traditionally ignored the dashoffset.
+  with cbook._setattr_cm(
+           self, _dash_pattern=(0, self._dash_pattern[1])), \
+  ```
+- `lib/matplotlib/patches.py:427-429` — Offset is correctly stored:
+  ```python
+  self._unscaled_dash_pattern = mlines._get_dash_pattern(ls)
+  self._dash_pattern = mlines._scale_dashes(
+      *self._unscaled_dash_pattern, self._linewidth)
+  ```
+- `lib/matplotlib/patches.py:552` — Graphics context would use the offset if not overridden:
+  ```python
+  gc.set_dashes(*self._dash_pattern)
+  ```
+
+## Edit sites
+- `lib/matplotlib/patches.py` lines 589-592: Remove the `cbook._setattr_cm` context manager that zeros the dash offset. Change from:
+  ```python
+  # Patch has traditionally ignored the dashoffset.
+  with cbook._setattr_cm(
+           self, _dash_pattern=(0, self._dash_pattern[1])), \
+       self._bind_draw_path_function(renderer) as draw_path:
+  ```
+  to:
+  ```python
+  with self._bind_draw_path_function(renderer) as draw_path:
+  ```
+  This will allow the dash offset stored in `self._dash_pattern[0]` to be passed through to the graphics context.
+
+## Rejected hypotheses
+None — first diagnosis.
+
+## Open questions
+- Will removing the backwards-compatibility override break existing code that relied on offsets being ignored? (Unlikely to be an issue since most users probably expected offsets to work, and the test suite will catch any regressions.)
+- Are there other patch subclasses that override `draw()` and might have similar issues? (Checked: Shadow and ConnectionPatch call `super().draw()`, Ellipse calls `Patch.draw()`, FancyArrowPatch uses `_bind_draw_path_function` directly without the offset override.)
+
+---STDERR---

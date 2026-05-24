@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully makes the FAIL_TO_PASS test pass. The recon diagnosis was correct: `Patch.draw()` was explicitly zeroing the dash offset for backwards compatibility, preventing the test from passing. Removing the context manager that overrode `_dash_pattern` allows the dash offset to be respected as expected.
+
+---STDERR---

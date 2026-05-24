@@ -1,0 +1,30 @@
+# Audit: matplotlib__matplotlib-23412
+
+## FAIL_TO_PASS
+- `test_dash_offset_patch_draw[png]`: **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 46 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Summary
+The craft patch successfully removed the dash offset override in `Patch.draw()` (lines 589-591 of `lib/matplotlib/patches.py`). The patch changed:
+```python
+# Patch has traditionally ignored the dashoffset.
+with cbook._setattr_cm(
+         self, _dash_pattern=(0, self._dash_pattern[1])), \
+     self._bind_draw_path_function(renderer) as draw_path:
+```
+to:
+```python
+with self._bind_draw_path_function(renderer) as draw_path:
+```
+
+This allows the dash offset stored in `_dash_pattern[0]` to flow through to the graphics context instead of being forced to 0. The test that was failing on base (ImageComparisonFailure with RMS 24.315) now passes, and no regressions were introduced.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

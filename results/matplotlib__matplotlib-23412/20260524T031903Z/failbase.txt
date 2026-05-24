@@ -1,0 +1,107 @@
+$ pytest -rA lib/matplotlib/tests/test_patches.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.11.11, pytest-8.3.4, pluggy-1.5.0
+rootdir: /testbed
+configfile: pytest.ini
+plugins: cov-6.0.0, rerunfailures-15.0, timeout-2.3.1, xdist-3.6.1
+collected 55 items
+
+lib/matplotlib/tests/test_patches.py ....F...s..s..s...s.....s...s...... [ 63%]
+....ss..............                                                     [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_dash_offset_patch_draw[png] _______________________
+
+ext = 'png'
+request = <FixtureRequest for <Function test_dash_offset_patch_draw[png]>>
+args = (), kwargs = {}, file_name = 'test_dash_offset_patch_draw[png]'
+fig_test = <Figure size 640x480 with 1 Axes>
+fig_ref = <Figure size 640x480 with 1 Axes>, figs = []
+test_image_path = PosixPath('/testbed/result_images/test_patches/test_dash_offset_patch_draw[png].png')
+ref_image_path = PosixPath('/testbed/result_images/test_patches/test_dash_offset_patch_draw[png]-expected.png')
+
+    @pytest.mark.parametrize("ext", extensions)
+    def wrapper(*args, ext, request, **kwargs):
+        if 'ext' in old_sig.parameters:
+            kwargs['ext'] = ext
+        if 'request' in old_sig.parameters:
+            kwargs['request'] = request
+    
+        file_name = "".join(c for c in request.node.name
+                            if c in ALLOWED_CHARS)
+        try:
+            fig_test = plt.figure("test")
+            fig_ref = plt.figure("reference")
+            with _collect_new_figures() as figs:
+                func(*args, fig_test=fig_test, fig_ref=fig_ref, **kwargs)
+            if figs:
+                raise RuntimeError('Number of open figures changed during '
+                                   'test. Make sure you are plotting to '
+                                   'fig_test or fig_ref, or if this is '
+                                   'deliberate explicitly close the '
+                                   'new figure(s) inside the test.')
+            test_image_path = result_dir / (file_name + "." + ext)
+            ref_image_path = result_dir / (file_name + "-expected." + ext)
+            fig_test.savefig(test_image_path)
+            fig_ref.savefig(ref_image_path)
+>           _raise_on_image_difference(
+                ref_image_path, test_image_path, tol=tol
+            )
+E           matplotlib.testing.exceptions.ImageComparisonFailure: images not close (RMS 24.315):
+E           	result_images/test_patches/test_dash_offset_patch_draw[png].png
+E           	result_images/test_patches/test_dash_offset_patch_draw[png]-expected.png
+E           	result_images/test_patches/test_dash_offset_patch_draw[png]-failed-diff.png
+
+lib/matplotlib/testing/decorators.py:478: ImageComparisonFailure
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED lib/matplotlib/tests/test_patches.py::test_Polygon_close
+PASSED lib/matplotlib/tests/test_patches.py::test_corner_center
+PASSED lib/matplotlib/tests/test_patches.py::test_rotate_rect
+PASSED lib/matplotlib/tests/test_patches.py::test_rotate_rect_draw[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_negative_rect
+PASSED lib/matplotlib/tests/test_patches.py::test_clip_to_bbox[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_clip_to_bbox[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_alpha_coloring[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_alpha_coloring[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_alpha_override[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_alpha_override[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_color_none
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_custom_linestyle[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_custom_linestyle[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_linestyle_accents
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_linestyle_none[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_wedge_movement
+PASSED lib/matplotlib/tests/test_patches.py::test_wedge_range[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_wedge_range[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_patch_str
+PASSED lib/matplotlib/tests/test_patches.py::test_multi_color_hatch[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_multi_color_hatch[pdf]
+PASSED lib/matplotlib/tests/test_patches.py::test_units_rectangle[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_connection_patch[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_connection_patch_fig[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_datetime_rectangle
+PASSED lib/matplotlib/tests/test_patches.py::test_datetime_datetime_fails
+PASSED lib/matplotlib/tests/test_patches.py::test_contains_point
+PASSED lib/matplotlib/tests/test_patches.py::test_contains_points
+PASSED lib/matplotlib/tests/test_patches.py::test_shadow[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_fancyarrow_units
+PASSED lib/matplotlib/tests/test_patches.py::test_fancyarrow_setdata
+PASSED lib/matplotlib/tests/test_patches.py::test_fancyarrow_shape_error
+PASSED lib/matplotlib/tests/test_patches.py::test_boxstyle_errors[foo-Unknown style: 'foo']
+PASSED lib/matplotlib/tests/test_patches.py::test_boxstyle_errors[Round,foo-Incorrect style argument: 'Round,foo']
+PASSED lib/matplotlib/tests/test_patches.py::test_annulus[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_annulus_setters[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_annulus_setters2[png]
+PASSED lib/matplotlib/tests/test_patches.py::test_degenerate_polygon
+PASSED lib/matplotlib/tests/test_patches.py::test_color_override_warning[edgecolor]
+PASSED lib/matplotlib/tests/test_patches.py::test_color_override_warning[facecolor]
+PASSED lib/matplotlib/tests/test_patches.py::test_empty_verts
+PASSED lib/matplotlib/tests/test_patches.py::test_default_antialiased
+PASSED lib/matplotlib/tests/test_patches.py::test_default_linestyle
+PASSED lib/matplotlib/tests/test_patches.py::test_default_capstyle
+PASSED lib/matplotlib/tests/test_patches.py::test_default_joinstyle
+SKIPPED [8] ../opt/miniconda3/envs/testbed/lib/python3.11/contextlib.py:81: Cannot compare svg files on this system
+FAILED lib/matplotlib/tests/test_patches.py::test_dash_offset_patch_draw[png]
+=================== 1 failed, 46 passed, 8 skipped in 4.09s ====================
