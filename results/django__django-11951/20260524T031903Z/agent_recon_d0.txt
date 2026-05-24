@@ -1,0 +1,47 @@
+Now I'll print the complete diagnosis to stdout:
+
+# Recon: django__django-11951
+
+## Failure summary
+
+The test `test_explicit_batch_size_respects_max_batch_size` verifies that `bulk_create()` respects database backend batch size limits even when the user provides a larger `batch_size` parameter. The test creates 1000 Country objects with 3 fields, calculates the database's max_batch_size (333 for SQLite: 999 parameters / 3 fields), then calls `bulk_create(objs, batch_size=334)`. It expects 4 queries (ceil(1000/333)) but only 3 queries execute, indicating the code uses the user-provided 334 instead of respecting the 333 limit.
+
+Error message: `AssertionError: 3 != 4 : 3 queries executed, 4 expected`
+
+## Suspect set
+
+- `django/db/models/query.py` lines 1205-1227: `_batched_insert()` method — contains the batch_size calculation logic that fails to enforce database limits
+
+## Root cause
+
+The `_batched_insert` method at line 1212 uses OR logic to set batch_size, which means "use the user-provided value if given, otherwise calculate the max". This does NOT enforce the database's maximum batch size when the user explicitly provides a batch_size parameter that exceeds safe limits.
+
+The SQLite backend limits bulk inserts to 999 total parameters. With 3 fields, this means max 333 objects per batch. When a user passes batch_size=334, the current code blindly uses 334, generating SQL with 1002 parameters that could fail or behave incorrectly.
+
+In contrast, `bulk_update` (added in 2018) correctly uses `min(batch_size, max_batch_size)` to enforce limits. The `bulk_create` logic dates from 2012 and was never updated to match this pattern.
+
+Confidence: **deduction** — 99%
+
+Supporting evidence:
+- `django/db/models/query.py:1212` — `batch_size = (batch_size or max(ops.bulk_batch_size(fields, objs), 1))` uses OR instead of min()
+- `django/db/models/query.py:523` — `bulk_update` correctly uses `batch_size = min(batch_size, max_batch_size) if batch_size else max_batch_size`
+- git blame shows bulk_create batch logic from 2012 commit (Anssi Kääriäinen), bulk_update from 2018 commit 9cbdb44014 with correct min() pattern
+- Test expectations and observed query counts match this hypothesis exactly (3 queries at 334/batch vs 4 queries at 333/batch)
+
+## Edit sites
+
+- `django/db/models/query.py` line 1212 in `_batched_insert()`: Replace the single-line batch_size calculation with the two-line pattern from bulk_update that calculates max_batch_size first, then uses min() to enforce it:
+  ```python
+  max_batch_size = max(ops.bulk_batch_size(fields, objs), 1)
+  batch_size = min(batch_size, max_batch_size) if batch_size else max_batch_size
+  ```
+
+## Rejected hypotheses
+
+None — first diagnosis, no competing explanations emerged during code trace.
+
+## Open questions
+
+None — the fix is straightforward and directly parallels the working bulk_update implementation.
+
+---STDERR---

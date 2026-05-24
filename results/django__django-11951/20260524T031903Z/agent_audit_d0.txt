@@ -1,0 +1,27 @@
+# Audit: django__django-11951
+
+## FAIL_TO_PASS
+- `test_explicit_batch_size_respects_max_batch_size`: **PASS** ✅
+
+## PASS_TO_PASS regressions
+None. All 22 PASS_TO_PASS tests remain passing.
+
+## Pre-existing failures
+None (confirmed against base capture).
+
+## Patch applied
+The fix replaces the faulty OR logic with a proper min() pattern that enforces the database backend's max_batch_size limit:
+
+```diff
+-        batch_size = (batch_size or max(ops.bulk_batch_size(fields, objs), 1))
++        max_batch_size = max(ops.bulk_batch_size(fields, objs), 1)
++        batch_size = min(batch_size, max_batch_size) if batch_size else max_batch_size
+```
+
+## Summary
+Full gate: 27 tests ran, all passed (5 skipped). The FAIL_TO_PASS test now passes, and zero PASS_TO_PASS tests regressed. The fix correctly enforces the database backend's max_batch_size constraint by matching the pattern already used successfully in bulk_update.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix is complete. Changed `_batched_insert()` to enforce database batch size limits by using `min(batch_size, max_batch_size)` instead of blindly trusting user-provided values. The failing test now passes, matching the correct pattern from `bulk_update()`.
+
+---STDERR---
