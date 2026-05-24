@@ -2,6 +2,8 @@
 
 A three-stage agent pipeline for SWE-bench Verified, built to be re-run and inspected by skeptics. The point of this repo is not the score. It is that you can clone it, run the exact procedure on the exact skills, and check the artifacts against your own grading.
 
+> **One repo per benchmark.** This is the **Verified** run. The SWE-bench **Pro** run lives in its own repo, [`swebench-pro`](https://github.com/kimjune01/swebench-pro) — separate repos so each run's artifacts and number stand alone, rather than hiding behind branches.
+
 > ## ⚠️ Contamination disclaimer — read this before the number
 >
 > **SWE-bench Verified is training-data contaminated for every modern model, including the ones used here.** Claude Sonnet generates and codex (GPT-5.5) filters; both training cutoffs postdate the Verified instances. This is a **leaderboard / capability configuration, not a contamination-clean science claim.**
