@@ -1,0 +1,37 @@
+# Recon: django__django-15863
+
+## Failure summary
+
+The test `test_inputs` in `tests/template_tests/filter_tests/test_floatformat.py` checks that the `floatformat` template filter correctly handles high-precision Decimal numbers. Specifically, it tests that `floatformat(Decimal("123456.123456789012345678901"), 21)` returns the full precision string `"123456.123456789012345678901"`. The test fails with an assertion error showing the actual output is `"123456.123456789000000000000"` — precision is lost after approximately 15 decimal digits.
+
+## Suspect set
+
+- `django/template/defaultfilters.py` lines 153-161: The Decimal conversion logic in the `floatformat` function that uses `repr()` and falls back to float conversion
+
+## Root cause
+
+When a `Decimal` object is passed to `floatformat`, line 154 calls `repr(text)`, which for a Decimal returns a string like `"Decimal('123456.123456789012345678901')"`. When line 155 attempts `Decimal(input_val)`, this raises an `InvalidOperation` because Decimal's constructor cannot parse the string representation that includes the `Decimal()` wrapper. The code then falls back to line 159: `d = Decimal(str(float(text)))`, which first converts the Decimal to a float. This float conversion is where precision is lost, as Python floats have limited precision of approximately 15-17 significant digits. The high-precision decimal data that exceeds float's precision is permanently lost.
+
+**Confidence**: Deduction — 95%
+
+**Supporting evidence**:
+- `django/template/defaultfilters.py:154` — `input_val = repr(text)` produces `"Decimal('...')"` for Decimal inputs
+- `django/template/defaultfilters.py:155` — `d = Decimal(input_val)` raises InvalidOperation for Decimal-wrapped strings
+- `django/template/defaultfilters.py:159` — `d = Decimal(str(float(text)))` converts through float, losing precision
+- Verified: `repr(Decimal("123456.123456789012345678901"))` returns `"Decimal('123456.123456789012345678901')"`
+- Verified: `Decimal("Decimal('...')")` raises InvalidOperation
+- Verified: `float(Decimal("123456.123456789012345678901"))` yields `123456.123456789` (precision lost)
+
+## Edit sites
+
+- `django/template/defaultfilters.py` lines 153-161: Insert a type check before the existing try-except block. If `text` is already a `Decimal` instance, assign it directly to `d` without any conversion. Otherwise, execute the existing `repr()`-based logic. The modification should be: add `if isinstance(text, Decimal): d = text` and wrap the current try-except in an `else` clause. This preserves Decimal precision while maintaining backward compatibility with float and string inputs.
+
+## Rejected hypotheses
+
+None — the root cause is clear from code inspection and the error manifestation directly matches the predicted failure mode.
+
+## Open questions
+
+None — the fix is straightforward and localized to a single function.
+
+---STDERR---

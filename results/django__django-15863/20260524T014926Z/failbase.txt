@@ -1,0 +1,31 @@
+$ ./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1 template_tests.filter_tests.test_floatformat
+
+test_floatformat01 (template_tests.filter_tests.test_floatformat.FloatformatTests) ... ok
+test_floatformat02 (template_tests.filter_tests.test_floatformat.FloatformatTests) ... ok
+test_float_dunder_method (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+test_force_grouping (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+test_infinity (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+test_inputs (template_tests.filter_tests.test_floatformat.FunctionTests) ... FAIL
+test_low_decimal_precision (template_tests.filter_tests.test_floatformat.FunctionTests)
+#15789 ... ok
+test_negative_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+test_unlocalize (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+test_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests) ... ok
+
+======================================================================
+FAIL: test_inputs (template_tests.filter_tests.test_floatformat.FunctionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/tests/template_tests/filter_tests/test_floatformat.py", line 59, in test_inputs
+    self.assertEqual(
+AssertionError: '123456.123456789000000000000' != '123456.123456789012345678901'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.007s
+
+FAILED (failures=1)
+Testing against Django installed in '/testbed/django'
+Importing application template_tests
+Found 10 test(s).
+Skipping setup of unused database(s): default, other.
+System check identified no issues (0 silenced).

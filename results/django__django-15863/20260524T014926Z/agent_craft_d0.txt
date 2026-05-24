@@ -1,0 +1,5 @@
+**RESOLVED** ✓
+
+The fix preserves Decimal precision by detecting when `text` is already a Decimal instance and using it directly instead of converting through float. All FAIL_TO_PASS tests pass with no PASS_TO_PASS regressions.
+
+---STDERR---

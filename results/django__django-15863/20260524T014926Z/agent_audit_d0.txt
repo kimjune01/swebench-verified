@@ -1,0 +1,22 @@
+# Audit: django__django-15863
+
+## FAIL_TO_PASS
+- test_inputs (template_tests.filter_tests.test_floatformat.FunctionTests): **PASS** ✓
+
+## PASS_TO_PASS regressions
+None. All 9 PASS_TO_PASS tests remain passing.
+
+## Pre-existing (not counted, confirmed against base capture)
+None.
+
+## Contract verification
+- ✓ All FAIL_TO_PASS tests now pass (1/1)
+- ✓ Zero PASS_TO_PASS regressions (0/9)
+- ✓ Patch is present in tree (django/template/defaultfilters.py modified)
+
+The fix successfully preserves Decimal precision by detecting Decimal instances and using them directly, bypassing the float conversion that was causing precision loss on line 159.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---
