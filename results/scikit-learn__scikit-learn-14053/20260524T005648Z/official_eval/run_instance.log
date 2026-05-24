@@ -1,0 +1,61 @@
+2026-05-24 00:54:13,758 - INFO - Creating container for scikit-learn__scikit-learn-14053...
+2026-05-24 00:54:14,763 - INFO - Container for scikit-learn__scikit-learn-14053 created: ea61383cd4acc997efaf7223df59b27f3c36167e514ccd0974c4f54e9d0b76e1
+2026-05-24 00:54:15,239 - INFO - Container for scikit-learn__scikit-learn-14053 started: ea61383cd4acc997efaf7223df59b27f3c36167e514ccd0974c4f54e9d0b76e1
+2026-05-24 00:54:15,239 - INFO - Intermediate patch for scikit-learn__scikit-learn-14053 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14053/patch.diff, now applying to container...
+2026-05-24 00:54:15,347 - INFO - >>>>> Applied Patch:
+Checking patch sklearn/tree/export.py...
+Applied patch sklearn/tree/export.py cleanly.
+
+2026-05-24 00:54:15,506 - INFO - Git diff before:
+diff --git a/sklearn/tree/export.py b/sklearn/tree/export.py
+index 1fe11e596..607b800c4 100644
+--- a/sklearn/tree/export.py
++++ b/sklearn/tree/export.py
+@@ -890,9 +890,15 @@ def export_text(decision_tree, feature_names=None, max_depth=10,
+         value_fmt = "{}{} value: {}\n"
+ 
+     if feature_names:
+-        feature_names_ = [feature_names[i] for i in tree_.feature]
++        feature_names_ = [
++            feature_names[i] if i != _tree.TREE_UNDEFINED else None
++            for i in tree_.feature
++        ]
+     else:
+-        feature_names_ = ["feature_{}".format(i) for i in tree_.feature]
++        feature_names_ = [
++            "feature_{}".format(i) if i != _tree.TREE_UNDEFINED else None
++            for i in tree_.feature
++        ]
+ 
+     export_text.report = ""
+2026-05-24 00:54:15,506 - INFO - Eval script for scikit-learn__scikit-learn-14053 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14053/eval.sh; copying to container...
+2026-05-24 00:54:18,087 - INFO - Test runtime: 2.48 seconds
+2026-05-24 00:54:18,087 - INFO - Test output for scikit-learn__scikit-learn-14053 written to logs/run_evaluation/batch/recon-craft-audit/scikit-learn__scikit-learn-14053/test_output.txt
+2026-05-24 00:54:18,156 - INFO - Git diff after:
+diff --git a/sklearn/tree/export.py b/sklearn/tree/export.py
+index 1fe11e596..607b800c4 100644
+--- a/sklearn/tree/export.py
++++ b/sklearn/tree/export.py
+@@ -890,9 +890,15 @@ def export_text(decision_tree, feature_names=None, max_depth=10,
+         value_fmt = "{}{} value: {}\n"
+ 
+     if feature_names:
+-        feature_names_ = [feature_names[i] for i in tree_.feature]
++        feature_names_ = [
++            feature_names[i] if i != _tree.TREE_UNDEFINED else None
++            for i in tree_.feature
++        ]
+     else:
+-        feature_names_ = ["feature_{}".format(i) for i in tree_.feature]
++        feature_names_ = [
++            "feature_{}".format(i) if i != _tree.TREE_UNDEFINED else None
++            for i in tree_.feature
++        ]
+ 
+     export_text.report = ""
+2026-05-24 00:54:18,156 - INFO - Grading answer for scikit-learn__scikit-learn-14053...
+2026-05-24 00:54:18,157 - INFO - report: {'scikit-learn__scikit-learn-14053': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'tests_status': {'FAIL_TO_PASS': {'success': ['sklearn/tree/tests/test_export.py::test_export_text'], 'failure': []}, 'PASS_TO_PASS': {'success': ['sklearn/tree/tests/test_export.py::test_graphviz_toy', 'sklearn/tree/tests/test_export.py::test_graphviz_errors', 'sklearn/tree/tests/test_export.py::test_friedman_mse_in_graphviz', 'sklearn/tree/tests/test_export.py::test_precision', 'sklearn/tree/tests/test_export.py::test_export_text_errors'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for scikit-learn__scikit-learn-14053: resolved: True
+2026-05-24 00:54:18,157 - INFO - Attempting to stop container sweb.eval.scikit-learn__scikit-learn-14053.batch...
+2026-05-24 00:54:33,548 - INFO - Attempting to remove container sweb.eval.scikit-learn__scikit-learn-14053.batch...
+2026-05-24 00:54:33,560 - INFO - Container sweb.eval.scikit-learn__scikit-learn-14053.batch removed.

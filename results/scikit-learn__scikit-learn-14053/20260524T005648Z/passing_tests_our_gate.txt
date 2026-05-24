@@ -1,0 +1,61 @@
+$ pytest -rA sklearn/tree/tests/test_export.py
+
+============================= test session starts ==============================
+platform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1
+rootdir: /testbed, configfile: setup.cfg
+collected 8 items
+
+sklearn/tree/tests/test_export.py ......EE                               [100%]
+
+==================================== ERRORS ====================================
+___________________ ERROR at setup of test_plot_tree_entropy ___________________
+
+    @pytest.fixture(scope='function')
+    def pyplot():
+        """Setup and teardown fixture for matplotlib.
+    
+        This fixture checks if we can import matplotlib. If not, the tests will be
+        skipped. Otherwise, we setup matplotlib backend and close the figures
+        after running the functions.
+    
+        Returns
+        -------
+        pyplot : module
+            The ``matplotlib.pyplot`` module.
+        """
+        matplotlib = pytest.importorskip('matplotlib')
+>       matplotlib.use('agg', warn=False, force=True)
+E       TypeError: use() got an unexpected keyword argument 'warn'
+
+sklearn/conftest.py:18: TypeError
+____________________ ERROR at setup of test_plot_tree_gini _____________________
+
+    @pytest.fixture(scope='function')
+    def pyplot():
+        """Setup and teardown fixture for matplotlib.
+    
+        This fixture checks if we can import matplotlib. If not, the tests will be
+        skipped. Otherwise, we setup matplotlib backend and close the figures
+        after running the functions.
+    
+        Returns
+        -------
+        pyplot : module
+            The ``matplotlib.pyplot`` module.
+        """
+        matplotlib = pytest.importorskip('matplotlib')
+>       matplotlib.use('agg', warn=False, force=True)
+E       TypeError: use() got an unexpected keyword argument 'warn'
+
+sklearn/conftest.py:18: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED sklearn/tree/tests/test_export.py::test_graphviz_toy
+PASSED sklearn/tree/tests/test_export.py::test_graphviz_errors
+PASSED sklearn/tree/tests/test_export.py::test_friedman_mse_in_graphviz
+PASSED sklearn/tree/tests/test_export.py::test_precision
+PASSED sklearn/tree/tests/test_export.py::test_export_text_errors
+PASSED sklearn/tree/tests/test_export.py::test_export_text
+ERROR sklearn/tree/tests/test_export.py::test_plot_tree_entropy - TypeError: ...
+ERROR sklearn/tree/tests/test_export.py::test_plot_tree_gini - TypeError: use...
+==================== 6 passed, 1 warning, 2 errors in 0.24s ====================

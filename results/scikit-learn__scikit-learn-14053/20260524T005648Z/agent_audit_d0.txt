@@ -1,0 +1,28 @@
+# Audit: scikit-learn__scikit-learn-14053
+
+## FAIL_TO_PASS
+- `test_export_text`: **PASSED** ✓
+
+## PASS_TO_PASS regressions
+None.
+
+## Pre-existing (not counted, confirmed against base capture)
+- `test_plot_tree_entropy`: ERROR - `TypeError: use() got an unexpected keyword argument 'warn'` in sklearn/conftest.py:18
+- `test_plot_tree_gini`: ERROR - same matplotlib.use compatibility issue
+
+Both errors show the identical matplotlib API incompatibility (`matplotlib.use('agg', warn=False, force=True)`) present in the fail-on-base capture. Not regressions.
+
+## Summary
+
+Patch is live (sklearn/tree/export.py: +8, -2). Full gate: 6 passed, 2 pre-existing errors.
+
+- ✓ All FAIL_TO_PASS tests pass
+- ✓ All PASS_TO_PASS tests pass  
+- ✓ Zero regressions introduced
+
+The fix correctly handles `TREE_UNDEFINED` values when building `feature_names_` lists, resolving the IndexError on single-feature trees without breaking multi-feature trees.
+
+VERDICT: RESOLVED
+RE-ENTER: none
+
+---STDERR---

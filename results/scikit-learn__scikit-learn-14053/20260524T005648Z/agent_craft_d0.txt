@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix for scikit-learn issue 14053 is complete. The `test_export_text` test now passes after handling `TREE_UNDEFINED` values in the `feature_names_` list comprehensions. The fix prevents IndexError when exporting single-feature decision trees by checking if feature indices are undefined before indexing into the feature names list.
+
+---STDERR---

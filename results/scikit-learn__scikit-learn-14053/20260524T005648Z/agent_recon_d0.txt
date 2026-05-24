@@ -1,0 +1,54 @@
+# Recon: scikit-learn__scikit-learn-14053
+
+## Failure summary
+
+The test `test_export_text` fails when calling `export_text()` on a decision tree trained with a single feature. The test creates a single-feature regression tree (`X_single` has shape 6×1) and calls `export_text(reg, decimals=1, feature_names=['first'])`. The function raises `IndexError: list index out of range` at `sklearn/tree/export.py:893` when attempting to build the `feature_names_` list.
+
+Stack trace excerpt:
+```
+sklearn/tree/export.py:893: in export_text
+    feature_names_ = [feature_names[i] for i in tree_.feature]
+E   IndexError: list index out of range
+```
+
+## Suspect set
+
+- `sklearn/tree/export.py` lines 893-895: The list comprehension that builds `feature_names_` by indexing into the user-provided `feature_names` list
+
+## Root cause
+
+The `export_text` function builds a node-indexed feature name lookup list (`feature_names_`) by iterating over all values in `tree_.feature`. However, `tree_.feature` contains `_tree.TREE_UNDEFINED` (-2) for leaf nodes. When `feature_names` has only one element (single-feature tree), accessing `feature_names[-2]` raises IndexError.
+
+For a simple single-feature tree, `tree_.feature = [0, -2, -2]` where:
+- Node 0 (root): uses feature index 0
+- Nodes 1-2 (leaves): have `TREE_UNDEFINED` = -2
+
+The list comprehension attempts:
+- `feature_names[0]` → works, returns `'first'`
+- `feature_names[-2]` → IndexError on a 1-element list
+
+This is a **latent bug** that only manifests with single-feature trees. With 2+ features, `feature_names[-2]` accidentally succeeds due to Python's negative indexing (e.g., `['a', 'b'][-2]` returns `'a'`), which is why existing multi-feature tests pass.
+
+**Confidence**: Deduction — 99%
+
+**Supporting evidence**:
+- `sklearn/tree/export.py:893-895` — the buggy list comprehensions
+- `sklearn/tree/_tree.pyx:64` — `TREE_UNDEFINED = -2` definition
+- Tested with reproduction: `tree_.feature = [0, -2, -2]` for single-feature tree
+- Line 930 checks `if tree_.feature[node] != _tree.TREE_UNDEFINED:` before using `feature_names_[node]`, so leaf entries in `feature_names_` are never accessed
+
+## Edit sites
+
+- `sklearn/tree/export.py` line 893: Change `feature_names_ = [feature_names[i] for i in tree_.feature]` to handle `_tree.TREE_UNDEFINED` values. Since `feature_names_` is only accessed for internal nodes (protected by the check at line 930), leaf nodes can use any placeholder value. Recommend: `[feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined" for i in tree_.feature]`
+
+- `sklearn/tree/export.py` line 895: Apply the same fix to the else branch: `["feature_{}".format(i) if i != _tree.TREE_UNDEFINED else "undefined" for i in tree_.feature]`
+
+## Rejected hypotheses
+
+None — the root cause was immediately clear from the stack trace and code inspection.
+
+## Open questions
+
+None — the fix is straightforward and localized to two lines.
+
+---STDERR---
