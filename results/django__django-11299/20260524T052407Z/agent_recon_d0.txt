@@ -1,0 +1,48 @@
+# Recon: django__django-11299
+
+## Failure summary
+The test `test_simplecol_query` creates a Query with OR conditions containing nested AND clauses: `Q(num__gt=2, name__isnull=False) | Q(num__lt=F('id'))`. The test expects all column references to use `SimpleCol` instances (which generate SQL without table name prefixes like `"field"`), but instead the lookups in the nested AND clause are using `Col` instances (which generate SQL with table prefixes like `"table"."field"`). This causes the assertion `self.assertIsInstance(num_gt_lookup.lhs, SimpleCol)` to fail with error: `AssertionError: Col(queries_author, queries.Author.num) is not an instance of <class 'django.db.models.expressions.SimpleCol'>`.
+
+This bug directly causes the CheckConstraint issue described in the problem statement: when Django generates CHECK constraints for complex Q objects with OR+AND combinations, it mixes `SimpleCol` (bare column names) and `Col` (qualified column names) in the same constraint. On SQLite, this breaks migrations because the qualified references use temporary table names that don't exist after the table is renamed.
+
+## Suspect set
+- `django/db/models/sql/query.py` lines 1326-1351: The `_add_q()` method, specifically the recursive call at lines 1339-1341
+
+## Root cause
+The `_add_q()` method in `django/db/models/sql/query.py` fails to propagate the `simple_col` parameter when recursively processing nested Q objects (Node children). 
+
+**Code path:**
+1. `build_where()` (line 1325) calls `_add_q(q_object, used_aliases=set(), allow_joins=False, simple_col=True)`
+2. `_add_q()` iterates through Q object children
+3. For Node children (nested Q objects), it recursively calls `_add_q()` at lines 1339-1341, but omits the `simple_col` parameter
+4. Since `simple_col` defaults to `False` (line 1328), the nested call uses `Col` instead of `SimpleCol`
+
+Confidence: **Deduction — 95%**
+
+Supporting evidence:
+- `django/db/models/sql/query.py:1328` — `simple_col=False` is the default parameter value
+- `django/db/models/sql/query.py:1339-1341` — Recursive `_add_q()` call missing `simple_col` parameter
+- `django/db/models/sql/query.py:71-74` — `_get_col()` function returns `SimpleCol` only when `simple_col=True`, otherwise returns `Col` via `target.get_col(alias, field)`
+- `django/db/models/expressions.py:742-760` — `SimpleCol` docstring states: "This variant of Col doesn't include the table name (or an alias) to avoid a syntax error in check constraints"
+
+## Edit sites
+- `django/db/models/sql/query.py` lines 1339-1341: Add `simple_col` to the recursive `_add_q()` call parameters. Change from:
+  ```python
+  child_clause, needed_inner = self._add_q(
+      child, used_aliases, branch_negated,
+      current_negated, allow_joins, split_subq)
+  ```
+  to:
+  ```python
+  child_clause, needed_inner = self._add_q(
+      child, used_aliases, branch_negated,
+      current_negated, allow_joins, split_subq, simple_col)
+  ```
+
+## Rejected hypotheses
+None — first-pass diagnosis identified clear omission
+
+## Open questions
+None — the fix is straightforward parameter propagation
+
+---STDERR---

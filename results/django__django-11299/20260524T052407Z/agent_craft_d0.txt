@@ -1,0 +1,5 @@
+**RESOLVED**
+
+The fix successfully propagates the `simple_col` parameter in recursive `_add_q()` calls. The failing test `test_simplecol_query` now passes, and all 105 tests are green.
+
+---STDERR---
