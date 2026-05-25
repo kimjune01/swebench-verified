@@ -77,6 +77,27 @@ The commit history is the audit trail of the method, and it is **append-only by 
 
 A win is a **passing attestation from the official `swebench.harness.run_evaluation` grader** — nothing else. Not our gate, not the agent's `RESOLVED` claim, not "it would have passed without the infra hiccup." [`SCOREBOARD.md`](SCOREBOARD.md) is the live count, re-derived by `driver/scoreboard.py` from the committed `official_eval/summary.json` files — trust it over any number in prose, which drifts.
 
+## Solve times
+
+Wall-clock per instance, summed across the recon → craft → audit stages of the
+chosen run (the resolved run where there is more than one). Median **8 min**,
+p90 **15 min**; the long tail past 16 min is the heavy-suite repos (sympy,
+matplotlib) where the audit's full-suite run dominates. Derived from the
+committed `ledger.jsonl` files by `driver/solve_times.py` — re-run it to
+reproduce the chart.
+
+```mermaid
+xychart-beta
+  title "Solve time per instance (n=438): recon + craft + audit wall-clock"
+  x-axis "minutes" [3-4, 4-5, 5-6, 6-7, 7-8, 8-9, 9-10, 10-11, 11-12, 12-13, 13-14, 14-15, 15-16, 16-17, 17-18, 18-19, 19-20, 20-21, 21-22, "22+"]
+  y-axis "instances" 0 --> 80
+  bar [4, 18, 62, 75, 59, 49, 33, 26, 24, 14, 17, 14, 6, 8, 3, 3, 1, 5, 2, 15]
+```
+
+p50 8.0 min · p90 15.0 min · p95 20.0 min · p99 65 min · max 77 min (a
+heavy-suite stage-hang). These are pipeline wall times on the driver host, not
+billed model time.
+
 ## Exclusions
 
 [`KNOWN_BAD.md`](KNOWN_BAD.md) lists the SWE-bench instances with broken Docker envs, flaky tests, gold patches that fail to grade, or weak coverage (sourced from SWE-bench issues and the UTBoost paper). Every batch is filtered against it before running and the exclusion is committed, so the denominator is honest. [`LIMITATIONS.md`](LIMITATIONS.md) carries the full, unhedged list of everything else.
@@ -126,3 +147,14 @@ results/<instance>/                   ledger, patch, hypothesis graph, agent log
 ## License
 
 GPL-3.0 (copyleft). See `LICENSE`. If you build on the method, share back.
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/gRVjAtPip0Y"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen>
+</iframe>
