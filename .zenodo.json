@@ -1,0 +1,23 @@
+{
+  "title": "recon-craft-audit: a reproducible agent pipeline for SWE-bench Verified",
+  "description": "A three-stage agent pipeline (recon, craft, audit) for SWE-bench Verified, built to be re-run and inspected by skeptics. Resolves 426 of 500 instances under the official swebench.harness.run_evaluation grader. Every run is committed (wins and losses), exclusions are documented, the skills are frozen and git-tagged, and the score is re-derivable from the committed logs via analysis.get_results. Writeup: https://june.kim/swebench-verified",
+  "upload_type": "software",
+  "license": "GPL-3.0-or-later",
+  "creators": [
+    { "name": "Kim, June" }
+  ],
+  "keywords": [
+    "SWE-bench",
+    "code-generation agents",
+    "automated program repair",
+    "reproducibility",
+    "LLM agents"
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isDocumentedBy",
+      "identifier": "https://june.kim/swebench-verified",
+      "scheme": "url"
+    }
+  ]
+}

@@ -144,6 +144,23 @@ tasks/                                generated task JSONs
 results/<instance>/                   ledger, patch, hypothesis graph, agent logs, codex proof
 ```
 
+## Citation
+
+**To cite this pipeline**, use the metadata in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). A versioned, DOI-bearing archive is minted on each tagged release via [Zenodo](https://zenodo.org); the DOI will be linked here once the first release is cut. Writeup: [june.kim/swebench-verified](https://june.kim/swebench-verified).
+
+**This work runs on the SWE-bench Verified benchmark.** If you use this repo, also cite the original benchmark:
+
+```bibtex
+@inproceedings{
+    jimenez2024swebench,
+    title={{SWE}-bench: Can Language Models Resolve Real-world Github Issues?},
+    author={Carlos E Jimenez and John Yang and Alexander Wettig and Shunyu Yao and Kexin Pei and Ofir Press and Karthik R Narasimhan},
+    booktitle={The Twelfth International Conference on Learning Representations},
+    year={2024},
+    url={https://openreview.net/forum?id=VTF8yNQM66}
+}
+```
+
 ## License
 
 GPL-3.0 (copyleft). See `LICENSE`. If you build on the method, share back.

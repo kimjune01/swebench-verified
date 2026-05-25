@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "recon-craft-audit: a reproducible agent pipeline for SWE-bench Verified"
+message: "If you use this work, please cite it using these metadata."
+type: software
+authors:
+  - given-names: June
+    family-names: Kim
+    alias: kimjune01
+repository-code: "https://github.com/kimjune01/swebench-verified"
+url: "https://june.kim/swebench-verified"
+abstract: >-
+  A three-stage agent pipeline (recon, craft, audit) for SWE-bench Verified,
+  built to be re-run and inspected by skeptics. Resolves 426 of 500 instances
+  under the official swebench.harness.run_evaluation grader, with every run
+  committed (wins and losses), exclusions documented, frozen git-tagged skills,
+  and a score re-derivable from the committed logs.
+license: GPL-3.0
+keywords:
+  - SWE-bench
+  - code-generation agents
+  - automated program repair
+  - reproducibility
+  - LLM agents
+# DOI: minted on first Zenodo-archived release; backfill here once available.
+# doi: 10.5281/zenodo.XXXXXXX
