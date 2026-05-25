@@ -2,6 +2,8 @@
 
 A three-stage agent pipeline for SWE-bench Verified, built to be re-run and inspected by skeptics. The point of this repo is not the score. It is that you can clone it, run the exact procedure on the exact skills, and check the artifacts against your own grading.
 
+📝 **Want the readable version?** The writeup walks the method stage by stage with annotated skills, a worked win, and a worked loss: **[june.kim/swebench-verified](https://june.kim/swebench-verified)**.
+
 > **One repo per benchmark.** This is the **Verified** run. The SWE-bench **Pro** run — and its port plan, goal predicate, and validation design (`PRO_PORT.md`) — lives in its own repo, [`swebench-pro`](https://github.com/kimjune01/swebench-pro). Separate repos so each run's artifacts and number stand alone, rather than hiding behind branches.
 
 ## Where the numbers come from (start at 500)
