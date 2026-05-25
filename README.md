@@ -148,7 +148,7 @@ results/<instance>/                   ledger, patch, hypothesis graph, agent log
 
 ## Citation
 
-**To cite this pipeline**, use the metadata in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). A versioned, DOI-bearing archive is minted on each tagged release via [Zenodo](https://zenodo.org); the DOI will be linked here once the first release is cut. Writeup: [june.kim/swebench-verified](https://june.kim/swebench-verified).
+**To cite this pipeline**, use the metadata in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it) or the archived DOI: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20383661.svg)](https://doi.org/10.5281/zenodo.20383661). The concept DOI `10.5281/zenodo.20383661` always resolves to the latest version. Writeup: [june.kim/swebench-verified](https://june.kim/swebench-verified).
 
 **This work runs on the SWE-bench Verified benchmark.** If you use this repo, also cite the original benchmark:
 
